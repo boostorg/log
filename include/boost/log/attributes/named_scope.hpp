@@ -419,12 +419,12 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 
-//! \cond
+#ifndef BOOST_LOG_DOXYGEN_PASS
 
 #define BOOST_LOG_NAMED_SCOPE_INTERNAL(var, name, file, line)\
     BOOST_LOG_UNUSED_VARIABLE(::boost::log::attributes::named_scope::sentry, var, (name, file, line));
 
-//! \endcond
+#endif // BOOST_LOG_DOXYGEN_PASS
 
 /*!
  * Macro for scope markup. The specified scope name is pushed to the end of the current thread scope list.

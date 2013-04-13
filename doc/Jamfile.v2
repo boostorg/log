@@ -20,6 +20,7 @@ project boost/libs/log/doc ;
 
 path-constant images_location : html ;
 
+# NOTE: At least Doxygen 1.8.2 is needed to generate docs correctly. Older versions don't support C++11 constructs correctly and generate misleading docs.
 local doxygen_params =
         <doxygen:param>RECURSIVE=YES
         <doxygen:param>ALPHABETICAL_INDEX=YES
@@ -49,15 +50,25 @@ local doxygen_params =
                         BOOST_STATIC_ASSERT(x)= \\
                         BOOST_STATIC_ASSERT_MSG(x,y)= \\
                         BOOST_RV_REF(x)=\"x&&\" \\
+                        BOOST_NESTED_TEMPLATE=template \\
+                        BOOST_CONSTEXPR=constexpr \\
+                        BOOST_CONSTEXPR_OR_CONST=constexpr \\
+                        BOOST_NOEXCEPT=noexcept \\
+                        BOOST_NOEXCEPT_IF(x)=noexcept(x) \\
+                        BOOST_NOEXCEPT_OR_NOTHROW=noexcept \\
                         BOOST_COPY_ASSIGN_REF(x)=\"x const&\" \\
                         BOOST_APPEND_EXPLICIT_TEMPLATE_TYPE(x)= \\
                         BOOST_LOG_UNIQUE_IDENTIFIER_NAME(x)=anonymous \\
                         BOOST_LOG_USE_NATIVE_SYSLOG=1 \\
                         BOOST_PARAMETER_KEYWORD(x,y)=\"keyword y;\" \\
                         BOOST_LOG_AUX_VOID_DEFAULT=\"= void\" \\
+                        BOOST_LOG_CONSOLE_SINK_FRONTEND_INTERNAL=sinks::synchronous_sink \\
+                        BOOST_LOG_FILE_SINK_FRONTEND_INTERNAL=sinks::synchronous_sink \\
                         BOOST_LOG_NAMESPACE=log \\
                         BOOST_LOG_OPEN_NAMESPACE=\"namespace log {\" \\
                         BOOST_LOG_CLOSE_NAMESPACE=\"}\" \\
+                        BOOST_LOG_DEFAULTED_FUNCTION(x,y)=\"x = default;\" \\
+                        BOOST_LOG_DELETED_FUNCTION(x)=\"x = delete;\" \\
                         BOOST_LOG_USE_CHAR \\
                         BOOST_LOG_USE_WCHAR_T \\
                         BOOST_LOG_API= \\

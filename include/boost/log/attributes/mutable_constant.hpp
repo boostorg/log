@@ -47,10 +47,15 @@ namespace attributes {
  *
  * The attribute also allows to modify the stored value, even if the attibute is registered in an attribute set.
  * In order to ensure thread safety of such modifications the \c mutable_constant class is also parametrized
- * with three additional template arguments: mutex type, scoped write and scoped read lock types. The implementation
- * may avoid using these types to actually create and use the mutex, if a more efficient synchronization method is
+ * with three additional template arguments: mutex type, scoped write and scoped read lock types. If not specified,
+ * the lock types are automatically deduced based on the mutex type.
+ *
+ * The implementation may avoid using these types to actually create and use the mutex, if a more efficient synchronization method is
  * available (such as atomic operations on the value type). By default no synchronization is done.
  */
+#ifdef BOOST_LOG_DOXYGEN_PASS
+template< typename T, typename MutexT = void, typename ScopedWriteLockT = auto, typename ScopedReadLockT = auto >
+#else // BOOST_LOG_DOXYGEN_PASS
 template<
     typename T,
     typename MutexT = void,
@@ -63,7 +68,7 @@ template<
         >::type,
 #else
         void,
-#endif
+#endif // BOOST_LOG_NO_THREADS
     typename ScopedReadLockT =
 #ifndef BOOST_LOG_NO_THREADS
         typename mpl::if_c<
@@ -73,7 +78,8 @@ template<
         >::type
 #else
         ScopedWriteLockT
-#endif
+#endif // BOOST_LOG_NO_THREADS
+#endif // BOOST_LOG_DOXYGEN_PASS
 >
 class mutable_constant :
     public attribute
