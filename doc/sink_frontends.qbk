@@ -51,7 +51,7 @@ The library provides a [link log.detailed.utilities.exception_handlers convenien
 
 [section:unlocked Unlocked sink frontend]
 
-    #include <``[boost_log_sinks_unlocked_frontend.hpp]``>
+    #include <``[boost_log_sinks_unlocked_frontend_hpp]``>
 
 The unlocked sink frontend is implemented with the [class_sinks_unlocked_sink] class template. This frontend provides the most basic service for the backend. The [class_sinks_unlocked_sink] frontend performs no thread synchronization when accessing the backend, assuming that synchronization either is not needed or is implemented by the backend. Nevertheless, setting up a filter is still thread-safe (that is, one can safely change the filter in the [class_sinks_unlocked_sink] frontend while other threads are writing logs through this sink). This is the only sink frontend available in a single threaded environment. The example of use is as follows:
 
