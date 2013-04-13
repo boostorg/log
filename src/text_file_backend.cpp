@@ -432,7 +432,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
                         unsigned int width = 0;
                         if (!parse_counter_placeholder(p, p_end, width))
                         {
-                            BOOST_LOG_THROW_DESCR(invalid_value, "Unsupported placeholder used in pattern for file scanning");
+                            BOOST_THROW_EXCEPTION(std::invalid_argument("Unsupported placeholder used in pattern for file scanning"));
                         }
 
                         // Find where the file number ends
