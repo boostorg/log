@@ -1,0 +1,40 @@
+[/
+              Copyright Andrey Semashev 2007 - 2013.
+     Distributed under the Boost Software License, Version 1.0.
+        (See accompanying file LICENSE_1_0.txt or copy at
+              http://www.boost.org/LICENSE_1_0.txt)
+
+    This document is a part of Boost.Log library documentation.
+
+     This document was automatically generated,  DO NOT EDIT!
+/]
+
+[template boost_log_filters_attr_hpp[][headerref boost/log/filters/attr.hpp]]
+
+[template class_filters_flt_attr[][classref boost::log::filters::flt_attr flt_attr]]
+
+[template boost_log_filters_basic_filters_hpp[][headerref boost/log/filters/basic_filters.hpp]]
+
+[template class_filters_filter_base[][classref boost::filters::filter_base filter_base]]
+
+[template class_filters_is_filter[][classref boost::filters::is_filter is_filter]]
+
+[template class_filters_basic_filter[][classref boost::filters::basic_filter basic_filter]]
+
+[template class_filters_flt_wrap[][classref boost::filters::flt_wrap flt_wrap]]
+
+[template class_filters_flt_negation[][classref boost::filters::flt_negation flt_negation]]
+
+[template class_filters_flt_and[][classref boost::filters::flt_and flt_and]]
+
+[template class_filters_flt_or[][classref boost::filters::flt_or flt_or]]
+
+[template boost_log_filters_exception_policies_hpp[][headerref boost/log/filters/exception_policies.hpp]]
+
+[template class_filters_no_throw_policy[][classref boost::filters::no_throw_policy no_throw_policy]]
+
+[template class_filters_throw_policy[][classref boost::filters::throw_policy throw_policy]]
+
+[template boost_log_filters_has_attr_hpp[][headerref boost/log/filters/has_attr.hpp]]
+
+[template class_filters_flt_has_attr[][classref boost::filters::flt_has_attr flt_has_attr]]
