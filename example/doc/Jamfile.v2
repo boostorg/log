@@ -26,8 +26,8 @@ project
         <library>/boost/date_time//boost_date_time
         <library>/boost/filesystem//boost_filesystem
         <library>/boost/system//boost_system
-        <threading>single:<define>BOOST_LOG_NO_THREADS
-        <threading>multi:<library>/boost/thread//boost_thread
+        <library>/boost/thread//boost_thread
+        <threading>multi
     ;
 
 # Compiles each .cpp file in this directory into a separate executable

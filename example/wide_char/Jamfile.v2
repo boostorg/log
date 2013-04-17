@@ -25,8 +25,8 @@ project
         <library>/boost/filesystem//boost_filesystem
         <library>/boost/system//boost_system
         <library>/boost/locale//boost_locale
-        <threading>single:<define>BOOST_LOG_NO_THREADS
-        <threading>multi:<library>/boost/thread//boost_thread
+        <library>/boost/thread//boost_thread
+        <threading>multi
     ;
 
 exe wide_char

@@ -25,7 +25,8 @@ feature.set-default logapi : [ default_logapi ] ;
 project boost/log
     : source-location ../src
     : requirements
-        <link>shared:<define>BOOST_LOG_DLL
+        <define>BOOST_SPIRIT_USE_PHOENIX_V3=1
+        <define>BOOST_THREAD_DONT_USE_CHRONO=1 # Don't introduce false dependency on Boost.Chrono
         <logapi>unix:<define>BOOST_LOG_USE_NATIVE_SYSLOG=1
         <toolset>msvc:<define>_SCL_SECURE_NO_WARNINGS
         <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE
@@ -45,6 +46,9 @@ project boost/log
         <library>/boost/system//boost_system
         <threading>single:<define>BOOST_LOG_NO_THREADS
         <threading>multi:<library>/boost/thread//boost_thread
+        <target-os>freebsd:<linkflags>"-lrt"
+        <target-os>linux:<linkflags>"-lrt -lpthread"
+        <toolset>pgi:<linkflags>"-lrt"
     ;
 
 local no_event_log = [ MATCH (define=BOOST_LOG_WITHOUT_EVENT_LOG) : [ modules.peek : ARGV ] ] ;
@@ -100,10 +104,13 @@ lib boost_log
         psapi
         ws2_32
     : ## requirements ##
+        <link>shared:<define>BOOST_LOG_DLL
         <define>BOOST_LOG_BUILDING_THE_LIB=1
-        <define>BOOST_SPIRIT_USE_PHOENIX_V3=1
-        <define>BOOST_THREAD_DONT_USE_CHRONO=1 # Don't introduce false dependency on Boost.Chrono
         <logapi>winnt
+    : ## default-build ##
+    : ## usage-requirements ##
+        <link>shared:<define>BOOST_LOG_DYN_LINK=1
+        <threading>single:<define>BOOST_LOG_NO_THREADS
     ;
 
 lib boost_log
@@ -111,10 +118,13 @@ lib boost_log
         $(BOOST_LOG_COMMON_SRC)
       ## unix sources ##
     : ## requirements ##
+        <link>shared:<define>BOOST_LOG_DLL
         <define>BOOST_LOG_BUILDING_THE_LIB=1
-        <define>BOOST_SPIRIT_USE_PHOENIX_V3=1
-        <define>BOOST_THREAD_DONT_USE_CHRONO=1 # Don't introduce false dependency on Boost.Chrono
         <logapi>unix
+    : ## default-build ##
+    : ## usage-requirements ##
+        <link>shared:<define>BOOST_LOG_DYN_LINK=1
+        <threading>single:<define>BOOST_LOG_NO_THREADS
     ;
 
 
@@ -134,12 +144,15 @@ lib boost_log_setup
       ## winnt sources ##
         ws2_32
     : ## requirements ##
+        <link>shared:<define>BOOST_LOG_DYN_LINK=1
         <link>shared:<define>BOOST_LOG_SETUP_DLL
         <define>BOOST_LOG_SETUP_BUILDING_THE_LIB=1
-        <define>BOOST_SPIRIT_USE_PHOENIX_V3=1
-        <define>BOOST_THREAD_DONT_USE_CHRONO=1 # Don't introduce false dependency on Boost.Chrono
         <library>boost_log
         <logapi>winnt
+    : ## default-build ##
+    : ## usage-requirements ##
+        <link>shared:<define>BOOST_LOG_SETUP_DYN_LINK=1
+        <threading>single:<define>BOOST_LOG_NO_THREADS
     ;
 
 lib boost_log_setup
@@ -147,10 +160,13 @@ lib boost_log_setup
         $(BOOST_LOG_SETUP_COMMON_SRC)
       ## unix sources ##
     : ## requirements ##
+        <link>shared:<define>BOOST_LOG_DYN_LINK=1
         <link>shared:<define>BOOST_LOG_SETUP_DLL
         <define>BOOST_LOG_SETUP_BUILDING_THE_LIB=1
-        <define>BOOST_SPIRIT_USE_PHOENIX_V3=1
-        <define>BOOST_THREAD_DONT_USE_CHRONO=1 # Don't introduce false dependency on Boost.Chrono
         <library>boost_log
         <logapi>unix
+    : ## default-build ##
+    : ## usage-requirements ##
+        <link>shared:<define>BOOST_LOG_SETUP_DYN_LINK=1
+        <threading>single:<define>BOOST_LOG_NO_THREADS
     ;
