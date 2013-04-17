@@ -259,4 +259,4 @@ boostbook log
         <format>pdf:<xsl:param>img.src.path=$(images_location)/
     ;
 
-# install html : ../../../doc/src/boostbook.css ;
+install html/images/log : [ glob *.png ] ;
