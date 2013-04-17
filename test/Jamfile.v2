@@ -11,6 +11,7 @@ import testing ;
 project
     : requirements
         <include>common
+        <link>shared:<define>BOOST_ALL_DYN_LINK
         <toolset>msvc:<define>_SCL_SECURE_NO_WARNINGS
         <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE
         <toolset>msvc:<define>_CRT_SECURE_NO_WARNINGS
