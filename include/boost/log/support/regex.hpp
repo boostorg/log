@@ -40,12 +40,12 @@ private:
     struct no_type { char dummy[2]; };
 
     template< typename CharT, typename TraitsT >
-    static yes_type check(basic_regex< CharT, TraitsT > const&);
-    static no_type check(...);
+    static yes_type check_regex(basic_regex< CharT, TraitsT > const&);
+    static no_type check_regex(...);
     static T& get_T();
 
 public:
-    enum { value = sizeof(check(get_T())) == sizeof(yes_type) };
+    enum { value = sizeof(check_regex(get_T())) == sizeof(yes_type) };
     typedef mpl::bool_< value > type;
 };
 

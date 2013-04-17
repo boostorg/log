@@ -60,12 +60,12 @@ private:
     struct no_type { char dummy[2]; };
 
     template< typename U >
-    static yes_type check(spirit::classic::parser< U > const&);
-    static no_type check(...);
+    static yes_type check_spirit_classic_parser(spirit::classic::parser< U > const&);
+    static no_type check_spirit_classic_parser(...);
     static T& get_T();
 
 public:
-    enum { value = sizeof(check(get_T())) == sizeof(yes_type) };
+    enum { value = sizeof(check_spirit_classic_parser(get_T())) == sizeof(yes_type) };
     typedef mpl::bool_< value > type;
 };
 

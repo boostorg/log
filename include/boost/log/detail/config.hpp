@@ -25,11 +25,6 @@
 
 #include <limits.h> // To bring in libc macros
 #include <boost/config.hpp>
-#include <boost/version.hpp>
-
-#if BOOST_VERSION < 104800
-#   error Boost.Log: Boost version 1.48 or later is required
-#endif
 
 #if defined(BOOST_NO_RTTI)
 #   error Boost.Log: RTTI is required by the library

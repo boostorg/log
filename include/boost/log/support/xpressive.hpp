@@ -42,12 +42,12 @@ private:
     struct no_type { char dummy[2]; };
 
     template< typename U >
-    static yes_type check(xpressive::basic_regex< U > const&);
-    static no_type check(...);
+    static yes_type check_xpressive_regex(xpressive::basic_regex< U > const&);
+    static no_type check_xpressive_regex(...);
     static T& get_T();
 
 public:
-    enum { value = sizeof(check(get_T())) == sizeof(yes_type) };
+    enum { value = sizeof(check_xpressive_regex(get_T())) == sizeof(yes_type) };
     typedef mpl::bool_< value > type;
 };
 

@@ -72,10 +72,10 @@ struct is_exclusively_lockable
     struct false_type { char t[2]; };
 
     template< typename T >
-    static true_type check(T*, void (T::*)() = &T::lock, void (T::*)() = &T::unlock);
-    static false_type check(void*);
+    static true_type check_lockable(T*, void (T::*)() = &T::lock, void (T::*)() = &T::unlock);
+    static false_type check_lockable(void*);
 
-    enum value_t { value = sizeof(check((MutexT*)NULL)) == sizeof(true_type) };
+    enum value_t { value = sizeof(check_lockable((MutexT*)NULL)) == sizeof(true_type) };
 };
 
 //! A trait to detect if the mutex supports shared locking
@@ -86,10 +86,10 @@ struct is_shared_lockable
     struct false_type { char t[2]; };
 
     template< typename T >
-    static true_type check(T*, void (T::*)() = &T::lock_shared, void (T::*)() = &T::unlock_shared);
-    static false_type check(void*);
+    static true_type check_shared_lockable(T*, void (T::*)() = &T::lock_shared, void (T::*)() = &T::unlock_shared);
+    static false_type check_shared_lockable(void*);
 
-    enum value_t { value = sizeof(check((MutexT*)NULL)) == sizeof(true_type) };
+    enum value_t { value = sizeof(check_shared_lockable((MutexT*)NULL)) == sizeof(true_type) };
 };
 
 //! An analogue to the minimalistic \c lock_guard template. Defined here to avoid including Boost.Thread.
