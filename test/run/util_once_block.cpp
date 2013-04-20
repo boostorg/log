@@ -17,7 +17,7 @@
 #define BOOST_TEST_MODULE util_once_block
 
 #include <boost/log/utility/once_block.hpp>
-#include <boost/test/included/unit_test.hpp>
+#include <boost/test/unit_test.hpp>
 
 #if !defined(BOOST_LOG_NO_THREADS)
 

@@ -19,7 +19,7 @@
 #include <iomanip>
 #include <ostream>
 #include <algorithm>
-#include <boost/test/included/unit_test.hpp>
+#include <boost/test/unit_test.hpp>
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
 #include <boost/log/utility/type_dispatch/standard_types.hpp>

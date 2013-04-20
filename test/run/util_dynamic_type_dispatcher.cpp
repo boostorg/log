@@ -17,7 +17,7 @@
 #include <string>
 #include <boost/bind.hpp>
 #include <boost/test/floating_point_comparison.hpp>
-#include <boost/test/included/unit_test.hpp>
+#include <boost/test/unit_test.hpp>
 #include <boost/log/utility/type_dispatch/dynamic_type_dispatcher.hpp>
 
 namespace logging = boost::log;

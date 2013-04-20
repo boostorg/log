@@ -19,7 +19,7 @@
 #include <string>
 #include <boost/shared_ptr.hpp>
 #include <boost/move/utility.hpp>
-#include <boost/test/included/unit_test.hpp>
+#include <boost/test/unit_test.hpp>
 #include <boost/log/core/core.hpp>
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/attributes/attribute_set.hpp>

@@ -21,7 +21,7 @@
 #include <ostream>
 #include <algorithm>
 #include <boost/date_time.hpp>
-#include <boost/test/included/unit_test.hpp>
+#include <boost/test/unit_test.hpp>
 #include <boost/log/expressions.hpp>
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/attributes/attribute_set.hpp>

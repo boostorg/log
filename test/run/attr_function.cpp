@@ -17,7 +17,7 @@
 #include <string>
 #include <boost/mpl/vector.hpp>
 #include <boost/utility/result_of.hpp>
-#include <boost/test/included/unit_test.hpp>
+#include <boost/test/unit_test.hpp>
 #include <boost/log/attributes/function.hpp>
 #include <boost/log/utility/type_dispatch/static_type_dispatcher.hpp>
 

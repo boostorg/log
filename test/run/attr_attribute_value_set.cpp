@@ -18,11 +18,9 @@
 #include <string>
 #include <utility>
 #include <iterator>
-#include <boost/none.hpp>
-#include <boost/optional.hpp>
 #include <boost/config.hpp>
 #include <boost/test/floating_point_comparison.hpp>
-#include <boost/test/included/unit_test.hpp>
+#include <boost/test/unit_test.hpp>
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
 #include <boost/log/attributes/attribute_value_set.hpp>

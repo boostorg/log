@@ -17,7 +17,7 @@
 #include <string>
 #include <typeinfo>
 #include <algorithm>
-#include <boost/test/included/unit_test.hpp>
+#include <boost/test/unit_test.hpp>
 #include <boost/log/utility/type_info_wrapper.hpp>
 
 namespace logging = boost::log;

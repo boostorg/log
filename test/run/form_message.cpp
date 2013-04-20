@@ -15,7 +15,7 @@
 #define BOOST_TEST_MODULE form_message
 
 #include <string>
-#include <boost/test/included/unit_test.hpp>
+#include <boost/test/unit_test.hpp>
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
 #include <boost/log/utility/formatting_ostream.hpp>

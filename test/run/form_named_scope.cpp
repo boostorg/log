@@ -16,7 +16,7 @@
 
 #include <string>
 #include <boost/preprocessor/cat.hpp>
-#include <boost/test/included/unit_test.hpp>
+#include <boost/test/unit_test.hpp>
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
 #include <boost/log/attributes/named_scope.hpp>

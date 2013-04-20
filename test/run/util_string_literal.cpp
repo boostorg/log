@@ -19,7 +19,7 @@
 #include <memory>
 #include <string>
 #include <algorithm>
-#include <boost/test/included/unit_test.hpp>
+#include <boost/test/unit_test.hpp>
 #include <boost/log/utility/string_literal.hpp>
 
 namespace logging = boost::log;
