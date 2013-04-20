@@ -140,10 +140,10 @@ BOOST_PP_REPEAT_FROM_TO(1, BOOST_LOG_MAX_PARAMETER_ARGS, BOOST_LOG_INIT_LOG_TO_F
  *             \li \c time_based_rotation The predicate for time-based file rotations. See <tt>basic_text_file_backend</tt>.
  *             \li \c auto_flush A boolean flag that shows whether the sink should automatically flush the file
  *                               after each written record.
- *             \li \c target The target directory to store rotated files in. See <tt>file::make_collector</tt>.
- *             \li \c max_size The maximum total size of rotated files in the target directory. See <tt>file::make_collector</tt>.
- *             \li \c min_free_space Minimum free space in the target directory. See <tt>file::make_collector</tt>.
- *             \li \c scan_method The method of scanning the target directory for log files. See <tt>file::scan_method</tt>.
+ *             \li \c target The target directory to store rotated files in. See <tt>sinks::file::make_collector</tt>.
+ *             \li \c max_size The maximum total size of rotated files in the target directory. See <tt>sinks::file::make_collector</tt>.
+ *             \li \c min_free_space Minimum free space in the target directory. See <tt>sinks::file::make_collector</tt>.
+ *             \li \c scan_method The method of scanning the target directory for log files. See <tt>sinks::file::scan_method</tt>.
  *             \li \c filter Specifies a filter to install into the sink. May be a string that represents a filter,
  *                           or a filter lambda expression.
  *             \li \c format Specifies a formatter to install into the sink. May be a string that represents a formatter,

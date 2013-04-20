@@ -379,7 +379,7 @@ public:
      * \li \c auto_flush - Specifies a flag, whether or not to automatically flush the file after each
      *                     written log record. By default, is \c false.
      *
-     * \note Read caution regarding file name pattern in the <tt>file::collector::scan_for_files</tt>
+     * \note Read the caution note regarding file name pattern in the <tt>sinks::file::collector::scan_for_files</tt>
      *       documentation.
      */
 #ifndef BOOST_LOG_DOXYGEN_PASS
