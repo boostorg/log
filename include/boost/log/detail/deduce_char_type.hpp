@@ -87,7 +87,7 @@ struct deduce_char_type< T& > :
 {
 };
 
-#if !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
 
 template< typename T >
 struct deduce_char_type< T&& > :

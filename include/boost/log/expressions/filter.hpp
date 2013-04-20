@@ -80,7 +80,7 @@ public:
     /*!
      * Initializing constructor. Creates a filter which will invoke the specified function object.
      */
-#if !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
     template< typename FunT >
     filter(FunT const& fun)
 #else
@@ -110,7 +110,7 @@ public:
     /*!
      * Initializing assignment. Sets the specified function object to the filter.
      */
-#if !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
     template< typename FunT >
     filter& operator= (FunT const& fun)
 #else

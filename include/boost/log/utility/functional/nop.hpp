@@ -33,7 +33,7 @@ struct nop
 
     void operator() () const {}
 
-#if !defined(BOOST_NO_VARIADIC_TEMPLATES) && !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+#if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
     template< typename... ArgsT >
     void operator() (ArgsT const&...) const {}
 #else

@@ -61,7 +61,7 @@ struct make_embedded_string_type_impl< const wchar_t, ArgT >
     typedef std::basic_string< wchar_t > type;
 };
 
-#if !defined(BOOST_NO_CHAR16_T) && !defined(BOOST_NO_CXX11_CHAR16_T)
+#if !defined(BOOST_NO_CXX11_CHAR16_T)
 template< typename ArgT >
 struct make_embedded_string_type_impl< char16_t, ArgT >
 {
@@ -75,7 +75,7 @@ struct make_embedded_string_type_impl< const char16_t, ArgT >
 };
 #endif
 
-#if !defined(BOOST_NO_CHAR32_T) && !defined(BOOST_NO_CXX11_CHAR32_T)
+#if !defined(BOOST_NO_CXX11_CHAR32_T)
 template< typename ArgT >
 struct make_embedded_string_type_impl< char32_t, ArgT >
 {

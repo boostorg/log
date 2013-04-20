@@ -103,7 +103,7 @@ public:
     /*!
      * Initializing constructor. Creates a formatter which will invoke the specified function object.
      */
-#if !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
     template< typename FunT >
     basic_formatter(FunT const& fun)
 #else
@@ -133,7 +133,7 @@ public:
     /*!
      * Initializing assignment. Sets the specified function object to the formatter.
      */
-#if !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
     template< typename FunT >
     basic_formatter& operator= (FunT const& fun)
 #else

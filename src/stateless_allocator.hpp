@@ -34,7 +34,7 @@ namespace aux {
 
 #if defined(_STLPORT_VERSION)
 
-#if !defined(BOOST_NO_TEMPLATE_ALIASES) && !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
+#if !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
 
 template< typename T >
 using stateless_allocator = std::allocator< T >;

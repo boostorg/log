@@ -131,7 +131,7 @@ public:
         }
     }
 
-#if !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
     template< typename FunT >
     void add_formatter(FunT&& fun)
     {

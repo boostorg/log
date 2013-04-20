@@ -25,21 +25,21 @@
 #include <boost/log/detail/config.hpp>
 #include <boost/log/utility/explicit_operator_bool.hpp>
 #include <boost/type_traits/remove_cv.hpp>
-#if defined(BOOST_NO_VARIADIC_TEMPLATES) || defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+#if defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 #include <boost/preprocessor/iteration/iterate.hpp>
 #include <boost/preprocessor/repetition/enum_params.hpp>
 #include <boost/preprocessor/repetition/enum_binary_params.hpp>
 #include <boost/preprocessor/repetition/enum_trailing_params.hpp>
 #include <boost/preprocessor/repetition/enum_trailing_binary_params.hpp>
 #endif
-#if defined(BOOST_NO_RVALUE_REFERENCES) || defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+#if defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
 #include <boost/utility/enable_if.hpp>
 #include <boost/type_traits/is_same.hpp>
 #include <boost/mpl/or.hpp>
 #else
 #include <boost/type_traits/remove_reference.hpp>
 #endif
-#if defined(BOOST_NO_NULLPTR) || defined(BOOST_NO_CXX11_NULLPTR)
+#if defined(BOOST_NO_CXX11_NULLPTR)
 #include <boost/assert.hpp>
 #endif
 #include <boost/log/detail/header.hpp>
@@ -61,7 +61,7 @@ namespace aux {
 template< typename SignatureT >
 class light_function;
 
-#if !defined(BOOST_NO_VARIADIC_TEMPLATES) && !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+#if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
 template< typename ResultT, typename... ArgsT >
 class light_function< ResultT (ArgsT...) >
@@ -111,13 +111,13 @@ private:
         {
         }
 
-#if !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
         explicit impl(FunT&& fun) :
             impl_base(&this_type::invoke_impl, &this_type::clone_impl, &this_type::destroy_impl),
             m_Function(fun)
         {
         }
-#endif // !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+#endif // !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
 
         static void destroy_impl(impl_base* self)
         {
@@ -160,7 +160,7 @@ public:
         ((this_type&)that).m_pImpl = NULL;
     }
 
-#if !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
     template< typename FunT >
     light_function(FunT&& fun) :
         m_pImpl(new impl< typename remove_cv< typename remove_reference< FunT >::type >::type >(boost::forward< FunT >(fun)))
@@ -180,14 +180,14 @@ public:
 #endif
 
     //! Constructor from NULL
-#if !defined(BOOST_NO_NULLPTR) && !defined(BOOST_NO_CXX11_NULLPTR)
+#if !defined(BOOST_NO_CXX11_NULLPTR)
     BOOST_CONSTEXPR light_function(std::nullptr_t) BOOST_NOEXCEPT
 #else
     BOOST_CONSTEXPR light_function(int p) BOOST_NOEXCEPT
 #endif
         : m_pImpl(NULL)
     {
-#if defined(BOOST_NO_NULLPTR) || defined(BOOST_NO_CXX11_NULLPTR)
+#if defined(BOOST_NO_CXX11_NULLPTR)
         BOOST_ASSERT(p == 0);
 #endif
     }
@@ -208,19 +208,19 @@ public:
         return *this;
     }
     //! Assignment of NULL
-#if !defined(BOOST_NO_NULLPTR) && !defined(BOOST_NO_CXX11_NULLPTR)
+#if !defined(BOOST_NO_CXX11_NULLPTR)
     light_function& operator= (std::nullptr_t)
 #else
     light_function& operator= (int p)
 #endif
     {
-#if defined(BOOST_NO_NULLPTR) || defined(BOOST_NO_CXX11_NULLPTR)
+#if defined(BOOST_NO_CXX11_NULLPTR)
         BOOST_ASSERT(p == 0);
 #endif
         clear();
         return *this;
     }
-#if !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
     template< typename FunT >
     light_function& operator= (FunT&& fun)
     {
@@ -312,13 +312,13 @@ private:
         {
         }
 
-#if !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
         explicit impl(FunT&& fun) :
             impl_base(&this_type::invoke_impl, &this_type::clone_impl, &this_type::destroy_impl),
             m_Function(fun)
         {
         }
-#endif // !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+#endif // !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
 
         static void destroy_impl(impl_base* self)
         {
@@ -380,14 +380,14 @@ public:
 #endif
 
     //! Constructor from NULL
-#if !defined(BOOST_NO_NULLPTR) && !defined(BOOST_NO_CXX11_NULLPTR)
+#if !defined(BOOST_NO_CXX11_NULLPTR)
     BOOST_CONSTEXPR light_function(std::nullptr_t) BOOST_NOEXCEPT
 #else
     BOOST_CONSTEXPR light_function(int p) BOOST_NOEXCEPT
 #endif
         : m_pImpl(NULL)
     {
-#if defined(BOOST_NO_NULLPTR) || defined(BOOST_NO_CXX11_NULLPTR)
+#if defined(BOOST_NO_CXX11_NULLPTR)
         BOOST_ASSERT(p == 0);
 #endif
     }
@@ -408,19 +408,19 @@ public:
         return *this;
     }
     //! Assignment of NULL
-#if !defined(BOOST_NO_NULLPTR) && !defined(BOOST_NO_CXX11_NULLPTR)
+#if !defined(BOOST_NO_CXX11_NULLPTR)
     light_function& operator= (std::nullptr_t)
 #else
     light_function& operator= (int p)
 #endif
     {
-#if defined(BOOST_NO_NULLPTR) || defined(BOOST_NO_CXX11_NULLPTR)
+#if defined(BOOST_NO_CXX11_NULLPTR)
         BOOST_ASSERT(p == 0);
 #endif
         clear();
         return *this;
     }
-#if !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
     template< typename FunT >
     light_function& operator= (FunT&& fun)
     {

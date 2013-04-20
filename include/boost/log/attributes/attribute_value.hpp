@@ -271,7 +271,7 @@ public:
     template< typename T, typename TagT BOOST_LOG_AUX_VOID_DEFAULT, typename DefaultT >
     typename result_of::extract_or_default< T, DefaultT, TagT >::type extract_or_default(DefaultT const& def_value) const;
 
-#if defined(BOOST_NO_FUNCTION_TEMPLATE_DEFAULT_ARGS) || defined(BOOST_NO_CXX11_FUNCTION_TEMPLATE_DEFAULT_ARGS)
+#if defined(BOOST_NO_CXX11_FUNCTION_TEMPLATE_DEFAULT_ARGS)
     /*!
      * The method attempts to extract the stored value, assuming the value has the specified type.
      * One can specify either a single type or a MPL type sequence, in which case the stored value
@@ -331,7 +331,7 @@ public:
      */
     template< typename T, typename DefaultT >
     typename result_of::extract_or_default< T, DefaultT >::type extract_or_default(DefaultT const& def_value) const;
-#endif // defined(BOOST_NO_FUNCTION_TEMPLATE_DEFAULT_ARGS) || defined(BOOST_NO_CXX11_FUNCTION_TEMPLATE_DEFAULT_ARGS)
+#endif // defined(BOOST_NO_CXX11_FUNCTION_TEMPLATE_DEFAULT_ARGS)
 
 #undef BOOST_LOG_AUX_VOID_DEFAULT
 

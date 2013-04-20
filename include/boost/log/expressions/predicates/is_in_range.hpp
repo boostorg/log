@@ -41,12 +41,12 @@ namespace expressions {
 /*!
  * The predicate checks if the attribute value contains a substring. The attribute value is assumed to be of a string type.
  */
-#if !defined(BOOST_NO_TEMPLATE_ALIASES) && !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
+#if !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
 
 template< typename T, typename BoundaryT, typename FallbackPolicyT = fallback_to_none >
 using attribute_is_in_range = aux::attribute_predicate< T, std::pair< BoundaryT, BoundaryT >, in_range_fun, FallbackPolicyT >;
 
-#else // !defined(BOOST_NO_TEMPLATE_ALIASES) && !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
+#else // !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
 
 template< typename T, typename BoundaryT, typename FallbackPolicyT = fallback_to_none >
 class attribute_is_in_range :
@@ -78,7 +78,7 @@ public:
     }
 };
 
-#endif // !defined(BOOST_NO_TEMPLATE_ALIASES) && !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
+#endif // !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
 
 /*!
  * The function generates a terminal node in a template expression. The node will check if the attribute value

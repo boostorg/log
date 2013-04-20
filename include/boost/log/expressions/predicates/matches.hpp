@@ -39,12 +39,12 @@ namespace expressions {
 /*!
  * The predicate checks if the attribute value matches a regular expression. The attribute value is assumed to be of a string type.
  */
-#if !defined(BOOST_NO_TEMPLATE_ALIASES) && !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
+#if !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
 
 template< typename T, typename RegexT, typename FallbackPolicyT = fallback_to_none >
 using attribute_matches = aux::attribute_predicate< T, RegexT, matches_fun, FallbackPolicyT >;
 
-#else // !defined(BOOST_NO_TEMPLATE_ALIASES) && !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
+#else // !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
 
 template< typename T, typename RegexT, typename FallbackPolicyT = fallback_to_none >
 class attribute_matches :
@@ -76,7 +76,7 @@ public:
     }
 };
 
-#endif // !defined(BOOST_NO_TEMPLATE_ALIASES) && !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
+#endif // !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
 
 /*!
  * The function generates a terminal node in a template expression. The node will check if the attribute value,

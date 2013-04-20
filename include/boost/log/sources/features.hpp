@@ -22,7 +22,7 @@
 #pragma once
 #endif
 
-#if defined(BOOST_NO_VARIADIC_TEMPLATES) || defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+#if defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
 #include <boost/preprocessor/repetition/enum_params.hpp>
 #include <boost/preprocessor/repetition/enum_shifted_params.hpp>
@@ -44,7 +44,7 @@ BOOST_LOG_OPEN_NAMESPACE
 
 namespace sources {
 
-#if defined(BOOST_LOG_DOXYGEN_PASS) || !(defined(BOOST_NO_VARIADIC_TEMPLATES) || defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES))
+#if defined(BOOST_LOG_DOXYGEN_PASS) || !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
 /*!
  * \brief A type sequence of logger features

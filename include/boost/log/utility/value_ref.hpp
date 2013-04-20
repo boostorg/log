@@ -90,7 +90,7 @@ public:
 
 protected:
     //! The metafunction tests if the type is compatible with the reference wrapper
-#if !defined(BOOST_NO_TEMPLATE_ALIASES) && !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
+#if !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
     template< typename U >
     using is_compatible = is_same< U, value_type >;
 #else

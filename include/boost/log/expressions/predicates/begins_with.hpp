@@ -40,12 +40,12 @@ namespace expressions {
 /*!
  * The predicate checks if the attribute value begins with a substring. The attribute value is assumed to be of a string type.
  */
-#if !defined(BOOST_NO_TEMPLATE_ALIASES) && !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
+#if !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
 
 template< typename T, typename SubstringT, typename FallbackPolicyT = fallback_to_none >
 using attribute_begins_with = aux::attribute_predicate< T, SubstringT, begins_with_fun, FallbackPolicyT >;
 
-#else // !defined(BOOST_NO_TEMPLATE_ALIASES) && !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
+#else // !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
 
 template< typename T, typename SubstringT, typename FallbackPolicyT = fallback_to_none >
 class attribute_begins_with :
@@ -77,7 +77,7 @@ public:
     }
 };
 
-#endif // !defined(BOOST_NO_TEMPLATE_ALIASES) && !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
+#endif // !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
 
 /*!
  * The function generates a terminal node in a template expression. The node will check if the attribute value,

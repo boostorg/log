@@ -21,7 +21,7 @@
 #include <boost/log/detail/config.hpp>
 #include <boost/log/attributes/attribute_value.hpp>
 #include <boost/log/utility/type_dispatch/type_dispatcher.hpp>
-#if !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
 #include <boost/type_traits/remove_reference.hpp>
 #endif
 #include <boost/log/detail/header.hpp>
@@ -107,7 +107,7 @@ inline attribute_value make_attribute_value(T&& v)
     return attribute_value(new attribute_value_impl< value_type >(boost::forward< T >(v)));
 }
 
-#else // !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+#else // !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
 
 template< typename T >
 inline attribute_value make_attribute_value(T const& v)

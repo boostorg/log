@@ -35,13 +35,13 @@ namespace aux {
 BOOST_LOG_API void code_convert(const wchar_t* str1, std::size_t len, std::string& str2, std::locale const& loc = std::locale());
 //! The function converts one string to the character type of another
 BOOST_LOG_API void code_convert(const char* str1, std::size_t len, std::wstring& str2, std::locale const& loc = std::locale());
-#if !defined(BOOST_NO_CHAR16_T) && !defined(BOOST_NO_CXX11_CHAR16_T)
+#if !defined(BOOST_NO_CXX11_CHAR16_T)
 //! The function converts one string to the character type of another
 BOOST_LOG_API void code_convert(const char16_t* str1, std::size_t len, std::string& str2, std::locale const& loc = std::locale());
 //! The function converts one string to the character type of another
 BOOST_LOG_API void code_convert(const char* str1, std::size_t len, std::u16string& str2, std::locale const& loc = std::locale());
 #endif
-#if !defined(BOOST_NO_CHAR32_T) && !defined(BOOST_NO_CXX11_CHAR32_T)
+#if !defined(BOOST_NO_CXX11_CHAR32_T)
 //! The function converts one string to the character type of another
 BOOST_LOG_API void code_convert(const char32_t* str1, std::size_t len, std::string& str2, std::locale const& loc = std::locale());
 //! The function converts one string to the character type of another

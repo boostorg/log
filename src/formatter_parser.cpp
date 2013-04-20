@@ -128,7 +128,7 @@ struct chained_formatter
     typedef basic_formatter< CharT > formatter_type;
     typedef typename formatter_type::stream_type stream_type;
 
-#if !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
     explicit chained_formatter(formatter_type&& first, SecondT&& second) :
 #else
     template< typename T >
