@@ -472,7 +472,7 @@ public:
      *
      * The file scan can be performed in two ways: either all files in the target directory will
      * be considered as log files, or only those files that satisfy the file name pattern.
-     * See documentation on <tt>file::collector::scan_for_files</tt> for more information.
+     * See documentation on <tt>sinks::file::collector::scan_for_files</tt> for more information.
      *
      * \pre File collector and the proper file name pattern have already been set.
      *

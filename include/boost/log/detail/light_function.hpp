@@ -360,7 +360,7 @@ public:
         ((this_type&)that).m_pImpl = NULL;
     }
 
-#if !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
     template< typename FunT >
     light_function(FunT&& fun) :
         m_pImpl(new impl< typename remove_cv< typename remove_reference< FunT >::type >::type >(boost::forward< FunT >(fun)))
@@ -464,13 +464,13 @@ public:
     }
 };
 
-#else // !defined(BOOST_NO_VARIADIC_TEMPLATES) && !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+#else // !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
 #define BOOST_PP_FILENAME_1 <boost/log/detail/light_function_pp.hpp>
 #define BOOST_PP_ITERATION_LIMITS (0, BOOST_LOG_LIGHT_FUNCTION_LIMIT)
 #include BOOST_PP_ITERATE()
 
-#endif // !defined(BOOST_NO_VARIADIC_TEMPLATES) && !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+#endif // !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
 template< typename SignatureT >
 inline void swap(light_function< SignatureT >& left, light_function< SignatureT >& right)
