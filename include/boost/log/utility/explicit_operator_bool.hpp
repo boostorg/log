@@ -47,6 +47,8 @@ BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
 
+#if !defined(_MSC_VER)
+
     struct unspecified_bool
     {
         // NOTE TO THE USER: If you see this in error messages then you tried
@@ -56,6 +58,21 @@ namespace aux {
         static void true_value(OPERATORS_NOT_ALLOWED*) {}
     };
     typedef void (*unspecified_bool_type)(unspecified_bool::OPERATORS_NOT_ALLOWED*);
+
+#else
+
+    // MSVC is too eager to convert pointer to function to void* even when it shouldn't
+    struct unspecified_bool
+    {
+        // NOTE TO THE USER: If you see this in error messages then you tried
+        // to apply an unsupported operator on the object that supports
+        // explicit conversion to bool.
+        struct OPERATORS_NOT_ALLOWED;
+        void true_value(OPERATORS_NOT_ALLOWED*) {}
+    };
+    typedef void (unspecified_bool::*unspecified_bool_type)(unspecified_bool::OPERATORS_NOT_ALLOWED*);
+
+#endif
 
 } // namespace aux
 
