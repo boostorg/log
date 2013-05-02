@@ -16,6 +16,7 @@
 [c++]
 
 [/ Links to external resources /]
+[def __boost_config__ [@http://www.boost.org/doc/libs/release/libs/config/doc/html/index.html Boost.Config]]
 [def __boost_smart_ptr__ [@http://www.boost.org/doc/libs/release/libs/smart_ptr/smart_ptr.htm Boost.SmartPtr]]
 [def __boost_function__ [@http://www.boost.org/doc/libs/release/doc/html/function.html Boost.Function]]
 [def __boost_filesystem__ [@http://www.boost.org/doc/libs/release/libs/filesystem/doc/index.htm Boost.Filesystem]]

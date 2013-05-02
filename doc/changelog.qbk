@@ -9,7 +9,17 @@
 
 [section:changelog Changelog]
 
-[heading 2.0]
+[heading 2.1]
+
+[*Breaking changes:]
+
+* [class_log_basic_formatting_ostream] no longer derives from `std::basic_ostream`, but rather reimplements its and its base classes interface closely. This solves problems with overloading `operator<<` for [class_log_basic_formatting_ostream] and user-defined types. This will break user's code if it relied on the inheritance from the standard stream types (such as passing [class_log_basic_formatting_ostream] object as an argument to a function receiving `std::basic_ostream`). Please, use the `stream()` member function to access the standard stream. This change will [*not] break the code that outputs user-defined types to a [class_log_basic_formatting_ostream] stream while there are only `operator<<` overloads for the standard stream types - the code will compile and use the standard operator overloads, as before.
+
+[*General changes:]
+
+* Removed the use of deprecated macros of __boost_config__.
+
+[heading 2.0, 13 April 2013]
 
 [*General changes:]
 

@@ -35,11 +35,6 @@ BOOST_LOG_OPEN_NAMESPACE
 template< typename T, typename TagT = void >
 class to_log_manip
 {
-#ifndef BOOST_LOG_DOXYGEN_PASS
-public:
-    typedef void _has_basic_formatting_ostream_insert_operator;
-#endif
-
 public:
     //! Output value type
     typedef T value_type;

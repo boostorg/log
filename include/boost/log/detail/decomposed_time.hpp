@@ -214,7 +214,7 @@ public:
         typedef std::time_put< char_type > facet_type;
         typedef typename facet_type::iter_type iter_type;
         std::tm t = to_tm(static_cast< decomposed_time const& >(ctx.value));
-        std::use_facet< facet_type >(ctx.strm.getloc()).put(iter_type(ctx.strm), ctx.strm, ' ', &t, FormatCharV);
+        std::use_facet< facet_type >(ctx.strm.getloc()).put(iter_type(ctx.strm.stream()), ctx.strm.stream(), ' ', &t, FormatCharV);
         ctx.strm.flush();
     }
 
