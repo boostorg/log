@@ -61,7 +61,7 @@ namespace aux {
 
 #else
 
-    // MSVC is too eager to convert pointer to function to void* even when it shouldn't
+    // MSVC is too eager to convert pointer to function to void* even though it shouldn't
     struct unspecified_bool
     {
         // NOTE TO THE USER: If you see this in error messages then you tried
