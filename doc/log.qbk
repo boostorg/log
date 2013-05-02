@@ -10,7 +10,7 @@
     ]
     [id log]
     [source-mode c++]
-    [last-revision $Date: 2013-03-10 18:29:41 +0400 (Sun, 10 Mar 2013) $]
+    [last-revision $Date: 2013-05-02 21:38:12 +0400 (Thu, 02 May 2013) $]
 ]
 
 [c++]
