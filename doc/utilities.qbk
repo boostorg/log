@@ -257,7 +257,7 @@ The manipulator also allows to limit the amount of data to be output, in case if
 
     void on_receive(std::vector< unsigned char > const& packet)
     {
-        // Outputs something like "Packet received: 00 01 02 03 04 05 06 07 08 and 67 bytes more"
+        // Outputs something like "Packet received: 00 01 02 03 04 05 06 07 and 67 bytes more"
         BOOST_LOG(lg) << "Packet received: " << logging::dump(packet.data(), packet.size(), 8);
     }
 
