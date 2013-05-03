@@ -241,6 +241,38 @@ In addition to the value itself, the manipulator also requires the attribute nam
 
 [endsect]
 
+[section:dump Binary dump manipulator]
+
+    #include <``[boost_log_utility_manipulators_dump_hpp]``>
+
+The [funcref boost::log::dump `dump`] function creates a manipulator that outputs binary contents of a contiguous memory region. This can be useful for logging some low level binary data, such as encoded network packets or entries of a binary file. The use is quite straightforward:
+
+    void on_receive(std::vector< unsigned char > const& packet)
+    {
+        // Outputs something like "Packet received: 00 01 02 0a 0b 0c"
+        BOOST_LOG(lg) << "Packet received: " << logging::dump(packet.data(), packet.size());
+    }
+
+The manipulator also allows to limit the amount of data to be output, in case if the input data can be too large. Just specify the maximum number of bytes of input to dump as the last argument:
+
+    void on_receive(std::vector< unsigned char > const& packet)
+    {
+        // Outputs something like "Packet received: 00 01 02 03 04 05 06 07 08 and 67 bytes more"
+        BOOST_LOG(lg) << "Packet received: " << logging::dump(packet.data(), packet.size(), 8);
+    }
+
+There is another manipulator called [funcref boost::log::dump_elements `dump_elements`] for printing binary representation of non-byte array elements. The special manipulator for this case is necessary because the units of the size argument of [funcref boost::log::dump `dump`] can be confusing (is it in bytes or in elements?). Therefore [funcref boost::log::dump `dump`] will not compile when used for non-byte input data. [funcref boost::log::dump_elements `dump_elements`] accepts the same arguments, and its size-related arguments always designate the number of elements to process.
+
+    void process(std::vector< double > const& matrix)
+    {
+        // Note that dump_elements accepts the number of elements in the matrix, not its size in bytes
+        BOOST_LOG(lg) << "Matrix dump: " << logging::dump_elements(matrix.data(), matrix.size());
+    }
+
+[tip Both these manipulators can also be used with regular output streams, not necessarily loggers.]
+
+[endsect]
+
 [endsect]
 
 [section:setup Simplified library initialization tools]

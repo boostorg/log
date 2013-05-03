@@ -92,6 +92,7 @@ local BOOST_LOG_COMMON_SRC =
     date_time_format_parser.cpp
     named_scope_format_parser.cpp
     unhandled_exception_count.cpp
+    dump.cpp
     ;
 
 lib boost_log

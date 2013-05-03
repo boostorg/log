@@ -18,6 +18,7 @@
 [*General changes:]
 
 * Removed the use of deprecated macros of __boost_config__.
+* Added a new [link log.detailed.utilities.manipulators.dump `dump`] output manipulator for printing binary data.
 
 [heading 2.0, 13 April 2013]
 
