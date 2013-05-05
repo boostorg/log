@@ -68,7 +68,7 @@ namespace {
         public sinks::basic_sink_backend< sinks::concurrent_feeding >
     {
     public:
-        void consume(logging::record const& rec)
+        void consume(logging::record_view const& rec)
         {
         }
     };

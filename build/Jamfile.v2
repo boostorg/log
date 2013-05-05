@@ -5,9 +5,13 @@
 #          http://www.boost.org/LICENSE_1_0.txt)
 #
 
+import common ;
 import modules ;
 import os ;
 import feature ;
+import version ;
+import property ;
+import architecture ;
 using mc ;
 
 lib psapi ;
@@ -23,9 +27,41 @@ local rule default_logapi ( )
 feature.feature logapi : unix winnt : propagated ;
 feature.set-default logapi : [ default_logapi ] ;
 
+rule select-instruction-set ( properties * )
+{
+    local result ;
+
+    if <architecture>x86 in $(properties) && <address-model>32 in $(properties)
+    {
+        result = [ property.select <instruction-set> : $(properties) ] ;
+        if $(result)
+        {
+            if $(result) = <instruction-set>i386 || $(result) = <instruction-set>i486
+            {
+                if ! $(.annouced-failure)
+                {
+                    ECHO Boost.Log is not supported on the specified target CPU and will not be built. At least i586 class CPU is required. ;
+                    .annouced-failure = 1 ;
+                }
+                result = <build>no ;
+            }
+        }
+        else
+        {
+            # We build for Pentium Pro and later CPUs by default. This is used as the target in many Linux distributions, and Windows and OS X also seem to not support older CPUs.
+            result = <instruction-set>i686 ;
+        }
+    }
+
+    return $(result) ;
+}
+
 project boost/log
     : source-location ../src
     : requirements
+        [ architecture.architecture ]
+        [ architecture.address-model ]
+        <conditional>@select-instruction-set
         <define>BOOST_SPIRIT_USE_PHOENIX_V3=1
         <define>BOOST_THREAD_DONT_USE_CHRONO=1 # Don't introduce false dependency on Boost.Chrono
         <logapi>unix:<define>BOOST_LOG_USE_NATIVE_SYSLOG=1
@@ -95,9 +131,191 @@ local BOOST_LOG_COMMON_SRC =
     dump.cpp
     ;
 
+local BOOST_LOG_COMMON_SSSE3_SRC =
+    dump_ssse3
+    ;
+
+local BOOST_LOG_COMMON_AVX2_SRC =
+    dump_avx2
+    ;
+
+rule ssse3-targets-cond ( properties * )
+{
+    local result = <build>no ;
+
+    if <architecture>x86 in $(properties)
+    {
+        if <toolset>gcc in $(properties)
+        {
+            local string_version = [ feature.get-values "toolset-gcc:version" : $(properties) ] ;
+            local version = [ SPLIT_BY_CHARACTERS $(string_version) : "." ] ;
+
+            if ! [ version.version-less $(version) : 4 3 ]
+            {
+                result = <cxxflags>"-march=core2 -msse -msse2 -msse3 -mssse3" ;
+            }
+        }
+        else if <toolset>msvc in $(properties)
+        {
+            local string_version = [ feature.get-values "toolset-msvc:version" : $(properties) ] ;
+            local version = [ SPLIT_BY_CHARACTERS $(string_version) : "." ] ;
+
+            if ! [ version.version-less $(version) : 9 0 ]
+            {
+                # MSVC doesn't really care about these switches, all SSE intrinsics are always available, but still...
+                result = <cxxflags>"/arch:SSE2" ;
+            }
+        }
+        else if <toolset>clang in $(properties)
+        {
+            local string_version = [ feature.get-values "toolset-clang:version" : $(properties) ] ;
+            local version = [ SPLIT_BY_CHARACTERS $(string_version) : "." ] ;
+
+            # I don't know which version started to support SSSE3, but we don't support versions before 3.2 anyway and it has support for SSSE3
+            if ! [ version.version-less $(version) : 3 2 ]
+            {
+                result = <cxxflags>"-march=core2 -msse -msse2 -msse3 -mssse3" ;
+            }
+        }
+        else if <toolset>intel in $(properties)
+        {
+            local string_version = [ feature.get-values "toolset-intel:version" : $(properties) ] ;
+            local version = [ SPLIT_BY_CHARACTERS $(string_version) : "." ] ;
+
+            if ! [ version.version-less $(version) : 10 0 ]
+            {
+                if <toolset-intel:platform>win in $(properties)
+                {
+                    if ! [ version.version-less $(version) : 11 0 ]
+                    {
+                        result = <cxxflags>"/QxSSSE3" ;
+                    }
+                    else
+                    {
+                        result = <cxxflags>"/QxT" ;
+                    }
+                }
+                else
+                {
+                    result = <cxxflags>"-march=core2 -msse -msse2 -msse3 -mssse3" ;
+                }
+            }
+        }
+    }
+
+#    if ! <build>no in $(result)
+#    {
+#        ECHO Boost.Log: Using SSSE3 optimized implementation ;
+#    }
+#    ECHO $(result) ;
+
+    return $(result) ;
+}
+
+for local src in $(BOOST_LOG_COMMON_SSSE3_SRC)
+{
+    obj $(src)
+        : ## sources ##
+            $(src).cpp
+        : ## requirements ##
+            <conditional>@ssse3-targets-cond
+            <link>shared:<define>BOOST_LOG_DLL
+            <define>BOOST_LOG_BUILDING_THE_LIB=1
+        : ## default-build ##
+        : ## usage-requirements ##
+            <define>BOOST_LOG_USE_SSSE3
+        ;
+}
+
+
+rule avx2-targets-cond ( properties * )
+{
+    local result = <build>no ;
+
+    if <architecture>x86 in $(properties)
+    {
+        if <toolset>gcc in $(properties)
+        {
+            local string_version = [ feature.get-values "toolset-gcc:version" : $(properties) ] ;
+            local version = [ SPLIT_BY_CHARACTERS $(string_version) : "." ] ;
+
+            if ! [ version.version-less $(version) : 4 7 ]
+            {
+                result = <cxxflags>"-march=core-avx2 -mavx -mavx2" ;
+            }
+        }
+        else if <toolset>msvc in $(properties)
+        {
+            local string_version = [ feature.get-values "toolset-msvc:version" : $(properties) ] ;
+            local version = [ SPLIT_BY_CHARACTERS $(string_version) : "." ] ;
+
+            if ! [ version.version-less $(version) : 11 0 ]
+            {
+                result = <cxxflags>"/arch:AVX" ;
+            }
+        }
+        else if <toolset>clang in $(properties)
+        {
+            local string_version = [ feature.get-values "toolset-clang:version" : $(properties) ] ;
+            local version = [ SPLIT_BY_CHARACTERS $(string_version) : "." ] ;
+
+            # I don't know which version started to support AVX2, but we don't support versions before 3.2 anyway and it has support for AVX2
+            if ! [ version.version-less $(version) : 3 2 ]
+            {
+                result = <cxxflags>"-march=core-avx2 -mavx -mavx2" ;
+            }
+        }
+        else if <toolset>intel in $(properties)
+        {
+            local string_version = [ feature.get-values "toolset-intel:version" : $(properties) ] ;
+            local version = [ SPLIT_BY_CHARACTERS $(string_version) : "." ] ;
+
+            # AVX2 support added in Composer XE 2011 Update 7, while the original Composer XE 2011 had icc version 12.
+            # I don't know what version Update 7 had, so to be on the safe side enable this optimization since version 13.
+            if ! [ version.version-less $(version) : 13 0 ]
+            {
+                if <toolset-intel:platform>win in $(properties)
+                {
+                    result = <cxxflags>"/QxAVX2" ;
+                }
+                else
+                {
+                    result = <cxxflags>"-march=core-avx2 -mavx -mavx2" ;
+                }
+            }
+        }
+    }
+
+#    if ! <build>no in $(result)
+#    {
+#        ECHO Boost.Log: Using AVX2 optimized implementation ;
+#    }
+#    ECHO $(result) ;
+
+    return $(result) ;
+}
+
+for local src in $(BOOST_LOG_COMMON_AVX2_SRC)
+{
+    obj $(src)
+        : ## sources ##
+            $(src).cpp
+        : ## requirements ##
+            <conditional>@avx2-targets-cond
+            <link>shared:<define>BOOST_LOG_DLL
+            <define>BOOST_LOG_BUILDING_THE_LIB=1
+        : ## default-build ##
+        : ## usage-requirements ##
+            <define>BOOST_LOG_USE_AVX2
+        ;
+}
+
+
 lib boost_log
     : ## sources ##
         $(BOOST_LOG_COMMON_SRC)
+        $(BOOST_LOG_COMMON_SSSE3_SRC)
+        $(BOOST_LOG_COMMON_AVX2_SRC)
       ## winnt sources ##
         $(BOOST_LOG_MC_SRC)
         event_log_backend.cpp
@@ -118,6 +336,8 @@ lib boost_log
 lib boost_log
     : ## sources ##
         $(BOOST_LOG_COMMON_SRC)
+        $(BOOST_LOG_COMMON_SSSE3_SRC)
+        $(BOOST_LOG_COMMON_AVX2_SRC)
       ## unix sources ##
     : ## requirements ##
         <link>shared:<define>BOOST_LOG_DLL

@@ -9,3 +9,7 @@ exe record_emission
     : record_emission.cpp ../../build//boost_log
     ;
 
+exe dump
+    : dump.cpp ../../build//boost_log
+    ;
+

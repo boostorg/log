@@ -16,6 +16,11 @@
 #include <ostream>
 #include <boost/cstdint.hpp>
 #include <boost/log/utility/manipulators/dump.hpp>
+#if defined(_MSC_VER)
+#include "windows_version.hpp"
+#include <windows.h>
+#include <intrin.h> // __cpuid
+#endif
 #include <boost/log/detail/header.hpp>
 
 namespace boost {
@@ -24,19 +29,40 @@ BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
 
-enum { stride = 64 };
+#if defined(BOOST_LOG_USE_SSSE3)
+extern dump_data_char_t dump_data_char_ssse3;
+extern dump_data_wchar_t dump_data_wchar_ssse3;
+#if !defined(BOOST_NO_CXX11_CHAR16_T)
+extern dump_data_char16_t dump_data_char16_ssse3;
+#endif
+#if !defined(BOOST_NO_CXX11_CHAR32_T)
+extern dump_data_char32_t dump_data_char32_ssse3;
+#endif
+#endif
+#if defined(BOOST_LOG_USE_AVX2)
+extern dump_data_char_t dump_data_char_avx2;
+extern dump_data_wchar_t dump_data_wchar_avx2;
+#if !defined(BOOST_NO_CXX11_CHAR16_T)
+extern dump_data_char16_t dump_data_char16_avx2;
+#endif
+#if !defined(BOOST_NO_CXX11_CHAR32_T)
+extern dump_data_char32_t dump_data_char32_avx2;
+#endif
+#endif
 
-static const char g_lowercase_char_table[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
-static const char g_uppercase_char_table[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
+enum { stride = 256 };
+
+extern const char g_lowercase_dump_char_table[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+extern const char g_uppercase_dump_char_table[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
 
 template< typename CharT >
-void dump_data(const void* data, std::size_t size, std::basic_ostream< CharT >& strm)
+void dump_data_generic(const void* data, std::size_t size, std::basic_ostream< CharT >& strm)
 {
     typedef CharT char_type;
 
     char_type buf[stride * 3u];
 
-    const char* const char_table = (strm.flags() & std::ios_base::uppercase) ? g_uppercase_char_table : g_lowercase_char_table;
+    const char* const char_table = (strm.flags() & std::ios_base::uppercase) ? g_uppercase_dump_char_table : g_lowercase_dump_char_table;
     const std::size_t stride_count = size / stride, tail_size = size % stride;
 
     const uint8_t* p = static_cast< const uint8_t* >(data);
@@ -78,18 +104,149 @@ void dump_data(const void* data, std::size_t size, std::basic_ostream< CharT >& 
     }
 }
 
-template BOOST_LOG_API
-void dump_data< char >(const void* data, std::size_t size, std::basic_ostream< char >& strm);
-template BOOST_LOG_API
-void dump_data< wchar_t >(const void* data, std::size_t size, std::basic_ostream< wchar_t >& strm);
+BOOST_LOG_API dump_data_char_t* dump_data_char = &dump_data_generic< char >;
+BOOST_LOG_API dump_data_wchar_t* dump_data_wchar = &dump_data_generic< wchar_t >;
 #if !defined(BOOST_NO_CXX11_CHAR16_T)
-template BOOST_LOG_API
-void dump_data< char16_t >(const void* data, std::size_t size, std::basic_ostream< char16_t >& strm);
+BOOST_LOG_API dump_data_char16_t* dump_data_char16 = &dump_data_generic< char16_t >;
 #endif
 #if !defined(BOOST_NO_CXX11_CHAR32_T)
-template BOOST_LOG_API
-void dump_data< char32_t >(const void* data, std::size_t size, std::basic_ostream< char32_t >& strm);
+BOOST_LOG_API dump_data_char32_t* dump_data_char32 = &dump_data_generic< char32_t >;
 #endif
+
+#if defined(BOOST_LOG_USE_SSSE3) || defined(BOOST_LOG_USE_AVX2)
+
+BOOST_LOG_ANONYMOUS_NAMESPACE {
+
+struct function_pointer_initializer
+{
+    function_pointer_initializer()
+    {
+        // First, let's check for the max supported cpuid function
+        uint32_t eax = 0, ebx = 0, ecx = 0, edx = 0;
+        cpuid(eax, ebx, ecx, edx);
+
+        const uint32_t max_cpuid_function = eax;
+        if (max_cpuid_function >= 1)
+        {
+            eax = 1;
+            ebx = ecx = edx = 0;
+            cpuid(eax, ebx, ecx, edx);
+
+            // Check for SSSE3 support
+            if (ecx & (1u << 9))
+                enable_ssse3();
+
+            if (max_cpuid_function >= 7)
+            {
+                // To check for AVX2 availability we also need to verify that OS supports it
+                // Check that OSXSAVE is supported by CPU
+                if (ecx & (1u << 27))
+                {
+                    // Check that it is used by the OS
+                    bool mmstate = false;
+#if defined(__GNUC__)
+                    // Get the XFEATURE_ENABLED_MASK register
+                    __asm__ __volatile__
+                    (
+                        "xgetbv\n\t"
+                            : "=a" (eax), "=d" (edx)
+                            : "c" (0)
+                    );
+                    mmstate = (eax & 6U) == 6U;
+#elif defined(_MSC_VER)
+                    // MSVC does not have an intrinsic for xgetbv, we have to query OS
+                    HMODULE hKernel32 = GetModuleHandleA("kernel32.dll");
+                    if (hKernel32)
+                    {
+                        typedef uint64_t (__stdcall* get_enabled_extended_features_t)(uint64_t);
+                        get_enabled_extended_features_t get_enabled_extended_features = (get_enabled_extended_features_t)GetProcAddress(hKernel32, "GetEnabledExtendedFeatures");
+                        if (get_enabled_extended_features)
+                            mmstate = get_enabled_extended_features(6u) == 6u;
+                    }
+#else
+#error Boost.Log: Unexpected compiler
+#endif
+
+                    if (mmstate)
+                    {
+                        // Finally, check for AVX2 support in CPU
+                        eax = 7;
+                        ebx = ecx = edx = 0;
+                        cpuid(eax, ebx, ecx, edx);
+
+                        if (ebx & (1U << 5))
+                            enable_avx2();
+                    }
+                }
+            }
+        }
+    }
+
+private:
+    static void cpuid(uint32_t& eax, uint32_t& ebx, uint32_t& ecx, uint32_t& edx)
+    {
+#if defined(__GNUC__)
+#if defined(__i386__) && defined(__PIC__) && __PIC__ != 0
+        // We have to backup ebx in 32 bit PIC code because it is reserved by the ABI
+        uint32_t ebx_backup;
+        __asm__ __volatile__
+        (
+            "movl %%ebx, %0\n\t"
+            "movl %1, %%ebx\n\t"
+            "cpuid\n\t"
+            "movl %%ebx, %1\n\t"
+            "movl %0, %%ebx\n\t"
+                : "=m" (ebx_backup), "+m" (ebx), "+a" (eax), "+c" (ecx), "+d" (edx)
+        );
+#else
+        __asm__ __volatile__
+        (
+            "cpuid\n\t"
+                : "+a" (eax), "+b" (ebx), "+c" (ecx), "+d" (edx)
+        );
+#endif
+#elif defined(_MSC_VER)
+        int regs[4] = {};
+        __cpuid(regs, eax);
+        eax = regs[0];
+        ebx = regs[1];
+        ecx = regs[2];
+        edx = regs[3];
+#else
+#error Boost.Log: Unexpected compiler
+#endif
+    }
+
+    static void enable_ssse3()
+    {
+        dump_data_char = &dump_data_char_ssse3;
+        dump_data_wchar = &dump_data_wchar_ssse3;
+#if !defined(BOOST_NO_CXX11_CHAR16_T)
+        dump_data_char16 = &dump_data_char16_ssse3;
+#endif
+#if !defined(BOOST_NO_CXX11_CHAR32_T)
+        dump_data_char32 = &dump_data_char32_ssse3;
+#endif
+    }
+
+    static void enable_avx2()
+    {
+        dump_data_char = &dump_data_char_avx2;
+        dump_data_wchar = &dump_data_wchar_avx2;
+#if !defined(BOOST_NO_CXX11_CHAR16_T)
+        dump_data_char16 = &dump_data_char16_avx2;
+#endif
+#if !defined(BOOST_NO_CXX11_CHAR32_T)
+        dump_data_char32 = &dump_data_char32_avx2;
+#endif
+    }
+};
+
+static function_pointer_initializer g_function_pointer_initializer;
+
+} // namespace
+
+#endif // defined(BOOST_LOG_USE_SSSE3) || defined(BOOST_LOG_USE_AVX2)
 
 } // namespace aux
 
@@ -98,4 +255,3 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 } // namespace boost
 
 #include <boost/log/detail/footer.hpp>
-

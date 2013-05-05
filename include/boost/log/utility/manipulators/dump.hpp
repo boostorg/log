@@ -30,8 +30,37 @@ BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
 
-template< typename CharT >
-BOOST_LOG_API void dump_data(const void* data, std::size_t size, std::basic_ostream< CharT >& strm);
+typedef void dump_data_char_t(const void* data, std::size_t size, std::basic_ostream< char >& strm);
+extern BOOST_LOG_API dump_data_char_t* dump_data_char;
+BOOST_LOG_FORCEINLINE void dump_data(const void* data, std::size_t size, std::basic_ostream< char >& strm)
+{
+    (dump_data_char)(data, size, strm);
+}
+
+typedef void dump_data_wchar_t(const void* data, std::size_t size, std::basic_ostream< wchar_t >& strm);
+extern BOOST_LOG_API dump_data_wchar_t* dump_data_wchar;
+BOOST_LOG_FORCEINLINE void dump_data(const void* data, std::size_t size, std::basic_ostream< wchar_t >& strm)
+{
+    (dump_data_wchar)(data, size, strm);
+}
+
+#if !defined(BOOST_NO_CXX11_CHAR16_T)
+typedef void dump_data_char16_t(const void* data, std::size_t size, std::basic_ostream< char16_t >& strm);
+extern BOOST_LOG_API dump_data_char16_t* dump_data_char16;
+BOOST_LOG_FORCEINLINE void dump_data(const void* data, std::size_t size, std::basic_ostream< char16_t >& strm)
+{
+    (dump_data_char16)(data, size, strm);
+}
+#endif
+
+#if !defined(BOOST_NO_CXX11_CHAR32_T)
+typedef void dump_data_char32_t(const void* data, std::size_t size, std::basic_ostream< char32_t >& strm);
+extern BOOST_LOG_API dump_data_char32_t* dump_data_char32;
+BOOST_LOG_FORCEINLINE void dump_data(const void* data, std::size_t size, std::basic_ostream< char32_t >& strm)
+{
+    (dump_data_char32)(data, size, strm);
+}
+#endif
 
 template< std::size_t SizeV, typename R >
 struct enable_dump_size_based
