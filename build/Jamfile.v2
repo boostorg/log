@@ -163,7 +163,15 @@ rule ssse3-targets-cond ( properties * )
             if ! [ version.version-less $(version) : 9 0 ]
             {
                 # MSVC doesn't really care about these switches, all SSE intrinsics are always available, but still...
-                result = <cxxflags>"/arch:SSE2" ;
+                # Also 64 bit MSVC doesn't have the /arch:SSE2 switch as it is the default.
+                if <address-model>32 in $(properties)
+                {
+                    result = <cxxflags>"/arch:SSE2" ;
+                }
+                else
+                {
+                    result = ;
+                }
             }
         }
         else if <toolset>clang in $(properties)
