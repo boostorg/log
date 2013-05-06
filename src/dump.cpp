@@ -161,7 +161,10 @@ struct function_pointer_initializer
                         typedef uint64_t (__stdcall* get_enabled_extended_features_t)(uint64_t);
                         get_enabled_extended_features_t get_enabled_extended_features = (get_enabled_extended_features_t)GetProcAddress(hKernel32, "GetEnabledExtendedFeatures");
                         if (get_enabled_extended_features)
+                        {
+                            // XSTATE_MASK_LEGACY_SSE | XSTATE_MASK_GSSE == 6
                             mmstate = get_enabled_extended_features(6u) == 6u;
+                        }
                     }
 #else
 #error Boost.Log: Unexpected compiler
