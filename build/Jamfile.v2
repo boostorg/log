@@ -11,7 +11,7 @@ import os ;
 import feature ;
 import version ;
 import property ;
-import architecture ;
+import log-architecture ;
 using mc ;
 
 lib psapi ;
@@ -27,29 +27,31 @@ local rule default_logapi ( )
 feature.feature logapi : unix winnt : propagated ;
 feature.set-default logapi : [ default_logapi ] ;
 
-rule select-instruction-set ( properties * )
+rule select-instruction-set-flags ( properties * )
 {
     local result ;
+    local instruction_set = [ feature.get-values "log-instruction-set" : $(properties) ] ;
 
-    if <architecture>x86 in $(properties) && <address-model>32 in $(properties)
+    if $(instruction_set) = i386 || $(instruction_set) = i486
     {
-        result = [ property.select <instruction-set> : $(properties) ] ;
-        if $(result)
+        if ! $(.annouced-failure)
         {
-            if $(result) = <instruction-set>i386 || $(result) = <instruction-set>i486
-            {
-                if ! $(.annouced-failure)
-                {
-                    ECHO Boost.Log is not supported on the specified target CPU and will not be built. At least i586 class CPU is required. ;
-                    .annouced-failure = 1 ;
-                }
-                result = <build>no ;
-            }
+            ECHO Boost.Log is not supported on the specified target CPU and will not be built. At least i586 class CPU is required. ;
+            .annouced-failure = 1 ;
         }
-        else
+        result = <build>no ;
+    }
+    else if $(instruction_set) = i686 && ! <instruction-set> in $(properties)
+    {
+        # We override the default <instruction-set> (which is i386 in this case) with our custom compiler flags.
+        # This hack is needed because Boost.Build fails to configure dependencies of this library if we modify <instruction-set> property.
+        if <toolset>gcc in $(properties) || <toolset>clang in $(properties) || <toolset>intel-linux in $(properties) || <toolset>intel-darwin in $(properties)
         {
-            # We build for Pentium Pro and later CPUs by default. This is used as the target in many Linux distributions, and Windows and OS X also seem to not support older CPUs.
-            result = <instruction-set>i686 ;
+            result = <cxxflags>"-march=i686" ;
+        }
+        else if <toolset>msvc-7.1 in $(properties)
+        {
+            result = <cxxflags>"/G6" ;
         }
     }
 
@@ -59,9 +61,10 @@ rule select-instruction-set ( properties * )
 project boost/log
     : source-location ../src
     : requirements
-        [ architecture.architecture ]
-        [ architecture.address-model ]
-        <conditional>@select-instruction-set
+        [ log-architecture.architecture ]
+        [ log-architecture.address-model ]
+        [ log-architecture.instruction-set ]
+        <conditional>@select-instruction-set-flags
         <define>BOOST_SPIRIT_USE_PHOENIX_V3=1
         <define>BOOST_THREAD_DONT_USE_CHRONO=1 # Don't introduce false dependency on Boost.Chrono
         <logapi>unix:<define>BOOST_LOG_USE_NATIVE_SYSLOG=1
@@ -143,7 +146,7 @@ rule ssse3-targets-cond ( properties * )
 {
     local result = <build>no ;
 
-    if <architecture>x86 in $(properties)
+    if <log-architecture>x86 in $(properties)
     {
         if <toolset>gcc in $(properties)
         {
@@ -164,7 +167,7 @@ rule ssse3-targets-cond ( properties * )
             {
                 # MSVC doesn't really care about these switches, all SSE intrinsics are always available, but still...
                 # Also 64 bit MSVC doesn't have the /arch:SSE2 switch as it is the default.
-                if <address-model>32 in $(properties)
+                if <log-address-model>32 in $(properties)
                 {
                     result = <cxxflags>"/arch:SSE2" ;
                 }
@@ -240,7 +243,7 @@ rule avx2-targets-cond ( properties * )
 {
     local result = <build>no ;
 
-    if <architecture>x86 in $(properties)
+    if <log-architecture>x86 in $(properties)
     {
         if <toolset>gcc in $(properties)
         {
