@@ -374,7 +374,7 @@ private:
     template< typename VisitorT >
     typename VisitorT::result_type do_apply_visitor(VisitorT& visitor) const
     {
-        BOOST_ASSERT_MSG(m_type_idx < mpl::size< value_type >::value, "Boost.Log: Value reference is corrupted, type index is out of bounds");
+        BOOST_ASSERT(m_type_idx < static_cast< unsigned int >(mpl::size< value_type >::value));
         return apply_visitor_dispatch< value_type, VisitorT >::call(m_ptr, m_type_idx, visitor);
     }
 };
