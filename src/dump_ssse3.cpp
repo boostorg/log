@@ -20,6 +20,7 @@
 #include <tmmintrin.h>
 #include <boost/cstdint.hpp>
 #include <boost/log/detail/config.hpp>
+#include <boost/log/detail/intptr_t.hpp>
 #include <boost/log/detail/header.hpp>
 
 namespace boost {
@@ -132,7 +133,7 @@ BOOST_LOG_FORCEINLINE void dump_data_ssse3(const void* data, std::size_t size, s
 
     char_type buf_storage[stride * 3u + 16u];
     // Align the temporary buffer at 16 bytes
-    char_type* const buf = buf_storage + (16u - ((std::size_t)(char_type*)buf_storage & 15u));
+    char_type* const buf = reinterpret_cast< char_type* >((uint8_t*)buf_storage + (16u - (((uintptr_t)(char_type*)buf_storage) & 15u)));
     char_type* buf_begin = buf + 1u; // skip the first space of the first chunk
     char_type* buf_end = buf + stride * 3u;
 
@@ -144,7 +145,7 @@ BOOST_LOG_FORCEINLINE void dump_data_ssse3(const void* data, std::size_t size, s
 
     // First, check the input alignment
     const uint8_t* p = static_cast< const uint8_t* >(data);
-    if (const std::size_t prealign_size = ((16u - ((std::size_t)p & 15u)) & 15u))
+    if (const std::size_t prealign_size = ((16u - ((uintptr_t)p & 15u)) & 15u))
     {
         __m128i mm_input = _mm_lddqu_si128(reinterpret_cast< const __m128i* >(p));
         __m128i mm_output1, mm_output2, mm_output3;
@@ -169,9 +170,9 @@ BOOST_LOG_FORCEINLINE void dump_data_ssse3(const void* data, std::size_t size, s
             __m128i mm_input = _mm_load_si128(reinterpret_cast< const __m128i* >(p));
             __m128i mm_output1, mm_output2, mm_output3;
             dump_pack(mm_char_10_to_a, mm_input, mm_output1, mm_output2, mm_output3);
-            store_characters(mm_output1, buf);
-            store_characters(mm_output2, buf + 16u);
-            store_characters(mm_output3, buf + 32u);
+            store_characters(mm_output1, b);
+            store_characters(mm_output2, b + 16u);
+            store_characters(mm_output3, b + 32u);
         }
 
         strm.write(buf_begin, buf_end - buf_begin);
@@ -186,9 +187,9 @@ BOOST_LOG_FORCEINLINE void dump_data_ssse3(const void* data, std::size_t size, s
             __m128i mm_input = _mm_load_si128(reinterpret_cast< const __m128i* >(p));
             __m128i mm_output1, mm_output2, mm_output3;
             dump_pack(mm_char_10_to_a, mm_input, mm_output1, mm_output2, mm_output3);
-            store_characters(mm_output1, buf);
-            store_characters(mm_output2, buf + 16u);
-            store_characters(mm_output3, buf + 32u);
+            store_characters(mm_output1, b);
+            store_characters(mm_output2, b + 16u);
+            store_characters(mm_output3, b + 32u);
             b += 3u * 16u;
             p += 16u;
             tail_size -= 16u;
