@@ -12,12 +12,13 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <boost/log/common.hpp>
+
+#if defined(BOOST_WINDOWS) && !defined(BOOST_LOG_WITHOUT_EVENT_LOG)
+
 #include <boost/log/attributes.hpp>
 #include <boost/log/expressions.hpp>
 #include <boost/log/sinks/sync_frontend.hpp>
 #include <boost/log/sinks/event_log_backend.hpp>
-
-#if defined(BOOST_WINDOWS)
 
 namespace logging = boost::log;
 namespace attrs = boost::log::attributes;

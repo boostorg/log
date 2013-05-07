@@ -8,29 +8,30 @@
 import common ;
 import modules ;
 import os ;
+import path ;
+import project ;
 import feature ;
 import version ;
 import property ;
+import configure ;
 import log-architecture ;
 using mc ;
+
+local here = [ modules.binding $(__name__) ] ;
+
+project.push-current [ project.current ] ;
+project.load [ path.join [ path.make $(here:D) ] ../config ] ;
+project.pop-current ;
 
 lib psapi ;
 lib ws2_32 ;
 
-local rule default_logapi ( )
-{
-    local api = unix ;
-    if [ os.name ] = "NT" { api = winnt ; }
-    return $(api) ;
-}
-
-feature.feature logapi : unix winnt : propagated ;
-feature.set-default logapi : [ default_logapi ] ;
+feature.feature log-api : generic winnt unix : propagated ;
 
 rule select-instruction-set-flags ( properties * )
 {
     local result ;
-    local instruction_set = [ feature.get-values "log-instruction-set" : $(properties) ] ;
+    local instruction_set = [ feature.get-values "log-instruction-set" : [ log-architecture.deduce-instruction-set $(properties) ] ] ;
 
     if $(instruction_set) = i386 || $(instruction_set) = i486
     {
@@ -58,16 +59,57 @@ rule select-instruction-set-flags ( properties * )
     return $(result) ;
 }
 
+rule select-log-api ( properties * )
+{
+    local result = <log-api>generic ;
+
+    local target_os = [ feature.get-values "target-os" : $(properties) ] ;
+    switch $(target_os)
+    {
+    case windows :
+        # We have to verify if message compiler is available
+        if ! <define>BOOST_LOG_WITHOUT_EVENT_LOG in $(properties)
+        {
+            local has_mc = [ configure.builds /boost/message-compiler//test-availability : $(properties) : message-compiler ] ;
+            if $(has_mc)
+            {
+                result = <log-api>winnt ;
+            }
+        }
+
+    case linux : result = <log-api>unix ;
+    case *bsd : result = <log-api>unix ;
+    case darwin : result = <log-api>unix ;
+    case unix : result = <log-api>unix ;
+    case unixware : result = <log-api>unix ;
+    case cygwin : result = <log-api>unix ;
+    case hpux : result = <log-api>unix ;
+    case solaris : result = <log-api>unix ;
+    case qnx* : result = <log-api>unix ;
+    case sgi : result = <log-api>unix ;
+    case aix : result = <log-api>unix ;
+
+    case * : result = <log-api>generic ;
+    }
+
+    if ! <log-api>winnt in $(result)
+    {
+        result += <define>BOOST_LOG_WITHOUT_EVENT_LOG ;
+    }
+    if <log-api>unix in $(result)
+    {
+        result += <define>BOOST_LOG_USE_NATIVE_SYSLOG ;
+    }
+
+    return $(result) ;
+}
+
 project boost/log
     : source-location ../src
     : requirements
-        [ log-architecture.architecture ]
-        [ log-architecture.address-model ]
-        [ log-architecture.instruction-set ]
-        <conditional>@select-instruction-set-flags
+        <conditional>@select-log-api
         <define>BOOST_SPIRIT_USE_PHOENIX_V3=1
         <define>BOOST_THREAD_DONT_USE_CHRONO=1 # Don't introduce false dependency on Boost.Chrono
-        <logapi>unix:<define>BOOST_LOG_USE_NATIVE_SYSLOG=1
         <toolset>msvc:<define>_SCL_SECURE_NO_WARNINGS
         <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE
         <toolset>msvc:<define>_CRT_SECURE_NO_WARNINGS
@@ -86,19 +128,11 @@ project boost/log
         <library>/boost/system//boost_system
         <threading>single:<define>BOOST_LOG_NO_THREADS
         <threading>multi:<library>/boost/thread//boost_thread
+        <target-os>windows:<library>ws2_32
         <target-os>freebsd:<linkflags>"-lrt"
         <target-os>linux:<linkflags>"-lrt -lpthread"
         <toolset>pgi:<linkflags>"-lrt"
     ;
-
-local no_event_log = [ MATCH (define=BOOST_LOG_WITHOUT_EVENT_LOG) : [ modules.peek : ARGV ] ] ;
-local BOOST_LOG_MC_SRC ;
-
-if ! $(no_event_log)
-{
-    DEPENDS event_log_backend.cpp : simple_event_log.mc ;
-    BOOST_LOG_MC_SRC = simple_event_log.mc ;
-}
 
 local BOOST_LOG_COMMON_SRC =
     attribute_name.cpp
@@ -146,7 +180,7 @@ rule ssse3-targets-cond ( properties * )
 {
     local result = <build>no ;
 
-    if <log-architecture>x86 in $(properties)
+    if <log-architecture>x86 in [ log-architecture.deduce-architecture $(properties) ]
     {
         if <toolset>gcc in $(properties)
         {
@@ -167,7 +201,7 @@ rule ssse3-targets-cond ( properties * )
             {
                 # MSVC doesn't really care about these switches, all SSE intrinsics are always available, but still...
                 # Also 64 bit MSVC doesn't have the /arch:SSE2 switch as it is the default.
-                if <log-address-model>32 in $(properties)
+                if <log-address-model>32 in [ log-architecture.deduce-address-model $(properties) ]
                 {
                     result = <cxxflags>"/arch:SSE2" ;
                 }
@@ -243,7 +277,7 @@ rule avx2-targets-cond ( properties * )
 {
     local result = <build>no ;
 
-    if <log-architecture>x86 in $(properties)
+    if <log-architecture>x86 in [ log-architecture.deduce-architecture $(properties) ]
     {
         if <toolset>gcc in $(properties)
         {
@@ -321,43 +355,49 @@ for local src in $(BOOST_LOG_COMMON_AVX2_SRC)
         ;
 }
 
-
-lib boost_log
+alias platform-specific-sources
     : ## sources ##
-        $(BOOST_LOG_COMMON_SRC)
-        $(BOOST_LOG_COMMON_SSSE3_SRC)
-        $(BOOST_LOG_COMMON_AVX2_SRC)
-      ## winnt sources ##
-        $(BOOST_LOG_MC_SRC)
-        event_log_backend.cpp
         debug_output_backend.cpp
         light_rw_mutex.cpp
-        psapi
-        ws2_32
     : ## requirements ##
-        <link>shared:<define>BOOST_LOG_DLL
-        <define>BOOST_LOG_BUILDING_THE_LIB=1
-        <logapi>winnt
-    : ## default-build ##
-    : ## usage-requirements ##
-        <link>shared:<define>BOOST_LOG_DYN_LINK=1
-        <threading>single:<define>BOOST_LOG_NO_THREADS
+        <target-os>windows
     ;
+
+alias platform-specific-sources ;
+
+rule select-log-api-specific-sources ( properties * )
+{
+    local result ;
+
+    if <log-api>winnt in $(properties)
+    {
+        result = <source>simple_event_log.mc ;
+        result += <source>event_log_backend.cpp ;
+        result += <library>psapi ;
+
+        DEPENDS event_log_backend.cpp : simple_event_log.mc ;
+    }
+
+    return $(result) ;
+}
 
 lib boost_log
     : ## sources ##
         $(BOOST_LOG_COMMON_SRC)
         $(BOOST_LOG_COMMON_SSSE3_SRC)
         $(BOOST_LOG_COMMON_AVX2_SRC)
-      ## unix sources ##
+        platform-specific-sources
     : ## requirements ##
+        <conditional>@select-log-api-specific-sources
+        <conditional>@select-instruction-set-flags
         <link>shared:<define>BOOST_LOG_DLL
         <define>BOOST_LOG_BUILDING_THE_LIB=1
-        <logapi>unix
     : ## default-build ##
     : ## usage-requirements ##
         <link>shared:<define>BOOST_LOG_DYN_LINK=1
         <threading>single:<define>BOOST_LOG_NO_THREADS
+        <log-api>generic:<define>BOOST_LOG_WITHOUT_EVENT_LOG
+        <log-api>unix:<define>BOOST_LOG_WITHOUT_EVENT_LOG
     ;
 
 
@@ -374,30 +414,12 @@ local BOOST_LOG_SETUP_COMMON_SRC =
 lib boost_log_setup
     : ## sources ##
         $(BOOST_LOG_SETUP_COMMON_SRC)
-      ## winnt sources ##
-        ws2_32
     : ## requirements ##
+        <conditional>@select-instruction-set-flags
         <link>shared:<define>BOOST_LOG_DYN_LINK=1
         <link>shared:<define>BOOST_LOG_SETUP_DLL
         <define>BOOST_LOG_SETUP_BUILDING_THE_LIB=1
         <library>boost_log
-        <logapi>winnt
-    : ## default-build ##
-    : ## usage-requirements ##
-        <link>shared:<define>BOOST_LOG_SETUP_DYN_LINK=1
-        <threading>single:<define>BOOST_LOG_NO_THREADS
-    ;
-
-lib boost_log_setup
-    : ## sources ##
-        $(BOOST_LOG_SETUP_COMMON_SRC)
-      ## unix sources ##
-    : ## requirements ##
-        <link>shared:<define>BOOST_LOG_DYN_LINK=1
-        <link>shared:<define>BOOST_LOG_SETUP_DLL
-        <define>BOOST_LOG_SETUP_BUILDING_THE_LIB=1
-        <library>boost_log
-        <logapi>unix
     : ## default-build ##
     : ## usage-requirements ##
         <link>shared:<define>BOOST_LOG_SETUP_DYN_LINK=1

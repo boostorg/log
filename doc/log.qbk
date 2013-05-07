@@ -10,7 +10,7 @@
     ]
     [id log]
     [source-mode c++]
-    [last-revision $Date: 2013-05-02 21:38:12 +0400 (Thu, 02 May 2013) $]
+    [last-revision $Date: 2013-05-08 03:00:38 +0400 (Wed, 08 May 2013) $]
 ]
 
 [c++]
@@ -178,8 +178,6 @@ Lastly, you can disable support for event log backend by defining the `BOOST_LOG
 [heading Additional notes for Cygwin users]
 
 Cygwin support is rather preliminary. Some functionality is not available. In particular, the socket-based syslog backend is not supported, as it is based on __boost_asio__, which doesn't compile on this platform. However, the native syslog support is still in place.
-
-Furthermore, in order to compile the library the following parameters should be explicitly specified in the bjam command line: `target-os=cygwin logapi=unix`.
 
 [endsect]
 

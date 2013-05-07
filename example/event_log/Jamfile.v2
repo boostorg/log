@@ -10,7 +10,6 @@ import os ;
 project
     : requirements
         <link>shared
-        <logapi>unix:<define>BOOST_LOG_USE_NATIVE_SYSLOG=1
         <toolset>msvc:<define>_SCL_SECURE_NO_WARNINGS
         <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE
         <toolset>msvc:<define>_CRT_SECURE_NO_WARNINGS
@@ -27,18 +26,17 @@ project
         <library>/boost/system//boost_system
         <library>/boost/thread//boost_thread
         <threading>multi
+        <log-api>generic:<build>no
+        <log-api>unix:<build>no
     ;
 
-if [ os.name ] = "NT"
-{
-    lib event_log_messages
+lib event_log_messages
     : event_log_messages.mc
     : <linkflags>-noentry
 #      <name>event_log_messages
     ;
 
-    exe event_log
+exe event_log
     : main.cpp
     : <implicit-dependency>event_log_messages
     ;
-}
