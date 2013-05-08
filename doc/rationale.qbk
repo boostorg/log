@@ -185,4 +185,12 @@ Namespace mangling may lead to linkinkg errors if the application is misconfigur
 
 [endsect]
 
+[section:msvc_link_fails_lnk1123 Why MSVC 2010 fails to link the library with error LNK1123: failure during conversion to COFF: file invalid or corrupt?]
+
+If you have several versions of Visual Studio installed and trying to build the library with Visual Studio 2010, the compilation may fail with linker error LNK1123. This seems to be a [@http://stackoverflow.com/questions/10888391/link-fatal-error-lnk1123-failure-during-conversion-to-coff-file-invalid-or-c known problem] caused by some conflict between Visual Studio 2010 and .NET Framework 4.5, which is installed with Visual Studio 2012.
+
+The suggested solution is to upgrade Visual Studio 2010 to Visual Studio 2010 SP1 or overwrite `C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\cvtres.exe` with the one of Visual Studio 2010 SP1 or 2012.
+
+[endsect]
+
 [endsect]
