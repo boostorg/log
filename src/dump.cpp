@@ -136,6 +136,7 @@ struct function_pointer_initializer
             if (ecx & (1u << 9))
                 enable_ssse3();
 
+#if defined(BOOST_LOG_USE_AVX2)
             if (max_cpuid_function >= 7)
             {
                 // To check for AVX2 availability we also need to verify that OS supports it
@@ -182,6 +183,7 @@ struct function_pointer_initializer
                     }
                 }
             }
+#endif // defined(BOOST_LOG_USE_AVX2)
         }
     }
 
