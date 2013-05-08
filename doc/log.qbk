@@ -165,6 +165,8 @@ The following compilers/platforms are not supported and will likely fail to comp
 * Borland C++ 5.5.1 (free version). Newer versions might or might not work.
 * Windows 9x, ME, NT4 and older are not supported.
 
+Boost.Log should be compatible with all hardware architectures supported by Boost. However, in case of 32 bit x86 architecture the library requires at least i586 class CPU to run.
+
 [heading Notes for MinGW, Cygwin and Visual Studio Express Edition users]
 
 In order to compile the library under these compilers special preparations are needed. First, in case of MinGW or Cygwin make sure you have installed the latest GCC version. The library will most likely fail to compile with GCC 3.x.
