@@ -234,6 +234,7 @@ private:
 #endif
     }
 
+#if defined(BOOST_LOG_USE_AVX2)
     static void enable_avx2()
     {
         dump_data_char = &dump_data_char_avx2;
@@ -245,6 +246,7 @@ private:
         dump_data_char32 = &dump_data_char32_avx2;
 #endif
     }
+#endif // defined(BOOST_LOG_USE_AVX2)
 };
 
 static function_pointer_initializer g_function_pointer_initializer;
