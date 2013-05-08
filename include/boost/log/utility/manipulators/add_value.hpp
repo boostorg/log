@@ -86,7 +86,7 @@ inline basic_record_ostream< CharT >& operator<< (basic_record_ostream< CharT >&
 }
 
 //! The function creates a manipulator that attaches an attribute value to a log record
-#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES) && !(defined(BOOST_MSVC) && BOOST_MSVC <= 1600)
 
 template< typename T >
 inline add_value_manip< T&& > add_value(attribute_name const& name, T&& value)
