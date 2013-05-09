@@ -286,7 +286,7 @@ rule avx2-targets-cond ( properties * )
 
             if ! [ version.version-less $(version) : 4 7 ]
             {
-                result = <cxxflags>"-march=core-avx2 -mavx -mavx2" ;
+                result = <cxxflags>"-march=core-avx2 -mavx -mavx2 -fabi-version=0" ;
             }
         }
         else if <toolset>msvc in $(properties)
@@ -325,7 +325,7 @@ rule avx2-targets-cond ( properties * )
                 }
                 else
                 {
-                    result = <cxxflags>"-march=core-avx2 -mavx -mavx2" ;
+                    result = <cxxflags>"-march=core-avx2 -mavx -mavx2 -fabi-version=0" ;
                 }
             }
         }

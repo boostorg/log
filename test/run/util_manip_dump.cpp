@@ -130,6 +130,31 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(unbounded_binary_large_dump, CharT, char_types)
     BOOST_CHECK(equal_strings(strm_dump.str(), strm_correct.str()));
 }
 
+// Test SIMD tail handling
+BOOST_AUTO_TEST_CASE_TEMPLATE(unbounded_binary_tail_dump, CharT, char_types)
+{
+    typedef CharT char_type;
+    typedef std::basic_string< char_type > string_type;
+    typedef std::basic_ostringstream< char_type > ostream_type;
+
+    std::vector< unsigned char > data;
+    ostream_type strm_correct;
+    // 1023 makes it very unlikely for the buffer to end at 16 or 32 byte boundary, which makes the dump algorithm to process the tail in a special way
+    for (unsigned int i = 0; i < 1023; ++i)
+    {
+        unsigned char n = static_cast< unsigned char >(i);
+        data.push_back(n);
+        if (i > 0)
+            strm_correct << " ";
+        strm_correct << std::hex << std::setw(2) << std::setfill(static_cast< char_type >('0')) << static_cast< unsigned int >(n);
+    }
+
+    ostream_type strm_dump;
+    strm_dump << logging::dump(&data[0], data.size());
+
+    BOOST_CHECK(equal_strings(strm_dump.str(), strm_correct.str()));
+}
+
 // Test bounded dump
 BOOST_AUTO_TEST_CASE_TEMPLATE(bounded_binary_dump, CharT, char_types)
 {
