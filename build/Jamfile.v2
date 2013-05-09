@@ -225,24 +225,27 @@ rule ssse3-targets-cond ( properties * )
         else if <toolset>intel in $(properties)
         {
             local string_version = [ feature.get-values "toolset-intel:version" : $(properties) ] ;
-            local version = [ SPLIT_BY_CHARACTERS $(string_version) : "." ] ;
-
-            if ! [ version.version-less $(version) : 10 0 ]
+            if $(string_version)
             {
-                if <toolset-intel:platform>win in $(properties)
+                local version = [ SPLIT_BY_CHARACTERS $(string_version) : "." ] ;
+
+                if ! [ version.version-less $(version) : 10 0 ]
                 {
-                    if ! [ version.version-less $(version) : 11 0 ]
+                    if <toolset-intel:platform>win in $(properties)
                     {
-                        result = <cxxflags>"/QxSSSE3" ;
+                        if ! [ version.version-less $(version) : 11 0 ]
+                        {
+                            result = <cxxflags>"/QxSSSE3" ;
+                        }
+                        else
+                        {
+                            result = <cxxflags>"/QxT" ;
+                        }
                     }
                     else
                     {
-                        result = <cxxflags>"/QxT" ;
+                        result = <cxxflags>"-march=core2 -msse -msse2 -msse3 -mssse3" ;
                     }
-                }
-                else
-                {
-                    result = <cxxflags>"-march=core2 -msse -msse2 -msse3 -mssse3" ;
                 }
             }
         }
@@ -313,19 +316,22 @@ rule avx2-targets-cond ( properties * )
         else if <toolset>intel in $(properties)
         {
             local string_version = [ feature.get-values "toolset-intel:version" : $(properties) ] ;
-            local version = [ SPLIT_BY_CHARACTERS $(string_version) : "." ] ;
-
-            # AVX2 support added in Composer XE 2011 Update 7, while the original Composer XE 2011 had icc version 12.
-            # I don't know what version Update 7 had, so to be on the safe side enable this optimization since version 13.
-            if ! [ version.version-less $(version) : 13 0 ]
+            if $(string_version)
             {
-                if <toolset-intel:platform>win in $(properties)
+                local version = [ SPLIT_BY_CHARACTERS $(string_version) : "." ] ;
+
+                # AVX2 support added in Composer XE 2011 Update 7, while the original Composer XE 2011 had icc version 12.
+                # I don't know what version Update 7 had, so to be on the safe side enable this optimization since version 13.
+                if ! [ version.version-less $(version) : 13 0 ]
                 {
-                    result = <cxxflags>"/QxAVX2" ;
-                }
-                else
-                {
-                    result = <cxxflags>"-march=core-avx2 -mavx -mavx2 -fabi-version=0" ;
+                    if <toolset-intel:platform>win in $(properties)
+                    {
+                        result = <cxxflags>"/QxAVX2" ;
+                    }
+                    else
+                    {
+                        result = <cxxflags>"-march=core-avx2 -mavx -mavx2 -fabi-version=0" ;
+                    }
                 }
             }
         }
