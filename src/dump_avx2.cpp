@@ -92,9 +92,9 @@ static BOOST_LOG_FORCEINLINE void dump_pack(__m256i mm_char_a, __m256i mm_input,
     mm_char_space = _mm256_srli_si256(mm_char_space, 1);
     mm_out3 = _mm256_or_si256(mm_out3, mm_char_space);
 
-    mm_output1 = _mm256_permute2x128_si256(mm_out1, mm_out2, 2u << 4 | 0u);
-    mm_output2 = _mm256_permute2x128_si256(mm_out3, mm_out1, 3u << 4 | 0u);
-    mm_output3 = _mm256_permute2x128_si256(mm_out2, mm_out3, 3u << 4 | 1u);
+    mm_output1 = _mm256_permute2x128_si256(mm_out1, mm_out2, (2u << 4) | 0u);
+    mm_output2 = _mm256_permute2x128_si256(mm_out3, mm_out1, (3u << 4) | 0u);
+    mm_output3 = _mm256_permute2x128_si256(mm_out2, mm_out3, (3u << 4) | 1u);
 }
 
 //! Dumps a pack of input data into a string of 8 bit ASCII characters

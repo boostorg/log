@@ -212,7 +212,7 @@ BOOST_LOG_FORCEINLINE void dump_data_ssse3(const void* data, std::size_t size, s
 
 void dump_data_char_ssse3(const void* data, std::size_t size, std::basic_ostream< char >& strm)
 {
-    if (size >= 32)
+    if (size >= 16)
     {
         dump_data_ssse3(data, size, strm);
     }
@@ -224,7 +224,7 @@ void dump_data_char_ssse3(const void* data, std::size_t size, std::basic_ostream
 
 void dump_data_wchar_ssse3(const void* data, std::size_t size, std::basic_ostream< wchar_t >& strm)
 {
-    if (size >= 32)
+    if (size >= 16)
     {
         dump_data_ssse3(data, size, strm);
     }
@@ -237,7 +237,7 @@ void dump_data_wchar_ssse3(const void* data, std::size_t size, std::basic_ostrea
 #if !defined(BOOST_NO_CXX11_CHAR16_T)
 void dump_data_char16_ssse3(const void* data, std::size_t size, std::basic_ostream< char16_t >& strm)
 {
-    if (size >= 32)
+    if (size >= 16)
     {
         dump_data_ssse3(data, size, strm);
     }
@@ -251,7 +251,7 @@ void dump_data_char16_ssse3(const void* data, std::size_t size, std::basic_ostre
 #if !defined(BOOST_NO_CXX11_CHAR32_T)
 void dump_data_char32_ssse3(const void* data, std::size_t size, std::basic_ostream< char32_t >& strm)
 {
-    if (size >= 32)
+    if (size >= 16)
     {
         dump_data_ssse3(data, size, strm);
     }
