@@ -26,7 +26,7 @@ project.pop-current ;
 lib psapi ;
 lib ws2_32 ;
 
-feature.feature log-api : generic winnt unix : propagated ;
+feature.feature log-api : generic winnt unix ;
 
 rule select-instruction-set-flags ( properties * )
 {
@@ -41,19 +41,6 @@ rule select-instruction-set-flags ( properties * )
             .annouced-failure = 1 ;
         }
         result = <build>no ;
-    }
-    else if $(instruction_set) = i686 && ! <instruction-set> in $(properties)
-    {
-        # We override the default <instruction-set> (which is i386 in this case) with our custom compiler flags.
-        # This hack is needed because Boost.Build fails to configure dependencies of this library if we modify <instruction-set> property.
-        if <toolset>gcc in $(properties) || <toolset>clang in $(properties) || <toolset>intel-linux in $(properties) || <toolset>intel-darwin in $(properties)
-        {
-            result = <cxxflags>"-march=i686" ;
-        }
-        else if <toolset>msvc-7.1 in $(properties)
-        {
-            result = <cxxflags>"/G6" ;
-        }
     }
 
     return $(result) ;
