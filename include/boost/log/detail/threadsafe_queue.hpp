@@ -107,10 +107,9 @@ struct threadsafe_queue_types
  *
  * \li Default constructible, the default constructor must not throw.
  * \li Copy constructible.
- * \li Swappable (i.e. there should be an efficient \c swap implementation for this type).
+ * \li Movable (i.e. there should be an efficient move assignment for this type).
  *
- * The last requirement is not mandatory but is crucial for decent performance. In future
- * it may be replaced with Moveable requirement.
+ * The last requirement is not mandatory but is crucial for decent performance.
  */
 template< typename T, typename AllocatorT = std::allocator< void > >
 class threadsafe_queue :
