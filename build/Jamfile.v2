@@ -28,7 +28,7 @@ lib ws2_32 ;
 
 feature.feature log-api : generic winnt unix ;
 
-rule select-instruction-set-flags ( properties * )
+rule check-instruction-set ( properties * )
 {
     local result ;
     local instruction_set = [ feature.get-values "log-instruction-set" : [ log-architecture.deduce-instruction-set $(properties) ] ] ;
@@ -55,7 +55,7 @@ rule select-log-api ( properties * )
     {
     case windows :
         # We have to verify if message compiler is available
-        if ! <define>BOOST_LOG_WITHOUT_EVENT_LOG in $(properties)
+        if ! ( <define>BOOST_LOG_WITHOUT_EVENT_LOG in $(properties) || <define>BOOST_LOG_WITHOUT_EVENT_LOG=1 in $(properties) )
         {
             local has_mc = [ configure.builds /boost/message-compiler//test-availability : $(properties) : message-compiler ] ;
             if $(has_mc)
@@ -95,6 +95,7 @@ project boost/log
     : source-location ../src
     : requirements
         <conditional>@select-log-api
+        <conditional>@check-instruction-set
         <define>BOOST_SPIRIT_USE_PHOENIX_V3=1
         <define>BOOST_THREAD_DONT_USE_CHRONO=1 # Don't introduce false dependency on Boost.Chrono
         <toolset>msvc:<define>_SCL_SECURE_NO_WARNINGS
@@ -382,7 +383,6 @@ lib boost_log
         platform-specific-sources
     : ## requirements ##
         <conditional>@select-log-api-specific-sources
-        <conditional>@select-instruction-set-flags
         <link>shared:<define>BOOST_LOG_DLL
         <define>BOOST_LOG_BUILDING_THE_LIB=1
     : ## default-build ##
@@ -408,7 +408,6 @@ lib boost_log_setup
     : ## sources ##
         $(BOOST_LOG_SETUP_COMMON_SRC)
     : ## requirements ##
-        <conditional>@select-instruction-set-flags
         <link>shared:<define>BOOST_LOG_DYN_LINK=1
         <link>shared:<define>BOOST_LOG_SETUP_DLL
         <define>BOOST_LOG_SETUP_BUILDING_THE_LIB=1

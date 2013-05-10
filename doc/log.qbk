@@ -152,7 +152,7 @@ To keep the code snippets in this documentation simple, the following namespace 
 
 The library should build and work with a reasonably compliant compiler. The library was successfully built and tested on the following platforms:
 
-* Windows XP, Windows Vista, Windows 7. MSVC 9.0 and newer.
+* Windows XP, Windows Vista, Windows 7. MSVC 8.0 SP1, MSVC 9.0 and newer.
 * Linux. GCC 4.5 and newer. Older versions may work too, but it was not tested.
 * Linux. Intel C++ 13.1.0.146 Build 20130121.
 * Linux. Clang 3.2.
@@ -160,7 +160,7 @@ The library should build and work with a reasonably compliant compiler. The libr
 The following compilers/platforms are not supported and will likely fail to compile the library:
 
 * C++11 compilers with non-C++11 standard libraries (like Clang with libstdc++ from GCC 4.2). Please, use a C++11 standard library in C++11 mode.
-* MSVC 8.0 and older.
+* MSVC 8.0 (without SP1) and older.
 * GCC 4.0 and older.
 * Borland C++ 5.5.1 (free version). Newer versions might or might not work.
 * Windows 9x, ME, NT4 and older are not supported.
@@ -169,17 +169,17 @@ Boost.Log should be compatible with all hardware architectures supported by Boos
 
 [heading Notes for MinGW, Cygwin and Visual Studio Express Edition users]
 
-In order to compile the library under these compilers special preparations are needed. First, in case of MinGW or Cygwin make sure you have installed the latest GCC version. The library will most likely fail to compile with GCC 3.x.
+In order to compile the library with these compilers special preparations are needed. First, in case of MinGW or Cygwin make sure you have installed the latest GCC version. The library will most likely fail to compile with GCC 3.x.
 
-Second, at some point the library will require a Message Compiler tool (`mc.exe`), which is not available in MinGW, Cygwin and MSVC Express Edition. You have three options to settle the problem. The recommended solution is to obtain the original `mc.exe`. This tool is available in Windows SDK, which can be downloaded from the Microsoft site freely (for example, [@http://www.microsoft.com/downloads/details.aspx?FamilyID=71deb800-c591-4f97-a900-bea146e4fae1&displaylang=en here]). Also, this tool should be available in Visual Studio 2010 Express Edition. During the compilation, `mc.exe` should be accessible through one of the directories in your `PATH` environment variable.
+Second, at some point the library will require a Message Compiler tool (`mc.exe`), which is not available in MinGW, Cygwin and some versions of MSVC Express Edition. Typically the library build scripts will automatically detect if message compiler is present on the system and disable Event log related portion of the library if it's not. If Event log support is required and it is not found on the system, you have three options to settle the problem. The recommended solution is to obtain the original `mc.exe`. This tool is available in Windows SDK, which can be downloaded from the Microsoft site freely (for example, [@http://www.microsoft.com/downloads/details.aspx?FamilyID=71deb800-c591-4f97-a900-bea146e4fae1&displaylang=en here]). Also, this tool should be available in Visual Studio 2010 Express Edition. During the compilation, `mc.exe` should be accessible through one of the directories in your `PATH` environment variable.
 
 Another way is to attempt to use the `windmc.exe` tool distributed with MinGW and Cygwin, which is the analogue of the original `mc.exe`. In order to do that you will have to patch Boost.Build files (in particular, the `tools/build/v2/tools/mc.jam` file) as described in [@https://svn.boost.org/trac/boost/ticket/4111 this] ticket. After that you will be able to specify the `mc-compiler=windmc` option to bjam to build the library.
 
-Lastly, you can disable support for event log backend by defining the `BOOST_LOG_WITHOUT_EVENT_LOG` configuration macro when building the library. This will remove the need for the message compiler. See [link log.installation.config this section] for more configuration options.
+In case if message compiler detection fails for some reason, you can explicitly disable support for event log backend by defining the `BOOST_LOG_WITHOUT_EVENT_LOG` configuration macro when building the library. This will remove the need for the message compiler. See [link log.installation.config this section] for more configuration options.
 
 [heading Additional notes for Cygwin users]
 
-Cygwin support is rather preliminary. Some functionality is not available. In particular, the socket-based syslog backend is not supported, as it is based on __boost_asio__, which doesn't compile on this platform. However, the native syslog support is still in place.
+Cygwin support is very preliminary. The default GCC version available in Cygwin (4.5.3 as of this writing) is unable to compile the library because of compiler errors. You will have to build a newer GCC from sources. Even then some Boost.Log functionality is not available. In particular, the socket-based syslog backend is not supported, as it is based on __boost_asio__, which doesn't compile on this platform. However, the native syslog support is still in place.
 
 [endsect]
 
