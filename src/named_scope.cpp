@@ -196,8 +196,8 @@ private:
 
 #if defined(BOOST_LOG_USE_COMPILER_TLS)
 //! Cached pointer to the thread-specific scope stack
-BOOST_LOG_TLS named_scope::implementation::scope_list*
-named_scope::implementation::pScopesCache = NULL;
+BOOST_LOG_TLS named_scope::impl::scope_list*
+named_scope::impl::pScopesCache = NULL;
 #endif // defined(BOOST_LOG_USE_COMPILER_TLS)
 
 

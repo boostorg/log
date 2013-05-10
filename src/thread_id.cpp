@@ -125,7 +125,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
 
 struct id_storage
 {
-    aligned_storage< thread::id, alignment_of< thread::id >::value >::type m_storage;
+    aligned_storage< sizeof(thread::id), alignment_of< thread::id >::value >::type m_storage;
     bool m_initialized;
 };
 
