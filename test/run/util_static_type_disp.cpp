@@ -5,14 +5,14 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  */
 /*!
- * \file   util_static_type_dispatcher.cpp
+ * \file   util_static_type_disp.cpp
  * \author Andrey Semashev
  * \date   09.01.2009
  *
  * \brief  This header contains tests for the static type dispatcher.
  */
 
-#define BOOST_TEST_MODULE util_static_type_dispatcher
+#define BOOST_TEST_MODULE util_static_type_disp
 
 #include <string>
 #include <typeinfo>
