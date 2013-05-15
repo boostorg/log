@@ -11,8 +11,6 @@ import os ;
 import path ;
 import project ;
 import feature ;
-import version ;
-import property ;
 import configure ;
 import log-architecture ;
 using mc ;
@@ -20,7 +18,10 @@ using mc ;
 local here = [ modules.binding $(__name__) ] ;
 
 project.push-current [ project.current ] ;
-project.load [ path.join [ path.make $(here:D) ] ../config ] ;
+project.load [ path.join [ path.make $(here:D) ] ../config/message-compiler ] ;
+project.pop-current ;
+project.push-current [ project.current ] ;
+project.load [ path.join [ path.make $(here:D) ] ../config/x86-ext ] ;
 project.pop-current ;
 
 lib psapi ;
@@ -170,70 +171,32 @@ rule ssse3-targets-cond ( properties * )
 
     if <log-architecture>x86 in [ log-architecture.deduce-architecture $(properties) ]
     {
-        if <toolset>gcc in $(properties)
+        local has_ssse3 = [ configure.builds /boost/x86-extensions//ssse3 : $(properties) : compiler-supports-ssse3 ] ;
+        if $(has_ssse3)
         {
-            local string_version = [ feature.get-values "toolset-gcc:version" : $(properties) ] ;
-            local version = [ SPLIT_BY_CHARACTERS $(string_version) : "." ] ;
-
-            if ! [ version.version-less $(version) : 4 3 ]
+            result = ;
+            if <toolset>gcc in $(properties) || <toolset>clang in $(properties)
             {
                 result = <cxxflags>"-march=core2 -msse -msse2 -msse3 -mssse3" ;
             }
-        }
-        else if <toolset>msvc in $(properties)
-        {
-            local string_version = [ feature.get-values "toolset-msvc:version" : $(properties) ] ;
-            local version = [ SPLIT_BY_CHARACTERS $(string_version) : "." ] ;
-
-            if ! [ version.version-less $(version) : 9 0 ]
+            else if <toolset>intel in $(properties)
+            {
+                if <toolset-intel:platform>win in $(properties)
+                {
+                    result = <cxxflags>"/QxSSSE3" ;
+                }
+                else
+                {
+                    result = <cxxflags>"-march=core2 -msse -msse2 -msse3 -mssse3" ;
+                }
+            }
+            else if <toolset>msvc in $(properties)
             {
                 # MSVC doesn't really care about these switches, all SSE intrinsics are always available, but still...
                 # Also 64 bit MSVC doesn't have the /arch:SSE2 switch as it is the default.
                 if <log-address-model>32 in [ log-architecture.deduce-address-model $(properties) ]
                 {
                     result = <cxxflags>"/arch:SSE2" ;
-                }
-                else
-                {
-                    result = ;
-                }
-            }
-        }
-        else if <toolset>clang in $(properties)
-        {
-            local string_version = [ feature.get-values "toolset-clang:version" : $(properties) ] ;
-            local version = [ SPLIT_BY_CHARACTERS $(string_version) : "." ] ;
-
-            # I don't know which version started to support SSSE3, but we don't support versions before 3.2 anyway and it has support for SSSE3
-            if ! [ version.version-less $(version) : 3 2 ]
-            {
-                result = <cxxflags>"-march=core2 -msse -msse2 -msse3 -mssse3" ;
-            }
-        }
-        else if <toolset>intel in $(properties)
-        {
-            local string_version = [ feature.get-values "toolset-intel:version" : $(properties) ] ;
-            if $(string_version)
-            {
-                local version = [ SPLIT_BY_CHARACTERS $(string_version) : "." ] ;
-
-                if ! [ version.version-less $(version) : 10 0 ]
-                {
-                    if <toolset-intel:platform>win in $(properties)
-                    {
-                        if ! [ version.version-less $(version) : 11 0 ]
-                        {
-                            result = <cxxflags>"/QxSSSE3" ;
-                        }
-                        else
-                        {
-                            result = <cxxflags>"/QxT" ;
-                        }
-                    }
-                    else
-                    {
-                        result = <cxxflags>"-march=core2 -msse -msse2 -msse3 -mssse3" ;
-                    }
                 }
             }
         }
@@ -270,57 +233,32 @@ rule avx2-targets-cond ( properties * )
 
     if <log-architecture>x86 in [ log-architecture.deduce-architecture $(properties) ]
     {
-        if <toolset>gcc in $(properties)
+        local has_ssse3 = [ configure.builds /boost/x86-extensions//avx2 : $(properties) : compiler-supports-avx2 ] ;
+        if $(has_ssse3)
         {
-            local string_version = [ feature.get-values "toolset-gcc:version" : $(properties) ] ;
-            local version = [ SPLIT_BY_CHARACTERS $(string_version) : "." ] ;
-
-            if ! [ version.version-less $(version) : 4 7 ]
+            result = ;
+            if <toolset>gcc in $(properties)
             {
                 result = <cxxflags>"-march=core-avx2 -mavx -mavx2 -fabi-version=0" ;
             }
-        }
-        else if <toolset>msvc in $(properties)
-        {
-            local string_version = [ feature.get-values "toolset-msvc:version" : $(properties) ] ;
-            local version = [ SPLIT_BY_CHARACTERS $(string_version) : "." ] ;
-
-            if ! [ version.version-less $(version) : 11 0 ]
-            {
-                result = <cxxflags>"/arch:AVX" ;
-            }
-        }
-        else if <toolset>clang in $(properties)
-        {
-            local string_version = [ feature.get-values "toolset-clang:version" : $(properties) ] ;
-            local version = [ SPLIT_BY_CHARACTERS $(string_version) : "." ] ;
-
-            # I don't know which version started to support AVX2, but we don't support versions before 3.2 anyway and it has support for AVX2
-            if ! [ version.version-less $(version) : 3 2 ]
+            else if <toolset>clang in $(properties)
             {
                 result = <cxxflags>"-march=core-avx2 -mavx -mavx2" ;
             }
-        }
-        else if <toolset>intel in $(properties)
-        {
-            local string_version = [ feature.get-values "toolset-intel:version" : $(properties) ] ;
-            if $(string_version)
+            else if <toolset>intel in $(properties)
             {
-                local version = [ SPLIT_BY_CHARACTERS $(string_version) : "." ] ;
-
-                # AVX2 support added in Composer XE 2011 Update 7, while the original Composer XE 2011 had icc version 12.
-                # I don't know what version Update 7 had, so to be on the safe side enable this optimization since version 13.
-                if ! [ version.version-less $(version) : 13 0 ]
+                if <toolset-intel:platform>win in $(properties)
                 {
-                    if <toolset-intel:platform>win in $(properties)
-                    {
-                        result = <cxxflags>"/QxAVX2" ;
-                    }
-                    else
-                    {
-                        result = <cxxflags>"-march=core-avx2 -mavx -mavx2 -fabi-version=0" ;
-                    }
+                    result = <cxxflags>"/QxAVX2" ;
                 }
+                else
+                {
+                    result = <cxxflags>"-march=core-avx2 -mavx -mavx2 -fabi-version=0" ;
+                }
+            }
+            else if <toolset>msvc in $(properties)
+            {
+                result = <cxxflags>"/arch:AVX" ;
             }
         }
     }

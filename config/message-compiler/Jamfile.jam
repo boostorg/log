@@ -9,7 +9,7 @@ import project ;
 using mc ;
 
 project /boost/message-compiler
-    : source-location ../src
+    : source-location ../../src
     : requirements
         <pch>off
     ;
