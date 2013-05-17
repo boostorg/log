@@ -111,7 +111,7 @@ add_value(expressions::attribute_keyword< DescriptorT, ActorT > const&, typename
     return add_value_manip< typename DescriptorT::value_type& >(DescriptorT::get_name(), value);
 }
 
-#else // !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+#else // !defined(BOOST_NO_CXX11_RVALUE_REFERENCES) && !(defined(BOOST_MSVC) && BOOST_MSVC <= 1600)
 
 template< typename T >
 inline add_value_manip< T const& > add_value(attribute_name const& name, T const& value)
@@ -126,7 +126,7 @@ add_value(expressions::attribute_keyword< DescriptorT, ActorT > const&, typename
     return add_value_manip< typename DescriptorT::value_type const& >(DescriptorT::get_name(), value);
 }
 
-#endif // !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+#endif // !defined(BOOST_NO_CXX11_RVALUE_REFERENCES) && !(defined(BOOST_MSVC) && BOOST_MSVC <= 1600)
 
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
