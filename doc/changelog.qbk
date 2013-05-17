@@ -9,7 +9,7 @@
 
 [section:changelog Changelog]
 
-[heading 2.1]
+[heading 2.1, Boost 1.54]
 
 [*Breaking changes:]
 
@@ -18,6 +18,9 @@
 [*General changes:]
 
 * Removed the use of deprecated macros of __boost_config__.
+* Build system improved. On Windows, presence of Message Compiler is now detected automatically, and support for event log is only enabled when the tool is available.
+* Fixed compilation when `BOOST_LOG_USE_COMPILER_TLS` configuration macro is defined.
+* Fixed compilation of some uses of the [link log.detailed.utilities.manipulators.add_value `add_value`] manipulator with MSVC.
 * Added a new [link log.detailed.utilities.manipulators.dump `dump`] output manipulator for printing binary data.
 
 [heading 2.0, 13 April 2013]
