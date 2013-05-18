@@ -39,7 +39,7 @@ BOOST_LOG_OPEN_NAMESPACE
  * lighter in terms of memory footprint and operations complexity. This is done
  * transparently by this class, on object construction. Passing objects of this class
  * to other library methods, such as attribute lookup functions, will not require
- * this thanslation and/or string copying and thus will result in a more efficient code.
+ * this translation and/or string copying and thus will result in a more efficient code.
  */
 class attribute_name
 {

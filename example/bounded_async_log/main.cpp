@@ -57,7 +57,7 @@ void thread_fun(boost::barrier& bar)
     // Wait until all threads are created
     bar.wait();
 
-    // Here we go. First, identfy the thread.
+    // Here we go. First, identify the thread.
     BOOST_LOG_SCOPED_THREAD_TAG("ThreadID", boost::this_thread::get_id());
 
     // Now, do some logging

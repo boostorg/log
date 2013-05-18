@@ -188,7 +188,7 @@ public:
      * every log record made in the current thread.
      *
      * \note In single-threaded build the effect is the same as adding the attribute globally. This, however, does
-     *       not imply that iterators to thread-specific and global attributes are interchangable.
+     *       not imply that iterators to thread-specific and global attributes are interchangeable.
      *
      * \param name The attribute name.
      * \param attr The attribute factory.

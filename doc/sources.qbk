@@ -52,7 +52,7 @@ Sometimes it is important to associate log records with some application compone
 
 [example_sources_network_connection_channels]
 
-It is also possible to set the channel name of individual log records. This can be uesful when a [link log.detailed.sources.global_storage global logger] is used instead of an object-specific one. The channel name can be set by calling the `channel` modifier on the logger or by using a special macro for logging. For example:
+It is also possible to set the channel name of individual log records. This can be useful when a [link log.detailed.sources.global_storage global logger] is used instead of an object-specific one. The channel name can be set by calling the `channel` modifier on the logger or by using a special macro for logging. For example:
 
 [example_sources_network_connection_dynamic_channels]
 

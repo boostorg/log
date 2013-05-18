@@ -122,7 +122,7 @@ private:
 
     //! The container that provides storage for nodes
     typedef std::deque< node > node_list;
-    //! The conainer that provides name-based lookup
+    //! The container that provides name-based lookup
     typedef intrusive::set<
         node,
         intrusive::base_hook< node_by_name_hook >,

@@ -39,7 +39,7 @@ All sink frontends allow setting up exception handlers in order to customize err
 
 [tip [link log.detailed.core.core.exception_handling Logging core] and [link log.detailed.sources.exception_handling loggers] also support installing exception handlers.]
 
-The library provides a [link log.detailed.utilities.exception_handlers convenient tool] for dispatching exceptions into an unary polymorphic function object.
+The library provides a [link log.detailed.utilities.exception_handlers convenient tool] for dispatching exceptions into a unary polymorphic function object.
 
 [note An exception handler is not allowed to return a value. This means you are not able to alter the filtering result once an exception occurs, and thus filtering will always fail.]
 

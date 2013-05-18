@@ -162,7 +162,7 @@ If using formatters is not appropriate for some reason, you can provide your own
 
     #include <``[boost_log_sinks_syslog_backend_hpp]``>
 
-The syslog backend, as comes from its name, provides support for the syslog API that is available on virtually any UNIX-like platform. On Windows there exists at least [@http://syslog-win32.sourceforge.net one] public implementation of the syslog client API. However, in order to provide maximum flexibibity and better portability the library offers built-in support for the syslog protocol described in [@http://tools.ietf.org/html/rfc3164 RFC 3164]. Thus on Windows only the built-in implementation is supported, while on UNIX-like systems both built-in and system API based implementations are supported.
+The syslog backend, as comes from its name, provides support for the syslog API that is available on virtually any UNIX-like platform. On Windows there exists at least [@http://syslog-win32.sourceforge.net one] public implementation of the syslog client API. However, in order to provide maximum flexibility and better portability the library offers built-in support for the syslog protocol described in [@http://tools.ietf.org/html/rfc3164 RFC 3164]. Thus on Windows only the built-in implementation is supported, while on UNIX-like systems both built-in and system API based implementations are supported.
 
 The backend is implemented in the [class_sinks_syslog_backend] class. The backend supports formatting log records, and therefore requires thread synchronization in the frontend. The backend also supports severity level translation from the application-specific values to the syslog-defined values. This is achieved with an additional function object, level mapper, that receives a set of attribute values of each log record and returns the appropriate syslog level value. This value is used by the backend to construct the final priority value of the syslog record. The other component of the syslog priority value, the facility, is constant for each backend object and can be specified in the backend constructor arguments.
 
@@ -176,7 +176,7 @@ Please note that all syslog constants, as well as level extractors, are declared
 
 Also note that the backend will default to the built-in implementation and `user` logging facility, if the corresponding constructor parameters are not specified.
 
-[tip The `set_target_address` method will also accept DNS names, which it will resolve to the actual IP address. This featue, however, is not available in single threaded builds.]
+[tip The `set_target_address` method will also accept DNS names, which it will resolve to the actual IP address. This feature, however, is not available in single threaded builds.]
 
 [endsect]
 

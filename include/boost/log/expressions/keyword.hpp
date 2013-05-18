@@ -239,7 +239,7 @@ struct protoify< boost::reference_wrapper< const boost::log::expressions::attrib
 /*!
  * \brief The macro declares an attribute keyword
  *
- * The macro provides definitions similar to \c BOOST_LOG_ATTRIBUTE_KEYWORD_TYPE and addidionally
+ * The macro provides definitions similar to \c BOOST_LOG_ATTRIBUTE_KEYWORD_TYPE and additionally
  * defines the keyword object.
  *
  * \param keyword_ Keyword name

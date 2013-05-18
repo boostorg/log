@@ -528,7 +528,7 @@ BOOST_LOG_API void syslog_backend::set_local_address(std::string const& addr, un
     }
 #else
     // Boost.ASIO requires threads for the host name resolver,
-    // so without threads wi simply assume the string already contains IP address
+    // so without threads we simply assume the string already contains IP address
     set_local_address(boost::asio::ip::address::from_string(addr), port);
 #endif // !defined(BOOST_LOG_NO_THREADS)
 }
@@ -564,7 +564,7 @@ BOOST_LOG_API void syslog_backend::set_target_address(std::string const& addr, u
     }
 #else
     // Boost.ASIO requires threads for the host name resolver,
-    // so without threads wi simply assume the string already contains IP address
+    // so without threads we simply assume the string already contains IP address
     set_target_address(boost::asio::ip::address::from_string(addr), port);
 #endif // !defined(BOOST_LOG_NO_THREADS)
 }

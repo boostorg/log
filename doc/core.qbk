@@ -116,7 +116,7 @@ The global filter can be removed by the `reset_filter` method. When there is no 
         // ...
     }
 
-The core also provides another way to disable logging. By calling the `set_logging_enabled` with a boolean argument one may completely disable or reenable logging, including applying filtering. Disabling logging with this method may be more benefical in terms of application performance than setting a global filter that always fails.
+The core also provides another way to disable logging. By calling the `set_logging_enabled` with a boolean argument one may completely disable or re-enable logging, including applying filtering. Disabling logging with this method may be more beneficial in terms of application performance than setting a global filter that always fails.
 
 [endsect]
 

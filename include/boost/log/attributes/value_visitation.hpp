@@ -53,7 +53,7 @@ public:
     {
         ok,                     //!< The attribute value has been visited successfully
         value_not_found,        //!< The attribute value is not present in the view
-        value_has_invalid_type  //!< The attribute value is present in the vew, but has an unexpected type
+        value_has_invalid_type  //!< The attribute value is present in the view, but has an unexpected type
     };
 
 private:
@@ -90,7 +90,7 @@ public:
  *
  * Attribute value invoker is a functional object that attempts to find and extract the stored
  * attribute value from the attribute value view or a log record. The extracted value is passed to
- * an unary function object (the visitor) provided by user.
+ * a unary function object (the visitor) provided by user.
  *
  * The invoker can be specialized on one or several attribute value types that should be
  * specified in the second template argument.

@@ -57,7 +57,7 @@ Sometimes trivial logging doesn't provide enough flexibility. For example, one m
 
 [heading File logging unleashed]
 
-As a starting point, here is how you would initialize logginig to a file:
+As a starting point, here is how you would initialize logging to a file:
 
 [example_tutorial_file_simple]
 
@@ -117,7 +117,7 @@ Unlike sinks, sources need not be registered anywhere since they interact direct
 
 Regardless of the thread safety, all loggers provided by the library are default and copy-constructible and support swapping, so there should be no problem in making a logger a member of your class. As you will see later, such approach can give you additional benefits.
 
-The library provides a number of loggers with different features, such as severity and channel support. These features can be combined with each other in order to construct more complex loggers. See [link log.detailed.sources here] for more datails.
+The library provides a number of loggers with different features, such as severity and channel support. These features can be combined with each other in order to construct more complex loggers. See [link log.detailed.sources here] for more details.
 
 [heading Global logger objects]
 
@@ -155,7 +155,7 @@ Looks a bit shorter, doesn't it? The `BOOST_LOG` macro, along with other similar
 
 In previous sections we mentioned attributes and attribute values several times. Here we will discover how attributes can be used to add more data to log records.
 
-Each log record can have a number of named attribute values attached. Attributes can represent any essental information about the conditions in which the log record occurred, such as position in the code, executable module name, current date and time, or any piece of data relevant to your particular application and execution environment. An attribute may behave as a value generator, in which case it would return a different value for each log record it's involved in. As soon as the attribute generates the value, the latter becomes independent from the creator and can be used by filters, formatters and sinks. But in order to use the attribute value one has to know its name and type, or at least a set of types it may have. There are a number of commonly used attributes implemented in the library, you can find the types of their values in the documentation.
+Each log record can have a number of named attribute values attached. Attributes can represent any essential information about the conditions in which the log record occurred, such as position in the code, executable module name, current date and time, or any piece of data relevant to your particular application and execution environment. An attribute may behave as a value generator, in which case it would return a different value for each log record it's involved in. As soon as the attribute generates the value, the latter becomes independent from the creator and can be used by filters, formatters and sinks. But in order to use the attribute value one has to know its name and type, or at least a set of types it may have. There are a number of commonly used attributes implemented in the library, you can find the types of their values in the documentation.
 
 Aside from that, as described in the [link log.design Design overview] section, there are three possible scopes of attributes: source-specific, thread-specific and global. When a log record is made, attribute values from these three sets are joined into a single set and passed to sinks. This implies that the origin of the attribute makes no difference for sinks. Any attribute can be registered in any scope. When registered, an attribute is given a unique name in order to make it possible to search for it. If it happens that the same named attribute is found in several scopes, the attribute from the most specific scope is taken into consideration in any further processing, including filtering and formatting. Such behavior makes it possible to override global or thread-scoped attributes with the ones registered in your local logger, thus reducing thread interference.
 
@@ -175,7 +175,7 @@ With this call attributes "LineID", "TimeStamp", "ProcessID" and "ThreadID" are 
 
 The [funcref boost::log::add_common_attributes `add_common_attributes`] function is one of the several convenience helpers described [link log.detailed.utilities.setup.convenience here].
 
-Some attrubutes are registered automatically on loggers construction. For example, [link log.detailed.sources.severity_level_logger `severity_logger`] registers a source-specific attribute "Severity" which can be used to add a level of emphasis for different log records. For example:
+Some attributes are registered automatically on loggers construction. For example, [link log.detailed.sources.severity_level_logger `severity_logger`] registers a source-specific attribute "Severity" which can be used to add a level of emphasis for different log records. For example:
 
 [example_sources_severity]
 
@@ -200,7 +200,7 @@ Let's see what's under the hood of that [link log.detailed.utilities.setup.conve
         // other attributes skipped for brevity
     }
 
-Here the [link log.detailed.attributes.counter `counter`] and [link log.detailed.attributes.clock `local_clock`] components are attribute classes, they derive from the common attribute interface [class_log_attribute]. The library provides a number of other [link log.detailed.attributes attribute classes], including the [link log.detailed.attributes.function `function`] attribute that calls some function object on value acquisition. For example, we can in a similar way register a [link log.detailed.attributes.named_scope `named_scope`] attrubute:
+Here the [link log.detailed.attributes.counter `counter`] and [link log.detailed.attributes.clock `local_clock`] components are attribute classes, they derive from the common attribute interface [class_log_attribute]. The library provides a number of other [link log.detailed.attributes attribute classes], including the [link log.detailed.attributes.function `function`] attribute that calls some function object on value acquisition. For example, we can in a similar way register a [link log.detailed.attributes.named_scope `named_scope`] attribute:
 
     core->add_global_attribute("Scope", attrs::named_scope());
 
@@ -260,7 +260,7 @@ Here the `stream` is a placeholder for the stream to format the record in. Other
 
     expr::attr< logging::trivial::severity_level >("Severity")
 
-[tip As shown in the previous section, it is possible to define placeholders like `severity` for user's attributes. As an additional benefit to the simpler syntax in the template expressions such placeholders allow to concentrate all the information about the attribute (the name and the value type) in the placeholder definition. This makes coding less error-prone (you won't misspel the attribute name or specify incorrect value type) and therefore is the recommended way of defining new attributes and using them in template expressions.]
+[tip As shown in the previous section, it is possible to define placeholders like `severity` for user's attributes. As an additional benefit to the simpler syntax in the template expressions such placeholders allow to concentrate all the information about the attribute (the name and the value type) in the placeholder definition. This makes coding less error-prone (you won't misspell the attribute name or specify incorrect value type) and therefore is the recommended way of defining new attributes and using them in template expressions.]
 
 There are other [link log.detailed.expressions.formatters formatter manipulators] that provide advanced support for date, time and other types. Some manipulators accept additional arguments that customize their behavior. Most of these arguments are named and can be passed in __boost_parameter__ style.
 
@@ -274,7 +274,7 @@ You can see that it is possible to bind format changing manipulators in the expr
 
 [heading Boost.Format-style formatters]
 
-As an alternative, you can define formatters with with a syntax similar to __boost_format__. The same formatter as described above can be written as follows:
+As an alternative, you can define formatters with a syntax similar to __boost_format__. The same formatter as described above can be written as follows:
 
 [example_tutorial_formatters_format]
 
@@ -304,7 +304,7 @@ Here, the `format` parameter accepts such a format template. The template may co
 
 [note Textual format templates are not accepted by sink backends in the `set_formatter` method. In order to parse textual template into a formatter function one has to call `parse_formatter` function. See [link log.detailed.utilities.setup.filter_formatter here] for more details.]
 
-[heading Custom formatting functons]
+[heading Custom formatting functions]
 
 You can add a custom formatter to a sink backend that supports formatting. The formatter is actually a function object that supports the following signature:
 
@@ -332,7 +332,7 @@ We've already touched filtering in the previous sections but we barely scratched
 
 In this sample we initialize two sinks - one for the complete log file and the other for important messages only. Both sinks will be writing to text files with the same log record format, which we initialize first and save to the `fmt` variable. The [classref boost::log::basic_formatter formatter] type is a type-erased function object with the formatter calling signature; in many respects it can be viewed similar to `boost::function` or `std::function` except that it is never empty. There is also [classref boost::log::filter a similar function object] for filters.
 
-Notably, the formatter itself contains a filter here. As you can see, the format contains a conditional part that is only present when log records contain the "Tag" attribute. The [link log.detailed.expressions.predicates.has_attr `has_attr`] predicate checks whether the record containts the "Tag" attribute value and conrtols whether it is put into the file or not. We used the attribute keyword to specify the name and type of the attribute for the predicate, but it is also possible to specify them in the [link log.detailed.expressions.predicates.has_attr `has_attr`] call site. Conditional formatters are explained in more details [link log.detailed.expressions.formatters.conditional here].
+Notably, the formatter itself contains a filter here. As you can see, the format contains a conditional part that is only present when log records contain the "Tag" attribute. The [link log.detailed.expressions.predicates.has_attr `has_attr`] predicate checks whether the record contains the "Tag" attribute value and controls whether it is put into the file or not. We used the attribute keyword to specify the name and type of the attribute for the predicate, but it is also possible to specify them in the [link log.detailed.expressions.predicates.has_attr `has_attr`] call site. Conditional formatters are explained in more details [link log.detailed.expressions.formatters.conditional here].
 
 Further goes the initialization of the two sinks. The first sink does not have any filter, which means it will save every log record to the file. We call `set_filter` on the second sink to only save log records with severity no less than `warning` or having a "Tag" attribute with value "IMPORTANT_MESSAGE". As you can see, the filter syntax resembles usual C++ very much, especially when attribute keywords are used.
 

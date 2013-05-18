@@ -10,7 +10,7 @@
  * \date   08.03.2009
  *
  * This header defines a compatibility macro that implements an unspecified
- * \c bool operator idiom, which is superceded with explicit conversion operators in
+ * \c bool operator idiom, which is superseded with explicit conversion operators in
  * C++0x.
  */
 

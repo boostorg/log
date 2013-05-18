@@ -168,7 +168,7 @@ inline shared_ptr<
  *                           or a filter lambda expression.
  *             \li \c format Specifies a formatter to install into the sink. May be a string that represents a formatter,
  *                           or a formatter lambda expression (either streaming or Boost.Format-like notation).
- *             \li \c auto_flush A boolean flag that shows whether the sink should automaticallu flush the stream
+ *             \li \c auto_flush A boolean flag that shows whether the sink should automatically flush the stream
  *                               after each written record.
  * \return Pointer to the constructed sink.
  */

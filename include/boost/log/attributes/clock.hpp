@@ -41,7 +41,7 @@ namespace attributes {
  * The time traits provided by the library use \c boost::posix_time::ptime as the time type.
  *
  * Time traits also determine the way time is acquired. There are two types of time traits
- * provided by th library: \c utc_time_traits and \c local_time_traits. The first returns UTC time,
+ * provided by the library: \c utc_time_traits and \c local_time_traits. The first returns UTC time,
  * the second returns local time.
  */
 template< typename TimeTraitsT >

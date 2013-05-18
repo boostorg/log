@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE(type_dispatching)
     BOOST_CHECK(!p4.dispatch(disp));
 }
 
-// The test verifies that value extracition works
+// The test verifies that value extraction works
 BOOST_AUTO_TEST_CASE(value_extraction)
 {
     logging::attribute_value p1(attrs::make_attribute_value< int >(10));

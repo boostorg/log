@@ -98,7 +98,7 @@ int main(int argc, char* argv[])
     // Here synchronous_sink is a sink frontend that performs thread synchronization
     // before passing log records to the backend (the text_ostream_backend class).
     // The backend formats each record and outputs it to one or several streams.
-    // This approach makes implementing backends a lot simplier, because you don't
+    // This approach makes implementing backends a lot simpler, because you don't
     // need to worry about multithreading.
 
     {

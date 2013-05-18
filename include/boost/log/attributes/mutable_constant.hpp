@@ -45,7 +45,7 @@ namespace attributes {
  * The mutable_constant attribute stores a single value of type, specified as the first template argument.
  * This value is returned on each attribute value acquisition.
  *
- * The attribute also allows to modify the stored value, even if the attibute is registered in an attribute set.
+ * The attribute also allows to modify the stored value, even if the attribute is registered in an attribute set.
  * In order to ensure thread safety of such modifications the \c mutable_constant class is also parametrized
  * with three additional template arguments: mutex type, scoped write and scoped read lock types. If not specified,
  * the lock types are automatically deduced based on the mutex type.

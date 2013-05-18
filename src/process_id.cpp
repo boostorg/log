@@ -96,7 +96,7 @@ operator<< (std::basic_ostream< CharT, TraitsT >& strm, process::id const& pid)
     if (strm.good())
     {
         io::ios_flags_saver flags_saver(strm, std::ios_base::hex | std::ios_base::showbase);
-        // The width is set calculated to accomodate pid in hex + "0x" prefix
+        // The width is set calculated to accommodate pid in hex + "0x" prefix
         io::ios_width_saver width_saver(strm, static_cast< std::streamsize >(pid_size * 2 + 2));
         io::basic_ios_fill_saver< CharT, TraitsT > fill_saver(strm, static_cast< CharT >('0'));
         strm << static_cast< uint_t< pid_size * 8 >::least >(pid.native_id());

@@ -380,7 +380,7 @@ The name is not stored as a string within the [class_log_attribute_name] object.
 
 Working with identifiers is much more efficient than with strings. For example, copying does not involve dynamic memory allocation and comparison operators are very lightweight. On the other hand, it is easy to get a human-readable attribute name for presentation, if needed.
 
-The [class_log_attribute_name] class supports an empty (uninitialized) state when default constructed. In this state the name object is not equal to any other initialized name object. Unitnitialized attribute names should not be passed to the library but can be useful in some contexts (e.g. when a delayed initialization is desired).
+The [class_log_attribute_name] class supports an empty (uninitialized) state when default constructed. In this state the name object is not equal to any other initialized name object. Uninitialized attribute names should not be passed to the library but can be useful in some contexts (e.g. when a delayed initialization is desired).
 
 [endsect]
 
@@ -396,13 +396,13 @@ Attribute set is an unordered associative container that maps [link log.detailed
 
     #include <``[boost_log_attributes_attribute_value_set_hpp]``>
 
-Attribute value set is an unordered assocoative container that maps [link log.detailed.attributes.related_components.attribute_name attribute names] to [link log.detailed.attributes attribute values]. This container is used in log [link log.detailed.core.record records] to represent attribute values. Unlike conventional containers, [class_log_attribute_value_set] does not support removing or modifying elements after being inserted. This warrants that the attribute values that participated filtering will not disappear from the log record in the middle of the processing.
+Attribute value set is an unordered associative container that maps [link log.detailed.attributes.related_components.attribute_name attribute names] to [link log.detailed.attributes attribute values]. This container is used in log [link log.detailed.core.record records] to represent attribute values. Unlike conventional containers, [class_log_attribute_value_set] does not support removing or modifying elements after being inserted. This warrants that the attribute values that participated filtering will not disappear from the log record in the middle of the processing.
 
-Additionally, the set can be constructed from three [link log.detailed.attributes.related_components.attribute_set attribute sets], which are interpreted as the sets of source-specific, thread-specific and global attributes. The constructor adopts attribute values from the three attribute sets into a single set of attribute values. After construction, [class_log_attribute_value_set] is considered to be in an unfrozen state. This means that the container may keep references to the elements of the attribute sets used as the source for the value set construction. While in this state, neither the attribute sets nor the value set must not be modified in any way as this may make the value set corrupted. The value set can be used for reading in this state, its lookup operations will perform as usual. The value set can be frozen by calling the `freeze` method; the set will no longer be attached to the original attribute sets and will be available for further insertions after this call. The library will ensure that the value set is always frosen when a log record is returned from the logging core; the set is [_not] frozen during filtering though.
+Additionally, the set can be constructed from three [link log.detailed.attributes.related_components.attribute_set attribute sets], which are interpreted as the sets of source-specific, thread-specific and global attributes. The constructor adopts attribute values from the three attribute sets into a single set of attribute values. After construction, [class_log_attribute_value_set] is considered to be in an unfrozen state. This means that the container may keep references to the elements of the attribute sets used as the source for the value set construction. While in this state, neither the attribute sets nor the value set must not be modified in any way as this may make the value set corrupted. The value set can be used for reading in this state, its lookup operations will perform as usual. The value set can be frozen by calling the `freeze` method; the set will no longer be attached to the original attribute sets and will be available for further insertions after this call. The library will ensure that the value set is always frozen when a log record is returned from the logging core; the set is [_not] frozen during filtering though.
 
 [tip In the unfrozen state the value set may not have all attribute values acquired from the attributes. It will only acquire the values as requested by filters. After freezing the container has all attribute values. This transition allows to optimize the library so that attribute values are only acquired when needed.]
 
-For futher details on the container interface please consult the [class_log_attribute_value_set] reference.
+For further details on the container interface please consult the [class_log_attribute_value_set] reference.
 
 [endsect]
 
@@ -415,7 +415,7 @@ Since attribute values do not expose the stored value in the interface, an API i
     #include <``[boost_log_attributes_value_visitation_fwd_hpp]``>
     #include <``[boost_log_attributes_value_visitation_hpp]``>
 
-Attribute value visitation implements the visitor design pattern, hence the naming. The user has to provide an unary function object (a visitor) which will be invoked on the stored attribute value. The caller also has to provide the expected type or set of possible types of the stored value. Obviously, the visitor must be capable of receiving an argument of the expected type. Visitation will only succeed if the stored type matches the expectation.
+Attribute value visitation implements the visitor design pattern, hence the naming. The user has to provide a unary function object (a visitor) which will be invoked on the stored attribute value. The caller also has to provide the expected type or set of possible types of the stored value. Obviously, the visitor must be capable of receiving an argument of the expected type. Visitation will only succeed if the stored type matches the expectation.
 
 In order to apply the visitor, one should call the [funcref boost::log::visit `visit`] function on the attribute value. Let's see an example:
 
@@ -426,7 +426,7 @@ In order to apply the visitor, one should call the [funcref boost::log::visit `v
 In this example we print the stored attribute value in our `print_visitor`. We expect the attribute value to have either `int` or `std::string` stored type; only in this case the visitor will be invoked and the visitation result will be positive. In case of failure the [class_log_visitation_result] class provides additional information on the failure reason. The class has the method named `code` which returns visitation error code. The following error codes are possible:
 
 * `ok` - visitation succeeded, the visitor has been invoked; visitation result is positive when this code is used
-* `value_not_found` - visitation failed because the requested value was not found; this code is used when visitation is applied to a log record or a set of attrinute values rather than a single value
+* `value_not_found` - visitation failed because the requested value was not found; this code is used when visitation is applied to a log record or a set of attribute values rather than a single value
 * `value_has_invalid_type` - visitation failed because the value has type differing from any of the expected types
 
 By default the visitor function result is ignored but it is possible to obtain it. To do this one should use a special [funcref boost::log::save_result `save_result`] wrapper for the visitor; the wrapper will save the visitor resulting value into an external variable captured by reference. The visitor result is initialized when the returned [class_log_visitation_result] is positive. See the following example where we compute the hash value on the stored value.
@@ -458,7 +458,7 @@ Attribute value extraction API allows to acquire a reference to the stored value
 
 In this example we expect the attribute value to have the stored type `int`. The [funcref boost::log::extract `extract`] function attempts to extract a reference to the stored value and returns the filled [link log.detailed.utilities.value_ref `value_ref`] object if succeeded.
 
-Value extraction can also be used with a set of expected stored types. The follwoing code snippet demonstrates this:
+Value extraction can also be used with a set of expected stored types. The following code snippet demonstrates this:
 
 [example_attr_value_extraction_multiple_types]
 

@@ -137,7 +137,7 @@ struct filter_factory
  * The base class for filter factories. The class defines default implementations for most
  * filter expressions. In order to be able to construct filters, the attribute value type must
  * support reading from a stream. Also, the default filters will rely on relational operators for
- * the type, so these optrators must also be defined.
+ * the type, so these operators must also be defined.
  */
 template< typename CharT, typename AttributeValueT >
 class basic_filter_factory :

@@ -304,7 +304,7 @@ namespace event_log {
     private:
         //! The mapper that will extract the event identifier
         event_id_mapper_type m_EventIDMapper;
-        //! The map of event identifiers and and their insertion composers
+        //! The map of event identifiers and their insertion composers
         event_map m_EventMap;
 
     public:

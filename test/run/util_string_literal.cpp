@@ -192,7 +192,7 @@ BOOST_AUTO_TEST_CASE(string_literal_swap)
     BOOST_CHECK_EQUAL(lit1, "yo-ho-ho");
 }
 
-// STL strings acquision tests
+// STL strings acquisition tests
 BOOST_AUTO_TEST_CASE(string_literal_str)
 {
     logging::string_literal lit = "yo-ho-ho";

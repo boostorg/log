@@ -94,7 +94,7 @@ void print_severity_lookup(logging::record const& rec)
 //[ example_core_record_subscript
 BOOST_LOG_ATTRIBUTE_KEYWORD(severity, "Severity", severity_level)
 
-// Prints severity level by using the subscript opereator
+// Prints severity level by using the subscript operator
 void print_severity_subscript(logging::record const& rec)
 {
     // Use the attribute keyword to communicate the name and type of the value
