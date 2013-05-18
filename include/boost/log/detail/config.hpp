@@ -197,9 +197,13 @@
 #   define BOOST_LOG_NORETURN
 #endif
 
-#if (defined(__CLANG__) || defined(__GNUC__)) && !defined(__QNX__)
-// The cxxabi.h is available
-#define BOOST_LOG_HAS_CXXABI_H
+// cxxabi.h availability macro
+#if defined(BOOST_CLANG)
+#   if defined(__has_include) && __has_include(<cxxabi.h>)
+#       define BOOST_LOG_HAS_CXXABI_H
+#   endif
+#elif defined(__GNUC__) && !defined(__QNX__)
+#   define BOOST_LOG_HAS_CXXABI_H
 #endif
 
 #if defined(BOOST_SYMBOL_VISIBLE)
