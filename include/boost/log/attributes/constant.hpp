@@ -38,7 +38,7 @@ namespace attributes {
 /*!
  * \brief A class of an attribute that holds a single constant value
  *
- * The constant is a simpliest and one of the most frequently used types of attributes.
+ * The constant is a simplest and one of the most frequently used types of attributes.
  * It stores a constant value, which it eventually returns as its value each time
  * requested.
  */

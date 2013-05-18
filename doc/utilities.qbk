@@ -58,7 +58,7 @@ Happily, there is no need to write type dispatchers from scratch. The library pr
 
     #include <``[boost_log_utility_type_dispatch_static_type_dispatcher_hpp]``>
 
-Static type dispatchers are used when the set of types that needs to be supported for extraction is known at compile time. The [class_log_static_type_dispatcher] class template is parametrized with a MPL type sequence of types that need to be supported. The dispatcher inherits from the [class_log_type_dispatcher] interface which provides the `get_callback` method for aquiring the function object to invoke on the stored value. All you need to do is provide a visitor function object to the dispatcher at construction point and invoke the callback when dispatching the stored value:
+Static type dispatchers are used when the set of types that needs to be supported for extraction is known at compile time. The [class_log_static_type_dispatcher] class template is parametrized with an MPL type sequence of types that need to be supported. The dispatcher inherits from the [class_log_type_dispatcher] interface which provides the `get_callback` method for acquiring the function object to invoke on the stored value. All you need to do is provide a visitor function object to the dispatcher at construction point and invoke the callback when dispatching the stored value:
 
 [example_util_static_type_dispatcher]
 
@@ -149,7 +149,7 @@ There are cases when log records need to be ordered. One possible use case is st
 
 [heading Abstract record ordering]
 
-The [class_log_abstract_ordering] class allows application of a quick opaque ordering. The result of this ordering is not stable between different runs of the application and in generag cannot be predicted before the predicate is applied, however it provides the best performance. The [class_log_abstract_ordering] class is a template that is specialized with an optional predicate function that will be able to compare `const void*` pointers. By default an `std::less` equivalent is used.
+The [class_log_abstract_ordering] class allows application of a quick opaque ordering. The result of this ordering is not stable between different runs of the application and in general cannot be predicted before the predicate is applied, however it provides the best performance. The [class_log_abstract_ordering] class is a template that is specialized with an optional predicate function that will be able to compare `const void*` pointers. By default an `std::less` equivalent is used.
 
     // A set of unique records
     std::set< logging::record_view, logging::abstract_ordering< > > m_Records;
@@ -184,7 +184,7 @@ You can also use the [funcref boost::log::make_attr_ordering `make_attr_ordering
 
 The library provides exception handling hooks in different places. Tools, defined in this header, provide an easy way of implementing function objects suitable for such hooks.
 
-An exception handler is a function object that accepts no arguments. The result of the exception handler is ignored and thus should generally be `void`. Exception handlers are called from within `catch` sections by the library, therefore in order to reacquire the exception object it has to rethrow it. The header defines an [class_log_exception_handler] template functor that does just that and then forwards the exception object to an unary user-defined functional object. The [funcref boost::log::make_exception_handler `make_exception_handler`] function can be used to simplify the handler construction. All expected exception types should be specified explicitly in the call, in the order they would appear in the `catch` sections (i.e. from most specific ones to the most general ones).
+An exception handler is a function object that accepts no arguments. The result of the exception handler is ignored and thus should generally be `void`. Exception handlers are called from within `catch` sections by the library, therefore in order to reacquire the exception object it has to rethrow it. The header defines an [class_log_exception_handler] template functor that does just that and then forwards the exception object to a unary user-defined functional object. The [funcref boost::log::make_exception_handler `make_exception_handler`] function can be used to simplify the handler construction. All expected exception types should be specified explicitly in the call, in the order they would appear in the `catch` sections (i.e. from most specific ones to the most general ones).
 
 [example_utility_exception_handler]
 
@@ -465,7 +465,7 @@ So basically, settings container is a layered associative container, with string
 
 Sink settings are divided into separate subsections within the common top-level section "Sinks" - one subsection for each sink. The subsection names should denote a user-defined sink name. For example, "MyFile".
 
-[note Previous versions of the library also supported top-level sections starting with the "Sink:" prefix to describe sink parameters. This syntax is deprecated now, although it still works when parsing a settings file for backward compatibility. The parser will automatically put these sections under the "Sinks" top-level section in the resulting settings contsiner. Support for this syntax will be removed in future releases.]
+[note Previous versions of the library also supported top-level sections starting with the "Sink:" prefix to describe sink parameters. This syntax is deprecated now, although it still works when parsing a settings file for backward compatibility. The parser will automatically put these sections under the "Sinks" top-level section in the resulting settings container. Support for this syntax will be removed in future releases.]
 
 [table Sections under the "Sinks" section. Common sink settings.
 [[Parameter]             [Format]                                                               [Description]]

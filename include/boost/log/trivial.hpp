@@ -48,7 +48,7 @@ enum severity_level
     fatal
 };
 
-//! Returns stringified enumeration value or \c NULL, if the value is not valid
+//! Returns stringized enumeration value or \c NULL, if the value is not valid
 BOOST_LOG_API const char* to_string(severity_level lvl);
 
 template< typename CharT, typename TraitsT >

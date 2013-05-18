@@ -39,11 +39,11 @@ namespace expressions {
 namespace aux {
 
 /*!
- * \brief An adapter for an unary function to be used as a terminal in a Boost.Phoenix expression
+ * \brief An adapter for a unary function to be used as a terminal in a Boost.Phoenix expression
  *
- * This class is an adapter between Boost.Phoenix expression invokation protocol and
- * an unary function. It forwards the call to the base function, passing only the first argument
- * from the original call. This allows to to embed value extractors in template expressions.
+ * This class is an adapter between Boost.Phoenix expression invocation protocol and
+ * a unary function. It forwards the call to the base function, passing only the first argument
+ * from the original call. This allows to embed value extractors in template expressions.
  */
 template< typename FunT >
 class unary_function_terminal

@@ -39,7 +39,7 @@ BOOST_LOG_OPEN_NAMESPACE
  * \brief An attribute value class
  *
  * An attribute value is an object that contains a piece of data that represents an attribute state
- * at the point of the value acquision. All major operations with log records, such as filtering and
+ * at the point of the value acquisition. All major operations with log records, such as filtering and
  * formatting, involve attribute values contained in a single view. Most likely an attribute value is
  * implemented as a simple holder of some typed value. This holder implements the
  * \c attribute_value::implementation interface and acts as a pimpl for the \c attribute_value
@@ -213,7 +213,7 @@ public:
 
     /*!
      * The method attempts to extract the stored value, assuming the value has the specified type.
-     * One can specify either a single type or a MPL type sequence, in which case the stored value
+     * One can specify either a single type or an MPL type sequence, in which case the stored value
      * is checked against every type in the sequence.
      *
      * \note Include <tt>value_extraction.hpp</tt> prior to using this method.
@@ -227,7 +227,7 @@ public:
 
     /*!
      * The method attempts to extract the stored value, assuming the value has the specified type.
-     * One can specify either a single type or a MPL type sequence, in which case the stored value
+     * One can specify either a single type or an MPL type sequence, in which case the stored value
      * is checked against every type in the sequence.
      *
      * \note Include <tt>value_extraction.hpp</tt> prior to using this method.
@@ -241,7 +241,7 @@ public:
 
     /*!
      * The method attempts to extract the stored value, assuming the value has the specified type.
-     * One can specify either a single type or a MPL type sequence, in which case the stored value
+     * One can specify either a single type or an MPL type sequence, in which case the stored value
      * is checked against every type in the sequence. If extraction fails, the default value is returned.
      *
      * \note Include <tt>value_extraction.hpp</tt> prior to using this method.
@@ -257,7 +257,7 @@ public:
 
     /*!
      * The method attempts to extract the stored value, assuming the value has the specified type.
-     * One can specify either a single type or a MPL type sequence, in which case the stored value
+     * One can specify either a single type or an MPL type sequence, in which case the stored value
      * is checked against every type in the sequence. If extraction fails, the default value is returned.
      *
      * \note Include <tt>value_extraction.hpp</tt> prior to using this method.
@@ -274,7 +274,7 @@ public:
 #if defined(BOOST_NO_CXX11_FUNCTION_TEMPLATE_DEFAULT_ARGS)
     /*!
      * The method attempts to extract the stored value, assuming the value has the specified type.
-     * One can specify either a single type or a MPL type sequence, in which case the stored value
+     * One can specify either a single type or an MPL type sequence, in which case the stored value
      * is checked against every type in the sequence.
      *
      * \note Include <tt>value_extraction.hpp</tt> prior to using this method.
@@ -288,7 +288,7 @@ public:
 
     /*!
      * The method attempts to extract the stored value, assuming the value has the specified type.
-     * One can specify either a single type or a MPL type sequence, in which case the stored value
+     * One can specify either a single type or an MPL type sequence, in which case the stored value
      * is checked against every type in the sequence.
      *
      * \note Include <tt>value_extraction.hpp</tt> prior to using this method.
@@ -302,7 +302,7 @@ public:
 
     /*!
      * The method attempts to extract the stored value, assuming the value has the specified type.
-     * One can specify either a single type or a MPL type sequence, in which case the stored value
+     * One can specify either a single type or an MPL type sequence, in which case the stored value
      * is checked against every type in the sequence. If extraction fails, the default value is returned.
      *
      * \note Include <tt>value_extraction.hpp</tt> prior to using this method.
@@ -318,7 +318,7 @@ public:
 
     /*!
      * The method attempts to extract the stored value, assuming the value has the specified type.
-     * One can specify either a single type or a MPL type sequence, in which case the stored value
+     * One can specify either a single type or an MPL type sequence, in which case the stored value
      * is checked against every type in the sequence. If extraction fails, the default value is returned.
      *
      * \note Include <tt>value_extraction.hpp</tt> prior to using this method.
@@ -338,7 +338,7 @@ public:
     /*!
      * The method attempts to extract the stored value, assuming the value has the specified type,
      * and pass it to the \a visitor function object.
-     * One can specify either a single type or a MPL type sequence, in which case the stored value
+     * One can specify either a single type or an MPL type sequence, in which case the stored value
      * is checked against every type in the sequence.
      *
      * \note Include <tt>value_visitation.hpp</tt> prior to using this method.

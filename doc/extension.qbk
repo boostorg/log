@@ -28,7 +28,7 @@ In order to work with sink backends, frontends use the `frontend_requirements` t
 * [class_sinks_formatted_records]. The backend expects formatted log records. The frontend implements formatting to a string with character type defined by the `char_type` typedef within the backend. The formatted string will be passed along with the log record to the backend. The [class_sinks_basic_formatted_sink_backend] base class automatically adds this requirement to the `frontend_requirements` type.
 * [class_sinks_flushing]. The backend supports flushing its internal buffers. If the backend indicates this requirement it has to implement the `flush` method taking no arguments; this method will be called by the frontend when flushed.
 
-[tip By chosing either of the thread synchronization requirements you effectively allow or prohibit certain [link log.detailed.sink_frontends sink frontends] from being used with your backend.]
+[tip By choosing either of the thread synchronization requirements you effectively allow or prohibit certain [link log.detailed.sink_frontends sink frontends] from being used with your backend.]
 
 Multiple requirements can be combined into `frontend_requirements` type with the [class_sinks_combine_requirements] metafunction:
 
@@ -74,7 +74,7 @@ The first thing to notice is that the `app_launcher` backend derives from [class
 
 The second notable difference from the previous examples is that `consume` method takes an additional string parameter besides the log record. This is the result of formatting. The `string_type` type is defined by the [class_sinks_basic_formatted_sink_backend] base class and it corresponds to the requested character type.
 
-We don't need to flush any buffers in this example, so we didn't specify the [class_sinks_flushing] requirement and omitted the `flush` method in the backens. Although we don't need any synchronization in our backend, we specified [class_sinks_synchronized_feeding] requirement so that we don't spawn multiple instances of `notify-send` program and cause a "fork bomb".
+We don't need to flush any buffers in this example, so we didn't specify the [class_sinks_flushing] requirement and omitted the `flush` method in the backend. Although we don't need any synchronization in our backend, we specified [class_sinks_synchronized_feeding] requirement so that we don't spawn multiple instances of `notify-send` program and cause a "fork bomb".
 
 Now, the `consume` implementation is trivial:
 
@@ -283,18 +283,18 @@ You can find the complete code of this example [@boost:/libs/log/example/doc/ext
 
 You can extend filter parser in the similar way you can extend the formatter parser - by registering filter factories for your attribute values into the library. However, since it takes a considerably more complex syntax to describe filters, a filter factory typically implements several generator functions.
 
-Like with formatter parser extension, you can avoid spelling out the filter factory and register a simple factlry provided by the library:
+Like with formatter parser extension, you can avoid spelling out the filter factory and register a simple factory provided by the library:
 
 [example_extension_simple_filter_factory]
 
-In order this to work the user's type should fullfill these requirements:
+In order this to work the user's type should fulfill these requirements:
 
 # Support reading from an input stream with `operator>>`.
 # Support the complete set of comparison and ordering operators.
 
 Naturally, all these operators must be visible from the point of the [funcref boost::log::register_simple_filter_factory `register_simple_filter_factory`] call. Note that unlike the simple formatter factory, the filter factory requires the user's type to support reading from a stream. This is so because the filter factory would have to parse the argument of the filter relation from a string.
 
-But we won't get away with a simple filter factory, because our `point` class doesn't have a sensible ordering semantics and thus we cannot define the complete set of operators. We'll have to implement our own filter factory instead. Filter factories derive from the [class_log_filter_factory] interface. This base class declares a number of virtual functions that will be called in order to create filters, according to the filter expression. If some functions are not overriden by the factory, the corresponding operations are considered to be not supported by the attribute value. But before we define the filter factory we have to improve our `point` class slightly:
+But we won't get away with a simple filter factory, because our `point` class doesn't have a sensible ordering semantics and thus we cannot define the complete set of operators. We'll have to implement our own filter factory instead. Filter factories derive from the [class_log_filter_factory] interface. This base class declares a number of virtual functions that will be called in order to create filters, according to the filter expression. If some functions are not overridden by the factory, the corresponding operations are considered to be not supported by the attribute value. But before we define the filter factory we have to improve our `point` class slightly:
 
 [example_extension_filter_parser_point_definition]
 
@@ -343,7 +343,7 @@ Compared to the earlier definition we added the `write_interval` constructor par
 
 As you can see, we read parameters from settings and simply create our sink with them as a result of `create_sink` method. Generally, users are free to name parameters of their sinks the way they like, as long as [link log.detailed.utilities.setup.settings_file settings file format] is adhered. However, it is a good idea to follow the pattern established by the library and reuse parameter names with the same meaning. That is, it should be obvious that the parameter "Filter" means the same for both the library-provided "TextFile" sink and out custom "StatCollector" sink.
 
-After defining the factory we only have to register it with the [funcref boost::log::register_sink_factory `register_sink_factory`] call. The first argument is the new value of the "Destination" parameter in the settings. Whenever the library finds sink description with destination "StatCollector", our factory will be invoked to create the sink. It is also possible to override library-provided destination types with user-defined factories, however it is not possble to restore the default factories afterwards.
+After defining the factory we only have to register it with the [funcref boost::log::register_sink_factory `register_sink_factory`] call. The first argument is the new value of the "Destination" parameter in the settings. Whenever the library finds sink description with destination "StatCollector", our factory will be invoked to create the sink. It is also possible to override library-provided destination types with user-defined factories, however it is not possible to restore the default factories afterwards.
 
 [note As the "Destination" parameter is used to determine the sink factory, this parameter is reserved and cannot be used by sink factories for their own purposes.]
 

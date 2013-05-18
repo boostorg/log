@@ -71,7 +71,7 @@ namespace aux {
             std::string source_name(buf, buf + size);
             if (source_name.empty())
             {
-                // In case of error we provide artifical application name
+                // In case of error we provide artificial application name
                 std::ostringstream strm;
                 strm << "Boost.Log "
                     << static_cast< unsigned int >(BOOST_VERSION / 100000)
@@ -187,7 +187,7 @@ namespace aux {
             std::wstring source_name(buf, buf + size);
             if (source_name.empty())
             {
-                // In case of error we provide artifical application name
+                // In case of error we provide artificial application name
                 std::wostringstream strm;
                 strm << L"Boost.Log "
                     << static_cast< unsigned int >(BOOST_VERSION / 100000)

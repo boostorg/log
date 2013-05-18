@@ -14,7 +14,7 @@
  * header are not templates and therefore do not require a fixed argument type. Furthermore, both arguments
  * may have different types, in which case the comparison is performed without type conversion.
  *
- * \note In case if arguments are intergal, the conversion is performed according to the standard C++ rules
+ * \note In case if arguments are integral, the conversion is performed according to the standard C++ rules
  *       in order to avoid warnings from the compiler.
  */
 

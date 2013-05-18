@@ -77,7 +77,7 @@ protected:
 
     public:
         /*!
-         * Constructor with the stored delegate imitialization
+         * Constructor with the stored delegate initialization
          */
         explicit impl_template(T const& fun) : m_Functor(fun) {}
 

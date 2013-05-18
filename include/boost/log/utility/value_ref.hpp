@@ -404,7 +404,7 @@ struct value_ref_base
  * since it may be empty (i.e. refer to no value at all) and it can also refer to values of different types. Therefore its
  * interface and behavior combines features of Boost.Ref, Boost.Optional and Boost.Variant, depending on the use case.
  *
- * The template parameter \c T can be a single type or an MPL seqence of possible types being referred. The reference wrapper
+ * The template parameter \c T can be a single type or an MPL sequence of possible types being referred. The reference wrapper
  * will act as either an optional reference or an optional variant of references to the specified types. In any case, the
  * referred values will not be modifiable (i.e. \c value_ref always models a const reference).
  *

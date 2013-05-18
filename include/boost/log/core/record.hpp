@@ -36,7 +36,7 @@ class core;
 /*!
  * \brief Logging record class
  *
- * The logging record incapsulates all information related to a single logging statement,
+ * The logging record encapsulates all information related to a single logging statement,
  * in particular, attribute values view and the log message string. The record can be updated before pushing
  * for further processing to the logging core.
  */

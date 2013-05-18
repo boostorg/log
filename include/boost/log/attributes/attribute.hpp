@@ -50,7 +50,7 @@ class attribute_set_reference_proxy;
  * Every attribute is represented with a factory that is basically an attribute value generator.
  * The sole purpose of an attribute is to return an actual value when requested. A simplest attribute
  * can always return the same value that it stores internally, but more complex ones can
- * perform a considirable amount of work to return a value, and the returned values may differ
+ * perform a considerable amount of work to return a value, and the returned values may differ
  * each time requested.
  *
  * A word about thread safety. An attribute should be prepared to be requested a value from

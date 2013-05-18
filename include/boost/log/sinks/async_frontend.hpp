@@ -95,7 +95,7 @@ class asynchronous_sink :
 private:
     //! Backend synchronization mutex type
     typedef boost::mutex backend_mutex_type;
-    //! Frontend syncronization mutex type
+    //! Frontend synchronization mutex type
     typedef typename base_type::mutex_type frontend_mutex_type;
 
     //! A scope guard that implements thread ID management

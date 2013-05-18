@@ -54,7 +54,7 @@ namespace result_of {
  * \brief A metafunction that allows to acquire the result of the value extraction
  *
  * The metafunction results in a type that is in form of <tt>T const&</tt>, if \c T is
- * not a MPL type sequence and <tt>DefaultT</tt> is the same as <tt>T</tt>,
+ * not an MPL type sequence and <tt>DefaultT</tt> is the same as <tt>T</tt>,
  * or <tt>value_ref< TypesT, TagT ></tt> otherwise, with
  * \c TypesT being a type sequence comprising the types from sequence \c T and \c DefaultT,
  * if it is not present in \c T already.
@@ -87,7 +87,7 @@ struct extract_or_default
  * \brief A metafunction that allows to acquire the result of the value extraction
  *
  * The metafunction results in a type that is in form of <tt>T const&</tt>, if \c T is
- * not a MPL type sequence, or <tt>value_ref< T, TagT ></tt> otherwise. In the latter
+ * not an MPL type sequence, or <tt>value_ref< T, TagT ></tt> otherwise. In the latter
  * case the value reference shall never be empty.
  */
 template< typename T, typename TagT >
@@ -414,8 +414,8 @@ inline typename result_of::extract_or_throw< T, TagT >::type extract_or_throw(at
  * The function extracts an attribute value from the view. The user has to explicitly specify the
  * type or set of possible types of the attribute value to be extracted.
  *
- * \note Caution must be excercised if the default value is a temporary object. Because the function returns
- *       a reference, if the temporary object is destroued, the reference may become dangling.
+ * \note Caution must be exercised if the default value is a temporary object. Because the function returns
+ *       a reference, if the temporary object is destroyed, the reference may become dangling.
  *
  * \param name The name of the attribute value to extract.
  * \param attrs A set of attribute values in which to look for the specified attribute value.
@@ -435,8 +435,8 @@ extract_or_default(attribute_name const& name, attribute_value_set const& attrs,
  * The function extracts an attribute value from the view. The user has to explicitly specify the
  * type or set of possible types of the attribute value to be visited.
  *
- * \note Caution must be excercised if the default value is a temporary object. Because the function returns
- *       a reference, if the temporary object is destroued, the reference may become dangling.
+ * \note Caution must be exercised if the default value is a temporary object. Because the function returns
+ *       a reference, if the temporary object is destroyed, the reference may become dangling.
  *
  * \param name The name of the attribute value to extract.
  * \param rec A log record. The attribute value will be sought among those associated with the record.
@@ -456,8 +456,8 @@ extract_or_default(attribute_name const& name, record const& rec, DefaultT const
  * The function extracts an attribute value from the view. The user has to explicitly specify the
  * type or set of possible types of the attribute value to be visited.
  *
- * \note Caution must be excercised if the default value is a temporary object. Because the function returns
- *       a reference, if the temporary object is destroued, the reference may become dangling.
+ * \note Caution must be exercised if the default value is a temporary object. Because the function returns
+ *       a reference, if the temporary object is destroyed, the reference may become dangling.
  *
  * \param name The name of the attribute value to extract.
  * \param rec A log record view. The attribute value will be sought among those associated with the record.
@@ -477,8 +477,8 @@ extract_or_default(attribute_name const& name, record_view const& rec, DefaultT 
  * The function extracts an attribute value from the view. The user has to explicitly specify the
  * type or set of possible types of the attribute value to be visited.
  *
- * \note Caution must be excercised if the default value is a temporary object. Because the function returns
- *       a reference, if the temporary object is destroued, the reference may become dangling.
+ * \note Caution must be exercised if the default value is a temporary object. Because the function returns
+ *       a reference, if the temporary object is destroyed, the reference may become dangling.
  *
  * \param value Attribute value.
  * \param def_val The default value
@@ -690,8 +690,8 @@ extract_or_throw(expressions::attribute_keyword< DescriptorT, ActorT > const& ke
  * The function extracts an attribute value from the view. The user has to explicitly specify the
  * type or set of possible types of the attribute value to be extracted.
  *
- * \note Caution must be excercised if the default value is a temporary object. Because the function returns
- *       a reference, if the temporary object is destroued, the reference may become dangling.
+ * \note Caution must be exercised if the default value is a temporary object. Because the function returns
+ *       a reference, if the temporary object is destroyed, the reference may become dangling.
  *
  * \param keyword The keyword of the attribute value to extract.
  * \param attrs A set of attribute values in which to look for the specified attribute value.
@@ -711,8 +711,8 @@ extract_or_default(expressions::attribute_keyword< DescriptorT, ActorT > const& 
  * The function extracts an attribute value from the view. The user has to explicitly specify the
  * type or set of possible types of the attribute value to be visited.
  *
- * \note Caution must be excercised if the default value is a temporary object. Because the function returns
- *       a reference, if the temporary object is destroued, the reference may become dangling.
+ * \note Caution must be exercised if the default value is a temporary object. Because the function returns
+ *       a reference, if the temporary object is destroyed, the reference may become dangling.
  *
  * \param keyword The keyword of the attribute value to extract.
  * \param rec A log record. The attribute value will be sought among those associated with the record.
@@ -732,8 +732,8 @@ extract_or_default(expressions::attribute_keyword< DescriptorT, ActorT > const& 
  * The function extracts an attribute value from the view. The user has to explicitly specify the
  * type or set of possible types of the attribute value to be visited.
  *
- * \note Caution must be excercised if the default value is a temporary object. Because the function returns
- *       a reference, if the temporary object is destroued, the reference may become dangling.
+ * \note Caution must be exercised if the default value is a temporary object. Because the function returns
+ *       a reference, if the temporary object is destroyed, the reference may become dangling.
  *
  * \param keyword The keyword of the attribute value to extract.
  * \param rec A log record view. The attribute value will be sought among those associated with the record.

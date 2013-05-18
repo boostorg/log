@@ -306,7 +306,7 @@ inline void swap(
  * The user's logger class is expected to derive from the composite logger class, instantiated with
  * the character type, the user's logger class, the threading model and the list of the required features.
  * The former three parameters are passed to the \c basic_logger class template. The feature list
- * must be a MPL type sequence, where each element is an unary MPL metafunction class, that upon
+ * must be an MPL type sequence, where each element is a unary MPL metafunction class, that upon
  * applying on its argument results in a logging feature class that derives from the argument.
  * Every logger feature provided by the library can participate in the feature list.
  */

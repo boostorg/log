@@ -198,7 +198,7 @@ public:
         operand =
         (
             quoted_string_operand |
-            // A single word, enclosed with white spaces. It cannot contain parenthesis, since is is used by the filter parser.
+            // A single word, enclosed with white spaces. It cannot contain parenthesis, since it is used by the filter parser.
             qi::raw[ qi::lexeme[ +(encoding_specific::graph - qi::lit(constants::char_paren_bracket_left) - qi::lit(constants::char_paren_bracket_right)) ] ]
                 [boost::bind(&filter_grammar::on_operand, this, _1)]
         );
@@ -242,7 +242,7 @@ public:
         );
     }
 
-    //! The method returns the cinstructed filter
+    //! The method returns the constructed filter
     filter get_filter()
     {
         BOOST_ASSERT(!m_Subexpressions.empty());

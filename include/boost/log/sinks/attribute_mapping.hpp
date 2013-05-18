@@ -251,7 +251,7 @@ public:
      * the native value.
      *
      * \param rec A log record to extract value from
-     * \return A mapped value, if mapping was successfull, or the default value if
+     * \return A mapped value, if mapping was successful, or the default value if
      *         mapping did not succeed.
      */
     mapped_type operator() (record_view const& rec) const

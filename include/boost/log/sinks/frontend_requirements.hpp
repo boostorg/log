@@ -46,7 +46,7 @@ namespace sinks {
 /*!
  * The sink backend expects pre-synchronized calls, all needed synchronization is implemented
  * in the frontend (IOW, only one thread is feeding records to the backend concurrently, but
- * is is possible for several threads to write sequentially). Note that if a frontend supports
+ * it is possible for several threads to write sequentially). Note that if a frontend supports
  * synchronized record feeding, it will also report capable of concurrent record feeding.
  */
 struct synchronized_feeding {};

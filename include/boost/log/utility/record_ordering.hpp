@@ -78,7 +78,7 @@ public:
     result_type operator() (record_view const& left, record_view const& right) const
     {
         // We rely on the fact that the attribute_values() method returns a reference to the object in the record implementation,
-        // so we can comare pointers.
+        // so we can compare pointers.
         return FunT::operator() (static_cast< const void* >(&left.attribute_values()), static_cast< const void* >(&right.attribute_values()));
     }
 };
@@ -86,7 +86,7 @@ public:
 /*!
  * \brief Ordering predicate, based on attribute values associated with records
  *
- * This predicate allows to order log records based on values of a specificly named attribute
+ * This predicate allows to order log records based on values of a specifically named attribute
  * associated with them. Two given log records being compared should both have the specified
  * attribute value of the specified type to be able to be ordered properly. As a special case,
  * if neither of the records have the value, these records are considered equivalent. Otherwise,

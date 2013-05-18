@@ -42,7 +42,7 @@ class record;
 /*!
  * \brief Logging record view class
  *
- * The logging record incapsulates all information related to a single logging statement,
+ * The logging record encapsulates all information related to a single logging statement,
  * in particular, attribute values view and the log message string. The view is immutable,
  * it is implemented as a wrapper around a reference-counted implementation.
  */

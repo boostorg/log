@@ -18,7 +18,7 @@ There is also a way to specify the filter in the form of a string template. This
     #include <``[boost_log_expressions_attr_fwd_hpp]``>
     #include <``[boost_log_expressions_attr_hpp]``>
 
-The [funcref boost::log::expressions::attr attr] placeholder represents an attribute value in template expressions. Given the record view or a set of attribute values, the placeholder will attempt to extract the specified attribute value from the argument upon invokation. This can be roughly described with the following pseudo-code:
+The [funcref boost::log::expressions::attr attr] placeholder represents an attribute value in template expressions. Given the record view or a set of attribute values, the placeholder will attempt to extract the specified attribute value from the argument upon invocation. This can be roughly described with the following pseudo-code:
 
     logging::value_ref< T, TagT > val = expr::attr< T, TagT >(name)(rec);
 
@@ -156,7 +156,7 @@ This filter is usually used in conjunction with [link log.detailed.expressions.f
 
 [@boost:/libs/log/example/doc/expressions_has_attr_stat_accum.cpp See the complete code].
 
-In this example, log records emitted with the `PUT_STAT` macto will be directed to the `my_stat_accumulator` sink backend, which will accumulate the changes passed in the "Change" attribute values. All other records (even those made through the same logger) will be passed to the filte sink. This is achieved with the mutually exclusive filters set for the two sinks.
+In this example, log records emitted with the `PUT_STAT` macro will be directed to the `my_stat_accumulator` sink backend, which will accumulate the changes passed in the "Change" attribute values. All other records (even those made through the same logger) will be passed to the filter sink. This is achieved with the mutually exclusive filters set for the two sinks.
 
 Please note that in the example above we extended the library in two ways: we defined a new sink backend `my_stat_accumulator` and a new macro `PUT_STAT`. Also note that `has_attr` can accept attribute keywords to identify the attribute to check.
 
@@ -509,7 +509,7 @@ This decorator allows to ensure that the resulting string conforms to the [@http
 
     #include <``[boost_log_expressions_formatters_c_decorator_hpp]``>
 
-The header defines two character decorators: `c_decor` and `c_ascii_decor`. The first one replaces the following characters with their escaped counerparts: \\ (backslash, 0x5c), \\a (bell character, 0x07), \\b (backspace, 0x08), \\f (formfeed, 0x0c), \\n (newline, 0x0a), \\r (carriage return, 0x0d), \\t (horizontal tabulation, 0x09), \\v (vertical tabulation, 0x0b), \' (apostroph, 0x27), \" (quote, 0x22), ? (question mark, 0x3f). The `c_ascii_decor` decorator does the same but also replaces all other non-printable and non-ASCII characters with escaped hexadecimal character codes in C notation (e.g. "\\x8c"). The usage is similar to other character decorators:
+The header defines two character decorators: `c_decor` and `c_ascii_decor`. The first one replaces the following characters with their escaped counterparts: \\ (backslash, 0x5c), \\a (bell character, 0x07), \\b (backspace, 0x08), \\f (formfeed, 0x0c), \\n (newline, 0x0a), \\r (carriage return, 0x0d), \\t (horizontal tabulation, 0x09), \\v (vertical tabulation, 0x0b), \' (apostroph, 0x27), \" (quote, 0x22), ? (question mark, 0x3f). The `c_ascii_decor` decorator does the same but also replaces all other non-printable and non-ASCII characters with escaped hexadecimal character codes in C notation (e.g. "\\x8c"). The usage is similar to other character decorators:
 
     sink->set_formatter
     (

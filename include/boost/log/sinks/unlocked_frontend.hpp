@@ -100,7 +100,7 @@ public:
     /*!
      * Locking accessor to the attached backend.
      *
-     * \note Does not do any actual locking, provided only for intarface consistency
+     * \note Does not do any actual locking, provided only for interface consistency
      *       with other frontends.
      */
     locked_backend_ptr locked_backend()

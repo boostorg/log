@@ -105,7 +105,7 @@ The second solution was implemented as a special policy for the [link log.detail
 
 [section:why_attribute_manips_dont_affect_filters Why attributes set with stream manipulators do not participate in filtering?]
 
-One can add attributes to log records in the followinf way:
+One can add attributes to log records in the following way:
 
     BOOST_LOG(logger) << logging::add_value("MyInt", 10) << logging::add_value("MyString", "string attribute value")
         << "Some log message";
@@ -181,7 +181,7 @@ Most of the time users won't even notice the existence of this internal namespac
 
 As a couple quick examples, `v2s_st` corresponds to v2 static single-threaded build of the library and `v2_mt_posix` - to v2 dynamic multi-threaded build for POSIX system API.
 
-Namespace mangling may lead to linkinkg errors if the application is misconfigured. One common mistake is to build dynamic version of the library and not define `BOOST_LOG_DYN_LINK` or `BOOST_ALL_DYN_LINK` when building the application, so that the library assumes static linking by default. Whenever such linking errors appear, one can decode the namespace name in the missing symbols and the exported symbols of Boost.Log library and adjust library or application [link log.installation.config configuration] accordingly.
+Namespace mangling may lead to linking errors if the application is misconfigured. One common mistake is to build dynamic version of the library and not define `BOOST_LOG_DYN_LINK` or `BOOST_ALL_DYN_LINK` when building the application, so that the library assumes static linking by default. Whenever such linking errors appear, one can decode the namespace name in the missing symbols and the exported symbols of Boost.Log library and adjust library or application [link log.installation.config configuration] accordingly.
 
 [endsect]
 
