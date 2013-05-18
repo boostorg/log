@@ -121,6 +121,9 @@ project boost/log
         <target-os>freebsd:<linkflags>"-lrt"
         <target-os>linux:<linkflags>"-lrt -lpthread"
         <toolset>pgi:<linkflags>"-lrt"
+    : usage-requirements
+        <toolset>clang:<cxxflags>-Wno-bind-to-temporary-copy
+        <toolset>clang:<cxxflags>-Wno-unused-function
     ;
 
 local BOOST_LOG_COMMON_SRC =
