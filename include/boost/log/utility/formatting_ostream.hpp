@@ -355,11 +355,14 @@ public:
     typename aux::enable_if_char_type< OtherCharT, basic_formatting_ostream& >::type
     write(const OtherCharT* p, std::streamsize size)
     {
-        m_stream.flush();
+        sentry guard(*this);
+        if (guard)
+        {
+            m_stream.flush();
 
-        string_type* storage = m_streambuf.storage();
-        BOOST_ASSERT(storage != NULL);
-        aux::code_convert(p, static_cast< std::size_t >(size), *storage, m_stream.getloc());
+            string_type* storage = m_streambuf.storage();
+            aux::code_convert(p, static_cast< std::size_t >(size), *storage, m_stream.getloc());
+        }
 
         return *this;
     }
