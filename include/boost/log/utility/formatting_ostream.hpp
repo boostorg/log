@@ -19,6 +19,7 @@
 #include <string>
 #include <memory>
 #include <locale>
+#include <boost/utility/string_ref_fwd.hpp>
 #include <boost/type_traits/remove_cv.hpp>
 #include <boost/log/detail/config.hpp>
 #include <boost/log/detail/attachable_sstream_buf.hpp>
@@ -33,14 +34,6 @@
 #endif
 
 namespace boost {
-
-#ifndef BOOST_LOG_DOXYGEN_PASS
-
-// This forward is needed for operator<<
-template< typename CharT, typename TraitsT >
-class basic_string_ref;
-
-#endif
 
 BOOST_LOG_OPEN_NAMESPACE
 
@@ -127,6 +120,9 @@ public:
         explicit sentry(basic_formatting_ostream& strm) : base_type(strm.stream())
         {
         }
+
+        BOOST_LOG_DELETED_FUNCTION(sentry(sentry const&))
+        BOOST_LOG_DELETED_FUNCTION(sentry& operator= (sentry const&))
     };
 
 private:
@@ -359,7 +355,7 @@ public:
     typename aux::enable_if_char_type< OtherCharT, basic_formatting_ostream& >::type
     write(const OtherCharT* p, std::streamsize size)
     {
-        flush();
+        m_stream.flush();
 
         string_type* storage = m_streambuf.storage();
         BOOST_ASSERT(storage != NULL);
@@ -386,49 +382,41 @@ public:
 
     basic_formatting_ostream& operator<< (char c)
     {
-        this->put(c);
-        return *this;
+        return this->formatted_write(&c, 1);
     }
     basic_formatting_ostream& operator<< (const char* p)
     {
-        this->write(p, static_cast< std::streamsize >(std::char_traits< char >::length(p)));
-        return *this;
+        return this->formatted_write(p, static_cast< std::streamsize >(std::char_traits< char >::length(p)));
     }
 
 #if !defined(BOOST_NO_INTRINSIC_WCHAR_T)
     basic_formatting_ostream& operator<< (wchar_t c)
     {
-        this->put(c);
-        return *this;
+        return this->formatted_write(&c, 1);
     }
     basic_formatting_ostream& operator<< (const wchar_t* p)
     {
-        this->write(p, static_cast< std::streamsize >(std::char_traits< wchar_t >::length(p)));
-        return *this;
+        return this->formatted_write(p, static_cast< std::streamsize >(std::char_traits< wchar_t >::length(p)));
     }
 #endif
 #if !defined(BOOST_NO_CXX11_CHAR16_T)
     basic_formatting_ostream& operator<< (char16_t c)
     {
-        this->put(c);
-        return *this;
+        return this->formatted_write(&c, 1);
     }
     basic_formatting_ostream& operator<< (const char16_t* p)
     {
-        this->write(p, static_cast< std::streamsize >(std::char_traits< char16_t >::length(p)));
-        return *this;
+        return this->formatted_write(p, static_cast< std::streamsize >(std::char_traits< char16_t >::length(p)));
     }
 #endif
 #if !defined(BOOST_NO_CXX11_CHAR32_T)
     basic_formatting_ostream& operator<< (char32_t c)
     {
-        this->put(c);
-        return *this;
+        return this->formatted_write(&c, 1);
     }
     basic_formatting_ostream& operator<< (const char32_t* p)
     {
-        this->write(p, static_cast< std::streamsize >(std::char_traits< char32_t >::length(p)));
-        return *this;
+        return this->formatted_write(p, static_cast< std::streamsize >(std::char_traits< char32_t >::length(p)));
     }
 #endif
 
@@ -518,6 +506,27 @@ public:
         return *this;
     }
 
+    template< typename OtherCharT, typename OtherTraitsT, typename OtherAllocatorT >
+    friend typename aux::enable_if_char_type< OtherCharT, basic_formatting_ostream& >::type
+    operator<< (basic_formatting_ostream& strm, std::basic_string< OtherCharT, OtherTraitsT, OtherAllocatorT > const& str)
+    {
+        return strm.formatted_write(str.c_str(), static_cast< std::streamsize >(str.size()));
+    }
+
+    template< typename OtherCharT, typename OtherTraitsT >
+    friend typename aux::enable_if_char_type< OtherCharT, basic_formatting_ostream& >::type
+    operator<< (basic_formatting_ostream& strm, basic_string_literal< OtherCharT, OtherTraitsT > const& str)
+    {
+        return strm.formatted_write(str.c_str(), static_cast< std::streamsize >(str.size()));
+    }
+
+    template< typename OtherCharT, typename OtherTraitsT >
+    friend typename aux::enable_if_char_type< OtherCharT, basic_formatting_ostream& >::type
+    operator<< (basic_formatting_ostream& strm, basic_string_ref< OtherCharT, OtherTraitsT > const& str)
+    {
+        return strm.formatted_write(str.data(), static_cast< std::streamsize >(str.size()));
+    }
+
 private:
     void init_stream()
     {
@@ -531,6 +540,40 @@ private:
         m_stream.width(0);
         m_stream.precision(6);
         m_stream.fill(static_cast< char_type >(' '));
+    }
+
+    template< typename OtherCharT >
+    basic_formatting_ostream& formatted_write(const OtherCharT* p, std::streamsize size)
+    {
+        sentry guard(*this);
+        if (guard)
+        {
+            m_stream.flush();
+            string_type* const storage = m_streambuf.storage();
+
+            const std::streamsize w = m_stream.width();
+            if (w <= size)
+            {
+                aux::code_convert(p, static_cast< std::size_t >(size), *storage, m_stream.getloc());
+            }
+            else
+            {
+                const bool align_left = (m_stream.flags() & ostream_type::adjustfield) == ostream_type::left;
+                typename string_type::size_type const alignment_size =
+                    static_cast< typename string_type::size_type >(w - size);
+                if (!align_left)
+                    storage->append(alignment_size, m_stream.fill());
+
+                aux::code_convert(p, static_cast< std::size_t >(size), *storage, m_stream.getloc());
+
+                if (align_left)
+                    storage->append(alignment_size, m_stream.fill());
+            }
+
+            m_stream.width(0);
+        }
+
+        return *this;
     }
 
     //! Copy constructor (closed)
@@ -617,27 +660,6 @@ operator<< (basic_formatting_ostream< CharT, TraitsT, AllocatorT >& strm, T cons
 {
     strm.stream() << value;
     return strm;
-}
-
-template< typename CharT, typename TraitsT, typename AllocatorT, typename OtherCharT, typename OtherTraitsT, typename OtherAllocatorT >
-inline typename aux::enable_if_char_type< OtherCharT, basic_formatting_ostream< CharT, TraitsT, AllocatorT >& >::type
-operator<< (basic_formatting_ostream< CharT, TraitsT, AllocatorT >& strm, std::basic_string< OtherCharT, OtherTraitsT, OtherAllocatorT > const& str)
-{
-    return strm.write(str.c_str(), static_cast< std::streamsize >(str.size()));
-}
-
-template< typename CharT, typename TraitsT, typename AllocatorT, typename OtherCharT, typename OtherTraitsT >
-inline typename aux::enable_if_char_type< OtherCharT, basic_formatting_ostream< CharT, TraitsT, AllocatorT >& >::type
-operator<< (basic_formatting_ostream< CharT, TraitsT, AllocatorT >& strm, basic_string_literal< OtherCharT, OtherTraitsT > const& str)
-{
-    return strm.write(str.c_str(), static_cast< std::streamsize >(str.size()));
-}
-
-template< typename CharT, typename TraitsT, typename AllocatorT, typename OtherCharT, typename OtherTraitsT >
-inline typename aux::enable_if_char_type< OtherCharT, basic_formatting_ostream< CharT, TraitsT, AllocatorT >& >::type
-operator<< (basic_formatting_ostream< CharT, TraitsT, AllocatorT >& strm, basic_string_ref< OtherCharT, OtherTraitsT > const& str)
-{
-    return strm.write(str.data(), static_cast< std::streamsize >(str.size()));
 }
 
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
