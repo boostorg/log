@@ -13,6 +13,7 @@
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
 
+#include <cstring>
 #include <deque>
 #include <ostream>
 #include <stdexcept>
@@ -80,23 +81,18 @@ private:
         struct order_by_name
         {
             typedef bool result_type;
-            typedef string_type::traits_type traits_type;
 
             bool operator() (node const& left, node const& right) const
             {
-                // Include terminating 0 into comparison to also check the length match
-                return traits_type::compare(
-                    left.m_name.c_str(), right.m_name.c_str(), left.m_name.size() + 1) < 0;
+                return std::strcmp(left.m_name.c_str(), right.m_name.c_str()) < 0;
             }
             bool operator() (node const& left, const char* right) const
             {
-                // Include terminating 0 into comparison to also check the length match
-                return traits_type::compare(left.m_name.c_str(), right, left.m_name.size() + 1) < 0;
+                return std::strcmp(left.m_name.c_str(), right) < 0;
             }
             bool operator() (const char* left, node const& right) const
             {
-                // Include terminating 0 into comparison to also check the length match
-                return traits_type::compare(left, right.m_name.c_str(), right.m_name.size() + 1) < 0;
+                return std::strcmp(left, right.m_name.c_str()) < 0;
             }
         };
 
