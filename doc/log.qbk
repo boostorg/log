@@ -177,6 +177,8 @@ Another way is to attempt to use the `windmc.exe` tool distributed with MinGW an
 
 In case if message compiler detection fails for some reason, you can explicitly disable support for event log backend by defining the `BOOST_LOG_WITHOUT_EVENT_LOG` configuration macro when building the library. This will remove the need for the message compiler. See [link log.installation.config this section] for more configuration options.
 
+MinGW users on Windows XP may be affected by the [@http://sourceforge.net/p/mingw-w64/bugs/307/ bug] in msvcrt.dll that is bundled with the operating system. The bug manifests itself as crashes while the library formats log records. This problem is not specific to Boost.Log and may also show in different contexts related to locale and IO-streams management.
+
 [heading Additional notes for Cygwin users]
 
 Cygwin support is very preliminary. The default GCC version available in Cygwin (4.5.3 as of this writing) is unable to compile the library because of compiler errors. You will have to build a newer GCC from sources. Even then some Boost.Log functionality is not available. In particular, the socket-based syslog backend is not supported, as it is based on __boost_asio__, which doesn't compile on this platform. However, the native syslog support is still in place.
