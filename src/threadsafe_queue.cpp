@@ -53,7 +53,10 @@
 #define BOOST_LOG_HAS_POSIX_MEMALIGN 1
 #endif
 #elif (defined(_POSIX_VERSION) && (_POSIX_VERSION >= 200112L)) || (defined(_XOPEN_SOURCE) && (_XOPEN_SOURCE >= 600))
+// Solaris 10 does not have posix_memalign. Solaris 11 and later seem to have it.
+#if !(defined(sun) || defined(__sun)) || defined(__SunOS_5_11) || defined(__SunOS_5_12)
 #define BOOST_LOG_HAS_POSIX_MEMALIGN 1
+#endif
 #endif
 
 #if defined(BOOST_WINDOWS)
