@@ -108,6 +108,7 @@ project boost/log
         <toolset>intel-win:<define>_SCL_SECURE_NO_DEPRECATE
         <toolset>intel-win:<define>_CRT_SECURE_NO_WARNINGS
         <toolset>intel-win:<define>_CRT_SECURE_NO_DEPRECATE
+        <toolset>darwin:<cxxflags>-ftemplate-depth-1024
         <toolset>gcc:<cxxflags>-ftemplate-depth-1024
         <toolset>gcc:<cxxflags>-fno-strict-aliasing  # avoids strict aliasing violations in other Boost components
         <toolset>gcc-mingw:<linkflags>-Wl,--enable-auto-import
