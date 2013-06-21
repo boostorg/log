@@ -134,9 +134,6 @@ private:
 
     typedef filter (filter_factory_type::*comparison_relation_handler_t)(attribute_name const&, string_type const&);
 
-    template< typename ScannerT >
-    struct definition;
-
 private:
     //! Parsed attribute name
     mutable attribute_name m_AttributeName;
