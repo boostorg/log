@@ -36,9 +36,10 @@ BOOST_LOG_OPEN_NAMESPACE
  * macro. Usage example:
  *
  * <code>
+ * once_block_flag flag = BOOST_LOG_ONCE_BLOCK_INIT;
+ *
  * void foo()
  * {
- *     static once_block_flag flag = BOOST_LOG_ONCE_BLOCK_INIT;
  *     BOOST_LOG_ONCE_BLOCK_FLAG(flag)
  *     {
  *         puts("Hello, world once!");
@@ -52,11 +53,11 @@ struct once_block_flag
     // Do not use, implementation detail
     enum
     {
-        uninitialized = 0,
+        uninitialized = 0, // this must be zero, so that zero-initialized once_block_flag is equivalent to the one initialized with uninitialized
         being_initialized,
         initialized
-    }
-    status;
+    };
+    unsigned char status;
 #endif // BOOST_LOG_DOXYGEN_PASS
 };
 
@@ -72,22 +73,22 @@ namespace aux {
 class once_block_sentry
 {
 private:
-    once_block_flag& m_Flag;
+    once_block_flag& m_flag;
 
 public:
-    explicit once_block_sentry(once_block_flag& f) : m_Flag(f)
+    explicit once_block_sentry(once_block_flag& f) : m_flag(f)
     {
     }
 
     ~once_block_sentry()
     {
-        if (m_Flag.status != once_block_flag::initialized)
+        if (m_flag.status != once_block_flag::initialized)
             rollback();
     }
 
     bool executed() const
     {
-        return (m_Flag.status == once_block_flag::initialized || enter_once_block());
+        return (m_flag.status == once_block_flag::initialized || enter_once_block());
     }
 
     BOOST_LOG_API void commit();
@@ -125,21 +126,21 @@ namespace aux {
 class once_block_sentry
 {
 private:
-    once_block_flag& m_Flag;
+    once_block_flag& m_flag;
 
 public:
-    explicit once_block_sentry(once_block_flag& f) : m_Flag(f)
+    explicit once_block_sentry(once_block_flag& f) : m_flag(f)
     {
     }
 
     bool executed() const
     {
-        return m_Flag.status;
+        return m_flag.status;
     }
 
     void commit()
     {
-        m_Flag.status = true;
+        m_flag.status = true;
     }
 
 private:
@@ -162,8 +163,9 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
     for (boost::log::aux::once_block_sentry sentry_var((flag_var));\
         !sentry_var.executed(); sentry_var.commit())
 
+// NOTE: flag_var deliberately doesn't have an initializer so that it is zero-initialized at the static initialization stage
 #define BOOST_LOG_ONCE_BLOCK_INTERNAL(flag_var, sentry_var)\
-    static boost::log::once_block_flag flag_var = BOOST_LOG_ONCE_BLOCK_INIT;\
+    static boost::log::once_block_flag flag_var;\
     BOOST_LOG_ONCE_BLOCK_FLAG_INTERNAL(flag_var, sentry_var)
 
 #endif // BOOST_LOG_DOXYGEN_PASS
@@ -176,7 +178,7 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
  * been executed.
  */
 #define BOOST_LOG_ONCE_BLOCK_FLAG(flag_var)\
-    BOOST_LOG_ONCE_BLOCK_INTERNAL(\
+    BOOST_LOG_ONCE_BLOCK_FLAG_INTERNAL(\
         flag_var,\
         BOOST_LOG_UNIQUE_IDENTIFIER_NAME(_boost_log_once_block_sentry_))
 

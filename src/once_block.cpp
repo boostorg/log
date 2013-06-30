@@ -46,7 +46,7 @@ BOOST_LOG_API bool once_block_sentry::enter_once_block() const
 {
     AcquireSRWLockExclusive(&g_OnceBlockMutex);
 
-    once_block_flag volatile& flag = m_Flag;
+    once_block_flag volatile& flag = m_flag;
     while (flag.status != once_block_flag::initialized)
     {
         if (flag.status == once_block_flag::uninitialized)
@@ -77,7 +77,7 @@ BOOST_LOG_API void once_block_sentry::commit()
     AcquireSRWLockExclusive(&g_OnceBlockMutex);
 
     // The initializer executed successfully
-    m_Flag.status = once_block_flag::initialized;
+    m_flag.status = once_block_flag::initialized;
 
     ReleaseSRWLockExclusive(&g_OnceBlockMutex);
     WakeAllConditionVariable(&g_OnceBlockCond);
@@ -88,7 +88,7 @@ BOOST_LOG_API void once_block_sentry::rollback()
     AcquireSRWLockExclusive(&g_OnceBlockMutex);
 
     // The initializer failed, marking the flag as if it hasn't run at all
-    m_Flag.status = once_block_flag::uninitialized;
+    m_flag.status = once_block_flag::uninitialized;
 
     ReleaseSRWLockExclusive(&g_OnceBlockMutex);
     WakeAllConditionVariable(&g_OnceBlockCond);
@@ -354,17 +354,17 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
 
 BOOST_LOG_API bool once_block_sentry::enter_once_block() const
 {
-    return get_once_block_impl()->enter_once_block(m_Flag);
+    return get_once_block_impl()->enter_once_block(m_flag);
 }
 
 BOOST_LOG_API void once_block_sentry::commit()
 {
-    get_once_block_impl()->commit(m_Flag);
+    get_once_block_impl()->commit(m_flag);
 }
 
 BOOST_LOG_API void once_block_sentry::rollback()
 {
-    get_once_block_impl()->rollback(m_Flag);
+    get_once_block_impl()->rollback(m_flag);
 }
 
 } // namespace aux
@@ -399,7 +399,7 @@ BOOST_LOG_API bool once_block_sentry::enter_once_block() const
 {
     BOOST_VERIFY(!pthread_mutex_lock(&g_OnceBlockMutex));
 
-    once_block_flag volatile& flag = m_Flag;
+    once_block_flag volatile& flag = m_flag;
     while (flag.status != once_block_flag::initialized)
     {
         if (flag.status == once_block_flag::uninitialized)
@@ -429,7 +429,7 @@ BOOST_LOG_API void once_block_sentry::commit()
     BOOST_VERIFY(!pthread_mutex_lock(&g_OnceBlockMutex));
 
     // The initializer executed successfully
-    m_Flag.status = once_block_flag::initialized;
+    m_flag.status = once_block_flag::initialized;
 
     BOOST_VERIFY(!pthread_mutex_unlock(&g_OnceBlockMutex));
     BOOST_VERIFY(!pthread_cond_broadcast(&g_OnceBlockCond));
@@ -440,7 +440,7 @@ BOOST_LOG_API void once_block_sentry::rollback()
     BOOST_VERIFY(!pthread_mutex_lock(&g_OnceBlockMutex));
 
     // The initializer failed, marking the flag as if it hasn't run at all
-    m_Flag.status = once_block_flag::uninitialized;
+    m_flag.status = once_block_flag::uninitialized;
 
     BOOST_VERIFY(!pthread_mutex_unlock(&g_OnceBlockMutex));
     BOOST_VERIFY(!pthread_cond_broadcast(&g_OnceBlockCond));
