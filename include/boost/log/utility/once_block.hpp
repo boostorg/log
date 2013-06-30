@@ -76,30 +76,30 @@ private:
     once_block_flag& m_flag;
 
 public:
-    explicit once_block_sentry(once_block_flag& f) : m_flag(f)
+    explicit once_block_sentry(once_block_flag& f) BOOST_NOEXCEPT : m_flag(f)
     {
     }
 
-    ~once_block_sentry()
+    ~once_block_sentry() BOOST_NOEXCEPT
     {
         if (m_flag.status != once_block_flag::initialized)
             rollback();
     }
 
-    bool executed() const
+    bool executed() const BOOST_NOEXCEPT
     {
         return (m_flag.status == once_block_flag::initialized || enter_once_block());
     }
 
-    BOOST_LOG_API void commit();
+    BOOST_LOG_API void commit() BOOST_NOEXCEPT;
 
 private:
-    //  Non-copyable, non-assignable
-    once_block_sentry(once_block_sentry const&);
-    once_block_sentry& operator= (once_block_sentry const&);
+    BOOST_LOG_API bool enter_once_block() const BOOST_NOEXCEPT;
+    BOOST_LOG_API void rollback() BOOST_NOEXCEPT;
 
-    BOOST_LOG_API bool enter_once_block() const;
-    BOOST_LOG_API void rollback();
+    //  Non-copyable, non-assignable
+    BOOST_LOG_DELETED_FUNCTION(once_block_sentry(once_block_sentry const&))
+    BOOST_LOG_DELETED_FUNCTION(once_block_sentry& operator= (once_block_sentry const&))
 };
 
 } // namespace aux
@@ -129,24 +129,23 @@ private:
     once_block_flag& m_flag;
 
 public:
-    explicit once_block_sentry(once_block_flag& f) : m_flag(f)
+    explicit once_block_sentry(once_block_flag& f) BOOST_NOEXCEPT : m_flag(f)
     {
     }
 
-    bool executed() const
+    bool executed() const BOOST_NOEXCEPT
     {
         return m_flag.status;
     }
 
-    void commit()
+    void commit() BOOST_NOEXCEPT
     {
         m_flag.status = true;
     }
 
-private:
     //  Non-copyable, non-assignable
-    once_block_sentry(once_block_sentry const&);
-    once_block_sentry& operator= (once_block_sentry const&);
+    BOOST_LOG_DELETED_FUNCTION(once_block_sentry(once_block_sentry const&))
+    BOOST_LOG_DELETED_FUNCTION(once_block_sentry& operator= (once_block_sentry const&))
 };
 
 } // namespace aux
@@ -161,7 +160,7 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 #define BOOST_LOG_ONCE_BLOCK_FLAG_INTERNAL(flag_var, sentry_var)\
     for (boost::log::aux::once_block_sentry sentry_var((flag_var));\
-        !sentry_var.executed(); sentry_var.commit())
+        BOOST_UNLIKELY(!sentry_var.executed()); sentry_var.commit())
 
 // NOTE: flag_var deliberately doesn't have an initializer so that it is zero-initialized at the static initialization stage
 #define BOOST_LOG_ONCE_BLOCK_INTERNAL(flag_var, sentry_var)\

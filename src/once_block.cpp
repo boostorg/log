@@ -18,6 +18,7 @@
 #include <boost/log/utility/once_block.hpp>
 #ifndef BOOST_LOG_NO_THREADS
 
+#include <cstdlib>
 #include <boost/assert.hpp>
 
 #if defined(BOOST_THREAD_PLATFORM_WIN32)
@@ -42,7 +43,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
 
 } // namespace
 
-BOOST_LOG_API bool once_block_sentry::enter_once_block() const
+BOOST_LOG_API bool once_block_sentry::enter_once_block() const BOOST_NOEXCEPT
 {
     AcquireSRWLockExclusive(&g_OnceBlockMutex);
 
@@ -72,7 +73,7 @@ BOOST_LOG_API bool once_block_sentry::enter_once_block() const
     return true;
 }
 
-BOOST_LOG_API void once_block_sentry::commit()
+BOOST_LOG_API void once_block_sentry::commit() BOOST_NOEXCEPT
 {
     AcquireSRWLockExclusive(&g_OnceBlockMutex);
 
@@ -83,7 +84,7 @@ BOOST_LOG_API void once_block_sentry::commit()
     WakeAllConditionVariable(&g_OnceBlockCond);
 }
 
-BOOST_LOG_API void once_block_sentry::rollback()
+BOOST_LOG_API void once_block_sentry::rollback() BOOST_NOEXCEPT
 {
     AcquireSRWLockExclusive(&g_OnceBlockMutex);
 
@@ -328,10 +329,10 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         delete impl;
     }
 
-    once_block_impl_base* get_once_block_impl()
+    once_block_impl_base* get_once_block_impl() BOOST_NOEXCEPT
     {
         once_block_impl_base* impl = g_pOnceBlockImpl;
-        if (!impl)
+        if (!impl) try
         {
             once_block_impl_base* new_impl = create_once_block_impl();
             impl = (once_block_impl_base*)
@@ -346,23 +347,28 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
                 return new_impl;
             }
         }
+        catch (...)
+        {
+            BOOST_ASSERT_MSG(false, "Boost.Log: Failed to initialize the once block thread synchronization structures");
+            std::abort();
+        }
 
         return impl;
     }
 
 } // namespace
 
-BOOST_LOG_API bool once_block_sentry::enter_once_block() const
+BOOST_LOG_API bool once_block_sentry::enter_once_block() const BOOST_NOEXCEPT
 {
     return get_once_block_impl()->enter_once_block(m_flag);
 }
 
-BOOST_LOG_API void once_block_sentry::commit()
+BOOST_LOG_API void once_block_sentry::commit() BOOST_NOEXCEPT
 {
     get_once_block_impl()->commit(m_flag);
 }
 
-BOOST_LOG_API void once_block_sentry::rollback()
+BOOST_LOG_API void once_block_sentry::rollback() BOOST_NOEXCEPT
 {
     get_once_block_impl()->rollback(m_flag);
 }
@@ -395,7 +401,7 @@ static pthread_cond_t g_OnceBlockCond = PTHREAD_COND_INITIALIZER;
 
 } // namespace
 
-BOOST_LOG_API bool once_block_sentry::enter_once_block() const
+BOOST_LOG_API bool once_block_sentry::enter_once_block() const BOOST_NOEXCEPT
 {
     BOOST_VERIFY(!pthread_mutex_lock(&g_OnceBlockMutex));
 
@@ -424,7 +430,7 @@ BOOST_LOG_API bool once_block_sentry::enter_once_block() const
     return true;
 }
 
-BOOST_LOG_API void once_block_sentry::commit()
+BOOST_LOG_API void once_block_sentry::commit() BOOST_NOEXCEPT
 {
     BOOST_VERIFY(!pthread_mutex_lock(&g_OnceBlockMutex));
 
@@ -435,7 +441,7 @@ BOOST_LOG_API void once_block_sentry::commit()
     BOOST_VERIFY(!pthread_cond_broadcast(&g_OnceBlockCond));
 }
 
-BOOST_LOG_API void once_block_sentry::rollback()
+BOOST_LOG_API void once_block_sentry::rollback() BOOST_NOEXCEPT
 {
     BOOST_VERIFY(!pthread_mutex_lock(&g_OnceBlockMutex));
 
