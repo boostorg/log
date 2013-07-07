@@ -176,7 +176,7 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
  * been executed.
  */
 #define BOOST_LOG_ONCE_BLOCK_FLAG(flag_var)\
-    BOOST_LOG_ONCE_BLOCK_INTERNAL(\
+    BOOST_LOG_ONCE_BLOCK_FLAG_INTERNAL(\
         flag_var,\
         BOOST_LOG_UNIQUE_IDENTIFIER_NAME(_boost_log_once_block_sentry_))
 
