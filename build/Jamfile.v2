@@ -344,6 +344,7 @@ local BOOST_LOG_SETUP_COMMON_SRC =
     filter_parser.cpp
     formatter_parser.cpp
     default_filter_factory.cpp
+    default_formatter_factory.cpp
     ;
 
 lib boost_log_setup

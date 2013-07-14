@@ -27,10 +27,6 @@
 #include <boost/bind.hpp>
 #include <boost/move/core.hpp>
 #include <boost/move/utility.hpp>
-#include <boost/mpl/vector.hpp>
-#include <boost/mpl/copy.hpp>
-#include <boost/mpl/push_back.hpp>
-#include <boost/mpl/back_inserter.hpp>
 #include <boost/optional/optional.hpp>
 #include <boost/utility/in_place_factory.hpp>
 #include <boost/range/iterator_range_core.hpp>
@@ -43,30 +39,24 @@
 #include <boost/spirit/include/qi_symbols.hpp>
 #include <boost/phoenix/core.hpp>
 #include <boost/phoenix/operator.hpp>
-#include <boost/date_time/gregorian/gregorian.hpp>
-#include <boost/date_time/local_time/local_time.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/log/expressions/attr.hpp>
 #include <boost/log/expressions/message.hpp>
 #include <boost/log/expressions/formatters/stream.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
-#include <boost/log/attributes/named_scope.hpp>
 #include <boost/log/exceptions.hpp>
 #include <boost/log/detail/singleton.hpp>
-#include <boost/log/detail/process_id.hpp>
 #include <boost/log/detail/code_conversion.hpp>
 #include <boost/log/detail/default_attribute_names.hpp>
 #include <boost/log/utility/functional/nop.hpp>
 #include <boost/log/utility/setup/formatter_parser.hpp>
-#include <boost/log/utility/type_dispatch/standard_types.hpp>
-#include <boost/log/utility/type_dispatch/date_time_types.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
-#include <boost/log/detail/thread_id.hpp>
 #include <boost/log/detail/locks.hpp>
 #include <boost/log/detail/light_rw_mutex.hpp>
 #endif
 #include "parser_utils.hpp"
 #include "spirit_encoding.hpp"
+#if !defined(BOOST_LOG_WITHOUT_DEFAULT_FACTORIES)
+#include "default_formatter_factory.hpp"
+#endif
 #include <boost/log/detail/header.hpp>
 
 namespace qi = boost::spirit::qi;
@@ -91,7 +81,8 @@ struct formatters_repository :
     friend class base_type;
 #endif
 
-    typedef formatter_factory< CharT > formatter_factory_type;
+    typedef CharT char_type;
+    typedef formatter_factory< char_type > formatter_factory_type;
 
     //! Attribute name ordering predicate
     struct attribute_name_order
@@ -113,6 +104,28 @@ struct formatters_repository :
 #endif
     //! The map of formatter factories
     factories_map m_Map;
+#if !defined(BOOST_LOG_WITHOUT_DEFAULT_FACTORIES)
+    //! Default factory
+    mutable aux::default_formatter_factory< char_type > m_DefaultFactory;
+#endif
+
+    //! The method returns the filter factory for the specified attribute name
+    formatter_factory_type& get_factory(attribute_name const& name) const
+    {
+        typename factories_map::const_iterator it = m_Map.find(name);
+        if (it != m_Map.end())
+        {
+            return *it->second;
+        }
+        else
+        {
+#if !defined(BOOST_LOG_WITHOUT_DEFAULT_FACTORIES)
+            return m_DefaultFactory;
+#else
+            BOOST_LOG_THROW_DESCR(setup_error, "No formatter factory registered for attribute " + name.string());
+#endif
+        }
+    }
 
 private:
     formatters_repository()
@@ -326,43 +339,10 @@ private:
         }
         else
         {
+            // Use the factory to create the formatter
             formatters_repository< char_type > const& repo = formatters_repository< char_type >::get();
-            typename formatters_repository< char_type >::factories_map::const_iterator it = repo.m_Map.find(m_AttrName);
-            if (it != repo.m_Map.end())
-            {
-                // We've found a user-defined factory for this attribute
-                append_formatter(it->second->create_formatter(m_AttrName, m_FactoryArgs));
-            }
-            else
-            {
-                // No user-defined factory, shall use the most generic formatter we can ever imagine at this point
-                typedef mpl::copy<
-                    // We have to exclude std::time_t since it's an integral type and will conflict with one of the standard types
-                    boost_time_period_types,
-                    mpl::back_inserter<
-                        mpl::copy<
-                            boost_time_duration_types,
-                            mpl::back_inserter< boost_date_time_types >
-                        >::type
-                    >
-                >::type time_related_types;
-
-                typedef mpl::copy<
-                    mpl::copy<
-                        mpl::vector<
-                            attributes::named_scope_list,
-#if !defined(BOOST_LOG_NO_THREADS)
-                            log::aux::thread::id,
-#endif
-                            log::aux::process::id
-                        >,
-                        mpl::back_inserter< time_related_types >
-                    >::type,
-                    mpl::back_inserter< default_attribute_types >
-                >::type supported_types;
-
-                append_formatter(expressions::stream << expressions::attr< supported_types::type >(m_AttrName));
-            }
+            formatter_factory_type& factory = repo.get_factory(m_AttrName);
+            append_formatter(factory.create_formatter(m_AttrName, m_FactoryArgs));
         }
 
         // Eventually, clear all the auxiliary data
