@@ -13,7 +13,7 @@
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
 
-#if !defined(BOOST_LOG_WITHOUT_DEFAULT_FACTORIES)
+#if !defined(BOOST_LOG_WITHOUT_SETTINGS_PARSERS) && !defined(BOOST_LOG_WITHOUT_DEFAULT_FACTORIES)
 
 #include <string>
 #include <boost/move/core.hpp>
@@ -398,4 +398,4 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 #include <boost/log/detail/footer.hpp>
 
-#endif // !defined(BOOST_LOG_WITHOUT_DEFAULT_FACTORIES)
+#endif // !defined(BOOST_LOG_WITHOUT_SETTINGS_PARSERS) && !defined(BOOST_LOG_WITHOUT_DEFAULT_FACTORIES)

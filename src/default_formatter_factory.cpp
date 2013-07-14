@@ -13,7 +13,10 @@
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
 
-#if !defined(BOOST_LOG_WITHOUT_DEFAULT_FACTORIES)
+#if !defined(BOOST_LOG_WITHOUT_SETTINGS_PARSERS) && !defined(BOOST_LOG_WITHOUT_DEFAULT_FACTORIES)
+
+#undef BOOST_MPL_LIMIT_VECTOR_SIZE
+#define BOOST_MPL_LIMIT_VECTOR_SIZE 50
 
 #include <boost/mpl/vector.hpp>
 #include <boost/mpl/copy.hpp>
@@ -95,4 +98,4 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 #include <boost/log/detail/footer.hpp>
 
-#endif // !defined(BOOST_LOG_WITHOUT_DEFAULT_FACTORIES)
+#endif // !defined(BOOST_LOG_WITHOUT_SETTINGS_PARSERS) && !defined(BOOST_LOG_WITHOUT_DEFAULT_FACTORIES)

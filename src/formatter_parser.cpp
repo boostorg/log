@@ -15,9 +15,6 @@
 
 #ifndef BOOST_LOG_WITHOUT_SETTINGS_PARSERS
 
-#undef BOOST_MPL_LIMIT_VECTOR_SIZE
-#define BOOST_MPL_LIMIT_VECTOR_SIZE 50
-
 #include <ctime>
 #include <map>
 #include <string>
