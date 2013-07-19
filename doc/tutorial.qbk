@@ -37,7 +37,7 @@ While severity levels can be used for informative purposes, you will normally wa
 
 [@boost:/libs/log/example/doc/tutorial_trivial_flt.cpp See the complete code].
 
-Now, if we run this code sample, the first two log records will be ignored, while the remaining four will pass on to the file.
+Now, if we run this code sample, the first two log records will be ignored, while the remaining four will pass on to the console.
 
 [important Remember that the streaming expression is only executed if the record passed filtering. Don't specify business-critical calls in the streaming expression, as these calls may not get invoked if the record is filtered away.]
 
