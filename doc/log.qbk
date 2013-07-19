@@ -1,6 +1,6 @@
 [library Boost.Log
     [quickbook 1.5]
-    [version 2.0]
+    [version v2]
     [authors [Semashev, Andrey]]
     [copyright 2007 - 2013 Andrey Semashev]
     [license
