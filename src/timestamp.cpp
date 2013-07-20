@@ -20,12 +20,6 @@
 #include <boost/detail/interlocked.hpp>
 #include "windows_version.hpp"
 #include <windows.h>
-#if (defined(_MSC_VER) && defined(_M_IX86) && defined(_M_IX86_FP) && _M_IX86_FP >= 2) || (defined(__GNUC__) && defined(__i386__) && defined(__SSE2__))
-#include <emmintrin.h>
-#if defined(_MSC_VER)
-#include <intrin.h>
-#endif
-#endif
 #else
 #include <unistd.h> // for config macros
 #if defined(macintosh) || defined(__APPLE__) || defined(__APPLE_CC__)
@@ -65,7 +59,13 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
 //! Atomically loads and stores the 64-bit value through SSE2 instructions
 BOOST_LOG_FORCEINLINE void move64(const uint64_t* from, uint64_t* to)
 {
-    _mm_storel_epi64(reinterpret_cast< __m128i* >(to), _mm_loadl_epi64(reinterpret_cast< const __m128i* >(from)));
+    __asm
+    {
+        mov eax, from
+        mov edx, to
+        movq xmm4, qword ptr [eax]
+        movq qword ptr [edx], xmm4
+    };
 }
 #       else // defined(_M_IX86_FP) && _M_IX86_FP >= 2
 //! Atomically loads and stores the 64-bit value through FPU instructions
@@ -97,7 +97,14 @@ BOOST_LOG_FORCEINLINE void move64(const uint64_t* from, uint64_t* to)
 //! Atomically loads and stores the 64-bit value through SSE2 instructions
 BOOST_LOG_FORCEINLINE void move64(const uint64_t* from, uint64_t* to)
 {
-    _mm_storel_epi64(reinterpret_cast< __m128i* >(to), _mm_loadl_epi64(reinterpret_cast< const __m128i* >(from)));
+    __asm__ __volatile__
+    (
+        "movq %1, %%xmm4\n\t"
+        "movq %%xmm4, %0\n\t"
+            : "=m" (*to)
+            : "m" (*from)
+            : "memory", "xmm4"
+    );
 }
 #       else // defined(__SSE2__)
 //! Atomically loads and stores the 64-bit value through FPU instructions

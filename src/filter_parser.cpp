@@ -48,7 +48,9 @@
 #include <boost/log/detail/light_rw_mutex.hpp>
 #endif // !defined(BOOST_LOG_NO_THREADS)
 #include "parser_utils.hpp"
+#if !defined(BOOST_LOG_WITHOUT_DEFAULT_FACTORIES)
 #include "default_filter_factory.hpp"
+#endif
 #include "spirit_encoding.hpp"
 #include <boost/log/detail/header.hpp>
 
@@ -94,17 +96,27 @@ struct filters_repository :
 #endif
     //! The map of filter factories
     factories_map m_Map;
+#if !defined(BOOST_LOG_WITHOUT_DEFAULT_FACTORIES)
     //! Default factory
     mutable aux::default_filter_factory< char_type > m_DefaultFactory;
+#endif
 
     //! The method returns the filter factory for the specified attribute name
     filter_factory_type& get_factory(attribute_name const& name) const
     {
         typename factories_map::const_iterator it = m_Map.find(name);
         if (it != m_Map.end())
+        {
             return *it->second;
+        }
         else
+        {
+#if !defined(BOOST_LOG_WITHOUT_DEFAULT_FACTORIES)
             return m_DefaultFactory;
+#else
+            BOOST_LOG_THROW_DESCR(setup_error, "No filter factory registered for attribute " + name.string());
+#endif
+        }
     }
 
 private:
