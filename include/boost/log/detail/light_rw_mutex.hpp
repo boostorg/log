@@ -18,7 +18,7 @@
 
 #include <boost/log/detail/config.hpp>
 
-#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#ifdef BOOST_HAS_PRAGMA_ONCE
 #pragma once
 #endif
 
@@ -105,8 +105,8 @@ public:
     }
 
     // Noncopyable
-    BOOST_LOG_DELETED_FUNCTION(light_rw_mutex(light_rw_mutex const&))
-    BOOST_LOG_DELETED_FUNCTION(light_rw_mutex& operator= (light_rw_mutex const&))
+    BOOST_DELETED_FUNCTION(light_rw_mutex(light_rw_mutex const&))
+    BOOST_DELETED_FUNCTION(light_rw_mutex& operator= (light_rw_mutex const&))
 };
 
 } // namespace aux
@@ -157,8 +157,8 @@ public:
     }
 
     // Noncopyable
-    BOOST_LOG_DELETED_FUNCTION(light_rw_mutex(light_rw_mutex const&))
-    BOOST_LOG_DELETED_FUNCTION(light_rw_mutex& operator= (light_rw_mutex const&))
+    BOOST_DELETED_FUNCTION(light_rw_mutex(light_rw_mutex const&))
+    BOOST_DELETED_FUNCTION(light_rw_mutex& operator= (light_rw_mutex const&))
 };
 
 } // namespace aux
@@ -189,8 +189,8 @@ public:
     BOOST_LOG_API void unlock();
 
     // Noncopyable
-    BOOST_LOG_DELETED_FUNCTION(light_rw_mutex(light_rw_mutex const&))
-    BOOST_LOG_DELETED_FUNCTION(light_rw_mutex& operator= (light_rw_mutex const&))
+    BOOST_DELETED_FUNCTION(light_rw_mutex(light_rw_mutex const&))
+    BOOST_DELETED_FUNCTION(light_rw_mutex& operator= (light_rw_mutex const&))
 };
 
 } // namespace aux

@@ -28,7 +28,7 @@
 #include <boost/log/utility/formatting_ostream.hpp>
 #include <boost/log/detail/header.hpp>
 
-#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#ifdef BOOST_HAS_PRAGMA_ONCE
 #pragma once
 #endif
 
@@ -87,7 +87,7 @@ public:
     //! Format element descriptors
     format_element_list format_elements;
 
-    BOOST_LOG_DEFAULTED_FUNCTION(format_description(), {})
+    BOOST_DEFAULTED_FUNCTION(format_description(), {})
 
     format_description(format_description const& that) : literal_chars(that.literal_chars), format_elements(that.format_elements)
     {
@@ -113,14 +113,14 @@ BOOST_LOG_API format_description< CharT > parse_format(const CharT* begin, const
 
 //! Parses format string
 template< typename CharT >
-BOOST_LOG_FORCEINLINE format_description< CharT > parse_format(const CharT* begin)
+BOOST_FORCEINLINE format_description< CharT > parse_format(const CharT* begin)
 {
     return parse_format(begin, begin + std::char_traits< CharT >::length(begin));
 }
 
 //! Parses format string
 template< typename CharT, typename TraitsT, typename AllocatorT >
-BOOST_LOG_FORCEINLINE format_description< CharT > parse_format(std::basic_string< CharT, TraitsT, AllocatorT > const& fmt)
+BOOST_FORCEINLINE format_description< CharT > parse_format(std::basic_string< CharT, TraitsT, AllocatorT > const& fmt)
 {
     const CharT* begin = fmt.c_str();
     return parse_format(begin, begin + fmt.size());

@@ -20,7 +20,7 @@
 #include <boost/log/utility/once_block.hpp>
 #include <boost/log/detail/header.hpp>
 
-#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#ifdef BOOST_HAS_PRAGMA_ONCE
 #pragma once
 #endif
 
@@ -35,7 +35,7 @@ template< typename DerivedT, typename StorageT = DerivedT >
 class lazy_singleton
 {
 public:
-    BOOST_LOG_DEFAULTED_FUNCTION(lazy_singleton(), {})
+    BOOST_DEFAULTED_FUNCTION(lazy_singleton(), {})
 
     //! Returns the singleton instance
     static StorageT& get()
@@ -53,8 +53,8 @@ public:
         get_instance();
     }
 
-    BOOST_LOG_DELETED_FUNCTION(lazy_singleton(lazy_singleton const&))
-    BOOST_LOG_DELETED_FUNCTION(lazy_singleton& operator= (lazy_singleton const&))
+    BOOST_DELETED_FUNCTION(lazy_singleton(lazy_singleton const&))
+    BOOST_DELETED_FUNCTION(lazy_singleton& operator= (lazy_singleton const&))
 
 protected:
     //! Returns the singleton instance (not thread-safe)

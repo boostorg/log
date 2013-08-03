@@ -16,7 +16,6 @@
 #include <boost/log/detail/timestamp.hpp>
 
 #if defined(BOOST_WINDOWS) && !defined(__CYGWIN__)
-#include <boost/log/detail/alignas.hpp>
 #include <boost/detail/interlocked.hpp>
 #include "windows_version.hpp"
 #include <windows.h>
@@ -57,7 +56,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
 #   if defined(_M_IX86)
 #       if defined(_M_IX86_FP) && _M_IX86_FP >= 2
 //! Atomically loads and stores the 64-bit value through SSE2 instructions
-BOOST_LOG_FORCEINLINE void move64(const uint64_t* from, uint64_t* to)
+BOOST_FORCEINLINE void move64(const uint64_t* from, uint64_t* to)
 {
     __asm
     {
@@ -69,7 +68,7 @@ BOOST_LOG_FORCEINLINE void move64(const uint64_t* from, uint64_t* to)
 }
 #       else // defined(_M_IX86_FP) && _M_IX86_FP >= 2
 //! Atomically loads and stores the 64-bit value through FPU instructions
-BOOST_LOG_FORCEINLINE void move64(const uint64_t* from, uint64_t* to)
+BOOST_FORCEINLINE void move64(const uint64_t* from, uint64_t* to)
 {
     __asm
     {
@@ -82,7 +81,7 @@ BOOST_LOG_FORCEINLINE void move64(const uint64_t* from, uint64_t* to)
 #       endif // defined(_M_IX86_FP) && _M_IX86_FP >= 2
 #   elif defined(_M_AMD64) || defined(_M_IA64)
 //! Atomically loads and stores the 64-bit value
-BOOST_LOG_FORCEINLINE void move64(const uint64_t* from, uint64_t* to)
+BOOST_FORCEINLINE void move64(const uint64_t* from, uint64_t* to)
 {
     *to = *from;
 }
@@ -95,7 +94,7 @@ BOOST_LOG_FORCEINLINE void move64(const uint64_t* from, uint64_t* to)
 #   if defined(__i386__)
 #       if defined(__SSE2__)
 //! Atomically loads and stores the 64-bit value through SSE2 instructions
-BOOST_LOG_FORCEINLINE void move64(const uint64_t* from, uint64_t* to)
+BOOST_FORCEINLINE void move64(const uint64_t* from, uint64_t* to)
 {
     __asm__ __volatile__
     (
@@ -108,7 +107,7 @@ BOOST_LOG_FORCEINLINE void move64(const uint64_t* from, uint64_t* to)
 }
 #       else // defined(__SSE2__)
 //! Atomically loads and stores the 64-bit value through FPU instructions
-BOOST_LOG_FORCEINLINE void move64(const uint64_t* from, uint64_t* to)
+BOOST_FORCEINLINE void move64(const uint64_t* from, uint64_t* to)
 {
     __asm__ __volatile__
     (
@@ -122,7 +121,7 @@ BOOST_LOG_FORCEINLINE void move64(const uint64_t* from, uint64_t* to)
 #       endif // defined(__SSE2__)
 #   elif defined(__x86_64__)
 //! Atomically loads and stores the 64-bit value
-BOOST_LOG_FORCEINLINE void move64(const uint64_t* from, uint64_t* to)
+BOOST_FORCEINLINE void move64(const uint64_t* from, uint64_t* to)
 {
     *to = *from;
 }
@@ -138,10 +137,10 @@ BOOST_LOG_FORCEINLINE void move64(const uint64_t* from, uint64_t* to)
 
 #if defined(BOOST_LOG_GENERIC_MOVE64)
 
-BOOST_LOG_ALIGNAS(16) long g_spin_lock = 0;
+BOOST_ALIGNMENT(16) long g_spin_lock = 0;
 
 //! Atomically loads and stores the 64-bit value
-BOOST_LOG_FORCEINLINE void move64(const uint64_t* from, uint64_t* to)
+BOOST_FORCEINLINE void move64(const uint64_t* from, uint64_t* to)
 {
     while (BOOST_INTERLOCKED_COMPARE_EXCHANGE(&g_spin_lock, 1, 0) != 0);
     *to = *from;
@@ -150,7 +149,7 @@ BOOST_LOG_FORCEINLINE void move64(const uint64_t* from, uint64_t* to)
 
 #endif // defined(BOOST_LOG_GENERIC_MOVE64)
 
-BOOST_LOG_ALIGNAS(16) uint64_t g_ticks = 0;
+BOOST_ALIGNMENT(16) uint64_t g_ticks = 0;
 
 union ticks_caster
 {

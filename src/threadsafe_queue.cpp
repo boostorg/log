@@ -31,7 +31,6 @@
 #include <boost/type_traits/alignment_of.hpp>
 #include <boost/log/detail/spin_mutex.hpp>
 #include <boost/log/detail/locks.hpp>
-#include <boost/log/detail/alignas.hpp>
 #include <boost/log/detail/malloc_aligned.hpp>
 #include <boost/log/detail/header.hpp>
 
@@ -53,7 +52,7 @@ private:
      * A structure that contains a pointer to the node and the associated mutex.
      * The alignment below allows to eliminate false sharing, it should not be less than CPU cache line size.
      */
-    struct BOOST_LOG_ALIGNAS(BOOST_LOG_CPU_CACHE_LINE_SIZE) pointer
+    struct BOOST_ALIGNMENT(BOOST_LOG_CPU_CACHE_LINE_SIZE) pointer
     {
         //! Pointer to the either end of the queue
         node_base* node;
@@ -121,11 +120,11 @@ private:
     threadsafe_queue_impl_generic(threadsafe_queue_impl_generic const&);
     threadsafe_queue_impl_generic& operator= (threadsafe_queue_impl_generic const&);
 
-    BOOST_LOG_FORCEINLINE static void set_next(node_base* p, node_base* next)
+    BOOST_FORCEINLINE static void set_next(node_base* p, node_base* next)
     {
         p->next.data[0] = next;
     }
-    BOOST_LOG_FORCEINLINE static node_base* get_next(node_base* p)
+    BOOST_FORCEINLINE static node_base* get_next(node_base* p)
     {
         return static_cast< node_base* >(p->next.data[0]);
     }

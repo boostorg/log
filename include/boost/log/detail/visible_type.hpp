@@ -20,7 +20,7 @@
 #include <boost/log/detail/config.hpp>
 #include <boost/log/detail/header.hpp>
 
-#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#ifdef BOOST_HAS_PRAGMA_ONCE
 #pragma once
 #endif
 
@@ -32,7 +32,7 @@ namespace aux {
 
 //! The wrapper type whose type_info is always visible
 template< typename T >
-struct BOOST_LOG_VISIBLE visible_type
+struct BOOST_SYMBOL_VISIBLE visible_type
 {
     typedef T wrapped_type;
 };

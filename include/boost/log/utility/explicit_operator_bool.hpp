@@ -20,7 +20,7 @@
 #include <boost/log/detail/config.hpp>
 #include <boost/log/detail/header.hpp>
 
-#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#ifdef BOOST_HAS_PRAGMA_ONCE
 #pragma once
 #endif
 
@@ -34,7 +34,7 @@
  * in terms of which the conversion operator will be implemented.
  */
 #define BOOST_LOG_EXPLICIT_OPERATOR_BOOL()\
-    BOOST_LOG_FORCEINLINE explicit operator bool () const\
+    BOOST_FORCEINLINE explicit operator bool () const\
     {\
         return !this->operator! ();\
     }
@@ -81,7 +81,7 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 } // namespace boost
 
 #define BOOST_LOG_EXPLICIT_OPERATOR_BOOL()\
-    BOOST_LOG_FORCEINLINE operator boost::log::aux::unspecified_bool_type () const\
+    BOOST_FORCEINLINE operator boost::log::aux::unspecified_bool_type () const\
     {\
         if (!this->operator!())\
             return &boost::log::aux::unspecified_bool::true_value;\
@@ -92,7 +92,7 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 #else
 
 #define BOOST_LOG_EXPLICIT_OPERATOR_BOOL()\
-    BOOST_LOG_FORCEINLINE operator bool () const\
+    BOOST_FORCEINLINE operator bool () const\
     {\
         return !this->operator! ();\
     }

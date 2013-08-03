@@ -18,7 +18,7 @@
 
 #include <boost/log/detail/config.hpp>
 
-#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#ifdef BOOST_HAS_PRAGMA_ONCE
 #pragma once
 #endif
 
@@ -154,8 +154,8 @@ public:
     }
 
     //  Non-copyable
-    BOOST_LOG_DELETED_FUNCTION(spin_mutex(spin_mutex const&))
-    BOOST_LOG_DELETED_FUNCTION(spin_mutex& operator= (spin_mutex const&))
+    BOOST_DELETED_FUNCTION(spin_mutex(spin_mutex const&))
+    BOOST_DELETED_FUNCTION(spin_mutex& operator= (spin_mutex const&))
 };
 
 #undef BOOST_LOG_PAUSE_OP
@@ -212,8 +212,8 @@ public:
     }
 
     //  Non-copyable
-    BOOST_LOG_DELETED_FUNCTION(spin_mutex(spin_mutex const&))
-    BOOST_LOG_DELETED_FUNCTION(spin_mutex& operator= (spin_mutex const&))
+    BOOST_DELETED_FUNCTION(spin_mutex(spin_mutex const&))
+    BOOST_DELETED_FUNCTION(spin_mutex& operator= (spin_mutex const&))
 };
 
 #else // defined(_POSIX_SPIN_LOCKS)
@@ -247,8 +247,8 @@ public:
     }
 
     //  Non-copyable
-    BOOST_LOG_DELETED_FUNCTION(spin_mutex(spin_mutex const&))
-    BOOST_LOG_DELETED_FUNCTION(spin_mutex& operator= (spin_mutex const&))
+    BOOST_DELETED_FUNCTION(spin_mutex(spin_mutex const&))
+    BOOST_DELETED_FUNCTION(spin_mutex& operator= (spin_mutex const&))
 };
 
 #endif // defined(_POSIX_SPIN_LOCKS)

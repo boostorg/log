@@ -32,7 +32,7 @@
 #include <boost/log/core/record.hpp>
 #include <boost/log/detail/header.hpp>
 
-#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#ifdef BOOST_HAS_PRAGMA_ONCE
 #pragma once
 #endif
 
@@ -62,7 +62,7 @@ namespace aux {
 
     protected:
         //! Factory implementation
-        class BOOST_LOG_VISIBLE impl :
+        class BOOST_SYMBOL_VISIBLE impl :
             public attribute_value::impl
         {
         public:

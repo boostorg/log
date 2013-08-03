@@ -184,8 +184,8 @@ private:
     }
 
     //  Assignment and copying are prohibited
-    BOOST_LOG_DELETED_FUNCTION(settings_grammar(settings_grammar const&))
-    BOOST_LOG_DELETED_FUNCTION(settings_grammar& operator= (settings_grammar const&))
+    BOOST_DELETED_FUNCTION(settings_grammar(settings_grammar const&))
+    BOOST_DELETED_FUNCTION(settings_grammar& operator= (settings_grammar const&))
 };
 
 } // namespace

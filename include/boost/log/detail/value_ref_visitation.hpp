@@ -44,7 +44,7 @@ struct apply_visitor_dispatch
 {
     typedef typename VisitorT::result_type result_type;
 
-    static BOOST_LOG_FORCEINLINE result_type call(const void* p, unsigned int type_index, VisitorT& visitor)
+    static BOOST_FORCEINLINE result_type call(const void* p, unsigned int type_index, VisitorT& visitor)
     {
         typedef typename mpl::begin< SequenceT >::type begin_type;
         typedef typename mpl::advance_c< begin_type, SizeV / 2u >::type middle_type;
@@ -91,7 +91,7 @@ struct apply_visitor_dispatch< SequenceT, VisitorT, BOOST_LOG_AUX_SWITCH_SIZE >
 {
     typedef typename VisitorT::result_type result_type;
 
-    static BOOST_LOG_FORCEINLINE result_type call(const void* p, unsigned int type_index, VisitorT& visitor)
+    static BOOST_FORCEINLINE result_type call(const void* p, unsigned int type_index, VisitorT& visitor)
     {
         switch (type_index)
         {

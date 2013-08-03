@@ -113,7 +113,7 @@ private:
     formatters m_formatters;
 
 public:
-    BOOST_LOG_DEFAULTED_FUNCTION(named_scope_formatter(), {})
+    BOOST_DEFAULTED_FUNCTION(named_scope_formatter(), {})
     named_scope_formatter(named_scope_formatter const& that) : m_formatters(that.m_formatters) {}
     named_scope_formatter(BOOST_RV_REF(named_scope_formatter) that) { m_formatters.swap(that.m_formatters); }
 

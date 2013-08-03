@@ -30,12 +30,12 @@
 #if !defined(BOOST_LOG_TYPEOF)
 #include <boost/utility/enable_if.hpp>
 #endif
-#if defined(BOOST_LOG_TYPEOF) && defined(BOOST_LOG_NO_TRAILING_RESULT_TYPE)
+#if defined(BOOST_LOG_TYPEOF) && defined(BOOST_NO_CXX11_TRAILING_RESULT_TYPES)
 #include <boost/utility/declval.hpp>
 #endif
 #include <boost/log/detail/header.hpp>
 
-#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#ifdef BOOST_HAS_PRAGMA_ONCE
 #pragma once
 #endif
 
@@ -223,7 +223,7 @@ private:
         }
 
 #if defined(BOOST_LOG_TYPEOF) && !(defined(__GNUC__) && !defined(__INTEL_COMPILER) && !defined(__clang__) && !defined(__PATHSCALE__) && !defined(__GXX_EXPERIMENTAL_CXX0X__) && (__GNUC__ == 4 && __GNUC_MINOR__ <= 5))
-#if !defined(BOOST_LOG_NO_TRAILING_RESULT_TYPE)
+#if !defined(BOOST_NO_CXX11_TRAILING_RESULT_TYPES)
         template< typename T >
         auto or_default(T const& def_value) const -> BOOST_LOG_TYPEOF(property_tree_type().get(typename property_tree_type::path_type(), def_value))
         {
@@ -297,7 +297,7 @@ private:
         typedef typename iterator_adaptor_::reference reference;
 
     public:
-        BOOST_LOG_DEFAULTED_FUNCTION(iter(), {})
+        BOOST_DEFAULTED_FUNCTION(iter(), {})
         template< bool OtherIsConstV >
         iter(iter< OtherIsConstV > const& that) : iterator_adaptor_(that.base()) {}
         explicit iter(base_iterator_type const& it) : iterator_adaptor_(it) {}

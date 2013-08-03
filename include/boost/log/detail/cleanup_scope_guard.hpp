@@ -19,7 +19,7 @@
 #include <boost/log/detail/config.hpp>
 #include <boost/log/detail/header.hpp>
 
-#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#ifdef BOOST_HAS_PRAGMA_ONCE
 #pragma once
 #endif
 
@@ -37,8 +37,8 @@ struct cleanup_guard
     ~cleanup_guard() { m_Obj.clear(); }
 
     // Copying prohibited
-    BOOST_LOG_DELETED_FUNCTION(cleanup_guard(cleanup_guard const&))
-    BOOST_LOG_DELETED_FUNCTION(cleanup_guard& operator= (cleanup_guard const&))
+    BOOST_DELETED_FUNCTION(cleanup_guard(cleanup_guard const&))
+    BOOST_DELETED_FUNCTION(cleanup_guard& operator= (cleanup_guard const&))
 
 private:
     T& m_Obj;

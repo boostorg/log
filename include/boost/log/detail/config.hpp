@@ -39,11 +39,7 @@
 #   endif
 #endif
 
-#if (defined(_MSC_VER) && (_MSC_VER >= 1020)) || defined(__GNUC__) || defined(BOOST_CLANG) || defined(BOOST_INTEL) || defined(__COMO__) || defined(__DMC__)
-#   define BOOST_LOG_HAS_PRAGMA_ONCE
-#endif
-
-#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#ifdef BOOST_HAS_PRAGMA_ONCE
 #pragma once
 #endif
 
@@ -120,37 +116,9 @@
 #   define BOOST_LOG_ANONYMOUS_NAMESPACE namespace
 #endif
 
-#define BOOST_LOG_NO_TRAILING_RESULT_TYPE
-#define BOOST_LOG_NO_INLINE_NAMESPACES
-
-#if defined(BOOST_CLANG)
-#   if __has_feature(cxx_trailing_return)
-#       undef BOOST_LOG_NO_TRAILING_RESULT_TYPE
-#   endif
-#   if __has_feature(cxx_inline_namespaces)
-#       undef BOOST_LOG_NO_INLINE_NAMESPACES
-#   endif
-#elif defined(__GNUC__) && defined(__GXX_EXPERIMENTAL_CXX0X__)
-#   if (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 4))
-#       undef BOOST_LOG_NO_TRAILING_RESULT_TYPE
-#       undef BOOST_LOG_NO_INLINE_NAMESPACES
-#   endif
-#endif
-
 #if defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) || (defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ <= 6))
 // GCC up to 4.6 (inclusively) did not support expanding template argument packs into non-variadic template arguments
 #define BOOST_LOG_NO_CXX11_ARG_PACKS_TO_NON_VARIADIC_ARGS_EXPANSION
-#endif
-
-// Extended declaration macros. Used to implement compiler-specific optimizations.
-#if defined(BOOST_FORCEINLINE)
-#   define BOOST_LOG_FORCEINLINE BOOST_FORCEINLINE
-#elif defined(_MSC_VER)
-#   define BOOST_LOG_FORCEINLINE __forceinline
-#elif defined(__GNUC__) && (__GNUC__ > 3)
-#   define BOOST_LOG_FORCEINLINE inline __attribute__((always_inline))
-#else
-#   define BOOST_LOG_FORCEINLINE inline
 #endif
 
 #if defined(_MSC_VER)
@@ -204,14 +172,6 @@
 #   endif
 #elif defined(__GNUC__) && !defined(__QNX__)
 #   define BOOST_LOG_HAS_CXXABI_H
-#endif
-
-#if defined(BOOST_SYMBOL_VISIBLE)
-#   define BOOST_LOG_VISIBLE BOOST_SYMBOL_VISIBLE
-#elif defined(__GNUC__) && (__GNUC__ >= 4)
-#   define BOOST_LOG_VISIBLE __attribute__((visibility("default")))
-#else
-#   define BOOST_LOG_VISIBLE
 #endif
 
 #if !defined(BOOST_LOG_BUILDING_THE_LIB)
@@ -269,7 +229,7 @@
 #       endif
 #   endif
 #   ifndef BOOST_LOG_API
-#       define BOOST_LOG_API BOOST_LOG_VISIBLE
+#       define BOOST_LOG_API BOOST_SYMBOL_VISIBLE
 #   endif
 
 #endif // !defined(BOOST_LOG_BUILDING_THE_LIB)
@@ -312,23 +272,6 @@
 #   endif
 #endif // defined(BOOST_LOG_USE_COMPILER_TLS)
 
-#if defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ <= 5)
-     // GCC 4.5 forbids declaration of defaulted functions in private or protected sections
-#    define BOOST_LOG_NO_CXX11_NON_PUBLIC_DEFAULTED_FUNCTIONS
-#endif
-
-#if defined(BOOST_LOG_DOXYGEN_PASS) || !(defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS) || defined(BOOST_LOG_NO_CXX11_NON_PUBLIC_DEFAULTED_FUNCTIONS))
-#   define BOOST_LOG_DEFAULTED_FUNCTION(fun, body) fun = default;
-#else
-#   define BOOST_LOG_DEFAULTED_FUNCTION(fun, body) fun body
-#endif
-
-#if defined(BOOST_LOG_DOXYGEN_PASS) || !defined(BOOST_NO_CXX11_DELETED_FUNCTIONS)
-#   define BOOST_LOG_DELETED_FUNCTION(fun) fun = delete;
-#else
-#   define BOOST_LOG_DELETED_FUNCTION(fun) private: fun;
-#endif
-
 namespace boost {
 
 // Setup namespace name
@@ -370,7 +313,7 @@ namespace boost {
 
 namespace log {
 
-#   if !defined(BOOST_LOG_NO_INLINE_NAMESPACES)
+#   if !defined(BOOST_NO_CXX11_INLINE_NAMESPACES)
 
 inline namespace BOOST_LOG_VERSION_NAMESPACE {}
 }

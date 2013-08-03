@@ -36,7 +36,7 @@ BOOST_LOG_OPEN_NAMESPACE
 namespace attributes {
 
 //! Factory implementation
-class BOOST_LOG_VISIBLE timer::impl :
+class BOOST_SYMBOL_VISIBLE timer::impl :
     public attribute::impl
 {
 private:
@@ -138,7 +138,7 @@ BOOST_LOG_OPEN_NAMESPACE
 namespace attributes {
 
 //! Factory implementation
-class BOOST_LOG_VISIBLE timer::impl :
+class BOOST_SYMBOL_VISIBLE timer::impl :
     public attribute::impl
 {
 public:

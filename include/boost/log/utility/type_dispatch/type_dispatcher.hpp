@@ -22,7 +22,7 @@
 #include <boost/log/utility/explicit_operator_bool.hpp>
 #include <boost/log/detail/header.hpp>
 
-#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#ifdef BOOST_HAS_PRAGMA_ONCE
 #pragma once
 #endif
 
@@ -162,9 +162,9 @@ protected:
     {
     }
     // Destructor and copying can only be called from the derived classes
-    BOOST_LOG_DEFAULTED_FUNCTION(~type_dispatcher(), {})
-    BOOST_LOG_DEFAULTED_FUNCTION(type_dispatcher(type_dispatcher const& that), : m_get_callback_impl(that.m_get_callback_impl) {})
-    BOOST_LOG_DEFAULTED_FUNCTION(type_dispatcher& operator= (type_dispatcher const& that), { m_get_callback_impl = that.m_get_callback_impl; return *this; })
+    BOOST_DEFAULTED_FUNCTION(~type_dispatcher(), {})
+    BOOST_DEFAULTED_FUNCTION(type_dispatcher(type_dispatcher const& that), : m_get_callback_impl(that.m_get_callback_impl) {})
+    BOOST_DEFAULTED_FUNCTION(type_dispatcher& operator= (type_dispatcher const& that), { m_get_callback_impl = that.m_get_callback_impl; return *this; })
 
 public:
     /*!

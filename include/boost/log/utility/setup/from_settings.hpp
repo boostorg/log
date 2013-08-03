@@ -25,7 +25,7 @@
 #include <boost/log/utility/setup/settings.hpp>
 #include <boost/log/detail/header.hpp>
 
-#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#ifdef BOOST_HAS_PRAGMA_ONCE
 #pragma once
 #endif
 
@@ -60,7 +60,7 @@ struct sink_factory
     /*!
      * Default constructor
      */
-    BOOST_LOG_DEFAULTED_FUNCTION(sink_factory(), {})
+    BOOST_DEFAULTED_FUNCTION(sink_factory(), {})
 
     /*!
      * Virtual destructor
@@ -74,8 +74,8 @@ struct sink_factory
      */
     virtual shared_ptr< sinks::sink > create_sink(settings_section const& settings) = 0;
 
-    BOOST_LOG_DELETED_FUNCTION(sink_factory(sink_factory const&))
-    BOOST_LOG_DELETED_FUNCTION(sink_factory& operator= (sink_factory const&))
+    BOOST_DELETED_FUNCTION(sink_factory(sink_factory const&))
+    BOOST_DELETED_FUNCTION(sink_factory& operator= (sink_factory const&))
 };
 
 /*!

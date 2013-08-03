@@ -27,7 +27,7 @@
 
 #include <boost/log/detail/header.hpp>
 
-#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#ifdef BOOST_HAS_PRAGMA_ONCE
 #pragma once
 #endif
 
@@ -48,7 +48,7 @@ private:
 #ifndef BOOST_LOG_DOXYGEN_PASS
 
     //! An inaccessible type to indicate an uninitialized state of the wrapper
-    struct BOOST_LOG_VISIBLE uninitialized {};
+    struct BOOST_SYMBOL_VISIBLE uninitialized {};
 
 #ifdef BOOST_LOG_HAS_CXXABI_H
     //! A simple scope guard for automatic memory free

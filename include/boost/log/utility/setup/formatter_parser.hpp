@@ -31,7 +31,7 @@
 #include <boost/log/expressions/formatters/stream.hpp>
 #include <boost/log/detail/header.hpp>
 
-#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#ifdef BOOST_HAS_PRAGMA_ONCE
 #pragma once
 #endif
 
@@ -60,7 +60,7 @@ struct formatter_factory
     /*!
      * Default constructor
      */
-    BOOST_LOG_DEFAULTED_FUNCTION(formatter_factory(), {})
+    BOOST_DEFAULTED_FUNCTION(formatter_factory(), {})
 
     /*!
      * Virtual destructor
@@ -75,8 +75,8 @@ struct formatter_factory
      */
     virtual formatter_type create_formatter(attribute_name const& name, args_map const& args) = 0;
 
-    BOOST_LOG_DELETED_FUNCTION(formatter_factory(formatter_factory const&))
-    BOOST_LOG_DELETED_FUNCTION(formatter_factory& operator= (formatter_factory const&))
+    BOOST_DELETED_FUNCTION(formatter_factory(formatter_factory const&))
+    BOOST_DELETED_FUNCTION(formatter_factory& operator= (formatter_factory const&))
 };
 
 /*!

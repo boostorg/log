@@ -32,13 +32,13 @@ namespace boost {
 
 BOOST_LOG_OPEN_NAMESPACE
 
-BOOST_LOG_FORCEINLINE attribute_value_set::node_base::node_base() :
+BOOST_FORCEINLINE attribute_value_set::node_base::node_base() :
     m_pPrev(NULL),
     m_pNext(NULL)
 {
 }
 
-BOOST_LOG_FORCEINLINE attribute_value_set::node::node(key_type const& key, mapped_type& data, bool dynamic) :
+BOOST_FORCEINLINE attribute_value_set::node::node(key_type const& key, mapped_type& data, bool dynamic) :
     node_base(),
     m_Value(key, mapped_type()),
     m_DynamicallyAllocated(dynamic)

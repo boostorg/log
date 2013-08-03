@@ -134,8 +134,8 @@ public:
     //! Returns the flag indicating whether it is needed to detach the record from the current thread
     bool is_detach_from_thread_needed() const BOOST_NOEXCEPT { return m_detach_from_thread_needed; }
 
-    BOOST_LOG_DELETED_FUNCTION(private_data(private_data const&))
-    BOOST_LOG_DELETED_FUNCTION(private_data& operator= (private_data const&))
+    BOOST_DELETED_FUNCTION(private_data(private_data const&))
+    BOOST_DELETED_FUNCTION(private_data& operator= (private_data const&))
 
 private:
     //! Returns a pointer to the first accepting sink
@@ -286,7 +286,7 @@ public:
 
     //! Opens a record
     template< typename SourceAttributesT >
-    BOOST_LOG_FORCEINLINE record open_record(BOOST_FWD_REF(SourceAttributesT) source_attributes)
+    BOOST_FORCEINLINE record open_record(BOOST_FWD_REF(SourceAttributesT) source_attributes)
     {
         // Try a quick win first
         if (m_enabled) try

@@ -18,7 +18,7 @@
 
 #include <boost/log/detail/config.hpp>
 
-#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#ifdef BOOST_HAS_PRAGMA_ONCE
 #pragma once
 #endif
 
@@ -255,10 +255,9 @@ public:
             return false;
     }
 
-private:
     // Copying and assignment is prohibited
-    threadsafe_queue(threadsafe_queue const&);
-    threadsafe_queue& operator= (threadsafe_queue const&);
+    BOOST_DELETED_FUNCTION(threadsafe_queue(threadsafe_queue const&))
+    BOOST_DELETED_FUNCTION(threadsafe_queue& operator= (threadsafe_queue const&))
 
 private:
     //! Pointer to the implementation
