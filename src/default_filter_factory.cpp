@@ -22,7 +22,6 @@
 #include <boost/spirit/include/qi_eoi.hpp>
 #include <boost/spirit/include/qi_as.hpp>
 #include <boost/log/exceptions.hpp>
-#include <boost/log/attributes/value_visitation.hpp>
 #include <boost/log/expressions/predicates/has_attr.hpp>
 #include <boost/log/utility/type_dispatch/standard_types.hpp>
 #include <boost/log/utility/string_literal.hpp>
@@ -30,13 +29,9 @@
 #include <boost/log/utility/functional/begins_with.hpp>
 #include <boost/log/utility/functional/ends_with.hpp>
 #include <boost/log/utility/functional/contains.hpp>
-#include <boost/log/utility/functional/matches.hpp>
 #include <boost/log/utility/functional/bind.hpp>
 #include <boost/log/utility/functional/as_action.hpp>
-#include <boost/log/utility/functional/save_result.hpp>
 #include <boost/log/detail/code_conversion.hpp>
-#include <boost/log/support/xpressive.hpp>
-#include <boost/xpressive/xpressive_dynamic.hpp>
 #if defined(BOOST_LOG_USE_CHAR) && defined(BOOST_LOG_USE_WCHAR_T)
 #include <boost/fusion/container/set.hpp>
 #include <boost/fusion/sequence/intrinsic/at_key.hpp>
@@ -55,32 +50,10 @@ BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
 
-template< typename CharT >
-template< typename ValueT, typename PredicateT >
-struct default_filter_factory< CharT >::predicate_wrapper
-{
-    typedef typename PredicateT::result_type result_type;
+BOOST_LOG_ANONYMOUS_NAMESPACE {
 
-    explicit predicate_wrapper(attribute_name const& name, PredicateT const& pred) : m_name(name), m_visitor(pred)
-    {
-    }
-
-    template< typename T >
-    result_type operator() (T const& arg) const
-    {
-        bool res = false;
-        boost::log::visit< ValueT >(m_name, arg, save_result_wrapper< PredicateT const&, bool >(m_visitor, res));
-        return res;
-    }
-
-private:
-    attribute_name m_name;
-    const PredicateT m_visitor;
-};
-
-template< typename CharT >
 template< typename RelationT >
-struct default_filter_factory< CharT >::on_integral_argument
+struct on_integral_argument
 {
     typedef void result_type;
 
@@ -99,9 +72,8 @@ private:
     filter& m_filter;
 };
 
-template< typename CharT >
 template< typename RelationT >
-struct default_filter_factory< CharT >::on_fp_argument
+struct on_fp_argument
 {
     typedef void result_type;
 
@@ -120,9 +92,8 @@ private:
     filter& m_filter;
 };
 
-template< typename CharT >
 template< typename RelationT >
-struct default_filter_factory< CharT >::on_string_argument
+struct on_string_argument
 {
     typedef void result_type;
 
@@ -131,11 +102,12 @@ struct default_filter_factory< CharT >::on_string_argument
     struct predicate :
         public RelationT
     {
+        template< typename StringT >
         struct initializer
         {
             typedef void result_type;
 
-            explicit initializer(string_type const& val) : m_initializer(val)
+            explicit initializer(StringT const& val) : m_initializer(val)
             {
             }
 
@@ -153,14 +125,15 @@ struct default_filter_factory< CharT >::on_string_argument
             }
 
         private:
-            string_type const& m_initializer;
+            StringT const& m_initializer;
         };
 
         typedef typename RelationT::result_type result_type;
 
-        explicit predicate(RelationT const& rel, string_type const& operand) : RelationT(rel)
+        template< typename StringT >
+        predicate(RelationT const& rel, StringT const& operand) : RelationT(rel)
         {
-            fusion::for_each(m_operands, initializer(operand));
+            fusion::for_each(m_operands, initializer< StringT >(operand));
         }
 
         template< typename T >
@@ -173,111 +146,18 @@ struct default_filter_factory< CharT >::on_string_argument
     private:
         fusion::set< std::string, std::wstring > m_operands;
     };
-#else
-    typedef binder2nd< RelationT, string_type > predicate;
 #endif
 
     on_string_argument(attribute_name const& name, filter& f) : m_name(name), m_filter(f)
     {
     }
 
-    result_type operator() (string_type const& val) const
+    template< typename StringT >
+    result_type operator() (StringT const& val) const
     {
-        m_filter = predicate_wrapper< log::string_types::type, predicate >(m_name, predicate(RelationT(), val));
-    }
-
-private:
-    attribute_name m_name;
-    filter& m_filter;
-};
-
-template< typename CharT >
-template< typename RelationT >
-struct default_filter_factory< CharT >::on_regex_argument
-{
-    typedef void result_type;
-
-#if defined(BOOST_LOG_USE_CHAR) && defined(BOOST_LOG_USE_WCHAR_T)
-    //! A special filtering predicate that adopts the string operand to the attribute value character type
-    struct predicate :
-        public RelationT
-    {
-        struct initializer
-        {
-            typedef void result_type;
-
-            explicit initializer(string_type const& val) : m_initializer(val)
-            {
-            }
-
-            template< typename T >
-            result_type operator() (T& val) const
-            {
-                try
-                {
-                    typedef typename T::char_type char_type;
-                    std::basic_string< char_type > str;
-                    log::aux::code_convert(m_initializer, str);
-                    val = T::compile(str.c_str(), str.size(), T::ECMAScript | T::optimize);
-                }
-                catch (...)
-                {
-                }
-            }
-
-        private:
-            string_type const& m_initializer;
-        };
-
-        typedef typename RelationT::result_type result_type;
-
-        explicit predicate(RelationT const& rel, string_type const& operand) : RelationT(rel)
-        {
-            fusion::for_each(m_operands, initializer(operand));
-        }
-
-        template< typename T >
-        result_type operator() (T const& val) const
-        {
-            typedef typename T::value_type char_type;
-            typedef xpressive::basic_regex< const char_type* > regex_type;
-            return RelationT::operator() (val, fusion::at_key< regex_type >(m_operands));
-        }
-
-    private:
-        fusion::set< xpressive::cregex, xpressive::wcregex > m_operands;
-    };
-#else
-    //! A special filtering predicate that adopts the string operand to the attribute value character type
-    struct predicate :
-        public RelationT
-    {
-        typedef typename RelationT::result_type result_type;
-        typedef xpressive::basic_regex< typename string_type::value_type const* > regex_type;
-
-        explicit predicate(RelationT const& rel, string_type const& operand) :
-            RelationT(rel),
-            m_operand(regex_type::compile(operand.c_str(), operand.size(), regex_type::ECMAScript | regex_type::optimize))
-        {
-        }
-
-        template< typename T >
-        result_type operator() (T const& val) const
-        {
-            return RelationT::operator() (val, m_operand);
-        }
-
-    private:
-        regex_type m_operand;
-    };
+#if !defined(BOOST_LOG_USE_CHAR) || !defined(BOOST_LOG_USE_WCHAR_T)
+        typedef binder2nd< RelationT, StringT > predicate;
 #endif
-
-    on_regex_argument(attribute_name const& name, filter& f) : m_name(name), m_filter(f)
-    {
-    }
-
-    result_type operator() (string_type const& val) const
-    {
         m_filter = predicate_wrapper< log::string_types::type, predicate >(m_name, predicate(RelationT(), val));
     }
 
@@ -286,6 +166,7 @@ private:
     filter& m_filter;
 };
 
+} // namespace
 
 //! The callback for equality relation filter
 template< typename CharT >
@@ -343,7 +224,7 @@ filter default_filter_factory< CharT >::on_custom_relation(attribute_name const&
     else if (rel == constants::contains_keyword())
         on_string_argument< contains_fun >(name, f)(arg);
     else if (rel == constants::matches_keyword())
-        on_regex_argument< matches_fun >(name, f)(arg);
+        f = parse_matches_relation(name, arg);
     else
     {
         BOOST_LOG_THROW_DESCR(parse_error, "The custom attribute relation \"" + log::aux::to_narrow(rel) + "\" is not supported");
