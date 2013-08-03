@@ -16,15 +16,12 @@
 #if !defined(BOOST_LOG_WITHOUT_SETTINGS_PARSERS) && !defined(BOOST_LOG_WITHOUT_DEFAULT_FACTORIES)
 
 #include <string>
-#include <boost/move/core.hpp>
-#include <boost/move/utility.hpp>
-#include <boost/log/exceptions.hpp>
+#include <boost/xpressive/xpressive_dynamic.hpp>
+#include <boost/log/support/xpressive.hpp>
+#include <boost/log/utility/string_literal.hpp>
 #include <boost/log/utility/functional/matches.hpp>
 #include <boost/log/utility/type_dispatch/standard_types.hpp>
-#include <boost/log/utility/string_literal.hpp>
 #include <boost/log/detail/code_conversion.hpp>
-#include <boost/log/support/xpressive.hpp>
-#include <boost/xpressive/xpressive_dynamic.hpp>
 #if defined(BOOST_LOG_USE_CHAR) && defined(BOOST_LOG_USE_WCHAR_T)
 #include <boost/fusion/container/set.hpp>
 #include <boost/fusion/sequence/intrinsic/at_key.hpp>
