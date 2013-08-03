@@ -222,8 +222,9 @@ timestamp get_timestamp_realtime_clock()
     timespec ts;
     if (clock_gettime(CLOCK_REALTIME, &ts) != 0)
     {
+        const int err = errno;
         BOOST_THROW_EXCEPTION(boost::system::system_error(
-            errno, boost::system::system_category(), "Failed to acquire current time"));
+            err, boost::system::system_category(), "Failed to acquire current time"));
     }
 
     return timestamp(static_cast< uint64_t >(ts.tv_sec) * 1000000000ULL + ts.tv_nsec);
@@ -237,7 +238,7 @@ timestamp get_timestamp_monotonic_clock()
     timespec ts;
     if (clock_gettime(CLOCK_MONOTONIC, &ts) != 0)
     {
-        int err = errno;
+        const int err = errno;
         if (err == EINVAL)
         {
             // The current platform does not support monotonic timer.
