@@ -36,6 +36,8 @@
 #pragma warning(disable: 4610)
 // function marked as __forceinline not inlined
 #pragma warning(disable: 4714)
+// decorated name length exceeded, name was truncated
+#pragma warning(disable: 4503)
 
 #elif defined(__GNUC__) && !(defined(__INTEL_COMPILER) || defined(__ICL) || defined(__ICC) || defined(__ECC)) \
     && (__GNUC__ * 100 + __GNUC_MINOR__) >= 406
