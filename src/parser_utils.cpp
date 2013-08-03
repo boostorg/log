@@ -32,6 +32,7 @@ namespace aux {
 
 const char_constants< char >::char_type char_constants< char >::char_comment;
 const char_constants< char >::char_type char_constants< char >::char_comma;
+const char_constants< char >::char_type char_constants< char >::char_dot;
 const char_constants< char >::char_type char_constants< char >::char_quote;
 const char_constants< char >::char_type char_constants< char >::char_percent;
 const char_constants< char >::char_type char_constants< char >::char_exclamation;
@@ -117,6 +118,7 @@ void char_constants< char >::translate_escape_sequences(std::basic_string< char_
 
 const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_comment;
 const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_comma;
+const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_dot;
 const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_quote;
 const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_percent;
 const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_exclamation;

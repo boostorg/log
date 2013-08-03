@@ -42,6 +42,7 @@ struct char_constants< char >
     typedef char char_type;
     static const char_type char_comment = '#';
     static const char_type char_comma = ',';
+    static const char_type char_dot = '.';
     static const char_type char_quote = '"';
     static const char_type char_percent = '%';
     static const char_type char_exclamation = '!';
@@ -158,6 +159,7 @@ struct char_constants< wchar_t >
     typedef wchar_t char_type;
     static const char_type char_comment = L'#';
     static const char_type char_comma = L',';
+    static const char_type char_dot = L'.';
     static const char_type char_quote = L'"';
     static const char_type char_percent = L'%';
     static const char_type char_exclamation = L'!';
