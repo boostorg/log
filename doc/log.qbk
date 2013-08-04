@@ -48,6 +48,8 @@
 [def __boost_locale__ [@http://www.boost.org/doc/libs/release/libs/locale/doc/html/index.html Boost.Locale]]
 [def __boost_quickbook__ [@http://www.boost.org/doc/libs/release/doc/html/quickbook.html Boost.Quickbook]]
 
+[template ticket[key] '''<ulink url="https://svn.boost.org/trac/boost/ticket/'''[key]'''">#'''[key]'''</ulink>''']
+
 [/ Auto-generated macros that refer to Reference sections /]
 [include top_level_reference.qbk]
 [include core_reference.qbk]
