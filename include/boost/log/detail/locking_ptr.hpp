@@ -10,7 +10,7 @@
  * \date   15.07.2009
  *
  * This header is the Boost.Log library implementation, see the library documentation
- * at http://www.boost.org/libs/log/doc/log.html.
+ * at http://www.boost.org/doc/libs/release/libs/log/doc/html/index.html.
  */
 
 #ifndef BOOST_LOG_DETAIL_LOCKING_PTR_HPP_INCLUDED_

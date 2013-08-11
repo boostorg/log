@@ -10,7 +10,7 @@
  * \date   05.11.2010
  *
  * \brief  This header is the Boost.Log library implementation, see the library documentation
- *         at http://www.boost.org/libs/log/doc/log.html.
+ *         at http://www.boost.org/doc/libs/release/libs/log/doc/html/index.html.
  *
  * The implementation is based on algorithms published in the "Simple, Fast,
  * and Practical Non-Blocking and Blocking Concurrent Queue Algorithms" article

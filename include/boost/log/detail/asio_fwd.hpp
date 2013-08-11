@@ -10,7 +10,7 @@
  * \date   20.04.2008
  *
  * \brief  This header is the Boost.Log library implementation, see the library documentation
- *         at http://www.boost.org/libs/log/doc/log.html.
+ *         at http://www.boost.org/doc/libs/release/libs/log/doc/html/index.html.
  *
  * The header provides forward declarations of Boost.ASIO that are required for the user's
  * code to compile with Boost.Log. The forward declarations allow to avoid including the major

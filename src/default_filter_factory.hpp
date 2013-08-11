@@ -10,7 +10,7 @@
  * \date   29.05.2010
  *
  * \brief  This header is the Boost.Log library implementation, see the library documentation
- *         at http://www.boost.org/libs/log/doc/log.html.
+ *         at http://www.boost.org/doc/libs/release/libs/log/doc/html/index.html.
  */
 
 #ifndef BOOST_DEFAULT_FILTER_FACTORY_HPP_INCLUDED_

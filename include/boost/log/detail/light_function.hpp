@@ -10,7 +10,7 @@
  * \date   20.06.2010
  *
  * \brief  This header is the Boost.Log library impl, see the library documentation
- *         at http://www.boost.org/libs/log/doc/log.html.
+ *         at http://www.boost.org/doc/libs/release/libs/log/doc/html/index.html.
  *
  * The file contains a lightweight alternative of Boost.Function. It does not provide all
  * features of Boost.Function but doesn't introduce dependency on Boost.Bind.
