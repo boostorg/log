@@ -26,14 +26,6 @@
 #include <boost/move/utility.hpp>
 #include <boost/optional/optional.hpp>
 #include <boost/utility/in_place_factory.hpp>
-#include <boost/range/iterator_range_core.hpp>
-#include <boost/spirit/include/qi_core.hpp>
-#include <boost/spirit/include/qi_char.hpp>
-#include <boost/spirit/include/qi_lit.hpp>
-#include <boost/spirit/include/qi_raw.hpp>
-#include <boost/spirit/include/qi_lexeme.hpp>
-#include <boost/spirit/include/qi_as.hpp>
-#include <boost/spirit/include/qi_symbols.hpp>
 #include <boost/phoenix/core.hpp>
 #include <boost/phoenix/operator.hpp>
 #include <boost/log/expressions/message.hpp>
@@ -55,8 +47,6 @@
 #include "default_formatter_factory.hpp"
 #endif
 #include <boost/log/detail/header.hpp>
-
-namespace qi = boost::spirit::qi;
 
 namespace boost {
 
@@ -161,18 +151,16 @@ private:
 
 //! Formatter parsing grammar
 template< typename CharT >
-class formatter_grammar :
-    public qi::grammar< const CharT* >
+class formatter_parser
 {
 private:
     typedef CharT char_type;
     typedef const char_type* iterator_type;
-    typedef qi::grammar< iterator_type > base_type;
-    typedef typename base_type::start_type rule_type;
     typedef std::basic_string< char_type > string_type;
     typedef basic_formatter< char_type > formatter_type;
     typedef boost::log::aux::char_constants< char_type > constants;
-    typedef log::aux::encoding_specific< typename log::aux::encoding< char_type >::type > encoding_specific;
+    typedef typename log::aux::encoding< char_type >::type encoding;
+    typedef log::aux::encoding_specific< encoding > encoding_specific;
     typedef formatter_factory< char_type > formatter_factory_type;
     typedef typename formatter_factory_type::args_map args_map;
 
@@ -190,88 +178,80 @@ private:
     //! Argument value
     mutable string_type m_ArgValue;
 
-    //! A parser for a quoted string argument value
-    rule_type quoted_string_arg_value;
-    //! A parser for an argument value
-    rule_type arg_value;
-    //! A parser for a named argument
-    rule_type arg;
-    //! A parser for an optional argument list for a formatter
-    rule_type arg_list;
-    //! A parser for an attribute placeholder
-    rule_type attr_name;
-    //! A parser for the complete formatter expression
-    rule_type expression;
-
 public:
     //! Constructor
-    formatter_grammar() :
-        base_type(expression)
+    formatter_parser()
     {
-        quoted_string_arg_value = qi::raw
-        [
-            // A quoted string with C-style escape sequences support
-            qi::lit(constants::char_quote) >>
-            *(
-                 (qi::lit(constants::char_backslash) >> qi::char_) |
-                 (qi::char_ - qi::lit(constants::char_quote))
-            ) >>
-            qi::lit(constants::char_quote)
-        ]
-            [boost::bind(&formatter_grammar::on_quoted_string_arg_value, this, _1)];
+    }
 
-        arg_value =
-        (
-            quoted_string_arg_value |
-            qi::raw[ *(encoding_specific::graph - constants::char_comma - constants::char_paren_bracket_left - constants::char_paren_bracket_right) ]
-                [boost::bind(&formatter_grammar::on_arg_value, this, _1)]
-        );
+    //! Parses formatter
+    void parse(iterator_type& begin, iterator_type end)
+    {
+        iterator_type p = begin;
 
-        arg =
-        (
-            *encoding_specific::space >>
-            qi::raw[ encoding_specific::alpha >> *encoding_specific::alnum ][boost::bind(&formatter_grammar::on_arg_name, this, _1)] >>
-            *encoding_specific::space >>
-            constants::char_equal >>
-            *encoding_specific::space >>
-            arg_value >>
-            *encoding_specific::space
-        );
+        while (p != end)
+        {
+            // Find the end of a string literal
+            iterator_type start = p;
+            for (; p != end; ++p)
+            {
+                char_type c = *p;
+                if (c == constants::char_backslash)
+                {
+                    // We found an escaped character
+                    ++p;
+                    if (p == end)
+                        BOOST_LOG_THROW_DESCR(parse_error, "Invalid escape sequence in the formatter string.");
+                }
+                else if (c == constants::char_percent)
+                {
+                    // We found an attribute
+                    break;
+                }
+            }
 
-        arg_list =
-        (
-            qi::lit(constants::char_paren_bracket_left) >>
-            (arg[boost::bind(&formatter_grammar::push_arg, this)] % qi::lit(constants::char_comma)) >>
-            qi::lit(constants::char_paren_bracket_right)
-        );
+            if (start != p)
+                push_string(start, p);
 
-        attr_name =
-        (
-            qi::lit(constants::char_percent) >>
-            (
-                qi::raw[ qi::lit(constants::message_text_keyword()) ]
-                    [boost::bind(&formatter_grammar::on_attr_name, this, _1)] |
-                (
-                    qi::raw[ +(encoding_specific::print - constants::char_paren_bracket_left - constants::char_percent) ]
-                        [boost::bind(&formatter_grammar::on_attr_name, this, _1)] >>
-                    -arg_list
-                )
-            ) >>
-            qi::lit(constants::char_percent)
-        )
-            [boost::bind(&formatter_grammar::push_attr, this)];
+            if (p != end)
+            {
+                // We found an attribute placeholder
+                iterator_type start = p = constants::trim_spaces_left(++p, end);
+                while (p != end)
+                {
+                    char_type c = *p;
+                    if (!encoding::isalnum(c) && c != constants::char_underline)
+                        break;
+                    ++p;
+                }
+                if (p == end)
+                    BOOST_LOG_THROW_DESCR(parse_error, "Invalid attribute placeholder in the formatter string.");
 
-        expression =
-        (
-            qi::raw
-            [
-                *(
-                    (qi::lit(constants::char_backslash) >> qi::char_) |
-                    (qi::char_ - qi::lit(constants::char_quote) - qi::lit(constants::char_percent))
-                )
-            ][boost::bind(&formatter_grammar::push_string, this, _1)] %
-            attr_name
-        );
+                on_attr_name(start, p);
+
+                p = constants::trim_spaces_left(p, end);
+                if (p == end)
+                    BOOST_LOG_THROW_DESCR(parse_error, "Invalid attribute placeholder in the formatter string.");
+
+                if (*p == constants::char_paren_bracket_left)
+                {
+                    // We found formatter arguments
+                    p = parse_args(constants::trim_spaces_left(++p, end), end);
+                    p = constants::trim_spaces_left(p, end);
+                    if (p == end)
+                        BOOST_LOG_THROW_DESCR(parse_error, "Invalid attribute placeholder in the formatter string.");
+                }
+
+                if (*p != constants::char_percent)
+                    BOOST_LOG_THROW_DESCR(parse_error, "Invalid attribute placeholder in the formatter string.");
+
+                ++p;
+
+                push_attr();
+            }
+        }
+
+        begin = p;
     }
 
     //! Returns the parsed formatter
@@ -287,22 +267,129 @@ public:
     }
 
 private:
-    //! The method is called when an argument name is discovered
-    void on_arg_name(iterator_range< iterator_type > const& name)
+    //! The method parses formatter arguments
+    iterator_type parse_args(iterator_type begin, iterator_type end)
     {
-        m_ArgName.assign(name.begin(), name.end());
+        iterator_type p = begin;
+        if (p == end)
+            BOOST_LOG_THROW_DESCR(parse_error, "Invalid attribute placeholder arguments description in the formatter string.");
+        if (*p == constants::char_paren_bracket_right)
+            return p;
+
+        while (true)
+        {
+            char_type c = *p;
+
+            // Read argument name
+            iterator_type start = p;
+            if (!encoding::isalpha(*p))
+                BOOST_LOG_THROW_DESCR(parse_error, "Placeholder argument name is invalid.");
+            for (++p; p != end; ++p)
+            {
+                c = *p;
+                if (encoding::isspace(c) || c == constants::char_equal)
+                    break;
+                if (!encoding::isalnum(c))
+                    BOOST_LOG_THROW_DESCR(parse_error, "Placeholder argument name is invalid.");
+            }
+
+            if (start == p)
+                BOOST_LOG_THROW_DESCR(parse_error, "Placeholder argument name is empty.");
+
+            on_arg_name(start, p);
+
+            p = constants::trim_spaces_left(p, end);
+            if (p == end || *p != constants::char_equal)
+                BOOST_LOG_THROW_DESCR(parse_error, "Placeholder argument description is not valid.");
+
+            // Read argument value
+            p = constants::trim_spaces_left(++p, end);
+
+            if (p == end)
+                BOOST_LOG_THROW_DESCR(parse_error, "Placeholder argument value is empty.");
+
+            c = *p;
+            if (c == constants::char_quote)
+            {
+                // The value is specified as a quoted string
+                start = ++p;
+                for (; p != end; ++p)
+                {
+                    c = *p;
+                    if (c == constants::char_quote)
+                    {
+                        break;
+                    }
+                    else if (c == constants::char_backslash)
+                    {
+                        ++p;
+                        if (p == end)
+                            BOOST_LOG_THROW_DESCR(parse_error, "Invalid escape sequence in the argument value.");
+                    }
+                }
+                if (p == end)
+                    BOOST_LOG_THROW_DESCR(parse_error, "Unterminated quoted string in the argument value.");
+
+                on_quoted_string_arg_value(start, p);
+
+                ++p; // skip the closing quote
+            }
+            else
+            {
+                // The value is specified as a single word
+                start = p;
+                for (++p; p != end; ++p)
+                {
+                    c = *p;
+                    if (!encoding::isgraph(c) || c == constants::char_comma || c == constants::char_paren_bracket_left || c == constants::char_paren_bracket_right)
+                        break;
+                }
+
+                on_arg_value(start, p);
+            }
+
+            push_arg();
+
+            p = constants::trim_spaces_left(p, end);
+            if (p == end)
+                BOOST_LOG_THROW_DESCR(parse_error, "Invalid attribute placeholder arguments description in the formatter string.");
+
+            c = *p;
+            if (c == constants::char_paren_bracket_right)
+            {
+                break;
+            }
+            else if (c == constants::char_comma)
+            {
+                p = constants::trim_spaces_left(++p, end);
+                if (p == end)
+                    BOOST_LOG_THROW_DESCR(parse_error, "Placeholder argument name is invalid.");
+            }
+            else
+            {
+                BOOST_LOG_THROW_DESCR(parse_error, "Invalid attribute placeholder arguments description in the formatter string.");
+            }
+        }
+
+        return ++p;
+    }
+
+    //! The method is called when an argument name is discovered
+    void on_arg_name(iterator_type begin, iterator_type end)
+    {
+        m_ArgName.assign(begin, end);
     }
     //! The method is called when an argument value is discovered
-    void on_quoted_string_arg_value(iterator_range< iterator_type > const& value)
+    void on_quoted_string_arg_value(iterator_type begin, iterator_type end)
     {
         // Cut off the quotes
-        m_ArgValue.assign(value.begin() + 1, value.end() - 1);
+        m_ArgValue.assign(begin, end);
         constants::translate_escape_sequences(m_ArgValue);
     }
     //! The method is called when an argument value is discovered
-    void on_arg_value(iterator_range< iterator_type > const& value)
+    void on_arg_value(iterator_type begin, iterator_type end)
     {
-        m_ArgValue.assign(value.begin(), value.end());
+        m_ArgValue.assign(begin, end);
     }
     //! The method is called when an argument is filled
     void push_arg()
@@ -313,16 +400,16 @@ private:
     }
 
     //! The method is called when an attribute name is discovered
-    void on_attr_name(iterator_range< iterator_type > const& name)
+    void on_attr_name(iterator_type begin, iterator_type end)
     {
-        if (name.empty())
+        if (begin == end)
             BOOST_LOG_THROW_DESCR(parse_error, "Empty attribute name encountered");
 
         // For compatibility with Boost.Log v1 we recognize %_% as the message attribute name
-        if (std::char_traits< char_type >::compare(constants::message_text_keyword(), name.begin(), name.size()) == 0)
+        if (std::char_traits< char_type >::compare(constants::message_text_keyword(), begin, end - begin) == 0)
             m_AttrName = log::aux::default_attribute_names::message();
         else
-            m_AttrName = attribute_name(log::aux::to_narrow(string_type(name.begin(), name.end())));
+            m_AttrName = attribute_name(log::aux::to_narrow(string_type(begin, end)));
     }
     //! The method is called when an attribute is filled
     void push_attr()
@@ -348,14 +435,11 @@ private:
     }
 
     //! The method is called when a string literal is discovered
-    void push_string(iterator_range< iterator_type > const& str)
+    void push_string(iterator_type begin, iterator_type end)
     {
-        if (!str.empty())
-        {
-            string_type s(str.begin(), str.end());
-            constants::translate_escape_sequences(s);
-            append_formatter(expressions::stream << s);
-        }
+        string_type s(begin, end);
+        constants::translate_escape_sequences(s);
+        append_formatter(expressions::stream << s);
     }
 
     //! The method appends a formatter part to the final formatter
@@ -369,8 +453,8 @@ private:
     }
 
     //  Assignment and copying are prohibited
-    BOOST_DELETED_FUNCTION(formatter_grammar(formatter_grammar const&))
-    BOOST_DELETED_FUNCTION(formatter_grammar& operator= (formatter_grammar const&))
+    BOOST_DELETED_FUNCTION(formatter_parser(formatter_parser const&))
+    BOOST_DELETED_FUNCTION(formatter_parser& operator= (formatter_parser const&))
 };
 
 } // namespace
@@ -383,7 +467,7 @@ void register_formatter_factory(attribute_name const& name, shared_ptr< formatte
     BOOST_ASSERT(!!factory);
 
     formatters_repository< CharT >& repo = formatters_repository< CharT >::get();
-    BOOST_LOG_EXPR_IF_MT(log::aux::exclusive_lock_guard< log::aux::light_rw_mutex > _(repo.m_Mutex);)
+    BOOST_LOG_EXPR_IF_MT(log::aux::exclusive_lock_guard< log::aux::light_rw_mutex > lock(repo.m_Mutex);)
     repo.m_Map[name] = factory;
 }
 
@@ -393,21 +477,15 @@ basic_formatter< CharT > parse_formatter(const CharT* begin, const CharT* end)
 {
     typedef CharT char_type;
 
-    formatter_grammar< char_type > gram;
+    formatter_parser< char_type > parser;
     const char_type* p = begin;
 
     BOOST_LOG_EXPR_IF_MT(formatters_repository< CharT >& repo = formatters_repository< CharT >::get();)
-    BOOST_LOG_EXPR_IF_MT(log::aux::shared_lock_guard< log::aux::light_rw_mutex > _(repo.m_Mutex);)
+    BOOST_LOG_EXPR_IF_MT(log::aux::shared_lock_guard< log::aux::light_rw_mutex > lock(repo.m_Mutex);)
 
-    bool result = qi::parse(p, end, gram);
-    if (!result || p != end)
-    {
-        std::ostringstream strm;
-        strm << "Could not parse the formatter, parsing stopped at position " << p - begin;
-        BOOST_LOG_THROW_DESCR(parse_error, strm.str());
-    }
+    parser.parse(p, end);
 
-    return gram.get_formatter();
+    return parser.get_formatter();
 }
 
 #ifdef BOOST_LOG_USE_CHAR

@@ -15,10 +15,14 @@
 
 #ifndef BOOST_LOG_WITHOUT_SETTINGS_PARSERS
 
+#include <cctype>
 #include <iterator>
 #include <algorithm>
 #include "parser_utils.hpp"
 #include <boost/log/detail/header.hpp>
+#ifdef BOOST_LOG_USE_WCHAR_T
+#include <cwctype>
+#endif
 
 namespace boost {
 
@@ -50,6 +54,25 @@ const char_constants< char >::char_type char_constants< char >::char_paren_brack
 
 #endif // BOOST_LOG_BROKEN_STATIC_CONSTANTS_LINKAGE
 
+//! Skips spaces in the beginning of the input
+const char* char_constants< char >::trim_spaces_left(const char_type* begin, const char_type* end)
+{
+    using namespace std;
+    while (begin != end && isspace(*begin))
+        ++begin;
+    return begin;
+}
+
+//! Skips spaces in the end of the input
+const char* char_constants< char >::trim_spaces_right(const char_type* begin, const char_type* end)
+{
+    using namespace std;
+    while (begin != end && isspace(*(end - 1)))
+        --end;
+    return end;
+}
+
+//! Converts escape sequences to the corresponding characters
 void char_constants< char >::translate_escape_sequences(std::basic_string< char_type >& str)
 {
     using namespace std; // to make sure we can use C functions unqualified
@@ -136,6 +159,25 @@ const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_paren
 
 #endif // BOOST_LOG_BROKEN_STATIC_CONSTANTS_LINKAGE
 
+//! Skips spaces in the beginning of the input
+const wchar_t* char_constants< wchar_t >::trim_spaces_left(const char_type* begin, const char_type* end)
+{
+    using namespace std;
+    while (begin != end && iswspace(*begin))
+        ++begin;
+    return begin;
+}
+
+//! Skips spaces in the end of the input
+const wchar_t* char_constants< wchar_t >::trim_spaces_right(const char_type* begin, const char_type* end)
+{
+    using namespace std;
+    while (begin != end && iswspace(*(end - 1)))
+        --end;
+    return end;
+}
+
+//! Converts escape sequences to the corresponding characters
 void char_constants< wchar_t >::translate_escape_sequences(std::basic_string< char_type >& str)
 {
     std::basic_string< char_type >::iterator it = str.begin();

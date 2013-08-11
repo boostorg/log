@@ -77,7 +77,7 @@ public:
     void parse_line(iterator_type& begin, iterator_type end)
     {
         iterator_type p = begin;
-        trim_spaces_left(p, end);
+        p = constants::trim_spaces_left(p, end);
         if (p != end)
         {
             char_type c = *p;
@@ -85,13 +85,13 @@ public:
             {
                 // We have a section name
                 iterator_type start = ++p;
-                trim_spaces_left(start, end);
+                start = constants::trim_spaces_left(start, end);
                 iterator_type stop = std::find(start, end, constants::char_section_bracket_right);
                 if (stop == end)
                     BOOST_LOG_THROW_DESCR_PARAMS(parse_error, "Section header is invalid.", (m_LineCounter));
 
                 p = stop + 1;
-                trim_spaces_right(start, stop);
+                stop = constants::trim_spaces_right(start, stop);
 
                 set_section_name(start, stop);
             }
@@ -103,14 +103,10 @@ public:
                     BOOST_LOG_THROW_DESCR_PARAMS(parse_error, "Parameter description is invalid.", (m_LineCounter));
 
                 // Parameter name
-                iterator_type stop = eq;
-                trim_spaces_right(p, stop);
-
-                set_parameter_name(p, stop);
+                set_parameter_name(p, constants::trim_spaces_right(p, eq));
 
                 // Parameter value
-                p = eq + 1;
-                trim_spaces_left(p, end);
+                p = constants::trim_spaces_left(eq + 1, end);
                 if (p == end || *p == constants::char_comment)
                     BOOST_LOG_THROW_DESCR_PARAMS(parse_error, "Parameter value is not specified.", (m_LineCounter));
 
@@ -156,7 +152,7 @@ public:
             }
 
             // In the end of the line we may have a comment
-            trim_spaces_left(p, end);
+            p = constants::trim_spaces_left(p, end);
             if (p != end)
             {
                 c = *p;
@@ -239,19 +235,6 @@ private:
         constants::translate_escape_sequences(val);
         m_Settings[m_SectionName][m_ParameterName] = val;
         m_ParameterName.clear();
-    }
-
-    //! Skips spaces in the beginning of the input
-    static void trim_spaces_left(iterator_type& begin, iterator_type end)
-    {
-        while (begin != end && encoding::isspace(*begin))
-            ++begin;
-    }
-    //! Skips spaces in the end of the input
-    static void trim_spaces_right(iterator_type begin, iterator_type& end)
-    {
-        while (begin != end && encoding::isspace(*(end - 1)))
-            --end;
     }
 
     //  Assignment and copying are prohibited

@@ -148,6 +148,11 @@ struct char_constants< char >
         return n;
     }
 
+    //! Skips spaces in the beginning of the input
+    static const char_type* trim_spaces_left(const char_type* begin, const char_type* end);
+    //! Skips spaces in the end of the input
+    static const char_type* trim_spaces_right(const char_type* begin, const char_type* end);
+    //! Converts escape sequences to the corresponding characters
     static void translate_escape_sequences(std::basic_string< char_type >& str);
 };
 #endif
@@ -269,6 +274,11 @@ struct char_constants< wchar_t >
         return (c >= L'0' && c <= L'9') || (c >= L'a' && c <= L'f') || (c >= L'A' && c <= L'F');
     }
 
+    //! Skips spaces in the beginning of the input
+    static const char_type* trim_spaces_left(const char_type* begin, const char_type* end);
+    //! Skips spaces in the end of the input
+    static const char_type* trim_spaces_right(const char_type* begin, const char_type* end);
+    //! Converts escape sequences to the corresponding characters
     static void translate_escape_sequences(std::basic_string< char_type >& str);
 };
 #endif
