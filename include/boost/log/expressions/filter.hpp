@@ -71,7 +71,7 @@ public:
     {
     }
     /*!
-     * Move constructor
+     * Move constructor. The moved-from filter is left in an unspecified state.
      */
     filter(BOOST_RV_REF(filter) that) BOOST_NOEXCEPT : m_Filter(boost::move(that.m_Filter))
     {
@@ -92,7 +92,7 @@ public:
     }
 
     /*!
-     * Move assignment.
+     * Move assignment. The moved-from filter is left in an unspecified state.
      */
     filter& operator= (BOOST_RV_REF(filter) that) BOOST_NOEXCEPT
     {

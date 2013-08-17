@@ -94,7 +94,7 @@ public:
     {
     }
     /*!
-     * Move constructor
+     * Move constructor. The moved-from formatter is left in an unspecified state.
      */
     basic_formatter(BOOST_RV_REF(this_type) that) BOOST_NOEXCEPT : m_Formatter(boost::move(that.m_Formatter))
     {
@@ -115,7 +115,7 @@ public:
     }
 
     /*!
-     * Move assignment.
+     * Move assignment. The moved-from formatter is left in an unspecified state.
      */
     basic_formatter& operator= (BOOST_RV_REF(this_type) that) BOOST_NOEXCEPT
     {
