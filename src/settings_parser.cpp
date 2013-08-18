@@ -21,6 +21,9 @@
 #include <stdexcept>
 #include <algorithm>
 #include <boost/throw_exception.hpp>
+#include <boost/exception/exception.hpp>
+#include <boost/exception/info.hpp>
+#include <boost/exception/errinfo_at_line.hpp>
 #include <boost/io/ios_state.hpp>
 #include <boost/move/core.hpp>
 #include <boost/move/utility.hpp>
@@ -88,7 +91,7 @@ public:
                 start = constants::trim_spaces_left(start, end);
                 iterator_type stop = std::find(start, end, constants::char_section_bracket_right);
                 if (stop == end)
-                    BOOST_LOG_THROW_DESCR_PARAMS(parse_error, "Section header is invalid.", (m_LineCounter));
+                    BOOST_LOG_THROW_DESCR_PARAMS(parse_error, "Section header is invalid", (m_LineCounter));
 
                 p = stop + 1;
                 stop = constants::trim_spaces_right(start, stop);
@@ -100,7 +103,7 @@ public:
                 // We have a parameter
                 iterator_type eq = std::find(p, end, constants::char_equal);
                 if (eq == end)
-                    BOOST_LOG_THROW_DESCR_PARAMS(parse_error, "Parameter description is invalid.", (m_LineCounter));
+                    BOOST_LOG_THROW_DESCR_PARAMS(parse_error, "Parameter description is invalid", (m_LineCounter));
 
                 // Parameter name
                 set_parameter_name(p, constants::trim_spaces_right(p, eq));
@@ -108,46 +111,17 @@ public:
                 // Parameter value
                 p = constants::trim_spaces_left(eq + 1, end);
                 if (p == end || *p == constants::char_comment)
-                    BOOST_LOG_THROW_DESCR_PARAMS(parse_error, "Parameter value is not specified.", (m_LineCounter));
+                    BOOST_LOG_THROW_DESCR_PARAMS(parse_error, "Parameter value is not specified", (m_LineCounter));
 
-                c = *p;
-                if (c == constants::char_quote)
+                try
                 {
-                    // The value is specified as a quoted string
-                    iterator_type start = ++p;
-                    for (; p != end; ++p)
-                    {
-                        c = *p;
-                        if (c == constants::char_quote)
-                        {
-                            break;
-                        }
-                        else if (c == constants::char_backslash)
-                        {
-                            ++p;
-                            if (p == end)
-                                BOOST_LOG_THROW_DESCR_PARAMS(parse_error, "Invalid escape sequence in the parameter value.", (m_LineCounter));
-                        }
-                    }
-                    if (p == end)
-                        BOOST_LOG_THROW_DESCR_PARAMS(parse_error, "Unterminated quoted string in the parameter value.", (m_LineCounter));
-
-                    set_parameter_quoted_value(start, p);
-
-                    ++p; // skip the closing quote
+                    string_type value;
+                    p = constants::parse_operand(p, end, value);
+                    set_parameter_value(value);
                 }
-                else
+                catch (parse_error& e)
                 {
-                    // The value is specified as a single word
-                    iterator_type start = p;
-                    for (++p; p != end; ++p)
-                    {
-                        c = *p;
-                        if (c == constants::char_comment || !encoding::isgraph(c))
-                            break;
-                    }
-
-                    set_parameter_value(start, p);
+                    throw boost::enable_error_info(e) << boost::errinfo_at_line(m_LineCounter);
                 }
             }
 
@@ -163,7 +137,7 @@ public:
                 }
                 else
                 {
-                    BOOST_LOG_THROW_DESCR_PARAMS(parse_error, "Unexpected characters in the end of the line.", (m_LineCounter));
+                    BOOST_LOG_THROW_DESCR_PARAMS(parse_error, "Unexpected characters in the end of the line", (m_LineCounter));
                 }
             }
         }
@@ -177,13 +151,13 @@ private:
     {
         // Check that the section name is valid
         if (begin == end)
-            BOOST_LOG_THROW_DESCR_PARAMS(parse_error, "Section name is empty.", (m_LineCounter));
+            BOOST_LOG_THROW_DESCR_PARAMS(parse_error, "Section name is empty", (m_LineCounter));
 
         for (iterator_type p = begin; p != end; ++p)
         {
             char_type c = *p;
             if (c != constants::char_dot && !encoding::isalnum(c))
-                BOOST_LOG_THROW_DESCR_PARAMS(parse_error, "Section name is invalid.", (m_LineCounter));
+                BOOST_LOG_THROW_DESCR_PARAMS(parse_error, "Section name is invalid", (m_LineCounter));
         }
 
         m_SectionName = log::aux::to_narrow(string_type(begin, end), m_Locale);
@@ -200,40 +174,30 @@ private:
         if (m_SectionName.empty())
         {
             // The parameter encountered before any section starter
-            BOOST_LOG_THROW_DESCR_PARAMS(parse_error, "Parameters are only allowed within sections.", (m_LineCounter));
+            BOOST_LOG_THROW_DESCR_PARAMS(parse_error, "Parameters are only allowed within sections", (m_LineCounter));
         }
 
         // Check that the parameter name is valid
         if (begin == end)
-            BOOST_LOG_THROW_DESCR_PARAMS(parse_error, "Parameter name is empty.", (m_LineCounter));
+            BOOST_LOG_THROW_DESCR_PARAMS(parse_error, "Parameter name is empty", (m_LineCounter));
 
         iterator_type p = begin;
         if (!encoding::isalpha(*p))
-            BOOST_LOG_THROW_DESCR_PARAMS(parse_error, "Parameter name is invalid.", (m_LineCounter));
+            BOOST_LOG_THROW_DESCR_PARAMS(parse_error, "Parameter name is invalid", (m_LineCounter));
         for (++p; p != end; ++p)
         {
             char_type c = *p;
             if (!encoding::isgraph(c))
-                BOOST_LOG_THROW_DESCR_PARAMS(parse_error, "Parameter name is invalid.", (m_LineCounter));
+                BOOST_LOG_THROW_DESCR_PARAMS(parse_error, "Parameter name is invalid", (m_LineCounter));
         }
 
         m_ParameterName = log::aux::to_narrow(string_type(begin, end), m_Locale);
     }
 
     //! The method sets the parsed parameter value (non-quoted)
-    void set_parameter_value(iterator_type begin, iterator_type end)
+    void set_parameter_value(string_type const& value)
     {
-        m_Settings[m_SectionName][m_ParameterName] = string_type(begin, end);
-        m_ParameterName.clear();
-    }
-
-    //! The method sets the parsed parameter value (quoted)
-    void set_parameter_quoted_value(iterator_type begin, iterator_type end)
-    {
-        // Cut off the quotes
-        string_type val(begin, end);
-        constants::translate_escape_sequences(val);
-        m_Settings[m_SectionName][m_ParameterName] = val;
+        m_Settings[m_SectionName][m_ParameterName] = value;
         m_ParameterName.clear();
     }
 

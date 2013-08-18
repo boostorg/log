@@ -40,6 +40,8 @@ template< >
 struct char_constants< char >
 {
     typedef char char_type;
+    typedef std::basic_string< char_type > string_type;
+
     static const char_type char_comment = '#';
     static const char_type char_comma = ',';
     static const char_type char_dot = '.';
@@ -152,8 +154,12 @@ struct char_constants< char >
     static const char_type* trim_spaces_left(const char_type* begin, const char_type* end);
     //! Skips spaces in the end of the input
     static const char_type* trim_spaces_right(const char_type* begin, const char_type* end);
+    //! Scans for the attribute name placeholder in the input
+    static const char_type* scan_attr_placeholder(const char_type* begin, const char_type* end);
+    //! Parses an operand string (possibly quoted) from the input
+    static const char_type* parse_operand(const char_type* begin, const char_type* end, string_type& operand);
     //! Converts escape sequences to the corresponding characters
-    static void translate_escape_sequences(std::basic_string< char_type >& str);
+    static void translate_escape_sequences(string_type& str);
 };
 #endif
 
@@ -162,6 +168,8 @@ template< >
 struct char_constants< wchar_t >
 {
     typedef wchar_t char_type;
+    typedef std::basic_string< char_type > string_type;
+
     static const char_type char_comment = L'#';
     static const char_type char_comma = L',';
     static const char_type char_dot = L'.';
@@ -278,8 +286,12 @@ struct char_constants< wchar_t >
     static const char_type* trim_spaces_left(const char_type* begin, const char_type* end);
     //! Skips spaces in the end of the input
     static const char_type* trim_spaces_right(const char_type* begin, const char_type* end);
+    //! Scans for the attribute name placeholder in the input
+    static const char_type* scan_attr_placeholder(const char_type* begin, const char_type* end);
+    //! Parses an operand string (possibly quoted) from the input
+    static const char_type* parse_operand(const char_type* begin, const char_type* end, string_type& operand);
     //! Converts escape sequences to the corresponding characters
-    static void translate_escape_sequences(std::basic_string< char_type >& str);
+    static void translate_escape_sequences(string_type& str);
 };
 #endif
 

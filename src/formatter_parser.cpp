@@ -15,7 +15,6 @@
 
 #ifndef BOOST_LOG_WITHOUT_SETTINGS_PARSERS
 
-#include <ctime>
 #include <map>
 #include <string>
 #include <sstream>
@@ -201,7 +200,7 @@ public:
                     // We found an escaped character
                     ++p;
                     if (p == end)
-                        BOOST_LOG_THROW_DESCR(parse_error, "Invalid escape sequence in the formatter string.");
+                        BOOST_LOG_THROW_DESCR(parse_error, "Invalid escape sequence in the formatter string");
                 }
                 else if (c == constants::char_percent)
                 {
@@ -216,22 +215,16 @@ public:
             if (p != end)
             {
                 // We found an attribute placeholder
-                iterator_type start = p = constants::trim_spaces_left(++p, end);
-                while (p != end)
-                {
-                    char_type c = *p;
-                    if (!encoding::isalnum(c) && c != constants::char_underline)
-                        break;
-                    ++p;
-                }
+                iterator_type start = constants::trim_spaces_left(++p, end);
+                p = constants::scan_attr_placeholder(start, end);
                 if (p == end)
-                    BOOST_LOG_THROW_DESCR(parse_error, "Invalid attribute placeholder in the formatter string.");
+                    BOOST_LOG_THROW_DESCR(parse_error, "Invalid attribute placeholder in the formatter string");
 
-                on_attr_name(start, p);
+                on_attribute_name(start, p);
 
                 p = constants::trim_spaces_left(p, end);
                 if (p == end)
-                    BOOST_LOG_THROW_DESCR(parse_error, "Invalid attribute placeholder in the formatter string.");
+                    BOOST_LOG_THROW_DESCR(parse_error, "Invalid attribute placeholder in the formatter string");
 
                 if (*p == constants::char_paren_bracket_left)
                 {
@@ -239,11 +232,11 @@ public:
                     p = parse_args(constants::trim_spaces_left(++p, end), end);
                     p = constants::trim_spaces_left(p, end);
                     if (p == end)
-                        BOOST_LOG_THROW_DESCR(parse_error, "Invalid attribute placeholder in the formatter string.");
+                        BOOST_LOG_THROW_DESCR(parse_error, "Invalid attribute placeholder in the formatter string");
                 }
 
                 if (*p != constants::char_percent)
-                    BOOST_LOG_THROW_DESCR(parse_error, "Invalid attribute placeholder in the formatter string.");
+                    BOOST_LOG_THROW_DESCR(parse_error, "Invalid attribute placeholder in the formatter string");
 
                 ++p;
 
@@ -272,7 +265,7 @@ private:
     {
         iterator_type p = begin;
         if (p == end)
-            BOOST_LOG_THROW_DESCR(parse_error, "Invalid attribute placeholder arguments description in the formatter string.");
+            BOOST_LOG_THROW_DESCR(parse_error, "Invalid attribute placeholder arguments description in the formatter string");
         if (*p == constants::char_paren_bracket_right)
             return p;
 
@@ -283,76 +276,36 @@ private:
             // Read argument name
             iterator_type start = p;
             if (!encoding::isalpha(*p))
-                BOOST_LOG_THROW_DESCR(parse_error, "Placeholder argument name is invalid.");
+                BOOST_LOG_THROW_DESCR(parse_error, "Placeholder argument name is invalid");
             for (++p; p != end; ++p)
             {
                 c = *p;
                 if (encoding::isspace(c) || c == constants::char_equal)
                     break;
                 if (!encoding::isalnum(c))
-                    BOOST_LOG_THROW_DESCR(parse_error, "Placeholder argument name is invalid.");
+                    BOOST_LOG_THROW_DESCR(parse_error, "Placeholder argument name is invalid");
             }
 
             if (start == p)
-                BOOST_LOG_THROW_DESCR(parse_error, "Placeholder argument name is empty.");
+                BOOST_LOG_THROW_DESCR(parse_error, "Placeholder argument name is empty");
 
             on_arg_name(start, p);
 
             p = constants::trim_spaces_left(p, end);
             if (p == end || *p != constants::char_equal)
-                BOOST_LOG_THROW_DESCR(parse_error, "Placeholder argument description is not valid.");
+                BOOST_LOG_THROW_DESCR(parse_error, "Placeholder argument description is not valid");
 
             // Read argument value
-            p = constants::trim_spaces_left(++p, end);
-
-            if (p == end)
-                BOOST_LOG_THROW_DESCR(parse_error, "Placeholder argument value is empty.");
-
-            c = *p;
-            if (c == constants::char_quote)
-            {
-                // The value is specified as a quoted string
-                start = ++p;
-                for (; p != end; ++p)
-                {
-                    c = *p;
-                    if (c == constants::char_quote)
-                    {
-                        break;
-                    }
-                    else if (c == constants::char_backslash)
-                    {
-                        ++p;
-                        if (p == end)
-                            BOOST_LOG_THROW_DESCR(parse_error, "Invalid escape sequence in the argument value.");
-                    }
-                }
-                if (p == end)
-                    BOOST_LOG_THROW_DESCR(parse_error, "Unterminated quoted string in the argument value.");
-
-                on_quoted_string_arg_value(start, p);
-
-                ++p; // skip the closing quote
-            }
-            else
-            {
-                // The value is specified as a single word
-                start = p;
-                for (++p; p != end; ++p)
-                {
-                    c = *p;
-                    if (!encoding::isgraph(c) || c == constants::char_comma || c == constants::char_paren_bracket_left || c == constants::char_paren_bracket_right)
-                        break;
-                }
-
-                on_arg_value(start, p);
-            }
+            start = p = constants::trim_spaces_left(++p, end);
+            p = constants::parse_operand(p, end, m_ArgValue);
+            if (p == start)
+                BOOST_LOG_THROW_DESCR(parse_error, "Placeholder argument value is not specified");
 
             push_arg();
 
             p = constants::trim_spaces_left(p, end);
             if (p == end)
-                BOOST_LOG_THROW_DESCR(parse_error, "Invalid attribute placeholder arguments description in the formatter string.");
+                BOOST_LOG_THROW_DESCR(parse_error, "Invalid attribute placeholder arguments description in the formatter string");
 
             c = *p;
             if (c == constants::char_paren_bracket_right)
@@ -363,11 +316,11 @@ private:
             {
                 p = constants::trim_spaces_left(++p, end);
                 if (p == end)
-                    BOOST_LOG_THROW_DESCR(parse_error, "Placeholder argument name is invalid.");
+                    BOOST_LOG_THROW_DESCR(parse_error, "Placeholder argument name is invalid");
             }
             else
             {
-                BOOST_LOG_THROW_DESCR(parse_error, "Invalid attribute placeholder arguments description in the formatter string.");
+                BOOST_LOG_THROW_DESCR(parse_error, "Invalid attribute placeholder arguments description in the formatter string");
             }
         }
 
@@ -379,18 +332,7 @@ private:
     {
         m_ArgName.assign(begin, end);
     }
-    //! The method is called when an argument value is discovered
-    void on_quoted_string_arg_value(iterator_type begin, iterator_type end)
-    {
-        // Cut off the quotes
-        m_ArgValue.assign(begin, end);
-        constants::translate_escape_sequences(m_ArgValue);
-    }
-    //! The method is called when an argument value is discovered
-    void on_arg_value(iterator_type begin, iterator_type end)
-    {
-        m_ArgValue.assign(begin, end);
-    }
+
     //! The method is called when an argument is filled
     void push_arg()
     {
@@ -400,16 +342,22 @@ private:
     }
 
     //! The method is called when an attribute name is discovered
-    void on_attr_name(iterator_type begin, iterator_type end)
+    void on_attribute_name(iterator_type begin, iterator_type end)
     {
         if (begin == end)
             BOOST_LOG_THROW_DESCR(parse_error, "Empty attribute name encountered");
 
         // For compatibility with Boost.Log v1 we recognize %_% as the message attribute name
-        if (std::char_traits< char_type >::compare(constants::message_text_keyword(), begin, end - begin) == 0)
+        const std::size_t len = end - begin;
+        if (std::char_traits< char_type >::length(constants::message_text_keyword()) == len &&
+            std::char_traits< char_type >::compare(constants::message_text_keyword(), begin, len) == 0)
+        {
             m_AttrName = log::aux::default_attribute_names::message();
+        }
         else
+        {
             m_AttrName = attribute_name(log::aux::to_narrow(string_type(begin, end)));
+        }
     }
     //! The method is called when an attribute is filled
     void push_attr()
