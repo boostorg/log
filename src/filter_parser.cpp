@@ -252,6 +252,8 @@ private:
                 // If the filter has negation operator, do not expect a relation (i.e. "!%attr% > 1" is not valid because "!%attr%" is interpreted as an attribute presence test)
                 if (!negation_present)
                     p = parse_relation(p, end);
+                else
+                    on_relation_complete();
             }
             else if (c == constants::char_exclamation || scan_keyword(p, end, next, constants::not_keyword()))
             {
