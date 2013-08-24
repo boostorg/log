@@ -64,7 +64,7 @@ struct on_integral_argument
     result_type operator() (long val) const
     {
         typedef binder2nd< RelationT, long > predicate;
-        m_filter = predicate_wrapper< log::integral_types::type, predicate >(m_name, predicate(RelationT(), val));
+        m_filter = predicate_wrapper< log::numeric_types::type, predicate >(m_name, predicate(RelationT(), val));
     }
 
 private:
