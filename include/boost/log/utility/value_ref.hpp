@@ -47,7 +47,7 @@
 #include <boost/log/utility/value_ref_fwd.hpp>
 #include <boost/log/detail/header.hpp>
 
-#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#ifdef BOOST_HAS_PRAGMA_ONCE
 #pragma once
 #endif
 
@@ -428,12 +428,12 @@ public:
     /*!
      * Default constructor. Creates a reference wrapper that does not refer to a value.
      */
-    BOOST_LOG_DEFAULTED_FUNCTION(value_ref(), BOOST_NOEXCEPT {})
+    BOOST_DEFAULTED_FUNCTION(value_ref(), BOOST_NOEXCEPT {})
 
     /*!
      * Copy constructor.
      */
-    BOOST_LOG_DEFAULTED_FUNCTION(value_ref(value_ref const& that), BOOST_NOEXCEPT : base_type(static_cast< base_type const& >(that)) {})
+    BOOST_DEFAULTED_FUNCTION(value_ref(value_ref const& that), BOOST_NOEXCEPT : base_type(static_cast< base_type const& >(that)) {})
 
     /*!
      * Initializing constructor. Creates a reference wrapper that refers to the specified value.

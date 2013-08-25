@@ -29,7 +29,7 @@
 #include <boost/log/utility/explicit_operator_bool.hpp>
 #include <boost/log/detail/header.hpp>
 
-#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#ifdef BOOST_HAS_PRAGMA_ONCE
 #pragma once
 #endif
 
@@ -121,8 +121,8 @@ public:
         {
         }
 
-        BOOST_LOG_DELETED_FUNCTION(sentry(sentry const&))
-        BOOST_LOG_DELETED_FUNCTION(sentry& operator= (sentry const&))
+        BOOST_DELETED_FUNCTION(sentry(sentry const&))
+        BOOST_DELETED_FUNCTION(sentry& operator= (sentry const&))
     };
 
 private:
@@ -580,9 +580,9 @@ private:
     }
 
     //! Copy constructor (closed)
-    BOOST_LOG_DELETED_FUNCTION(basic_formatting_ostream(basic_formatting_ostream const& that))
+    BOOST_DELETED_FUNCTION(basic_formatting_ostream(basic_formatting_ostream const& that))
     //! Assignment (closed)
-    BOOST_LOG_DELETED_FUNCTION(basic_formatting_ostream& operator= (basic_formatting_ostream const& that))
+    BOOST_DELETED_FUNCTION(basic_formatting_ostream& operator= (basic_formatting_ostream const& that))
 };
 
 template< typename CharT, typename TraitsT, typename AllocatorT >

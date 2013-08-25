@@ -34,7 +34,7 @@
 #include <boost/log/core/core.hpp>
 #include <boost/log/detail/header.hpp>
 
-#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#ifdef BOOST_HAS_PRAGMA_ONCE
 #pragma once
 #endif
 
@@ -56,7 +56,7 @@ struct filter_factory
     /*!
      * Default constructor
      */
-    BOOST_LOG_DEFAULTED_FUNCTION(filter_factory(), {})
+    BOOST_DEFAULTED_FUNCTION(filter_factory(), {})
 
     /*!
      * Virtual destructor
@@ -129,8 +129,8 @@ struct filter_factory
         BOOST_LOG_UNREACHABLE();
     }
 
-    BOOST_LOG_DELETED_FUNCTION(filter_factory(filter_factory const&))
-    BOOST_LOG_DELETED_FUNCTION(filter_factory& operator= (filter_factory const&))
+    BOOST_DELETED_FUNCTION(filter_factory(filter_factory const&))
+    BOOST_DELETED_FUNCTION(filter_factory& operator= (filter_factory const&))
 };
 
 /*!

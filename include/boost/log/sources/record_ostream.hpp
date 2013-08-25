@@ -31,7 +31,7 @@
 #include <boost/log/utility/formatting_ostream.hpp>
 #include <boost/log/detail/header.hpp>
 
-#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#ifdef BOOST_HAS_PRAGMA_ONCE
 #pragma once
 #endif
 
@@ -162,8 +162,8 @@ private:
     BOOST_LOG_API void init_stream();
 
     //  Copy and assignment are closed
-    BOOST_LOG_DELETED_FUNCTION(basic_record_ostream(basic_record_ostream const&))
-    BOOST_LOG_DELETED_FUNCTION(basic_record_ostream& operator= (basic_record_ostream const&))
+    BOOST_DELETED_FUNCTION(basic_record_ostream(basic_record_ostream const&))
+    BOOST_DELETED_FUNCTION(basic_record_ostream& operator= (basic_record_ostream const&))
 };
 
 
@@ -201,9 +201,9 @@ struct stream_provider
     BOOST_LOG_API static void release_compound(stream_compound* compound) BOOST_NOEXCEPT;
 
     //  Non-constructible, non-copyable, non-assignable
-    BOOST_LOG_DELETED_FUNCTION(stream_provider())
-    BOOST_LOG_DELETED_FUNCTION(stream_provider(stream_provider const&))
-    BOOST_LOG_DELETED_FUNCTION(stream_provider& operator= (stream_provider const&))
+    BOOST_DELETED_FUNCTION(stream_provider())
+    BOOST_DELETED_FUNCTION(stream_provider(stream_provider const&))
+    BOOST_DELETED_FUNCTION(stream_provider& operator= (stream_provider const&))
 };
 
 
@@ -289,7 +289,7 @@ public:
 };
 
 template< typename LoggerT >
-BOOST_LOG_FORCEINLINE record_pump< LoggerT > make_record_pump(LoggerT& lg, record& rec)
+BOOST_FORCEINLINE record_pump< LoggerT > make_record_pump(LoggerT& lg, record& rec)
 {
     return record_pump< LoggerT >(lg, rec);
 }

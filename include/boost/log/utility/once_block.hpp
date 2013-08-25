@@ -19,7 +19,7 @@
 #include <boost/log/utility/unique_identifier_name.hpp>
 #include <boost/log/detail/header.hpp>
 
-#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#ifdef BOOST_HAS_PRAGMA_ONCE
 #pragma once
 #endif
 
@@ -98,8 +98,8 @@ private:
     BOOST_LOG_API void rollback() BOOST_NOEXCEPT;
 
     //  Non-copyable, non-assignable
-    BOOST_LOG_DELETED_FUNCTION(once_block_sentry(once_block_sentry const&))
-    BOOST_LOG_DELETED_FUNCTION(once_block_sentry& operator= (once_block_sentry const&))
+    BOOST_DELETED_FUNCTION(once_block_sentry(once_block_sentry const&))
+    BOOST_DELETED_FUNCTION(once_block_sentry& operator= (once_block_sentry const&))
 };
 
 } // namespace aux
@@ -144,8 +144,8 @@ public:
     }
 
     //  Non-copyable, non-assignable
-    BOOST_LOG_DELETED_FUNCTION(once_block_sentry(once_block_sentry const&))
-    BOOST_LOG_DELETED_FUNCTION(once_block_sentry& operator= (once_block_sentry const&))
+    BOOST_DELETED_FUNCTION(once_block_sentry(once_block_sentry const&))
+    BOOST_DELETED_FUNCTION(once_block_sentry& operator= (once_block_sentry const&))
 };
 
 } // namespace aux

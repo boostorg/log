@@ -29,7 +29,7 @@
 #include <boost/log/expressions/keyword_fwd.hpp>
 #include <boost/log/detail/header.hpp>
 
-#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#ifdef BOOST_HAS_PRAGMA_ONCE
 #pragma once
 #endif
 
@@ -104,8 +104,8 @@ private:
 
         node_base();
 
-        BOOST_LOG_DELETED_FUNCTION(node_base(node_base const&))
-        BOOST_LOG_DELETED_FUNCTION(node_base& operator= (node_base const&))
+        BOOST_DELETED_FUNCTION(node_base(node_base const&))
+        BOOST_DELETED_FUNCTION(node_base& operator= (node_base const&))
     };
 
     //! Container elements

@@ -27,7 +27,7 @@
 #include <boost/log/attributes/value_visitation_fwd.hpp>
 #include <boost/log/detail/header.hpp>
 
-#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#ifdef BOOST_HAS_PRAGMA_ONCE
 #pragma once
 #endif
 
@@ -115,7 +115,7 @@ public:
     /*!
      * Default constructor. Creates an empty (absent) attribute value.
      */
-    BOOST_LOG_DEFAULTED_FUNCTION(attribute_value(), {})
+    BOOST_DEFAULTED_FUNCTION(attribute_value(), {})
 
     /*!
      * Copy constructor

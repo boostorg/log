@@ -30,7 +30,7 @@
 #include <boost/log/utility/type_dispatch/static_type_dispatcher.hpp>
 #include <boost/log/detail/header.hpp>
 
-#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#ifdef BOOST_HAS_PRAGMA_ONCE
 #pragma once
 #endif
 
@@ -115,7 +115,7 @@ public:
     /*!
      * Default constructor
      */
-    BOOST_LOG_DEFAULTED_FUNCTION(value_visitor_invoker(), {})
+    BOOST_DEFAULTED_FUNCTION(value_visitor_invoker(), {})
 
     /*!
      * Copy constructor

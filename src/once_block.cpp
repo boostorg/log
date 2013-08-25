@@ -10,7 +10,7 @@
  * \date   23.06.2010
  *
  * \brief  This file is the Boost.Log library implementation, see the library documentation
- *         at http://www.boost.org/libs/log/doc/log.html.
+ *         at http://www.boost.org/doc/libs/release/libs/log/doc/html/index.html.
  *
  * The code in this file is based on the \c call_once function implementation in Boost.Thread.
  */

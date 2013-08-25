@@ -26,7 +26,7 @@
 #endif // BOOST_LOG_NO_THREADS
 #include <boost/log/detail/header.hpp>
 
-#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#ifdef BOOST_HAS_PRAGMA_ONCE
 #pragma once
 #endif
 
@@ -85,8 +85,8 @@ private:
     protected:
         ~public_data() {}
 
-        BOOST_LOG_DELETED_FUNCTION(public_data(public_data const&))
-        BOOST_LOG_DELETED_FUNCTION(public_data& operator= (public_data const&))
+        BOOST_DELETED_FUNCTION(public_data(public_data const&))
+        BOOST_DELETED_FUNCTION(public_data& operator= (public_data const&))
 
         friend void intrusive_ptr_add_ref(const public_data* p) { ++p->m_ref_counter; }
         friend void intrusive_ptr_release(const public_data* p) { if (--p->m_ref_counter == 0) public_data::destroy(p); }
@@ -108,7 +108,7 @@ public:
      *
      * \post <tt>!*this == true</tt>
      */
-    BOOST_LOG_DEFAULTED_FUNCTION(record_view(), {})
+    BOOST_DEFAULTED_FUNCTION(record_view(), {})
 
     /*!
      * Copy constructor
