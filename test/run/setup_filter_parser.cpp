@@ -20,6 +20,8 @@
 
 #if !defined(BOOST_LOG_WITHOUT_SETTINGS_PARSERS) && !defined(BOOST_LOG_WITHOUT_DEFAULT_FACTORIES)
 
+#include <boost/shared_ptr.hpp>
+#include <boost/log/exceptions.hpp>
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
 #include <boost/log/attributes/attribute_value_set.hpp>
@@ -396,6 +398,14 @@ BOOST_AUTO_TEST_CASE(multi_expression)
         BOOST_CHECK(!f(values4));
         BOOST_CHECK(f(values5));
     }
+    {
+        logging::filter f = logging::parse_filter("%MyAttr% > 0 & %MyAttr% < 20 | %MyStr% = \"hello\"");
+        BOOST_CHECK(!f(values1));
+        BOOST_CHECK(f(values2));
+        BOOST_CHECK(!f(values3));
+        BOOST_CHECK(f(values4));
+        BOOST_CHECK(!f(values5));
+    }
 }
 
 // Tests for negation
@@ -436,6 +446,11 @@ BOOST_AUTO_TEST_CASE(negation)
         logging::filter f = logging::parse_filter("not %MyAttr%");
         BOOST_CHECK(f(values1));
         BOOST_CHECK(!f(values2));
+    }
+    {
+        logging::filter f = logging::parse_filter("!!%MyAttr%");
+        BOOST_CHECK(!f(values1));
+        BOOST_CHECK(f(values2));
     }
 
     // Test with relations
@@ -569,6 +584,185 @@ BOOST_AUTO_TEST_CASE(matches_relation)
         logging::filter f = logging::parse_filter("%MyStr% matches \"w.*\"");
         BOOST_CHECK(!f(values1));
     }
+}
+
+namespace {
+
+class test_filter_factory :
+    public logging::filter_factory< char >
+{
+private:
+    typedef logging::filter_factory< char > base_type;
+
+public:
+    enum relation_type
+    {
+        custom,
+        exists,
+        equality,
+        inequality,
+        less,
+        greater,
+        less_or_equal,
+        greater_or_equal
+    };
+
+    typedef base_type::string_type string_type;
+
+public:
+    explicit test_filter_factory(logging::attribute_name const& name) : m_name(name), m_rel(custom)
+    {
+    }
+
+    void expect_relation(relation_type rel, string_type const& arg)
+    {
+        m_rel = rel;
+        m_arg = arg;
+        m_custom_rel.clear();
+    }
+
+    void expect_relation(string_type const& rel, string_type const& arg)
+    {
+        m_rel = custom;
+        m_arg = arg;
+        m_custom_rel = rel;
+    }
+
+    logging::filter on_exists_test(logging::attribute_name const& name)
+    {
+        BOOST_CHECK_EQUAL(m_name, name);
+        BOOST_CHECK_EQUAL(m_rel, exists);
+        return logging::filter();
+    }
+    logging::filter on_equality_relation(logging::attribute_name const& name, string_type const& arg)
+    {
+        BOOST_CHECK_EQUAL(m_name, name);
+        BOOST_CHECK_EQUAL(m_rel, equality);
+        BOOST_CHECK_EQUAL(m_arg, arg);
+        return logging::filter();
+    }
+    logging::filter on_inequality_relation(logging::attribute_name const& name, string_type const& arg)
+    {
+        BOOST_CHECK_EQUAL(m_name, name);
+        BOOST_CHECK_EQUAL(m_rel, inequality);
+        BOOST_CHECK_EQUAL(m_arg, arg);
+        return logging::filter();
+    }
+    logging::filter on_less_relation(logging::attribute_name const& name, string_type const& arg)
+    {
+        BOOST_CHECK_EQUAL(m_name, name);
+        BOOST_CHECK_EQUAL(m_rel, less);
+        BOOST_CHECK_EQUAL(m_arg, arg);
+        return logging::filter();
+    }
+    logging::filter on_greater_relation(logging::attribute_name const& name, string_type const& arg)
+    {
+        BOOST_CHECK_EQUAL(m_name, name);
+        BOOST_CHECK_EQUAL(m_rel, greater);
+        BOOST_CHECK_EQUAL(m_arg, arg);
+        return logging::filter();
+    }
+    logging::filter on_less_or_equal_relation(logging::attribute_name const& name, string_type const& arg)
+    {
+        BOOST_CHECK_EQUAL(m_name, name);
+        BOOST_CHECK_EQUAL(m_rel, less_or_equal);
+        BOOST_CHECK_EQUAL(m_arg, arg);
+        return logging::filter();
+    }
+    logging::filter on_greater_or_equal_relation(logging::attribute_name const& name, string_type const& arg)
+    {
+        BOOST_CHECK_EQUAL(m_name, name);
+        BOOST_CHECK_EQUAL(m_rel, greater_or_equal);
+        BOOST_CHECK_EQUAL(m_arg, arg);
+        return logging::filter();
+    }
+    logging::filter on_custom_relation(logging::attribute_name const& name, string_type const& rel, string_type const& arg)
+    {
+        BOOST_CHECK_EQUAL(m_name, name);
+        BOOST_CHECK_EQUAL(m_rel, custom);
+        BOOST_CHECK_EQUAL(m_custom_rel, rel);
+        BOOST_CHECK_EQUAL(m_arg, arg);
+        return logging::filter();
+    }
+
+private:
+    logging::attribute_name m_name;
+    relation_type m_rel;
+    string_type m_arg;
+    string_type m_custom_rel;
+};
+
+} // namespace
+
+// Tests for filter factory
+BOOST_AUTO_TEST_CASE(filter_factory)
+{
+    logging::attribute_name attr_name("MyCustomAttr");
+    boost::shared_ptr< test_filter_factory > factory(new test_filter_factory(attr_name));
+    logging::register_filter_factory(attr_name, factory);
+
+    BOOST_TEST_CHECKPOINT("filter_factory::exists");
+    factory->expect_relation(test_filter_factory::exists, "");
+    logging::parse_filter("%MyCustomAttr%");
+
+    BOOST_TEST_CHECKPOINT("filter_factory::equality");
+    factory->expect_relation(test_filter_factory::equality, "15");
+    logging::parse_filter("%MyCustomAttr% = 15");
+
+    BOOST_TEST_CHECKPOINT("filter_factory::equality");
+    factory->expect_relation(test_filter_factory::equality, "hello");
+    logging::parse_filter("%MyCustomAttr% = hello");
+
+    BOOST_TEST_CHECKPOINT("filter_factory::equality");
+    factory->expect_relation(test_filter_factory::equality, "hello");
+    logging::parse_filter("%MyCustomAttr% = \"hello\"");
+
+    BOOST_TEST_CHECKPOINT("filter_factory::equality");
+    factory->expect_relation(test_filter_factory::equality, "hello\nworld");
+    logging::parse_filter("%MyCustomAttr% = \"hello\\nworld\"");
+
+    BOOST_TEST_CHECKPOINT("filter_factory::inequality");
+    factory->expect_relation(test_filter_factory::inequality, "hello");
+    logging::parse_filter("%MyCustomAttr% != \"hello\"");
+
+    BOOST_TEST_CHECKPOINT("filter_factory::less");
+    factory->expect_relation(test_filter_factory::less, "hello");
+    logging::parse_filter("%MyCustomAttr% < \"hello\"");
+
+    BOOST_TEST_CHECKPOINT("filter_factory::greater");
+    factory->expect_relation(test_filter_factory::greater, "hello");
+    logging::parse_filter("%MyCustomAttr% > \"hello\"");
+
+    BOOST_TEST_CHECKPOINT("filter_factory::less_or_equal");
+    factory->expect_relation(test_filter_factory::less_or_equal, "hello");
+    logging::parse_filter("%MyCustomAttr% <= \"hello\"");
+
+    BOOST_TEST_CHECKPOINT("filter_factory::greater_or_equal");
+    factory->expect_relation(test_filter_factory::greater_or_equal, "hello");
+    logging::parse_filter("%MyCustomAttr% >= \"hello\"");
+
+    BOOST_TEST_CHECKPOINT("filter_factory::custom");
+    factory->expect_relation("my_relation", "hello");
+    logging::parse_filter("%MyCustomAttr% my_relation \"hello\"");
+}
+
+// Tests for invalid filters
+BOOST_AUTO_TEST_CASE(invalid)
+{
+    BOOST_CHECK_THROW(logging::parse_filter("%MyStr"), logging::parse_error);
+    BOOST_CHECK_THROW(logging::parse_filter("MyStr%"), logging::parse_error);
+    BOOST_CHECK_THROW(logging::parse_filter("%MyStr% abcd"), logging::parse_error);
+    BOOST_CHECK_THROW(logging::parse_filter("(%MyStr%"), logging::parse_error);
+    BOOST_CHECK_THROW(logging::parse_filter("%MyStr%)"), logging::parse_error);
+    BOOST_CHECK_THROW(logging::parse_filter("%%"), logging::parse_error);
+    BOOST_CHECK_THROW(logging::parse_filter("%"), logging::parse_error);
+    BOOST_CHECK_THROW(logging::parse_filter("!"), logging::parse_error);
+    BOOST_CHECK_THROW(logging::parse_filter("!()"), logging::parse_error);
+    BOOST_CHECK_THROW(logging::parse_filter("\"xxx\" == %MyStr%"), logging::parse_error);
+    BOOST_CHECK_THROW(logging::parse_filter("%MyStr% == \"xxx"), logging::parse_error);
+    BOOST_CHECK_THROW(logging::parse_filter("%MyStr% === \"xxx\""), logging::parse_error);
+    BOOST_CHECK_THROW(logging::parse_filter("%MyStr% ! \"xxx\""), logging::parse_error);
+    BOOST_CHECK_THROW(logging::parse_filter("%MyStr% %MyStr2%"), logging::parse_error);
 }
 
 #endif // !defined(BOOST_LOG_WITHOUT_SETTINGS_PARSERS) && !defined(BOOST_LOG_WITHOUT_DEFAULT_FACTORIES)

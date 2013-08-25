@@ -225,7 +225,7 @@ private:
     //! The method parses a single subexpression
     void parse_subexpression(iterator_type& begin, iterator_type end, unsigned int depth)
     {
-        bool negated = false, negation_present = false;
+        bool negated = false, negation_present = false, done = false;
         iterator_type p = begin;
 
         while (p != end)
@@ -277,7 +277,15 @@ private:
             if (negated)
                 on_negation();
 
+            done = true;
+
             break;
+        }
+
+        if (negation_present && !done)
+        {
+            // This would happen if a filter consists of a single '!'
+            BOOST_LOG_THROW_DESCR(parse_error, "Filter parsing error: negation operator applied to nothingness");
         }
 
         begin = p;
@@ -415,8 +423,8 @@ private:
         }
         else
         {
-            // This would happen if a filter consists of a single '!'
-            BOOST_LOG_THROW_DESCR(parse_error, "Filter parsing error: a negation operator applied to nothingness");
+            // This would happen if a filter consists of "!()"
+            BOOST_LOG_THROW_DESCR(parse_error, "Filter parsing error: negation operator applied to an empty subexpression");
         }
     }
 
