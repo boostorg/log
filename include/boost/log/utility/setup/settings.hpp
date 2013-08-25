@@ -506,7 +506,7 @@ public:
     {
         if (m_ptree)
         {
-            optional< property_tree_type const& > section = m_ptree->get_child_optional(section_name);
+            optional< property_tree_type& > section = m_ptree->get_child_optional(section_name);
             if (!!section)
                 return (section->find(param_name) != section->not_found());
         }
