@@ -267,7 +267,7 @@ private:
         if (p == end)
             BOOST_LOG_THROW_DESCR(parse_error, "Invalid attribute placeholder arguments description in the formatter string");
         if (*p == constants::char_paren_bracket_right)
-            return p;
+            return ++p;
 
         while (true)
         {
@@ -282,7 +282,7 @@ private:
                 c = *p;
                 if (encoding::isspace(c) || c == constants::char_equal)
                     break;
-                if (!encoding::isalnum(c))
+                if (!encoding::isalnum(c) && c != constants::char_underline)
                     BOOST_LOG_THROW_DESCR(parse_error, "Placeholder argument name is invalid");
             }
 

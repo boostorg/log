@@ -610,7 +610,7 @@ public:
     typedef base_type::string_type string_type;
 
 public:
-    explicit test_filter_factory(logging::attribute_name const& name) : m_name(name), m_rel(custom)
+    explicit test_filter_factory(logging::attribute_name const& name) : m_name(name), m_rel(custom), m_called(false)
     {
     }
 
@@ -628,10 +628,17 @@ public:
         m_custom_rel = rel;
     }
 
+    void check_called()
+    {
+        BOOST_CHECK(m_called);
+        m_called = false;
+    }
+
     logging::filter on_exists_test(logging::attribute_name const& name)
     {
         BOOST_CHECK_EQUAL(m_name, name);
         BOOST_CHECK_EQUAL(m_rel, exists);
+        m_called = true;
         return logging::filter();
     }
     logging::filter on_equality_relation(logging::attribute_name const& name, string_type const& arg)
@@ -639,6 +646,7 @@ public:
         BOOST_CHECK_EQUAL(m_name, name);
         BOOST_CHECK_EQUAL(m_rel, equality);
         BOOST_CHECK_EQUAL(m_arg, arg);
+        m_called = true;
         return logging::filter();
     }
     logging::filter on_inequality_relation(logging::attribute_name const& name, string_type const& arg)
@@ -646,6 +654,7 @@ public:
         BOOST_CHECK_EQUAL(m_name, name);
         BOOST_CHECK_EQUAL(m_rel, inequality);
         BOOST_CHECK_EQUAL(m_arg, arg);
+        m_called = true;
         return logging::filter();
     }
     logging::filter on_less_relation(logging::attribute_name const& name, string_type const& arg)
@@ -653,6 +662,7 @@ public:
         BOOST_CHECK_EQUAL(m_name, name);
         BOOST_CHECK_EQUAL(m_rel, less);
         BOOST_CHECK_EQUAL(m_arg, arg);
+        m_called = true;
         return logging::filter();
     }
     logging::filter on_greater_relation(logging::attribute_name const& name, string_type const& arg)
@@ -660,6 +670,7 @@ public:
         BOOST_CHECK_EQUAL(m_name, name);
         BOOST_CHECK_EQUAL(m_rel, greater);
         BOOST_CHECK_EQUAL(m_arg, arg);
+        m_called = true;
         return logging::filter();
     }
     logging::filter on_less_or_equal_relation(logging::attribute_name const& name, string_type const& arg)
@@ -667,6 +678,7 @@ public:
         BOOST_CHECK_EQUAL(m_name, name);
         BOOST_CHECK_EQUAL(m_rel, less_or_equal);
         BOOST_CHECK_EQUAL(m_arg, arg);
+        m_called = true;
         return logging::filter();
     }
     logging::filter on_greater_or_equal_relation(logging::attribute_name const& name, string_type const& arg)
@@ -674,6 +686,7 @@ public:
         BOOST_CHECK_EQUAL(m_name, name);
         BOOST_CHECK_EQUAL(m_rel, greater_or_equal);
         BOOST_CHECK_EQUAL(m_arg, arg);
+        m_called = true;
         return logging::filter();
     }
     logging::filter on_custom_relation(logging::attribute_name const& name, string_type const& rel, string_type const& arg)
@@ -682,6 +695,7 @@ public:
         BOOST_CHECK_EQUAL(m_rel, custom);
         BOOST_CHECK_EQUAL(m_custom_rel, rel);
         BOOST_CHECK_EQUAL(m_arg, arg);
+        m_called = true;
         return logging::filter();
     }
 
@@ -690,6 +704,7 @@ private:
     relation_type m_rel;
     string_type m_arg;
     string_type m_custom_rel;
+    bool m_called;
 };
 
 } // namespace
@@ -704,46 +719,57 @@ BOOST_AUTO_TEST_CASE(filter_factory)
     BOOST_TEST_CHECKPOINT("filter_factory::exists");
     factory->expect_relation(test_filter_factory::exists, "");
     logging::parse_filter("%MyCustomAttr%");
+    factory->check_called();
 
     BOOST_TEST_CHECKPOINT("filter_factory::equality");
     factory->expect_relation(test_filter_factory::equality, "15");
     logging::parse_filter("%MyCustomAttr% = 15");
+    factory->check_called();
 
     BOOST_TEST_CHECKPOINT("filter_factory::equality");
     factory->expect_relation(test_filter_factory::equality, "hello");
     logging::parse_filter("%MyCustomAttr% = hello");
+    factory->check_called();
 
     BOOST_TEST_CHECKPOINT("filter_factory::equality");
     factory->expect_relation(test_filter_factory::equality, "hello");
     logging::parse_filter("%MyCustomAttr% = \"hello\"");
+    factory->check_called();
 
     BOOST_TEST_CHECKPOINT("filter_factory::equality");
     factory->expect_relation(test_filter_factory::equality, "hello\nworld");
     logging::parse_filter("%MyCustomAttr% = \"hello\\nworld\"");
+    factory->check_called();
 
     BOOST_TEST_CHECKPOINT("filter_factory::inequality");
     factory->expect_relation(test_filter_factory::inequality, "hello");
     logging::parse_filter("%MyCustomAttr% != \"hello\"");
+    factory->check_called();
 
     BOOST_TEST_CHECKPOINT("filter_factory::less");
     factory->expect_relation(test_filter_factory::less, "hello");
     logging::parse_filter("%MyCustomAttr% < \"hello\"");
+    factory->check_called();
 
     BOOST_TEST_CHECKPOINT("filter_factory::greater");
     factory->expect_relation(test_filter_factory::greater, "hello");
     logging::parse_filter("%MyCustomAttr% > \"hello\"");
+    factory->check_called();
 
     BOOST_TEST_CHECKPOINT("filter_factory::less_or_equal");
     factory->expect_relation(test_filter_factory::less_or_equal, "hello");
     logging::parse_filter("%MyCustomAttr% <= \"hello\"");
+    factory->check_called();
 
     BOOST_TEST_CHECKPOINT("filter_factory::greater_or_equal");
     factory->expect_relation(test_filter_factory::greater_or_equal, "hello");
     logging::parse_filter("%MyCustomAttr% >= \"hello\"");
+    factory->check_called();
 
     BOOST_TEST_CHECKPOINT("filter_factory::custom");
     factory->expect_relation("my_relation", "hello");
     logging::parse_filter("%MyCustomAttr% my_relation \"hello\"");
+    factory->check_called();
 }
 
 // Tests for invalid filters
