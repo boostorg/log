@@ -139,10 +139,7 @@ public:
     }
 
     template< typename T >
-    typename boost::enable_if<
-        mpl::contains< log::string_types::type, T >,
-        result_type
-    >::type operator() (T const& val) const
+    result_type operator() (T const& val) const
     {
         return relation_type::operator() (val, m_operand);
     }
@@ -173,11 +170,18 @@ public:
     {
     }
 
-    using base_type::operator();
+    template< typename T >
+    typename boost::enable_if<
+        mpl::contains< log::string_types, T >,
+        result_type
+    >::type operator() (T const& val) const
+    {
+        return base_type::operator() (val);
+    }
 
     template< typename T >
     typename boost::disable_if<
-        mpl::contains< log::string_types::type, T >,
+        mpl::contains< log::string_types, T >,
         result_type
     >::type operator() (T const& val) const
     {
