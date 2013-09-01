@@ -67,8 +67,13 @@ public:
      * All attributes must derive their implementation from this class.
      */
     struct BOOST_LOG_NO_VTABLE BOOST_SYMBOL_VISIBLE impl :
-        public boost::intrusive_ref_counter
+        public boost::intrusive_ref_counter< impl >
     {
+        /*!
+         * \brief Virtual destructor
+         */
+        virtual ~impl() {}
+
         /*!
          * \return The actual attribute value. It shall not return empty values (exceptions
          *         shall be used to indicate errors).

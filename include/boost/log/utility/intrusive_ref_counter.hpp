@@ -35,7 +35,16 @@ namespace boost {
 
 BOOST_LOG_OPEN_NAMESPACE
 
-using boost::intrusive_ref_counter;
+namespace aux {
+
+struct legacy_intrusive_ref_counter_root
+{
+    virtual ~legacy_intrusive_ref_counter_root() {}
+};
+
+} // namespace aux
+
+typedef boost::intrusive_ref_counter< aux::legacy_intrusive_ref_counter_root > intrusive_ref_counter;
 
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
