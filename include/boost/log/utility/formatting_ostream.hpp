@@ -26,7 +26,7 @@
 #include <boost/log/detail/code_conversion.hpp>
 #include <boost/log/utility/string_literal_fwd.hpp>
 #include <boost/log/utility/formatting_ostream_fwd.hpp>
-#include <boost/log/utility/explicit_operator_bool.hpp>
+#include <boost/utility/explicit_operator_bool.hpp>
 #include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_HAS_PRAGMA_ONCE
@@ -276,7 +276,7 @@ public:
     static bool sync_with_stdio(bool sync = true) { return ostream_type::sync_with_stdio(sync); }
 
     // std::basic_ios method forwarders
-    BOOST_LOG_EXPLICIT_OPERATOR_BOOL()
+    BOOST_EXPLICIT_OPERATOR_BOOL()
     bool operator! () const { return !m_stream; }
 
     iostate rdstate() const { return m_stream.rdstate(); }

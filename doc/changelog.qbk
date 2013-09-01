@@ -16,6 +16,7 @@
 * Added a new configuration macro `BOOST_LOG_WITHOUT_DEFAULT_FACTORIES`. By defining this macro the user can disable compilation of the default filter and formatter factories used by settings parsers. This can substantially reduce binary sizes while still retaining support for settings parsers. Note that when this macro is defined the user will have to register _all_ attributes in the library.
 * Rewritten some of the parsers to reduce the compiled binary size. The rewritten parsers are more robust in detecting ambiguous and incorrect input.
 * The header `boost/log/utility/intrusive_ref_counter.hpp` is deprecated and will be removed in future releases. Its contents have been moved to __boost_smart_ptr__, as `boost/smart_ptr/intrusive_ref_counter.hpp`.
+* The header `boost/log/utility/explicit_operator_bool.hpp` is deprecated and will be removed in future releases. Its contents have been moved to __boost_utility__, as `boost/utility/explicit_operator_bool.hpp`.
 
 [*Bug fixes:]
 

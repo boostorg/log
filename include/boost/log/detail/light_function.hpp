@@ -23,7 +23,7 @@
 #include <boost/move/core.hpp>
 #include <boost/move/utility.hpp>
 #include <boost/log/detail/config.hpp>
-#include <boost/log/utility/explicit_operator_bool.hpp>
+#include <boost/utility/explicit_operator_bool.hpp>
 #include <boost/type_traits/remove_cv.hpp>
 #if defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 #include <boost/preprocessor/iteration/iterate.hpp>
@@ -244,7 +244,7 @@ public:
         return m_pImpl->invoke(m_pImpl, args...);
     }
 
-    BOOST_LOG_EXPLICIT_OPERATOR_BOOL()
+    BOOST_EXPLICIT_OPERATOR_BOOL()
     bool operator! () const BOOST_NOEXCEPT { return (m_pImpl == NULL); }
     bool empty() const BOOST_NOEXCEPT { return (m_pImpl == NULL); }
     void clear() BOOST_NOEXCEPT
@@ -444,7 +444,7 @@ public:
         m_pImpl->invoke(m_pImpl, args...);
     }
 
-    BOOST_LOG_EXPLICIT_OPERATOR_BOOL()
+    BOOST_EXPLICIT_OPERATOR_BOOL()
     bool operator! () const BOOST_NOEXCEPT { return (m_pImpl == NULL); }
     bool empty() const BOOST_NOEXCEPT { return (m_pImpl == NULL); }
     void clear() BOOST_NOEXCEPT

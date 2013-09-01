@@ -18,7 +18,7 @@
 
 #include <boost/smart_ptr/shared_ptr.hpp>
 #include <boost/log/detail/config.hpp>
-#include <boost/log/utility/explicit_operator_bool.hpp>
+#include <boost/utility/explicit_operator_bool.hpp>
 #include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_HAS_PRAGMA_ONCE
@@ -119,7 +119,7 @@ public:
     element_type* get() const { return m_pElement.get(); }
 
     //! Checks for null pointer
-    BOOST_LOG_EXPLICIT_OPERATOR_BOOL()
+    BOOST_EXPLICIT_OPERATOR_BOOL()
     //! Checks for null pointer
     bool operator! () const { return !m_pElement; }
 

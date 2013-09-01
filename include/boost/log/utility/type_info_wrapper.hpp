@@ -18,7 +18,7 @@
 #include <typeinfo>
 #include <string>
 #include <boost/log/detail/config.hpp>
-#include <boost/log/utility/explicit_operator_bool.hpp>
+#include <boost/utility/explicit_operator_bool.hpp>
 
 #ifdef BOOST_LOG_HAS_CXXABI_H
 #include <cxxabi.h>
@@ -93,7 +93,7 @@ public:
      * \return \c true if the type info wrapper was initialized with a particular type,
      *         \c false if the wrapper was default-constructed and not yet initialized
      */
-    BOOST_LOG_EXPLICIT_OPERATOR_BOOL()
+    BOOST_EXPLICIT_OPERATOR_BOOL()
 
     /*!
      * Stored type info getter
