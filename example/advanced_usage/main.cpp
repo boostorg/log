@@ -21,7 +21,7 @@
 #include <cassert>
 #include <iostream>
 #include <fstream>
-#include <boost/shared_ptr.hpp>
+#include <boost/smart_ptr/shared_ptr.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/log/common.hpp>
 #include <boost/log/expressions.hpp>

@@ -16,10 +16,10 @@
 #define BOOST_LOG_ATTRIBUTES_ATTRIBUTE_HPP_INCLUDED_
 
 #include <new>
-#include <boost/intrusive_ptr.hpp>
 #include <boost/move/core.hpp>
+#include <boost/smart_ptr/intrusive_ptr.hpp>
+#include <boost/smart_ptr/intrusive_ref_counter.hpp>
 #include <boost/log/detail/config.hpp>
-#include <boost/log/utility/intrusive_ref_counter.hpp>
 #include <boost/log/utility/explicit_operator_bool.hpp>
 #include <boost/log/detail/header.hpp>
 
@@ -67,7 +67,7 @@ public:
      * All attributes must derive their implementation from this class.
      */
     struct BOOST_LOG_NO_VTABLE BOOST_SYMBOL_VISIBLE impl :
-        public intrusive_ref_counter
+        public boost::intrusive_ref_counter
     {
         /*!
          * \return The actual attribute value. It shall not return empty values (exceptions

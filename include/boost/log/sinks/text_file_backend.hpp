@@ -20,7 +20,7 @@
 #include <ostream>
 #include <boost/limits.hpp>
 #include <boost/cstdint.hpp>
-#include <boost/shared_ptr.hpp>
+#include <boost/smart_ptr/shared_ptr.hpp>
 #include <boost/date_time/date_defs.hpp>
 #include <boost/date_time/special_defs.hpp>
 #include <boost/date_time/gregorian/greg_day.hpp>

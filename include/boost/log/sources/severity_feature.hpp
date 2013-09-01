@@ -16,8 +16,8 @@
 #define BOOST_LOG_SOURCES_SEVERITY_FEATURE_HPP_INCLUDED_
 
 #include <boost/cstdint.hpp>
-#include <boost/intrusive_ptr.hpp>
 #include <boost/static_assert.hpp>
+#include <boost/smart_ptr/intrusive_ptr.hpp>
 #include <boost/move/core.hpp>
 #include <boost/move/utility.hpp>
 #include <boost/log/detail/config.hpp>

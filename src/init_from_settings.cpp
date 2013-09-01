@@ -29,7 +29,7 @@
 #include <boost/bind.hpp>
 #include <boost/limits.hpp>
 #include <boost/cstdint.hpp>
-#include <boost/make_shared.hpp>
+#include <boost/smart_ptr/make_shared_object.hpp>
 #include <boost/optional.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/date_time/date_defs.hpp>

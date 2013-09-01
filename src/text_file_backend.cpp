@@ -31,7 +31,7 @@
 #include <stdexcept>
 #include <boost/ref.hpp>
 #include <boost/bind.hpp>
-#include <boost/make_shared.hpp>
+#include <boost/smart_ptr/make_shared_object.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/throw_exception.hpp>
 #include <boost/mpl/if.hpp>

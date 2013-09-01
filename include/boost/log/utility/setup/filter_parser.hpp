@@ -16,9 +16,9 @@
 #define BOOST_LOG_UTILITY_SETUP_FILTER_PARSER_HPP_INCLUDED_
 
 #include <string>
-#include <boost/shared_ptr.hpp>
-#include <boost/make_shared.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/smart_ptr/shared_ptr.hpp>
+#include <boost/smart_ptr/make_shared_object.hpp>
 #include <boost/phoenix/operator/comparison.hpp>
 #include <boost/type_traits/is_base_and_derived.hpp>
 #include <boost/utility/enable_if.hpp>

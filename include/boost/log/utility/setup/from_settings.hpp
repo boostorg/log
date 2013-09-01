@@ -17,7 +17,7 @@
 #define BOOST_LOG_UTILITY_SETUP_FROM_SETTINGS_HPP_INCLUDED_
 
 #include <string>
-#include <boost/shared_ptr.hpp>
+#include <boost/smart_ptr/shared_ptr.hpp>
 #include <boost/utility/enable_if.hpp>
 #include <boost/type_traits/is_base_and_derived.hpp>
 #include <boost/log/detail/setup_config.hpp>

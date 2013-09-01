@@ -13,7 +13,7 @@
  *         at http://www.boost.org/doc/libs/release/libs/log/doc/html/index.html.
  */
 
-#include <boost/shared_ptr.hpp>
+#include <boost/smart_ptr/shared_ptr.hpp>
 #include <boost/log/detail/default_attribute_names.hpp>
 #include <boost/log/detail/singleton.hpp>
 #include <boost/log/detail/header.hpp>

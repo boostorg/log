@@ -21,7 +21,7 @@
 #include <functional>
 #include <boost/ref.hpp>
 #include <boost/bind.hpp>
-#include <boost/shared_ptr.hpp>
+#include <boost/smart_ptr/shared_ptr.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/thread/barrier.hpp>

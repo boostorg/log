@@ -16,7 +16,7 @@
 #define BOOST_LOG_CORE_CORE_HPP_INCLUDED_
 
 #include <utility>
-#include <boost/shared_ptr.hpp>
+#include <boost/smart_ptr/shared_ptr.hpp>
 #include <boost/move/core.hpp>
 #include <boost/log/detail/config.hpp>
 #include <boost/log/detail/light_function.hpp>
