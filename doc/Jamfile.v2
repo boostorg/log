@@ -69,6 +69,7 @@ local doxygen_params =
                         BOOST_LOG_CLOSE_NAMESPACE=\"}\" \\
                         BOOST_DEFAULTED_FUNCTION(x,y)=\"x = default;\" \\
                         BOOST_DELETED_FUNCTION(x)=\"x = delete;\" \\
+                        BOOST_EXPLICIT_OPERATOR_BOOL()=\"explicit operator bool() const;\" \\
                         BOOST_LOG_USE_CHAR \\
                         BOOST_LOG_USE_WCHAR_T \\
                         BOOST_LOG_API= \\
