@@ -17,8 +17,8 @@
 
 #include <typeinfo>
 #include <string>
-#include <boost/log/detail/config.hpp>
 #include <boost/utility/explicit_operator_bool.hpp>
+#include <boost/log/detail/config.hpp>
 
 #ifdef BOOST_LOG_HAS_CXXABI_H
 #include <cxxabi.h>

@@ -30,7 +30,8 @@
 #include <boost/limits.hpp>
 #include <boost/cstdint.hpp>
 #include <boost/smart_ptr/make_shared_object.hpp>
-#include <boost/optional.hpp>
+#include <boost/utility/empty_deleter.hpp>
+#include <boost/optional/optional.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/date_time/date_defs.hpp>
 #include <boost/property_tree/ptree.hpp>
@@ -49,7 +50,6 @@
 #include <boost/log/sinks/frontend_requirements.hpp>
 #include <boost/log/expressions/filter.hpp>
 #include <boost/log/expressions/formatter.hpp>
-#include <boost/log/utility/empty_deleter.hpp>
 #include <boost/log/utility/setup/from_settings.hpp>
 #include <boost/log/utility/setup/filter_parser.hpp>
 #include <boost/log/utility/setup/formatter_parser.hpp>
@@ -312,7 +312,7 @@ private:
             typedef boost::log::aux::char_constants< BackendCharT > constants;
             typedef sinks::basic_text_ostream_backend< BackendCharT > backend_t;
             shared_ptr< backend_t > backend = boost::make_shared< backend_t >();
-            backend->add_stream(shared_ptr< typename backend_t::stream_type >(&constants::get_console_log_stream(), empty_deleter()));
+            backend->add_stream(shared_ptr< typename backend_t::stream_type >(&constants::get_console_log_stream(), boost::empty_deleter()));
 
             // Auto flush
             if (optional< string_type > auto_flush_param = params["AutoFlush"])

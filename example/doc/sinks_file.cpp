@@ -14,7 +14,6 @@
 #include <boost/log/sinks/text_file_backend.hpp>
 #include <boost/log/sources/severity_channel_logger.hpp>
 #include <boost/log/sources/record_ostream.hpp>
-#include <boost/log/utility/empty_deleter.hpp>
 
 namespace logging = boost::log;
 namespace src = boost::log::sources;

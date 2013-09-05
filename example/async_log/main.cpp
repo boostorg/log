@@ -31,7 +31,6 @@
 #include <boost/log/attributes.hpp>
 #include <boost/log/sinks.hpp>
 #include <boost/log/sources/logger.hpp>
-#include <boost/log/utility/empty_deleter.hpp>
 #include <boost/log/utility/record_ordering.hpp>
 
 namespace logging = boost::log;
