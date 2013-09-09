@@ -545,6 +545,24 @@ private:
         m_stream.fill(static_cast< char_type >(' '));
     }
 
+    basic_formatting_ostream& formatted_write(const char_type* p, std::streamsize size)
+    {
+        sentry guard(*this);
+        if (guard)
+        {
+            m_stream.flush();
+
+            if (m_stream.width() <= size)
+                m_streambuf.storage()->append(p, static_cast< std::size_t >(size));
+            else
+                this->aligned_write(p, size);
+
+            m_stream.width(0);
+        }
+
+        return *this;
+    }
+
     template< typename OtherCharT >
     basic_formatting_ostream& formatted_write(const OtherCharT* p, std::streamsize size)
     {
@@ -552,32 +570,22 @@ private:
         if (guard)
         {
             m_stream.flush();
-            string_type* const storage = m_streambuf.storage();
 
-            const std::streamsize w = m_stream.width();
-            if (w <= size)
-            {
-                aux::code_convert(p, static_cast< std::size_t >(size), *storage, m_stream.getloc());
-            }
+            if (m_stream.width() <= size)
+                aux::code_convert(p, static_cast< std::size_t >(size), *m_streambuf.storage(), m_stream.getloc());
             else
-            {
-                const bool align_left = (m_stream.flags() & ostream_type::adjustfield) == ostream_type::left;
-                typename string_type::size_type const alignment_size =
-                    static_cast< typename string_type::size_type >(w - size);
-                if (!align_left)
-                    storage->append(alignment_size, m_stream.fill());
-
-                aux::code_convert(p, static_cast< std::size_t >(size), *storage, m_stream.getloc());
-
-                if (align_left)
-                    storage->append(alignment_size, m_stream.fill());
-            }
+                this->aligned_write(p, size);
 
             m_stream.width(0);
         }
 
         return *this;
     }
+
+    void aligned_write(const char_type* p, std::streamsize size);
+
+    template< typename OtherCharT >
+    void aligned_write(const OtherCharT* p, std::streamsize size);
 
     //! Copy constructor (closed)
     BOOST_DELETED_FUNCTION(basic_formatting_ostream(basic_formatting_ostream const& that))
@@ -656,6 +664,44 @@ BOOST_CONSTEXPR_OR_CONST typename basic_formatting_ostream< CharT, TraitsT, Allo
 template< typename CharT, typename TraitsT, typename AllocatorT >
 BOOST_CONSTEXPR_OR_CONST typename basic_formatting_ostream< CharT, TraitsT, AllocatorT >::event basic_formatting_ostream< CharT, TraitsT, AllocatorT >::copyfmt_event;
 
+template< typename CharT, typename TraitsT, typename AllocatorT >
+void basic_formatting_ostream< CharT, TraitsT, AllocatorT >::aligned_write(const char_type* p, std::streamsize size)
+{
+    string_type* const storage = m_streambuf.storage();
+    typename string_type::size_type const alignment_size =
+        static_cast< typename string_type::size_type >(m_stream.width() - size);
+    const bool align_left = (m_stream.flags() & ostream_type::adjustfield) == ostream_type::left;
+    if (align_left)
+    {
+        storage->append(p, static_cast< std::size_t >(size));
+        storage->append(alignment_size, m_stream.fill());
+    }
+    else
+    {
+        storage->append(alignment_size, m_stream.fill());
+        storage->append(p, static_cast< std::size_t >(size));
+    }
+}
+
+template< typename CharT, typename TraitsT, typename AllocatorT >
+template< typename OtherCharT >
+void basic_formatting_ostream< CharT, TraitsT, AllocatorT >::aligned_write(const OtherCharT* p, std::streamsize size)
+{
+    string_type* const storage = m_streambuf.storage();
+    typename string_type::size_type const alignment_size =
+        static_cast< typename string_type::size_type >(m_stream.width() - size);
+    const bool align_left = (m_stream.flags() & ostream_type::adjustfield) == ostream_type::left;
+    if (align_left)
+    {
+        aux::code_convert(p, static_cast< std::size_t >(size), *storage, m_stream.getloc());
+        storage->append(alignment_size, m_stream.fill());
+    }
+    else
+    {
+        storage->append(alignment_size, m_stream.fill());
+        aux::code_convert(p, static_cast< std::size_t >(size), *storage, m_stream.getloc());
+    }
+}
 
 template< typename CharT, typename TraitsT, typename AllocatorT, typename T >
 inline basic_formatting_ostream< CharT, TraitsT, AllocatorT >&
