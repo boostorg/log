@@ -15,11 +15,10 @@
 #ifndef BOOST_LOG_ATTRIBUTE_VALUE_HPP_INCLUDED_
 #define BOOST_LOG_ATTRIBUTE_VALUE_HPP_INCLUDED_
 
-#include <boost/intrusive_ptr.hpp>
 #include <boost/move/core.hpp>
+#include <boost/smart_ptr/intrusive_ptr.hpp>
 #include <boost/log/detail/config.hpp>
-#include <boost/log/utility/explicit_operator_bool.hpp>
-#include <boost/log/utility/intrusive_ref_counter.hpp>
+#include <boost/utility/explicit_operator_bool.hpp>
 #include <boost/log/utility/type_info_wrapper.hpp>
 #include <boost/log/utility/type_dispatch/type_dispatcher.hpp>
 #include <boost/log/attributes/attribute.hpp>
@@ -155,7 +154,7 @@ public:
     /*!
      * The operator checks if the attribute value is empty
      */
-    BOOST_LOG_EXPLICIT_OPERATOR_BOOL()
+    BOOST_EXPLICIT_OPERATOR_BOOL()
     /*!
      * The operator checks if the attribute value is empty
      */

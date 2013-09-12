@@ -15,9 +15,8 @@
 #ifndef BOOST_LOG_ATTRIBUTES_MUTABLE_CONSTANT_HPP_INCLUDED_
 #define BOOST_LOG_ATTRIBUTES_MUTABLE_CONSTANT_HPP_INCLUDED_
 
-#include <boost/shared_ptr.hpp>
-#include <boost/make_shared.hpp>
 #include <boost/static_assert.hpp>
+#include <boost/smart_ptr/intrusive_ptr.hpp>
 #include <boost/mpl/if.hpp>
 #include <boost/move/core.hpp>
 #include <boost/move/utility.hpp>

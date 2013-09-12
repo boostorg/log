@@ -24,7 +24,6 @@
 #ifndef BOOST_LOG_WITHOUT_SYSLOG
 
 #include <string>
-#include <boost/shared_ptr.hpp>
 #include <boost/log/detail/asio_fwd.hpp>
 #include <boost/log/detail/light_function.hpp>
 #include <boost/log/detail/parameter_tools.hpp>

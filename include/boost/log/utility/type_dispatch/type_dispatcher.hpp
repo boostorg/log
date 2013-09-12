@@ -19,7 +19,7 @@
 #include <boost/static_assert.hpp>
 #include <boost/log/detail/config.hpp>
 #include <boost/log/detail/visible_type.hpp>
-#include <boost/log/utility/explicit_operator_bool.hpp>
+#include <boost/utility/explicit_operator_bool.hpp>
 #include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_HAS_PRAGMA_ONCE
@@ -112,7 +112,7 @@ public:
             (caster.as_trampoline)(this->m_pVisitor, value);
         }
 
-        BOOST_LOG_EXPLICIT_OPERATOR_BOOL()
+        BOOST_EXPLICIT_OPERATOR_BOOL()
 
         bool operator! () const { return (this->m_pVisitor == 0); }
     };
@@ -136,7 +136,7 @@ public:
         /*!
          * The operator checks if the visitor is attached to a receiver
          */
-        BOOST_LOG_EXPLICIT_OPERATOR_BOOL()
+        BOOST_EXPLICIT_OPERATOR_BOOL()
 
         /*!
          * The operator checks if the visitor is not attached to a receiver

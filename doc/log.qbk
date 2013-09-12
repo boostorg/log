@@ -46,6 +46,7 @@
 [def __boost_asio__ [@http://www.boost.org/doc/libs/release/doc/html/boost_asio.html Boost.ASIO]]
 [def __boost_move__ [@http://www.boost.org/doc/libs/release/doc/html/move.html Boost.Move]]
 [def __boost_locale__ [@http://www.boost.org/doc/libs/release/libs/locale/doc/html/index.html Boost.Locale]]
+[def __boost_utility__ [@http://www.boost.org/doc/libs/release/libs/utility/utility.htm Boost.Utility]]
 [def __boost_quickbook__ [@http://www.boost.org/doc/libs/release/doc/html/quickbook.html Boost.Quickbook]]
 
 [template ticket[key] '''<ulink url="https://svn.boost.org/trac/boost/ticket/'''[key]'''">#'''[key]'''</ulink>''']

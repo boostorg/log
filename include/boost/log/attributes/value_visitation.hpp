@@ -26,7 +26,7 @@
 #include <boost/log/attributes/value_visitation_fwd.hpp>
 #include <boost/log/attributes/fallback_policy.hpp>
 #include <boost/log/expressions/keyword_fwd.hpp>
-#include <boost/log/utility/explicit_operator_bool.hpp>
+#include <boost/utility/explicit_operator_bool.hpp>
 #include <boost/log/utility/type_dispatch/static_type_dispatcher.hpp>
 #include <boost/log/detail/header.hpp>
 
@@ -71,7 +71,7 @@ public:
      *
      * \return \c true if the value was visited successfully, \c false otherwise.
      */
-    BOOST_LOG_EXPLICIT_OPERATOR_BOOL()
+    BOOST_EXPLICIT_OPERATOR_BOOL()
     /*!
      * Checks if the visitation was unsuccessful.
      *

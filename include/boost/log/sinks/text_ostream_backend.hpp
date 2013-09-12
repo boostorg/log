@@ -16,7 +16,7 @@
 #define BOOST_LOG_SINKS_TEXT_OSTREAM_BACKEND_HPP_INCLUDED_
 
 #include <ostream>
-#include <boost/shared_ptr.hpp>
+#include <boost/smart_ptr/shared_ptr.hpp>
 #include <boost/log/detail/config.hpp>
 #include <boost/log/sinks/basic_sink_backend.hpp>
 #include <boost/log/sinks/frontend_requirements.hpp>

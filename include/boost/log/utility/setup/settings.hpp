@@ -26,7 +26,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/log/detail/setup_config.hpp>
 #include <boost/log/detail/native_typeof.hpp>
-#include <boost/log/utility/explicit_operator_bool.hpp>
+#include <boost/utility/explicit_operator_bool.hpp>
 #if !defined(BOOST_LOG_TYPEOF)
 #include <boost/utility/enable_if.hpp>
 #endif
@@ -175,7 +175,7 @@ private:
             return *this;
         }
 
-        BOOST_LOG_EXPLICIT_OPERATOR_BOOL()
+        BOOST_EXPLICIT_OPERATOR_BOOL()
 
         bool operator! () const
         {
@@ -368,7 +368,7 @@ public:
     /*!
      * Checks if the section refers to the container.
      */
-    BOOST_LOG_EXPLICIT_OPERATOR_BOOL()
+    BOOST_EXPLICIT_OPERATOR_BOOL()
 
     /*!
      * Checks if the section refers to the container.

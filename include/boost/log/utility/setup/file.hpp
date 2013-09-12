@@ -15,8 +15,8 @@
 #ifndef BOOST_LOG_UTILITY_SETUP_FILE_HPP_INCLUDED_
 #define BOOST_LOG_UTILITY_SETUP_FILE_HPP_INCLUDED_
 
-#include <boost/shared_ptr.hpp>
-#include <boost/make_shared.hpp>
+#include <boost/smart_ptr/shared_ptr.hpp>
+#include <boost/smart_ptr/make_shared_object.hpp>
 #include <boost/parameter/parameters.hpp> // for is_named_argument
 #include <boost/preprocessor/comparison/greater.hpp>
 #include <boost/preprocessor/punctuation/comma_if.hpp>

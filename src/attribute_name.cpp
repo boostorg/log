@@ -18,9 +18,9 @@
 #include <ostream>
 #include <stdexcept>
 #include <boost/assert.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/make_shared.hpp>
 #include <boost/throw_exception.hpp>
+#include <boost/smart_ptr/shared_ptr.hpp>
+#include <boost/smart_ptr/make_shared_object.hpp>
 #include <boost/intrusive/set.hpp>
 #include <boost/intrusive/set_hook.hpp>
 #include <boost/intrusive/options.hpp>

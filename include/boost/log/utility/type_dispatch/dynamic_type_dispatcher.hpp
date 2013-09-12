@@ -19,8 +19,8 @@
 #include <memory>
 #include <map>
 #include <boost/ref.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/make_shared.hpp>
+#include <boost/smart_ptr/shared_ptr.hpp>
+#include <boost/smart_ptr/make_shared_object.hpp>
 #include <boost/log/detail/config.hpp>
 #include <boost/log/detail/visible_type.hpp>
 #include <boost/log/utility/type_info_wrapper.hpp>

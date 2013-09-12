@@ -25,7 +25,7 @@
 #error Boost.Log: The current_thread_id attribute is only available in multithreaded builds
 #endif
 
-#include <boost/intrusive_ptr.hpp>
+#include <boost/smart_ptr/intrusive_ptr.hpp>
 #include <boost/log/detail/thread_id.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/attribute_cast.hpp>

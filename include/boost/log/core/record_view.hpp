@@ -15,10 +15,10 @@
 #ifndef BOOST_LOG_CORE_RECORD_VIEW_HPP_INCLUDED_
 #define BOOST_LOG_CORE_RECORD_VIEW_HPP_INCLUDED_
 
-#include <boost/intrusive_ptr.hpp>
+#include <boost/smart_ptr/intrusive_ptr.hpp>
 #include <boost/move/core.hpp>
 #include <boost/log/detail/config.hpp>
-#include <boost/log/utility/explicit_operator_bool.hpp>
+#include <boost/utility/explicit_operator_bool.hpp>
 #include <boost/log/attributes/attribute_value_set.hpp>
 #include <boost/log/expressions/keyword_fwd.hpp>
 #ifndef BOOST_LOG_NO_THREADS
@@ -184,7 +184,7 @@ public:
      *
      * \return \c true, if the <tt>*this</tt> identifies a log record, \c false, if the <tt>*this</tt> is not valid
      */
-    BOOST_LOG_EXPLICIT_OPERATOR_BOOL()
+    BOOST_EXPLICIT_OPERATOR_BOOL()
 
     /*!
      * Inverted conversion to an unspecified boolean type

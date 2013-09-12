@@ -37,7 +37,7 @@
 #include <boost/log/detail/config.hpp>
 #include <boost/log/detail/parameter_tools.hpp>
 #include <boost/log/detail/value_ref_visitation.hpp>
-#include <boost/log/utility/explicit_operator_bool.hpp>
+#include <boost/utility/explicit_operator_bool.hpp>
 #include <boost/log/utility/formatting_ostream_fwd.hpp>
 #include <boost/log/utility/functional/logical.hpp>
 #include <boost/log/utility/functional/bind.hpp>
@@ -447,7 +447,7 @@ public:
     /*!
      * The operator verifies if the wrapper refers to a value.
      */
-    BOOST_LOG_EXPLICIT_OPERATOR_BOOL()
+    BOOST_EXPLICIT_OPERATOR_BOOL()
 
     /*!
      * The operator verifies if the wrapper does not refer to a value.
