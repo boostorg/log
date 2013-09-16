@@ -48,7 +48,7 @@ namespace this_thread {
 //! The function returns current thread identifier
 BOOST_LOG_API thread::id const& get_id();
 
-} // namespace this_process
+} // namespace this_thread
 
 template< typename CharT, typename TraitsT >
 BOOST_LOG_API std::basic_ostream< CharT, TraitsT >&
