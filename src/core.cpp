@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <boost/cstdint.hpp>
 #include <boost/assert.hpp>
+#include <boost/filesystem/path.hpp>
 #include <boost/smart_ptr/weak_ptr.hpp>
 #include <boost/smart_ptr/shared_ptr.hpp>
 #include <boost/smart_ptr/make_shared_object.hpp>
@@ -251,6 +252,10 @@ public:
         m_default_sink(boost::make_shared< sinks::aux::default_sink >()),
         m_enabled(true)
     {
+        // Workaround for https://svn.boost.org/trac/boost/ticket/8642
+        // Initialize global locale in Boost.Filesystem early, so that it is still available while the logging core is destroyed.
+        // Note that this only helps in the simplest case, when the core is not kept alive by a shared_ptr saved by user.
+        filesystem::path::codecvt();
     }
 
     //! Invokes sink-specific filter and adds the sink to the record if the filter passes the log record
