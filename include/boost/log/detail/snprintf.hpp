@@ -16,11 +16,12 @@
 #ifndef BOOST_LOG_DETAIL_SNPRINTF_HPP_INCLUDED_
 #define BOOST_LOG_DETAIL_SNPRINTF_HPP_INCLUDED_
 
-#include <cstdio>
+#include <stdio.h>
+#include <cstddef>
 #include <cstdarg>
 #include <boost/log/detail/config.hpp>
 #ifdef BOOST_LOG_USE_WCHAR_T
-#include <cwchar>
+#include <wchar.h>
 #endif // BOOST_LOG_USE_WCHAR_T
 #include <boost/log/detail/header.hpp>
 
