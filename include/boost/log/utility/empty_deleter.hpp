@@ -33,7 +33,7 @@ namespace boost {
 
 BOOST_LOG_OPEN_NAMESPACE
 
-using boost::empty_deleter
+using boost::empty_deleter;
 
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
