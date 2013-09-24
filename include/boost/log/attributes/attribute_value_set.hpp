@@ -95,6 +95,7 @@ public:
 
 private:
     struct implementation;
+    friend struct implementation;
 
     //! A base class for the container nodes
     struct node_base
