@@ -49,7 +49,7 @@ class attribute_name::repository :
         shared_ptr< repository >
     > base_type;
 
-#if !defined(BOOST_LOG_BROKEN_FRIEND_TEMPLATE_INSTANTIATIONS)
+#if !defined(BOOST_LOG_BROKEN_FRIEND_TEMPLATE_SPECIALIZATIONS)
     friend class log::aux::lazy_singleton<
         repository,
         shared_ptr< repository >
