@@ -31,12 +31,16 @@ namespace boost {
 
 BOOST_LOG_OPEN_NAMESPACE
 
+#if !defined(BOOST_LOG_NO_THREADS)
+
 namespace aux {
 
 // Defined in thread_id.cpp
 void format_thread_id(char* buf, std::size_t size, thread::id tid);
 
 } // namespace aux
+
+#endif // !defined(BOOST_LOG_NO_THREADS)
 
 namespace sinks {
 
