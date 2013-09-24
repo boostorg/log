@@ -78,8 +78,8 @@
 #   endif
 #endif
 
-#if defined(BOOST_INTEL)
-    // Intel compiler has problems with friend declarations for member classes
+#if defined(BOOST_INTEL) || defined(__SUNPRO_CC)
+    // Intel compiler and Sun Studio 12.3 have problems with friend declarations for nested class templates
 #   define BOOST_LOG_NO_MEMBER_TEMPLATE_FRIENDS
 #endif
 
