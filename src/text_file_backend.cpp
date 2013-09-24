@@ -571,7 +571,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         //! Base type
         typedef log::aux::lazy_singleton< file_collector_repository, shared_ptr< file_collector_repository > > base_type;
 
-#if !defined(BOOST_LOG_BROKEN_FRIEND_TEMPLATE_INSTANTIATIONS)
+#if !defined(BOOST_LOG_BROKEN_FRIEND_TEMPLATE_SPECIALIZATIONS)
         friend class log::aux::lazy_singleton< file_collector_repository, shared_ptr< file_collector_repository > >;
 #else
         friend class base_type;

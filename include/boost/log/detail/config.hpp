@@ -53,8 +53,8 @@
 #       define BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 #   endif
 #   if _MSC_VER <= 1400
-        // Older MSVC versions reject friend declarations for class template instantiations
-#       define BOOST_LOG_BROKEN_FRIEND_TEMPLATE_INSTANTIATIONS
+        // Older MSVC versions reject friend declarations for class template specializations
+#       define BOOST_LOG_BROKEN_FRIEND_TEMPLATE_SPECIALIZATIONS
 #   endif
 #   if _MSC_VER <= 1600
         // MSVC up to 10.0 attempts to invoke copy constructor when initializing a const reference from rvalue returned from a function.
@@ -97,16 +97,6 @@
 #   ifndef BOOST_LOG_WITHOUT_SYSLOG
 #       define BOOST_LOG_WITHOUT_SYSLOG
 #   endif
-#endif
-
-#if (defined(__SUNPRO_CC) && (__SUNPRO_CC <= 0x530)) && !defined(BOOST_NO_COMPILER_CONFIG)
-    // Sun C++ 5.3 can't handle the safe_bool idiom, so don't use it
-#   define BOOST_LOG_NO_UNSPECIFIED_BOOL
-#endif // (defined(__SUNPRO_CC) && (__SUNPRO_CC <= 0x530)) && !defined(BOOST_NO_COMPILER_CONFIG)
-
-#if defined(__GNUC__) && (__GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 1))
-    // GCC 4.0.0 (and probably older) can't cope with some optimizations regarding string literals
-#   define BOOST_LOG_BROKEN_STRING_LITERALS
 #endif
 
 #if defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ <= 2)
@@ -154,7 +144,7 @@
 
 // Some compilers support a special attribute that shows that a function won't return
 #if defined(__GNUC__) || (defined(__SUNPRO_CC) && __SUNPRO_CC >= 0x590)
-    // GCC and (supposedly) Sun Studio 12 support attribute syntax
+    // GCC and Sun Studio 12 support attribute syntax
 #   define BOOST_LOG_NORETURN __attribute__((noreturn))
 #elif defined (_MSC_VER)
     // Microsoft-compatible compilers go here
