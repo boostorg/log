@@ -9,13 +9,12 @@
  * \author Andrey Semashev
  * \date   30.04.2008
  *
- * The header contains BOOST_LOG_UNIQUE_IDENTIFIER_NAME macro definition.
+ * The header contains \c BOOST_LOG_UNIQUE_IDENTIFIER_NAME macro definition.
  */
 
 #ifndef BOOST_LOG_UTILITY_UNIQUE_IDENTIFIER_NAME_HPP_INCLUDED_
 #define BOOST_LOG_UTILITY_UNIQUE_IDENTIFIER_NAME_HPP_INCLUDED_
 
-#include <boost/detail/workaround.hpp>
 #include <boost/preprocessor/cat.hpp>
 #include <boost/log/detail/config.hpp>
 
@@ -37,7 +36,7 @@
  *
  * Constructs a unique (in the current file scope) token that can be used as a variable name.
  * The name will contain a prefix passed in the \a prefix argument. This allows to use the
- * macro multiple times in another macro.
+ * macro multiple times on a single line.
  */
 
 // In VC 7.0 and later when compiling with /ZI option __LINE__ macro is corrupted
