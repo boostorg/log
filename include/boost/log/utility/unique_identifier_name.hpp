@@ -41,12 +41,12 @@
  */
 
 // In VC 7.0 and later when compiling with /ZI option __LINE__ macro is corrupted
-#if BOOST_WORKAROUND(BOOST_MSVC, >=1300)
+#ifdef BOOST_MSVC
 #  define BOOST_LOG_UNIQUE_IDENTIFIER_NAME(prefix)\
     BOOST_LOG_UNIQUE_IDENTIFIER_NAME_INTERNAL(prefix, __COUNTER__)
 #else
 #  define BOOST_LOG_UNIQUE_IDENTIFIER_NAME(prefix)\
     BOOST_LOG_UNIQUE_IDENTIFIER_NAME_INTERNAL(prefix, __LINE__)
-#endif // BOOST_WORKAROUND(BOOST_MSVC, >= 1300)
+#endif // BOOST_MSVC
 
 #endif // BOOST_LOG_UTILITY_UNIQUE_IDENTIFIER_NAME_HPP_INCLUDED_

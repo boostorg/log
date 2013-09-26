@@ -79,7 +79,7 @@ extern "C" void _mm_pause(void);
 #    endif
 #    if defined(__INTEL_COMPILER)
 #        define BOOST_LOG_COMPILER_BARRIER __asm { nop }
-#    elif _MSC_VER >= 1310
+#    else
 extern "C" void _ReadWriteBarrier(void);
 #pragma intrinsic(_ReadWriteBarrier)
 #        define BOOST_LOG_COMPILER_BARRIER _ReadWriteBarrier()
