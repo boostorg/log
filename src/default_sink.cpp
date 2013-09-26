@@ -214,7 +214,7 @@ void default_sink::consume(record_view const& rec)
 void default_sink::flush()
 {
     BOOST_LOG_EXPR_IF_MT(lock_guard< mutex_type > lock(m_mutex);)
-    fflush(stdout);
+    std::fflush(stdout);
 }
 
 } // namespace aux
