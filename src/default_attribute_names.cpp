@@ -34,7 +34,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
     private:
         typedef lazy_singleton< names, shared_ptr< names > > base_type;
 
-#if !defined(BOOST_LOG_BROKEN_FRIEND_TEMPLATE_INSTANTIATIONS)
+#if !defined(BOOST_LOG_BROKEN_FRIEND_TEMPLATE_SPECIALIZATIONS)
         friend class lazy_singleton< names, shared_ptr< names > >;
 #else
         friend class base_type;

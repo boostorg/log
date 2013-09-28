@@ -71,10 +71,17 @@ enum scope_iteration_direction
 
 namespace aux {
 
+#ifdef BOOST_LOG_USE_CHAR
 //! Parses the named scope format string and constructs the formatter function
-template< typename CharT >
-BOOST_LOG_API boost::log::aux::light_function< void (basic_formatting_ostream< CharT >&, attributes::named_scope::value_type::value_type const&) >
-parse_named_scope_format(const CharT* begin, const CharT* end);
+BOOST_LOG_API boost::log::aux::light_function< void (basic_formatting_ostream< char >&, attributes::named_scope::value_type::value_type const&) >
+parse_named_scope_format(const char* begin, const char* end);
+#endif
+
+#ifdef BOOST_LOG_USE_WCHAR_T
+//! Parses the named scope format string and constructs the formatter function
+BOOST_LOG_API boost::log::aux::light_function< void (basic_formatting_ostream< wchar_t >&, attributes::named_scope::value_type::value_type const&) >
+parse_named_scope_format(const wchar_t* begin, const wchar_t* end);
+#endif
 
 //! Parses the named scope format string and constructs the formatter function
 template< typename CharT >

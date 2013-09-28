@@ -603,7 +603,7 @@ struct sinks_repository :
 {
     typedef log::aux::lazy_singleton< sinks_repository< CharT > > base_type;
 
-#if !defined(BOOST_LOG_BROKEN_FRIEND_TEMPLATE_INSTANTIATIONS)
+#if !defined(BOOST_LOG_BROKEN_FRIEND_TEMPLATE_SPECIALIZATIONS)
     friend class log::aux::lazy_singleton< sinks_repository< CharT > >;
 #else
     friend class base_type;

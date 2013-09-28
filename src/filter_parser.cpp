@@ -73,7 +73,7 @@ struct filters_repository :
 
     typedef std::map< attribute_name, shared_ptr< filter_factory_type >, attribute_name_order > factories_map;
 
-#if !defined(BOOST_LOG_BROKEN_FRIEND_TEMPLATE_INSTANTIATIONS)
+#if !defined(BOOST_LOG_BROKEN_FRIEND_TEMPLATE_SPECIALIZATIONS)
     friend class log::aux::lazy_singleton< filters_repository< char_type > >;
 #else
     friend class base_type;
