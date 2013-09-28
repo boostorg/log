@@ -166,6 +166,7 @@ The following compilers/platforms are not supported and will likely fail to comp
 * MSVC 8.0 (without SP1) and older.
 * GCC 4.0 and older.
 * Borland C++ 5.5.1 (free version). Newer versions might or might not work.
+* Solaris Studio 12.3 and older.
 * Windows 9x, ME, NT4 and older are not supported.
 
 Boost.Log should be compatible with all hardware architectures supported by Boost. However, in case of 32 bit x86 architecture the library requires at least i586 class CPU to run.
