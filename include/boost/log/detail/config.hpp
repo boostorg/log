@@ -316,7 +316,7 @@ inline namespace BOOST_LOG_VERSION_NAMESPACE {}
 namespace BOOST_LOG_VERSION_NAMESPACE {}
 
 using namespace BOOST_LOG_VERSION_NAMESPACE
-#       if defined(__GNUC__) && (__GNUC__ >= 4 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4))
+#       if defined(__GNUC__) && (__GNUC__ >= 4 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4)) && !defined(__clang__)
 __attribute__((__strong__))
 #       endif
 ;
