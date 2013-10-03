@@ -35,7 +35,6 @@
 #endif
 #include "default_filter_factory.hpp"
 #include "parser_utils.hpp"
-#include "spirit_encoding.hpp"
 #include <boost/log/detail/header.hpp>
 
 namespace qi = boost::spirit::qi;
