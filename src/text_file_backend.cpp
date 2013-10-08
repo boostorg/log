@@ -76,6 +76,8 @@ namespace sinks {
 
 BOOST_LOG_ANONYMOUS_NAMESPACE {
 
+    typedef filesystem::filesystem_error filesystem_error;
+
     //! A possible Boost.Filesystem extension - renames or moves the file to the target storage
     inline void move_file(
         filesystem::path const& from,
@@ -86,28 +88,26 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         filesystem::rename(from, to);
 #else
         // On POSIX rename fails if the target points to a different device
-        try
+        system::error_code ec;
+        filesystem::rename(from, to, ec);
+        if (ec)
         {
-            filesystem::rename(from, to);
-        }
-        catch (system::system_error& e)
-        {
-            if (e.code().value() == system::errc::cross_device_link)
+            if (ec.value() == system::errc::cross_device_link)
             {
                 // Attempt to manually move the file instead
                 filesystem::copy_file(from, to);
                 filesystem::remove(from);
             }
             else
-                throw;
+            {
+                BOOST_THROW_EXCEPTION(filesystem_error("failed to move file to another location", from, to, ec));
+            }
         }
 #endif
     }
 
     typedef filesystem::path::string_type path_string_type;
     typedef path_string_type::value_type path_char_type;
-
-    typedef filesystem::filesystem_error filesystem_error;
 
     //! An auxiliary traits that contain various constants and functions regarding string and character operations
     template< typename CharT >
@@ -633,13 +633,19 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
     //! The function stores the specified file in the storage
     void file_collector::store_file(filesystem::path const& src_path)
     {
+        // NOTE FOR THE FOLLOWING CODE:
+        // Avoid using Boost.Filesystem functions that would call path::codecvt(). store_file() can be called
+        // at process termination, and the global codecvt facet can already be destroyed at this point.
+        // https://svn.boost.org/trac/boost/ticket/8642
+
         // Let's construct the new file name
         file_info info;
         info.m_TimeStamp = filesystem::last_write_time(src_path);
         info.m_Size = filesystem::file_size(src_path);
 
-        path_string_type file_name = filename_string(src_path);
-        info.m_Path = m_StorageDir / file_name;
+        filesystem::path file_name_path = src_path.filename();
+        path_string_type file_name = file_name_path.native();
+        info.m_Path = m_StorageDir / file_name_path;
 
         // Check if the file is already in the target directory
         filesystem::path src_dir = src_path.has_parent_path() ?
@@ -657,7 +663,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
                 do
                 {
                     path_string_type alt_file_name = formatter(file_name, n++);
-                    info.m_Path = m_StorageDir / alt_file_name;
+                    info.m_Path = m_StorageDir / filesystem::path(alt_file_name);
                 }
                 while (filesystem::exists(info.m_Path) && n < (std::numeric_limits< unsigned int >::max)());
             }
@@ -1179,13 +1185,16 @@ BOOST_LOG_API void text_file_backend::flush()
 //! The method sets file name mask
 BOOST_LOG_API void text_file_backend::set_file_name_pattern_internal(filesystem::path const& pattern)
 {
+    // Note: avoid calling Boost.Filesystem functions that involve path::codecvt()
+    // https://svn.boost.org/trac/boost/ticket/9119
+
     typedef file_char_traits< path_char_type > traits_t;
     filesystem::path p = pattern;
     if (p.empty())
-        p = traits_t::default_file_name_pattern();
+        p = filesystem::path(traits_t::default_file_name_pattern());
 
-    path_string_type name_pattern = p.filename().string< path_string_type >();
-    m_pImpl->m_FileNamePattern = name_pattern;
+    m_pImpl->m_FileNamePattern = p.filename();
+    path_string_type name_pattern = m_pImpl->m_FileNamePattern.native();
     m_pImpl->m_StorageDir = filesystem::absolute(p.parent_path());
 
     // Let's try to find the file counter placeholder
