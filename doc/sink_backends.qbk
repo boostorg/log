@@ -34,6 +34,8 @@ Although it is possible to write logs into files with the [link log.detailed.sin
 
 The backend is called [class_sinks_text_file_backend].
 
+[warning This sink uses __boost_filesystem__ internally, which may cause problems on process termination. See [link log.rationale.why_crash_on_term here] for more details.]
+
 [heading File rotation]
 
 File rotation is implemented by the sink backend itself. The file name pattern and rotation thresholds can be specified when the [class_sinks_text_file_backend] backend is constructed.
