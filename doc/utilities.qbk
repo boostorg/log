@@ -526,6 +526,8 @@ Besides the common settings that all sinks support, some sink backends also acce
 ]
 ]
 
+[warning The text file sink uses __boost_filesystem__ internally, which may cause problems on process termination. See [link log.rationale.why_crash_on_term here] for more details.]
+
 The time-based rotation can be set up with one of the two parameters: RotationInterval or RotationTimePoint. Not more than one of these parameters should be specified for a given sink. If none is specified, no time-based rotation will be performed.
 
 The RotationTimePoint parameter should have one of the following formats, according to the __boost_date_time_format__ format notation:
