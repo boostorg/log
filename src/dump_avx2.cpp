@@ -54,8 +54,12 @@ static const ymm_constant mm_shuffle_pattern2 = {{ 0, 1, 0x80, 2, 3, 0x80, 4, 5,
 static const ymm_constant mm_shuffle_pattern3 = {{ 5, 0x80, 6, 7, 0x80, 8, 9, 0x80, 10, 11, 0x80, 12, 13, 0x80, 14, 15,    5, 0x80, 6, 7, 0x80, 8, 9, 0x80, 10, 11, 0x80, 12, 13, 0x80, 14, 15 }};
 static const ymm_constant mm_shuffle_pattern13 = {{ 0x80, 0, 1, 0x80, 2, 3, 0x80, 4, 5, 0x80, 6, 7, 0x80, 8, 9, 0x80,      5, 0x80, 6, 7, 0x80, 8, 9, 0x80, 10, 11, 0x80, 12, 13, 0x80, 14, 15 }};
 
-//! Dumps a pack of input data into a string of 8 bit ASCII characters
-static BOOST_FORCEINLINE void dump_pack(__m256i mm_char_a, __m256i mm_input, __m256i& mm_output1, __m256i& mm_output2, __m256i& mm_output3)
+/*!
+ * \brief Dumps a pack of input data into a string of 8 bit ASCII characters.
+ *
+ * The composed string is placed as follows (in Intel notation): mm_output1[127:0], mm_output2[127:0], mm_output3[127:0], mm_output1[255:128], mm_output2[255:128], mm_output3[255:128].
+ */
+static BOOST_FORCEINLINE void dump_pack(__m256i mm_char_10_to_a, __m256i mm_input, __m256i& mm_output1, __m256i& mm_output2, __m256i& mm_output3)
 {
     // Split half-bytes
     const __m256i mm_15 = _mm256_set1_epi8(0x0F);
@@ -66,9 +70,12 @@ static BOOST_FORCEINLINE void dump_pack(__m256i mm_char_a, __m256i mm_input, __m
     const __m256i mm_9 = _mm256_set1_epi8(9);
     __m256i mm_addend_hi = _mm256_cmpgt_epi8(mm_input_hi, mm_9);
     __m256i mm_addend_lo = _mm256_cmpgt_epi8(mm_input_lo, mm_9);
+    mm_addend_hi = _mm256_and_si256(mm_char_10_to_a, mm_addend_hi);
+    mm_addend_lo = _mm256_and_si256(mm_char_10_to_a, mm_addend_lo);
+
     const __m256i mm_char_0 = _mm256_set1_epi8('0');
-    mm_addend_hi = _mm256_blendv_epi8(mm_char_0, mm_char_a, mm_addend_hi);
-    mm_addend_lo = _mm256_blendv_epi8(mm_char_0, mm_char_a, mm_addend_lo);
+    mm_input_hi = _mm256_add_epi8(mm_input_hi, mm_char_0);
+    mm_input_lo = _mm256_add_epi8(mm_input_lo, mm_char_0);
 
     mm_input_hi = _mm256_add_epi8(mm_input_hi, mm_addend_hi);
     mm_input_lo = _mm256_add_epi8(mm_input_lo, mm_addend_lo);
@@ -85,19 +92,15 @@ static BOOST_FORCEINLINE void dump_pack(__m256i mm_char_a, __m256i mm_input, __m
     __m256i mm_out3 = _mm256_shuffle_epi8(mm_2, mm_shuffle_pattern3.as_mm);
 
     __m256i mm_char_space = mm_char_space_mask.as_mm;
-    mm_out1 = _mm256_or_si256(mm_out1, mm_char_space);
+    mm_output1 = _mm256_or_si256(mm_out1, mm_char_space);
     mm_char_space = _mm256_srli_si256(mm_char_space, 1);
-    mm_out2 = _mm256_or_si256(mm_out2, mm_char_space);
+    mm_output2 = _mm256_or_si256(mm_out2, mm_char_space);
     mm_char_space = _mm256_srli_si256(mm_char_space, 1);
-    mm_out3 = _mm256_or_si256(mm_out3, mm_char_space);
-
-    mm_output1 = _mm256_permute2x128_si256(mm_out1, mm_out2, (2u << 4) | 0u);
-    mm_output2 = _mm256_permute2x128_si256(mm_out3, mm_out1, (3u << 4) | 0u);
-    mm_output3 = _mm256_permute2x128_si256(mm_out2, mm_out3, (3u << 4) | 1u);
+    mm_output3 = _mm256_or_si256(mm_out3, mm_char_space);
 }
 
 //! Dumps a pack of input data into a string of 8 bit ASCII characters
-static BOOST_FORCEINLINE void dump_pack(__m256i mm_char_a, __m128i mm_input, __m128i& mm_output1, __m128i& mm_output2, __m128i& mm_output3)
+static BOOST_FORCEINLINE void dump_pack(__m256i mm_char_10_to_a, __m128i mm_input, __m128i& mm_output1, __m128i& mm_output2, __m128i& mm_output3)
 {
     // Split half-bytes
     __m128i mm_input_hi = _mm_srli_epi16(mm_input, 4);
@@ -106,7 +109,9 @@ static BOOST_FORCEINLINE void dump_pack(__m256i mm_char_a, __m128i mm_input, __m
 
     // Stringize the halves
     __m256i mm_addend = _mm256_cmpgt_epi8(mm, _mm256_set1_epi8(9));
-    mm_addend = _mm256_blendv_epi8(_mm256_set1_epi8('0'), mm_char_a, mm_addend);
+    mm_addend = _mm256_and_si256(mm_char_10_to_a, mm_addend);
+
+    mm = _mm256_add_epi8(mm, _mm256_set1_epi8('0'));
     mm = _mm256_add_epi8(mm, mm_addend);
 
     // Insert spaces between stringized bytes:
@@ -119,32 +124,6 @@ static BOOST_FORCEINLINE void dump_pack(__m256i mm_char_a, __m128i mm_input, __m
     mm_output2 = _mm_or_si128(mm_out2, mm_char_space);
     mm_char_space = _mm_srli_si128(mm_char_space, 1);
     mm_output3 = _mm_or_si128(_mm256_extractf128_si256(mm_out13, 1), mm_char_space);
-}
-
-template< typename CharT >
-BOOST_FORCEINLINE void store_characters(__m256i mm_chars, CharT* buf)
-{
-    switch (sizeof(CharT))
-    {
-    case 1:
-        _mm256_store_si256(reinterpret_cast< __m256i* >(buf), mm_chars);
-        break;
-
-    case 2:
-        _mm256_store_si256(reinterpret_cast< __m256i* >(buf), _mm256_cvtepu8_epi16(_mm256_castsi256_si128(mm_chars)));
-        _mm256_store_si256(reinterpret_cast< __m256i* >(buf) + 1, _mm256_cvtepu8_epi16(_mm256_extractf128_si256(mm_chars, 1)));
-        break;
-
-    case 4:
-        {
-            __m256i mm = _mm256_unpackhi_epi64(mm_chars, mm_chars);
-            _mm256_store_si256(reinterpret_cast< __m256i* >(buf), _mm256_cvtepu8_epi32(_mm256_castsi256_si128(mm_chars)));
-            _mm256_store_si256(reinterpret_cast< __m256i* >(buf) + 1, _mm256_cvtepu8_epi32(_mm256_castsi256_si128(mm)));
-            _mm256_store_si256(reinterpret_cast< __m256i* >(buf) + 2, _mm256_cvtepu8_epi32(_mm256_extractf128_si256(mm_chars, 1)));
-            _mm256_store_si256(reinterpret_cast< __m256i* >(buf) + 3, _mm256_cvtepu8_epi32(_mm256_extractf128_si256(mm, 1)));
-        }
-        break;
-    }
 }
 
 template< typename CharT >
@@ -171,6 +150,17 @@ BOOST_FORCEINLINE void store_characters(__m128i mm_chars, CharT* buf)
 }
 
 template< typename CharT >
+BOOST_FORCEINLINE void store_characters_x3(__m256i mm_chars1, __m256i mm_chars2, __m256i mm_chars3, CharT* buf)
+{
+    store_characters(_mm256_castsi256_si128(mm_chars1), buf);
+    store_characters(_mm256_castsi256_si128(mm_chars2), buf + 16);
+    store_characters(_mm256_castsi256_si128(mm_chars3), buf + 32);
+    store_characters(_mm256_extracti128_si256(mm_chars1, 1), buf + 48);
+    store_characters(_mm256_extracti128_si256(mm_chars2, 1), buf + 64);
+    store_characters(_mm256_extracti128_si256(mm_chars3, 1), buf + 80);
+}
+
+template< typename CharT >
 BOOST_FORCEINLINE void dump_data_avx2(const void* data, std::size_t size, std::basic_ostream< CharT >& strm)
 {
     typedef CharT char_type;
@@ -181,20 +171,24 @@ BOOST_FORCEINLINE void dump_data_avx2(const void* data, std::size_t size, std::b
     char_type* buf_begin = buf + 1u; // skip the first space of the first chunk
     char_type* buf_end = buf + stride * 3u;
 
-    const __m256i mm_char_a = _mm256_set1_epi8(((strm.flags() & std::ios_base::uppercase) ? 'A' : 'a') - 10);
+    __m256i mm_char_10_to_a;
+    if (strm.flags() & std::ios_base::uppercase)
+        mm_char_10_to_a = _mm256_set1_epi32(0x07070707); // '9' is 0x39 and 'A' is 0x41 in ASCII, so we have to add 0x07 to 0x3A to get uppercase letters
+    else
+        mm_char_10_to_a = _mm256_set1_epi32(0x27272727); // ...and 'a' is 0x61, which means we have to add 0x27 to 0x3A to get lowercase letters
 
-    // First, check the input alignment
+    // First, check the input alignment. Also, if we can dump the whole data in one go, do it right away. It turns out to be faster than splitting
+    // the work between prealign and tail part. It is also a fairly common case since on most platforms memory is not aligned to 32 bytes (i.e. prealign is often needed).
     const uint8_t* p = static_cast< const uint8_t* >(data);
-    if (const std::size_t prealign_size = ((32u - ((uintptr_t)p & 31u)) & 31u))
+    const std::size_t prealign_size = size == 32u ? static_cast< std::size_t >(32u) : static_cast< std::size_t >((32u - ((uintptr_t)p & 31u)) & 31u);
+    if (prealign_size)
     {
         __m256i mm_input = _mm256_lddqu_si256(reinterpret_cast< const __m256i* >(p));
         __m256i mm_output1, mm_output2, mm_output3;
-        dump_pack(mm_char_a, mm_input, mm_output1, mm_output2, mm_output3);
-        store_characters(mm_output1, buf);
-        store_characters(mm_output2, buf + 32u);
-        store_characters(mm_output3, buf + 64u);
+        dump_pack(mm_char_10_to_a, mm_input, mm_output1, mm_output2, mm_output3);
+        store_characters_x3(mm_output1, mm_output2, mm_output3, buf);
 
-        _mm256_zeroupper();
+        _mm256_zeroall(); // need to zero all ymm registers to avoid register spills/restores the compler generates around the function call
         strm.write(buf_begin, prealign_size * 3u - 1u);
         buf_begin = buf;
         size -= prealign_size;
@@ -210,25 +204,23 @@ BOOST_FORCEINLINE void dump_data_avx2(const void* data, std::size_t size, std::b
         {
             __m256i mm_input = _mm256_load_si256(reinterpret_cast< const __m256i* >(p));
             __m256i mm_output1, mm_output2, mm_output3;
-            dump_pack(mm_char_a, mm_input, mm_output1, mm_output2, mm_output3);
-            store_characters(mm_output1, b);
-            store_characters(mm_output2, b + 32u);
-            store_characters(mm_output3, b + 64u);
+            dump_pack(mm_char_10_to_a, mm_input, mm_output1, mm_output2, mm_output3);
+            store_characters_x3(mm_output1, mm_output2, mm_output3, buf);
         }
 
-        _mm256_zeroupper();
+        _mm256_zeroall(); // need to zero all ymm registers to avoid register spills/restores the compler generates around the function call
         strm.write(buf_begin, buf_end - buf_begin);
         buf_begin = buf;
     }
 
-    if (tail_size > 0)
+    if (BOOST_UNLIKELY(tail_size > 0))
     {
         char_type* b = buf;
         while (tail_size >= 16u)
         {
             __m128i mm_input = _mm_load_si128(reinterpret_cast< const __m128i* >(p));
             __m128i mm_output1, mm_output2, mm_output3;
-            dump_pack(mm_char_a, mm_input, mm_output1, mm_output2, mm_output3);
+            dump_pack(mm_char_10_to_a, mm_input, mm_output1, mm_output2, mm_output3);
             store_characters(mm_output1, b);
             store_characters(mm_output2, b + 16u);
             store_characters(mm_output3, b + 32u);
@@ -246,7 +238,7 @@ BOOST_FORCEINLINE void dump_data_avx2(const void* data, std::size_t size, std::b
             b[2] = static_cast< char_type >(char_table[n & 0x0F]);
         }
 
-        _mm256_zeroupper();
+        _mm256_zeroall(); // need to zero all ymm registers to avoid register spills/restores the compler generates around the function call
         strm.write(buf_begin, b - buf_begin);
     }
 }

@@ -144,7 +144,8 @@ BOOST_FORCEINLINE void dump_data_ssse3(const void* data, std::size_t size, std::
 
     // First, check the input alignment
     const uint8_t* p = static_cast< const uint8_t* >(data);
-    if (const std::size_t prealign_size = ((16u - ((uintptr_t)p & 15u)) & 15u))
+    const std::size_t prealign_size = ((16u - ((uintptr_t)p & 15u)) & 15u);
+    if (BOOST_UNLIKELY(prealign_size > 0))
     {
         __m128i mm_input = _mm_lddqu_si128(reinterpret_cast< const __m128i* >(p));
         __m128i mm_output1, mm_output2, mm_output3;
@@ -178,7 +179,7 @@ BOOST_FORCEINLINE void dump_data_ssse3(const void* data, std::size_t size, std::
         buf_begin = buf;
     }
 
-    if (tail_size > 0)
+    if (BOOST_UNLIKELY(tail_size > 0))
     {
         char_type* b = buf;
         while (tail_size >= 16u)
