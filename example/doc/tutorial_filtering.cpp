@@ -111,7 +111,8 @@ void init()
 #if 0
 
 //[ example_tutorial_filtering_bind
-bool my_filter(logging::value_ref< severity_level > const& level, logging::value_ref< std::string > const& tag)
+bool my_filter(logging::value_ref< severity_level, tag::severity > const& level,
+               logging::value_ref< std::string, tag::tag_attr > const& tag)
 {
     return level >= warning || tag == "IMPORTANT_MESSAGE";
 }
@@ -152,7 +153,7 @@ void init()
     // ...
 
     namespace phoenix = boost::phoenix;
-    sink->set_filter(phoenix::bind(&my_filter, severity, tag_attr));
+    sink->set_filter(phoenix::bind(&my_filter, severity.or_none(), tag_attr.or_none()));
 
     // ...
     //<-
