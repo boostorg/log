@@ -46,7 +46,7 @@ The placeholder can be used both in filters and formatters:
 
 The call to `set_filter` registers a composite filter that consists of two elementary subfilters: the first one checks the severity level, and the second checks the channel name. The call to `set_formatter` installs a formatter that composes a string containing the severity level and the channel name along with the message text.
 
-[heading Customizing fallback policy]
+[section:fallback_policies Customizing fallback policy]
 
 By default, when the requested attribute value is not found in the record, `attr` will return an empty reference. In case of filters, this will result in `false` in any ordering expressions, and in case of formatters the output from the placeholder will be empty. This behavior can be changed:
 
@@ -72,7 +72,9 @@ The default behavior is also accessible through the `or_none` modifier. The modi
 
 In `bind` expressions, the bound function object will still receive the [link log.detailed.utilities.value_ref `value_ref`]-wrapped values in place of the modified `attr` placeholder. Even though both `or_throw` and `or_default` modifiers guarantee that the bound function will receive a filled reference, [link log.detailed.utilities.value_ref `value_ref`] is still needed if the value type is specified as a type sequence. Also, the reference wrapper may contain a tag type which may be useful for formatting customization.
 
-[heading Attribute tags and custom formatting operators]
+[endsect]
+
+[section:tags Attribute tags and custom formatting operators]
 
 The `TagT` type in the [link log.detailed.expressions.attr abstract description] of `attr` above is optional and by default is `void`. This is an attribute tag which can be used to customize the output formatters produce for different attributes. This tag is forwarded to the [link log.detailed.utilities.manipulators.to_log `to_log`] manipulator when the extracted attribute value is put to a stream (this behavior is warranted by [link log.detailed.utilities.value_ref `value_ref`] implementation). Here's a quick example:
 
@@ -81,6 +83,8 @@ The `TagT` type in the [link log.detailed.expressions.attr abstract description]
 [@boost:/libs/log/example/doc/expressions_attr_fmt_tag.cpp See the complete code].
 
 Here we specify a different formatting operator for the severity level wrapped in the [link log.detailed.utilities.manipulators.to_log `to_log_manip`] manipulator marked with the tag `severity_tag`. This operator will be called when log records are formatted while the regular `operator<<` will be used in other contexts.
+
+[endsect]
 
 [endsect]
 
