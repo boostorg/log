@@ -9,7 +9,7 @@
  * \author Andrey Semashev
  * \date   09.01.2009
  *
- * \brief  This header contains tests for the string literals wrapper.
+ * \brief  This header contains tests for the dump manipulator.
  */
 
 #define BOOST_TEST_MODULE util_manip_dump
