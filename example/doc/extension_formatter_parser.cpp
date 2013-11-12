@@ -69,7 +69,7 @@ public:
     {
     }
 
-    void operator() (logging::formatting_ostream& strm, logging::value_ref< point > const& value)
+    void operator() (logging::formatting_ostream& strm, logging::value_ref< point > const& value) const
     {
         if (value)
         {
@@ -81,7 +81,7 @@ public:
     }
 
 private:
-    boost::format m_format;
+    mutable boost::format m_format;
 };
 
 // Custom point formatter factory

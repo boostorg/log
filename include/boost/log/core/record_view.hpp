@@ -221,6 +221,17 @@ public:
     /*!
      * Attribute value lookup.
      *
+     * \param name Attribute name.
+     * \return An \c attribute_value, non-empty if it is found, empty otherwise.
+     */
+    attribute_value_set::mapped_type operator[] (attribute_value_set::key_type name) const
+    {
+        return m_impl->m_attribute_values[name];
+    }
+
+    /*!
+     * Attribute value lookup.
+     *
      * \param keyword Attribute keyword.
      * \return A \c value_ref with extracted attribute value if it is found, empty \c value_ref otherwise.
      */

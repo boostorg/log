@@ -9,6 +9,16 @@
 
 [section:changelog Changelog]
 
+[heading 2.3, Boost 1.56]
+
+[*General changes:]
+
+* Added indexing operators with [class_log_attribute_name] arguments to [class_log_record] and [class_log_record_view]. The operators behave the same way as the similar operators of [class_log_attribute_value_set] (i.e. return an [class_log_attribute_value] identified by the name).
+
+[*Bug fixes:]
+
+* Fixed [link log.detailed.utilities.manipulators.dump `dump`] manipulator output on AVX2-enabled CPUs (e.g. Intel Haswell).
+
 [heading 2.2, Boost 1.55]
 
 [*General changes:]
