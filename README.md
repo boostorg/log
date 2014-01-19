@@ -7,7 +7,7 @@ Boost.Log, part of collection of the [Boost C++ Libraries](http://github.com/boo
 * **build** - Boost.Log build scripts
 * **config** - Boost.Log build configuration code and scripts
 * **doc** - QuickBook documentation sources
-* **examples** - Boost.Log examples
+* **example** - Boost.Log examples
 * **include** - Interface headers of Boost.Log
 * **src** - Compilable source code of Boost.Log
 * **test** - Boost.Log unit tests
