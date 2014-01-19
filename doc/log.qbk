@@ -302,6 +302,7 @@ Here are definitions of some terms that will be used widely throughout the docum
 [section:acknowledgments Acknowledgments]
 
 * Vladimir Prus managed the library review in Boost and actually reviewed it in the process.
+* Adam Wulkiewicz created the logo used on the [@https://github.com/boostorg/log GitHub project page]. The logo was taken from his [@https://github.com/awulkiew/boost-logos collection] of Boost logos.
 * Luca Rigini wrote the initial implementation of the NT event log sink and made a lot of suggestions on how to improve the library with regard to writing user-defined sinks.
 * Jean-Daniel Michaud, Michael Lacher and all others who took part in the discussion of the requirements to the library on [@http://www.crystalclearsoftware.com/cgi-bin/boost_wiki/wiki.pl?Boost.Logging Wiki].
 * John Torjo, Gennadiy Rozental and others for their discussion on John's logging library on the Boost developers list. It helped a lot to learn the requirements and possible solutions for the library.
