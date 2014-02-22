@@ -711,6 +711,34 @@ operator<< (basic_formatting_ostream< CharT, TraitsT, AllocatorT >& strm, T cons
     return strm;
 }
 
+template< typename CharT, typename TraitsT, typename AllocatorT, typename T >
+inline basic_formatting_ostream< CharT, TraitsT, AllocatorT >&
+operator<< (basic_formatting_ostream< CharT, TraitsT, AllocatorT >& strm, T& value)
+{
+    strm.stream() << value;
+    return strm;
+}
+
+#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+
+template< typename CharT, typename TraitsT, typename AllocatorT, typename T >
+inline basic_formatting_ostream< CharT, TraitsT, AllocatorT >&
+operator<< (basic_formatting_ostream< CharT, TraitsT, AllocatorT >&& strm, T const& value)
+{
+    static_cast< basic_formatting_ostream< CharT, TraitsT, AllocatorT >& >(strm) << value;
+    return strm;
+}
+
+template< typename CharT, typename TraitsT, typename AllocatorT, typename T >
+inline basic_formatting_ostream< CharT, TraitsT, AllocatorT >&
+operator<< (basic_formatting_ostream< CharT, TraitsT, AllocatorT >&& strm, T& value)
+{
+    static_cast< basic_formatting_ostream< CharT, TraitsT, AllocatorT >& >(strm) << value;
+    return strm;
+}
+
+#endif // !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
