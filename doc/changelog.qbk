@@ -14,6 +14,7 @@
 [*General changes:]
 
 * Added indexing operators with [class_log_attribute_name] arguments to [class_log_record] and [class_log_record_view]. The operators behave the same way as the similar operators of [class_log_attribute_value_set] (i.e. return an [class_log_attribute_value] identified by the name).
+* Added operators for non-const object output to [class_log_basic_formatting_ostream].
 
 [*Bug fixes:]
 
