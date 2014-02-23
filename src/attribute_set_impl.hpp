@@ -93,7 +93,7 @@ public:
 
     ~pool_allocator()
     {
-        for (register size_type i = 0; i < m_PooledCount; ++i)
+        for (size_type i = 0; i < m_PooledCount; ++i)
         {
             base_type::deallocate(m_Pool[i], 1);
         }
@@ -264,7 +264,7 @@ public:
         BOOST_ASSERT(!!key);
 
         bucket& b = get_bucket(key.id());
-        register node* p = b.first;
+        node* p = b.first;
         if (p)
         {
             // The bucket is not empty, search among the elements
@@ -335,7 +335,7 @@ public:
     iterator find(key_type key)
     {
         bucket& b = get_bucket(key.id());
-        register node* p = b.first;
+        node* p = b.first;
         if (p)
         {
             // The bucket is not empty, search among the elements
@@ -363,7 +363,7 @@ private:
         typedef node_list::value_traits value_traits;
 
         // All elements within the bucket are sorted to speedup the search.
-        register node* p = b.first;
+        node* p = b.first;
         while (p != b.last && p->m_Value.first.id() < key.id())
         {
             p = value_traits::to_value_ptr(node_traits::get_next(p));

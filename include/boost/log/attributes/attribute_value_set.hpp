@@ -311,7 +311,7 @@ public:
      */
     void swap(attribute_value_set& that) BOOST_NOEXCEPT
     {
-        register implementation* const p = m_pImpl;
+        implementation* const p = m_pImpl;
         m_pImpl = that.m_pImpl;
         that.m_pImpl = p;
     }

@@ -82,8 +82,8 @@ public:
     //! Clears the buffer to the initial state
     void clear()
     {
-        register char_type* pBase = this->pbase();
-        register char_type* pPtr = this->pptr();
+        char_type* pBase = this->pbase();
+        char_type* pPtr = this->pptr();
         if (pBase != pPtr)
             this->pbump(static_cast< int >(pBase - pPtr));
     }
@@ -113,8 +113,8 @@ protected:
     int sync()
     {
         BOOST_ASSERT(m_Storage != 0);
-        register char_type* pBase = this->pbase();
-        register char_type* pPtr = this->pptr();
+        char_type* pBase = this->pbase();
+        char_type* pPtr = this->pptr();
         if (pBase != pPtr)
         {
             m_Storage->append(pBase, pPtr);

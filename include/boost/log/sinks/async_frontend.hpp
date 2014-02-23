@@ -436,7 +436,7 @@ private:
         while (!m_StopRequested)
         {
             record_view rec;
-            register bool dequeued = false;
+            bool dequeued = false;
             if (!m_FlushRequested)
                 dequeued = queue_base_type::try_dequeue_ready(rec);
             else

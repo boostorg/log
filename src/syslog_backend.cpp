@@ -271,7 +271,7 @@ private:
             LOG_LOCAL7
         };
 
-        register std::size_t n = static_cast< unsigned int >(fac) / 8U;
+        std::size_t n = static_cast< unsigned int >(fac) / 8U;
         BOOST_ASSERT(n < sizeof(native_facilities) / sizeof(*native_facilities));
         return native_facilities[n];
     }

@@ -602,7 +602,7 @@ BOOST_LOG_API void core::push_record_move(record& rec)
         typedef std::vector< shared_ptr< sinks::sink > > accepting_sinks_t;
         accepting_sinks_t accepting_sinks(data->accepting_sink_count());
         shared_ptr< sinks::sink >* const begin = &*accepting_sinks.begin();
-        register shared_ptr< sinks::sink >* end = begin;
+        shared_ptr< sinks::sink >* end = begin;
 
         // Lock sinks that are willing to consume the record
         record_view::private_data::sink_list weak_sinks = data->get_accepting_sinks();
@@ -618,11 +618,11 @@ BOOST_LOG_API void core::push_record_move(record& rec)
         }
 
         bool shuffled = (end - begin) <= 1;
-        register shared_ptr< sinks::sink >* it = begin;
+        shared_ptr< sinks::sink >* it = begin;
         while (true) try
         {
             // First try to distribute load between different sinks
-            register bool all_locked = true;
+            bool all_locked = true;
             while (it != end)
             {
                 if (it->get()->try_consume(rec_view))

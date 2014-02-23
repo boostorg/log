@@ -127,7 +127,7 @@ public:
     void swap(locking_ptr& that)
     {
         m_pElement.swap(that.m_pElement);
-        register locking_ptr_counter_base* p = m_pLock;
+        locking_ptr_counter_base* p = m_pLock;
         m_pLock = that.m_pLock;
         that.m_pLock = p;
     }

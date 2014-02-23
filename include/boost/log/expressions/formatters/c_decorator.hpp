@@ -90,7 +90,7 @@ struct c_decorator_traits< wchar_t >
     static std::size_t print_escaped(wchar_t (&buf)[N], wchar_t c)
     {
         const wchar_t* format;
-        register unsigned int val;
+        unsigned int val;
         if (sizeof(wchar_t) == 1)
         {
             format = L"\\x%0.2X";

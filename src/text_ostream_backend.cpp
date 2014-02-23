@@ -94,7 +94,7 @@ BOOST_LOG_API void basic_text_ostream_backend< CharT >::consume(record_view cons
         it = m_pImpl->m_Streams.begin(), end = m_pImpl->m_Streams.end();
     for (; it != end; ++it)
     {
-        register stream_type* const strm = it->get();
+        stream_type* const strm = it->get();
         if (strm->good())
         {
             strm->write(p, static_cast< std::streamsize >(s));
@@ -114,7 +114,7 @@ BOOST_LOG_API void basic_text_ostream_backend< CharT >::flush()
         it = m_pImpl->m_Streams.begin(), end = m_pImpl->m_Streams.end();
     for (; it != end; ++it)
     {
-        register stream_type* const strm = it->get();
+        stream_type* const strm = it->get();
         if (strm->good())
             strm->flush();
     }

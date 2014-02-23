@@ -68,7 +68,7 @@ inline int vswprintf(wchar_t* buf, std::size_t size, const wchar_t* format, std:
 // MSVC prior to 2005 had a non-conforming extension _vsnprintf, that sometimes did not put a terminating '\0'
 inline int vsnprintf(char* buf, std::size_t size, const char* format, std::va_list args)
 {
-    register int n = _vsnprintf(buf, size - 1, format, args);
+    int n = _vsnprintf(buf, size - 1, format, args);
     buf[size - 1] = '\0';
     return n;
 }
@@ -76,7 +76,7 @@ inline int vsnprintf(char* buf, std::size_t size, const char* format, std::va_li
 #       ifdef BOOST_LOG_USE_WCHAR_T
 inline int vswprintf(wchar_t* buf, std::size_t size, const wchar_t* format, std::va_list args)
 {
-    register int n = _vsnwprintf(buf, size - 1, format, args);
+    int n = _vsnwprintf(buf, size - 1, format, args);
     buf[size - 1] = L'\0';
     return n;
 }
@@ -88,7 +88,7 @@ inline int snprintf(char* buf, std::size_t size, const char* format, ...)
 {
     std::va_list args;
     va_start(args, format);
-    register int n = vsnprintf(buf, size, format, args);
+    int n = vsnprintf(buf, size, format, args);
     va_end(args);
     return n;
 }
@@ -98,7 +98,7 @@ inline int swprintf(wchar_t* buf, std::size_t size, const wchar_t* format, ...)
 {
     std::va_list args;
     va_start(args, format);
-    register int n = vswprintf(buf, size, format, args);
+    int n = vswprintf(buf, size, format, args);
     va_end(args);
     return n;
 }

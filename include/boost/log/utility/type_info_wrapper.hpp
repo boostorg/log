@@ -108,7 +108,7 @@ public:
      */
     void swap(type_info_wrapper& that)
     {
-        register std::type_info const* temp = info;
+        std::type_info const* temp = info;
         info = that.info;
         that.info = temp;
     }

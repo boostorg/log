@@ -267,7 +267,7 @@ public:
     {
         // First try to find an acquired element
         bucket& b = get_bucket(key.id());
-        register node* p = b.first;
+        node* p = b.first;
         if (p)
         {
             // The bucket is not empty, search among the elements
@@ -330,7 +330,7 @@ private:
         typedef node_list::value_traits value_traits;
 
         // All elements within the bucket are sorted to speedup the search.
-        register node* p = b.first;
+        node* p = b.first;
         while (p != b.last && p->m_Value.first.id() < key.id())
         {
             p = value_traits::to_value_ptr(node_traits::get_next(p));
@@ -423,7 +423,7 @@ private:
         {
             key_type key = it->first;
             bucket& b = get_bucket(key.id());
-            register node* p = b.first;
+            node* p = b.first;
             if (p)
             {
                 p = find_in_bucket(key, b);

@@ -49,7 +49,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         //! The method pushes the scope to the back of the list
         BOOST_FORCEINLINE void push_back(const_reference entry) BOOST_NOEXCEPT
         {
-            register aux::named_scope_list_node* top = this->m_RootNode._m_pPrev;
+            aux::named_scope_list_node* top = this->m_RootNode._m_pPrev;
             entry._m_pPrev = top;
             entry._m_pNext = &this->m_RootNode;
 
@@ -63,7 +63,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         //! The method removes the top scope entry from the list
         BOOST_FORCEINLINE void pop_back() BOOST_NOEXCEPT
         {
-            register aux::named_scope_list_node* top = this->m_RootNode._m_pPrev;
+            aux::named_scope_list_node* top = this->m_RootNode._m_pPrev;
             top->_m_pPrev->_m_pNext = top->_m_pNext;
             top->_m_pNext->_m_pPrev = top->_m_pPrev;
             --this->m_Size;
@@ -157,9 +157,9 @@ struct BOOST_SYMBOL_VISIBLE named_scope::impl :
     scope_list& get_scope_list()
     {
 #if defined(BOOST_LOG_USE_COMPILER_TLS)
-        register scope_list* p = pScopesCache;
+        scope_list* p = pScopesCache;
 #else
-        register scope_list* p = pScopes.get();
+        scope_list* p = pScopes.get();
 #endif
         if (!p)
         {
@@ -207,8 +207,8 @@ BOOST_LOG_API named_scope_list::named_scope_list(named_scope_list const& that) :
     if (m_Size > 0)
     {
         // Copy the container contents
-        register pointer p = allocator_type::allocate(that.size());
-        register aux::named_scope_list_node* prev = &m_RootNode;
+        pointer p = allocator_type::allocate(that.size());
+        aux::named_scope_list_node* prev = &m_RootNode;
         for (const_iterator src = that.begin(), end = that.end(); src != end; ++src, ++p)
         {
             allocator_type::construct(p, *src); // won't throw

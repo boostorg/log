@@ -203,7 +203,7 @@ public:
 
     void swap(this_type& that) BOOST_NOEXCEPT
     {
-        register impl_base* p = m_pImpl;
+        impl_base* p = m_pImpl;
         m_pImpl = that.m_pImpl;
         that.m_pImpl = p;
     }
@@ -405,7 +405,7 @@ public:
 
     void swap(this_type& that) BOOST_NOEXCEPT
     {
-        register impl_base* p = m_pImpl;
+        impl_base* p = m_pImpl;
         m_pImpl = that.m_pImpl;
         that.m_pImpl = p;
     }
