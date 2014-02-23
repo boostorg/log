@@ -14,7 +14,8 @@
 [*General changes:]
 
 * Added indexing operators with [class_log_attribute_name] arguments to [class_log_record] and [class_log_record_view]. The operators behave the same way as the similar operators of [class_log_attribute_value_set] (i.e. return an [class_log_attribute_value] identified by the name).
-* Added operators for non-const object output to [class_log_basic_formatting_ostream] ([ticket 9389]).
+* Added operators for non-const object output to [class_log_basic_formatting_ostream]. ([ticket 9389])
+* Added new format flags "%c", "%C" and "%F" to the [link log.detailed.expressions.formatters.named_scope named scope formatter]. The new flags allow putting function names and source file names of named scopes into the formatted strings. ([ticket 9263)
 
 [*Bug fixes:]
 

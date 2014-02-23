@@ -362,10 +362,15 @@ The first argument names the attribute and the second is the format string. The 
 
 [table Named scope format placeholders
     [[Placeholder][Meaning][Example]]
-    [[%n]         [Scope name]["void foo()"]]
-    [[%f]         [Source file name of the scope]["foo.cpp"]]
+    [[%n]         [Scope name]["void bar::foo()"]]
+    [[%c]         [Function name]["bar::foo"]]
+    [[%C]         [Function name, without the function scope]["foo"]]
+    [[%f]         [Source file name of the scope]["/home/user/project/foo.cpp"]]
+    [[%F]         [Source file name of the scope, without the path]["foo.cpp"]]
     [[%l]         [Line number in the source file]["45"]]
 ]
+
+[note As described in the [link log.detailed.attributes.named_scope named scope] attribute description, it is possible to use `BOOST_LOG_FUNCTION` macro to automatically generate scope names from the enclosing function name. Unfortunately, the actual format of the generated strings is compiler-dependent and in many cases it includes the complete signature of the function. When "%c" or "%C" format flag is specified, the library attempts to parse the generated string to extract the function name. Depending on the string format, this may fail and in this case the library will fall back to using the whole string (i.e. behave equivalent to the "%n" flag). Note also that the library makes no distinction between scope names generated with `BOOST_LOG_FUNCTION` and explicitly specified in `BOOST_LOG_NAMED_SCOPE` and will attempt to parse either one. For this reason it is advised to avoid specifying scope names that resemble function signatures (in particular, contain parenthesis).]
 
 While the format string describes the presentation of each named scope in the list, the following named arguments allow to customize the list traversal and formatting:
 
