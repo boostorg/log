@@ -13,6 +13,8 @@
  *         at http://www.boost.org/doc/libs/release/libs/log/doc/html/index.html.
  */
 
+#include <cstddef>
+#include <cstring>
 #include <string>
 #include <vector>
 #include <limits>
@@ -76,13 +78,66 @@ public:
         }
     };
 
-    struct file_name
+    template< bool OmitScopeV >
+    struct function_name
+    {
+        typedef void result_type;
+
+        result_type operator() (stream_type& strm, value_type const& value) const
+        {
+            const char* const begin = value.scope_name.c_str();
+            const char* const paren = std::strchr(begin, '(');
+            if (paren)
+            {
+                const char* p = paren;
+                for (; p != begin; --p)
+                {
+                    const char c = *(p - 1);
+                    if (OmitScopeV && c == ':')
+                        break;
+                    if (c == ' ')
+                        break;
+                }
+
+                if (p != begin && p != paren)
+                {
+                    strm.write(p, paren - p);
+                    return;
+                }
+            }
+
+            strm << value.scope_name;
+        }
+    };
+
+    struct full_file_name
     {
         typedef void result_type;
 
         result_type operator() (stream_type& strm, value_type const& value) const
         {
             strm << value.file_name;
+        }
+    };
+
+    struct file_name
+    {
+        typedef void result_type;
+
+        result_type operator() (stream_type& strm, value_type const& value) const
+        {
+            std::size_t n = value.file_name.size(), i = n;
+            for (; i > 0; --i)
+            {
+                const char c = value.file_name[i - 1];
+#if defined(BOOST_WINDOWS)
+                if (c == '\\')
+                    break;
+#endif
+                if (c == '/')
+                    break;
+            }
+            strm.write(value.file_name.c_str() + i, n - i);
         }
     };
 
@@ -182,7 +237,25 @@ do_parse_named_scope_format(const CharT* begin, const CharT* end)
                 fmt.add_formatter(typename formatter_type::scope_name());
                 break;
 
+            case 'c':
+                if (!literal.empty())
+                    fmt.add_formatter(typename formatter_type::literal(literal));
+                fmt.add_formatter(typename formatter_type::BOOST_NESTED_TEMPLATE function_name< false >());
+                break;
+
+            case 'C':
+                if (!literal.empty())
+                    fmt.add_formatter(typename formatter_type::literal(literal));
+                fmt.add_formatter(typename formatter_type::BOOST_NESTED_TEMPLATE function_name< true >());
+                break;
+
             case 'f':
+                if (!literal.empty())
+                    fmt.add_formatter(typename formatter_type::literal(literal));
+                fmt.add_formatter(typename formatter_type::full_file_name());
+                break;
+
+            case 'F':
                 if (!literal.empty())
                     fmt.add_formatter(typename formatter_type::literal(literal));
                 fmt.add_formatter(typename formatter_type::file_name());
