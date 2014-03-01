@@ -51,6 +51,7 @@ namespace {
         static logging::string_literal function_name6() { return logging::str_literal("void* namespc::foo<char>::bar<int>(int) const"); }
         static logging::string_literal function_name7() { return logging::str_literal("void (*)() namespc::foo<char (__stdcall*)()>::bar(int (my_class::*)(float*), my_class*) const volatile"); }
         static logging::string_literal function_name8() { return logging::str_literal("void (*)(const int (&)[]) namespc::foo<char (__stdcall*)()>::bar<char (__stdcall xxx::*)()>(int (my_class::*)(float*), my_class*)"); }
+        static logging::string_literal function_name9() { return logging::str_literal("std::function<void (int)> namespc::foo<char (__stdcall*)()>::bar<char (__stdcall xxx::*)()>(int (my_class::*)(float*), my_class*)"); }
 
         static logging::string_literal file() { return logging::str_literal(__FILE__); }
         static logging::string_literal posix_file() { return logging::str_literal("/home/user/posix_file.cpp"); }
@@ -384,6 +385,13 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(scopes_scope_function_name_formatting, CharT, char
 //        strm << "namespc::foo<char (__stdcall*)()>::bar<char (__stdcall xxx::*)()>";
 //        BOOST_CHECK(check_formatting(data::scope_function_name_format(), rec, strm.str()));
 //    }
+//    {
+//        sentry scope1(data::function_name9(), data::file(), line1);
+//        string str;
+//        osstream strm(str);
+//        strm << "namespc::foo<char (__stdcall*)()>::bar<char (__stdcall xxx::*)()>";
+//        BOOST_CHECK(check_formatting(data::scope_function_name_format(), rec, strm.str()));
+//    }
 }
 
 // Function name without scope formatting
@@ -462,6 +470,13 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(scopes_function_name_formatting, CharT, char_types
 //    }
 //    {
 //        sentry scope1(data::function_name8(), data::file(), line1);
+//        string str;
+//        osstream strm(str);
+//        strm << "bar<char (__stdcall xxx::*)()>";
+//        BOOST_CHECK(check_formatting(data::function_name_format(), rec, strm.str()));
+//    }
+//    {
+//        sentry scope1(data::function_name9(), data::file(), line1);
 //        string str;
 //        osstream strm(str);
 //        strm << "bar<char (__stdcall xxx::*)()>";
