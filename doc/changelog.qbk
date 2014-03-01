@@ -20,6 +20,7 @@
 [*Bug fixes:]
 
 * Fixed [link log.detailed.utilities.manipulators.dump `dump`] manipulator output on AVX2-enabled CPUs (e.g. Intel Haswell).
+* Fixed compilation of `get_attribute` method of loggers.
 
 [heading 2.2, Boost 1.55]
 
