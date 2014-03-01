@@ -140,6 +140,9 @@
 #endif
 #if !defined(BOOST_LOG_UNREACHABLE)
 #   define BOOST_LOG_UNREACHABLE()
+#   define BOOST_LOG_UNREACHABLE_RETURN(r) return r
+#else
+#   define BOOST_LOG_UNREACHABLE_RETURN(r) BOOST_LOG_UNREACHABLE()
 #endif
 
 // Some compilers support a special attribute that shows that a function won't return
