@@ -21,6 +21,7 @@
 #include <algorithm>
 #include <boost/move/core.hpp>
 #include <boost/move/utility.hpp>
+#include <boost/range/iterator_range_core.hpp>
 #include <boost/spirit/include/karma_uint.hpp>
 #include <boost/spirit/include/karma_generate.hpp>
 #include <boost/log/attributes/named_scope.hpp>
@@ -39,6 +40,119 @@ namespace expressions {
 namespace aux {
 
 BOOST_LOG_ANONYMOUS_NAMESPACE {
+
+iterator_range< const char* > parse_function_name(string_literal const& signature, bool include_scope)
+{
+    // The algorithm basically is: find the opening parenthesis with function arguments and extract the function name that is directly leftmost of it.
+    //
+    // Unfortunately, C++ syntax is too complex and context-dependent, there may be parenthesis in the return type and also in template parameters
+    // of the function class or the function itself. We cheat and ignore any template parameters at all by skipping any characters in top-level angle brackets.
+    //
+    // There is no such graceful solution to the function return types, parsing it correctly requires knowledge of types. Our trick here is to rely on the
+    // assumption that function name immediately preceeds the opening parenthesis, while in case of function return types there is a space between the return type
+    // of the function return type and the parenthesis. Technically, the space is not required by C++ grammar, so some compiler could omit it and the parser
+    // would get confused by it. Also, some compiler could insert a space after the function name and that would break it too. But for now I can't find
+    // another equivalently fast and viable solution.
+    //
+    // When the function name is detected, the algorithm searches for its beginning backwards, again skipping any template arguments. The beginning
+    // is detected by encountering a delimiter character, which can be a space or another punctuation character that is not allowed in function names.
+    // A colon served as a delimiter as well if the scope name is to be omitted.
+    //
+    // Operators pose another problem at this stage. They are curently not supported.
+    //
+    // Note that the algorithm should be tolerant to user's custom scope names which may not be function names at all. For this reason in case of any failure
+    // just return the original string intact.
+
+    const char* const begin = signature.c_str();
+    const char* const end = begin + signature.size();
+    const char* p = begin;
+    while (p != end)
+    {
+        // Search for the opening parenthesis or template arguments
+        p += std::strcspn(p, "(<");
+        if (p == begin || p == end)
+            break;
+
+        char c = *p;
+        if (c == '(')
+        {
+            c = *(p - 1);
+            if (c != ' ')
+            {
+                // Assume we found the function name, find its beginning
+                const char* const name_end = p--;
+                while (p != begin)
+                {
+                    c = *p;
+                    if (c == ' ' || c == '*' || c == '&' || (!include_scope && c == ':'))
+                    {
+                        const char* const name_begin = p + 1;
+                        if (name_begin < name_end)
+                        {
+                            // We found it
+                            return iterator_range< const char* >(name_begin, name_end);
+                        }
+                        else
+                        {
+                            // Function name cannot be empty
+                            goto NotFoundL;
+                        }
+                    }
+                    else if (c == '>')
+                    {
+                        // It's template parameters, skip them
+                        unsigned int depth = 1;
+                        --p;
+                        while (p != begin && depth > 0)
+                        {
+                            c = *p;
+                            if (c == '<')
+                                --depth;
+                            else if (c == '>')
+                                ++depth;
+                            --p;
+                        }
+                    }
+                    else
+                    {
+                        --p;
+                    }
+                }
+
+                // If it came to this then the supposed function name begins from the start of the signature string (i.e. no return type at all).
+                // This is the case for constructors, destructors and conversion operators.
+                return iterator_range< const char* >(p, name_end);
+            }
+            else
+            {
+                // This must be the function return type, process characters inside the parenthesis
+                ++p;
+            }
+        }
+        else if (c == '<')
+        {
+            // Template parameters opened
+            unsigned int depth = 1;
+            do
+            {
+                ++p;
+                p += std::strcspn(p, "><");
+
+                if (p == end)
+                    break;
+                c = *p;
+                if (c == '>')
+                    --depth;
+                else
+                    ++depth;
+            }
+            while (depth > 0);
+        }
+    }
+
+NotFoundL:
+    return iterator_range< const char* >(signature.c_str(), signature.c_str() + signature.size());
+}
 
 template< typename CharT >
 class named_scope_formatter
@@ -78,36 +192,29 @@ public:
         }
     };
 
-    template< bool OmitScopeV >
     struct function_name
     {
         typedef void result_type;
 
+        explicit function_name(bool include_scope) : m_include_scope(include_scope)
+        {
+        }
+
         result_type operator() (stream_type& strm, value_type const& value) const
         {
-            const char* const begin = value.scope_name.c_str();
-            const char* const paren = std::strchr(begin, '(');
-            if (paren)
+            if (value.type == attributes::named_scope_entry::function)
             {
-                const char* p = paren;
-                for (; p != begin; --p)
-                {
-                    const char c = *(p - 1);
-                    if (OmitScopeV && c == ':')
-                        break;
-                    if (c == ' ')
-                        break;
-                }
-
-                if (p != begin && p != paren)
-                {
-                    strm.write(p, paren - p);
-                    return;
-                }
+                iterator_range< const char* > function_name = parse_function_name(value.scope_name, m_include_scope);
+                strm.write(function_name.begin(), function_name.size());
             }
-
-            strm << value.scope_name;
+            else
+            {
+                strm << value.scope_name;
+            }
         }
+
+    private:
+        const bool m_include_scope;
     };
 
     struct full_file_name
@@ -240,13 +347,13 @@ do_parse_named_scope_format(const CharT* begin, const CharT* end)
             case 'c':
                 if (!literal.empty())
                     fmt.add_formatter(typename formatter_type::literal(literal));
-                fmt.add_formatter(typename formatter_type::BOOST_NESTED_TEMPLATE function_name< false >());
+                fmt.add_formatter(typename formatter_type::function_name(true));
                 break;
 
             case 'C':
                 if (!literal.empty())
                     fmt.add_formatter(typename formatter_type::literal(literal));
-                fmt.add_formatter(typename formatter_type::BOOST_NESTED_TEMPLATE function_name< true >());
+                fmt.add_formatter(typename formatter_type::function_name(false));
                 break;
 
             case 'f':

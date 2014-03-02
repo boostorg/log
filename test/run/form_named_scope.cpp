@@ -43,16 +43,6 @@ namespace {
         static logging::string_literal scope1() { return logging::str_literal("scope1"); }
         static logging::string_literal scope2() { return logging::str_literal("scope2"); }
 
-        static logging::string_literal function_name1() { return logging::str_literal("int main(int, char *[])"); }
-        static logging::string_literal function_name2() { return logging::str_literal("int __cdecl main(int, char *[])"); }
-        static logging::string_literal function_name3() { return logging::str_literal("namespace_name::type foo()"); }
-        static logging::string_literal function_name4() { return logging::str_literal("namespace_name::type& foo::bar(int[], std::string const&)"); }
-        static logging::string_literal function_name5() { return logging::str_literal("void* namespc::foo<char>::bar()"); }
-        static logging::string_literal function_name6() { return logging::str_literal("void* namespc::foo<char>::bar<int>(int) const"); }
-        static logging::string_literal function_name7() { return logging::str_literal("void (*)() namespc::foo<char (__stdcall*)()>::bar(int (my_class::*)(float*), my_class*) const volatile"); }
-        static logging::string_literal function_name8() { return logging::str_literal("void (*)(const int (&)[]) namespc::foo<char (__stdcall*)()>::bar<char (__stdcall xxx::*)()>(int (my_class::*)(float*), my_class*)"); }
-        static logging::string_literal function_name9() { return logging::str_literal("std::function<void (int)> namespc::foo<char (__stdcall*)()>::bar<char (__stdcall xxx::*)()>(int (my_class::*)(float*), my_class*)"); }
-
         static logging::string_literal file() { return logging::str_literal(__FILE__); }
         static logging::string_literal posix_file() { return logging::str_literal("/home/user/posix_file.cpp"); }
         static logging::string_literal windows_file1() { return logging::str_literal("C:\\user\\windows_file1.cpp"); }
@@ -304,6 +294,74 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(scopes_filename_formatting_windows, CharT, char_ty
 
 #endif // defined(BOOST_WINDOWS)
 
+namespace {
+
+struct named_scope_test_case
+{
+    logging::string_literal scope_name;
+    const char* function_name;
+    const char* function_name_no_scope;
+};
+
+const named_scope_test_case named_scope_test_cases[] =
+{
+    // Generic signatures
+    { logging::str_literal("int main(int, char *[])"), "main", "main" },
+    { logging::str_literal("namespace_name::type foo()"), "foo", "foo" },
+    { logging::str_literal("namespace_name::type& foo::bar(int[], std::string const&)"), "foo::bar", "bar" },
+    { logging::str_literal("void* namespc::foo<char>::bar()"), "namespc::foo<char>::bar", "bar" },
+    { logging::str_literal("void* namespc::foo<char>::bar<int>(int) const"), "namespc::foo<char>::bar<int>", "bar<int>" },
+
+    // MSVC-specific
+    { logging::str_literal("int __cdecl main(int, char *[])"), "main", "main" },
+    { logging::str_literal("struct namespc::strooct __cdecl foo3(int [])"), "foo3", "foo3" },
+    { logging::str_literal("void (__cdecl *__cdecl foo4(void))(void)"), "foo4", "foo4" }, // function returning pointer to function
+    { logging::str_literal("void (__cdecl *__cdecl foo5(void (__cdecl *)(void)))(void)"), "foo5", "foo5" },
+    { logging::str_literal("void (__cdecl *__cdecl namespc::my_class<int>::member1(void (__cdecl *)(void)))(void)"), "namespc::my_class<int>::member1", "member1" },
+    { logging::str_literal("void (__cdecl *__cdecl namespc::my_class<int>::member2<int>(int))(void)"), "namespc::my_class<int>::member2<int>", "member2<int>" },
+    { logging::str_literal("void (__cdecl *__cdecl namespc::my_class<int>::member2<void(__cdecl *)(void)>(void (__cdecl *)(void)))(void)"), "namespc::my_class<int>::member2<void(__cdecl *)(void)>", "member2<void(__cdecl *)(void)>" },
+    { logging::str_literal("void (__cdecl *__cdecl namespc::my_class<int>::member3<void __cdecl foo1(void)>(void))(void)"), "namespc::my_class<int>::member3<void __cdecl foo1(void)>", "member3<void __cdecl foo1(void)>" },
+    { logging::str_literal("void (__cdecl *__cdecl namespc::my_class<void (__cdecl*)(void)>::member1(void (__cdecl *)(void)))(void)"), "namespc::my_class<void (__cdecl*)(void)>::member1", "member1" },
+    { logging::str_literal("void (__cdecl *__cdecl namespc::my_class<void (__cdecl*)(void)>::member2<int>(int))(void)"), "namespc::my_class<void (__cdecl*)(void)>::member2<int>", "member2<int>" },
+    { logging::str_literal("void (__cdecl *__cdecl namespc::my_class<void (__cdecl*)(void)>::member2<void(__cdecl *)(void)>(void (__cdecl *)(void)))(void)"), "namespc::my_class<void (__cdecl*)(void)>::member2<void(__cdecl *)(void)>", "member2<void(__cdecl *)(void)>" },
+    { logging::str_literal("void (__cdecl *__cdecl namespc::my_class<void (__cdecl*)(void)>::member3<void __cdecl foo1(void)>(void))(void)"), "namespc::my_class<void (__cdecl*)(void)>::member3<void __cdecl foo1(void)>", "member3<void __cdecl foo1(void)>" },
+    { logging::str_literal("void (__cdecl namespc::my_class2::* __cdecl namespc::foo6(void (__cdecl *)(void)))(void)"), "namespc::foo6", "foo6" },
+    { logging::str_literal("struct namespc::my_class<void __cdecl(int)> __cdecl namespc::foo7(void)"), "namespc::foo7", "foo7" },
+    { logging::str_literal("void (__cdecl namespc::my_class2::* (&__cdecl namespc::foo8(void (__cdecl *)(void)))[2])(void)"), "namespc::foo8", "foo8" },
+
+    // GCC-specific
+    { logging::str_literal("namespc::strooct foo3(int*)"), "foo3", "foo3" },
+    { logging::str_literal("void (* foo4())()"), "foo4", "foo4" }, // function returning pointer to function
+    { logging::str_literal("void (* foo5(pfun2_t))()"), "foo5", "foo5" },
+    { logging::str_literal("static void (* namespc::my_class<T>::member1(pfun2_t))() [with T = int; pfun1_t = void (*)(); pfun2_t = void (*)()]"), "namespc::my_class<T>::member1", "member1" },
+    { logging::str_literal("static void (* namespc::my_class<T>::member2(U))() [with U = int; T = int; pfun2_t = void (*)()]"), "namespc::my_class<T>::member2", "member2" },
+    { logging::str_literal("static void (* namespc::my_class<T>::member2(U))() [with U = void (*)(); T = int; pfun2_t = void (*)()]"), "namespc::my_class<T>::member2", "member2" },
+    { logging::str_literal("static void (* namespc::my_class<T>::member3())() [with void (* Fun)() = foo1; T = int; pfun2_t = void (*)()]"), "namespc::my_class<T>::member3", "member3" },
+    { logging::str_literal("static void (* namespc::my_class<T>::member1(pfun2_t))() [with T = void (*)(); pfun1_t = void (*)(); pfun2_t = void (*)()]"), "namespc::my_class<T>::member1", "member1" },
+    { logging::str_literal("static void (* namespc::my_class<T>::member2(U))() [with U = int; T = void (*)(); pfun2_t = void (*)()]"), "namespc::my_class<T>::member2", "member2" },
+    { logging::str_literal("static void (* namespc::my_class<T>::member2(U))() [with U = void (*)(); T = void (*)(); pfun2_t = void (*)()]"), "namespc::my_class<T>::member2", "member2" },
+    { logging::str_literal("static void (* namespc::my_class<T>::member3())() [with void (* Fun)() = foo1; T = void (*)(); pfun2_t = void (*)()]"), "namespc::my_class<T>::member3", "member3" },
+    { logging::str_literal("void (namespc::my_class2::* namespc::foo6(pfun2_t))()"), "namespc::foo6", "foo6" },
+    { logging::str_literal("namespc::my_class<void(int)> namespc::foo7()"), "namespc::foo7", "foo7" },
+    { logging::str_literal("void (namespc::my_class2::* (& namespc::foo8(pfun2_t))[2])()"), "namespc::foo8", "foo8" },
+    { logging::str_literal("namespc::my_class2::my_class2()"), "namespc::my_class2::my_class2", "my_class2" }, // constructor
+    { logging::str_literal("namespc::my_class2::~my_class2()"), "namespc::my_class2::~my_class2", "~my_class2" }, // destructor
+    // Operators not supported for now
+//    { logging::str_literal("void namespc::my_class2::operator=(const namespc::my_class2&)"), "namespc::my_class2::operator=", "operator=" },
+//    { logging::str_literal("void namespc::my_class2::operator*() const"), "namespc::my_class2::operator*", "operator*" },
+//    { logging::str_literal("void namespc::my_class2::operator()()"), "namespc::my_class2::operator()", "operator()" },
+//    { logging::str_literal("bool namespc::my_class2::operator<(int) const"), "namespc::my_class2::operator<", "operator<" },
+//    { logging::str_literal("bool namespc::my_class2::operator>(int) const"), "namespc::my_class2::operator>", "operator>" },
+//    { logging::str_literal("bool namespc::my_class2::operator<=(int) const"), "namespc::my_class2::operator<=", "operator<=" },
+//    { logging::str_literal("bool namespc::my_class2::operator>=(int) const"), "namespc::my_class2::operator>=", "operator>=" },
+//    { logging::str_literal("namespc::my_class2::operator bool() const"), "namespc::my_class2::operator bool", "operator bool" },
+
+    // BOOST_CURRENT_FUNCTION fallback value
+    { logging::str_literal("(unknown)"), "(unknown)", "(unknown)" }
+};
+
+} // namespace
+
 // Function name formatting
 BOOST_AUTO_TEST_CASE_TEMPLATE(scopes_scope_function_name_formatting, CharT, char_types)
 {
@@ -328,70 +386,14 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(scopes_scope_function_name_formatting, CharT, char
 
     record_view rec = make_record_view(set1);
 
-    // File names without the full path
+    for (unsigned int i = 0; i < sizeof(named_scope_test_cases) / sizeof(*named_scope_test_cases); ++i)
     {
-        sentry scope1(data::function_name1(), data::file(), line1);
+        sentry scope1(named_scope_test_cases[i].scope_name, data::file(), line1, attrs::named_scope_entry::function);
         string str;
         osstream strm(str);
-        strm << "main";
-        BOOST_CHECK(check_formatting(data::scope_function_name_format(), rec, strm.str()));
+        strm << named_scope_test_cases[i].function_name;
+        BOOST_CHECK_MESSAGE(check_formatting(data::scope_function_name_format(), rec, strm.str()), "Scope name: " << named_scope_test_cases[i].scope_name);
     }
-    {
-        sentry scope1(data::function_name2(), data::file(), line1);
-        string str;
-        osstream strm(str);
-        strm << "main";
-        BOOST_CHECK(check_formatting(data::scope_function_name_format(), rec, strm.str()));
-    }
-    {
-        sentry scope1(data::function_name3(), data::file(), line1);
-        string str;
-        osstream strm(str);
-        strm << "foo";
-        BOOST_CHECK(check_formatting(data::scope_function_name_format(), rec, strm.str()));
-    }
-    {
-        sentry scope1(data::function_name4(), data::file(), line1);
-        string str;
-        osstream strm(str);
-        strm << "foo::bar";
-        BOOST_CHECK(check_formatting(data::scope_function_name_format(), rec, strm.str()));
-    }
-    {
-        sentry scope1(data::function_name5(), data::file(), line1);
-        string str;
-        osstream strm(str);
-        strm << "namespc::foo<char>::bar";
-        BOOST_CHECK(check_formatting(data::scope_function_name_format(), rec, strm.str()));
-    }
-    {
-        sentry scope1(data::function_name6(), data::file(), line1);
-        string str;
-        osstream strm(str);
-        strm << "namespc::foo<char>::bar<int>";
-        BOOST_CHECK(check_formatting(data::scope_function_name_format(), rec, strm.str()));
-    }
-//    {
-//        sentry scope1(data::function_name7(), data::file(), line1);
-//        string str;
-//        osstream strm(str);
-//        strm << "namespc::foo<char (__stdcall*)()>::bar";
-//        BOOST_CHECK(check_formatting(data::scope_function_name_format(), rec, strm.str()));
-//    }
-//    {
-//        sentry scope1(data::function_name8(), data::file(), line1);
-//        string str;
-//        osstream strm(str);
-//        strm << "namespc::foo<char (__stdcall*)()>::bar<char (__stdcall xxx::*)()>";
-//        BOOST_CHECK(check_formatting(data::scope_function_name_format(), rec, strm.str()));
-//    }
-//    {
-//        sentry scope1(data::function_name9(), data::file(), line1);
-//        string str;
-//        osstream strm(str);
-//        strm << "namespc::foo<char (__stdcall*)()>::bar<char (__stdcall xxx::*)()>";
-//        BOOST_CHECK(check_formatting(data::scope_function_name_format(), rec, strm.str()));
-//    }
 }
 
 // Function name without scope formatting
@@ -418,69 +420,43 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(scopes_function_name_formatting, CharT, char_types
 
     record_view rec = make_record_view(set1);
 
-    // File names without the full path
+    for (unsigned int i = 0; i < sizeof(named_scope_test_cases) / sizeof(*named_scope_test_cases); ++i)
     {
-        sentry scope1(data::function_name1(), data::file(), line1);
+        sentry scope1(named_scope_test_cases[i].scope_name, data::file(), line1, attrs::named_scope_entry::function);
         string str;
         osstream strm(str);
-        strm << "main";
-        BOOST_CHECK(check_formatting(data::function_name_format(), rec, strm.str()));
+        strm << named_scope_test_cases[i].function_name_no_scope;
+        BOOST_CHECK_MESSAGE(check_formatting(data::function_name_format(), rec, strm.str()), "Scope name: " << named_scope_test_cases[i].scope_name);
     }
-    {
-        sentry scope1(data::function_name2(), data::file(), line1);
-        string str;
-        osstream strm(str);
-        strm << "main";
-        BOOST_CHECK(check_formatting(data::function_name_format(), rec, strm.str()));
-    }
-    {
-        sentry scope1(data::function_name3(), data::file(), line1);
-        string str;
-        osstream strm(str);
-        strm << "foo";
-        BOOST_CHECK(check_formatting(data::function_name_format(), rec, strm.str()));
-    }
-    {
-        sentry scope1(data::function_name4(), data::file(), line1);
-        string str;
-        osstream strm(str);
-        strm << "bar";
-        BOOST_CHECK(check_formatting(data::function_name_format(), rec, strm.str()));
-    }
-    {
-        sentry scope1(data::function_name5(), data::file(), line1);
-        string str;
-        osstream strm(str);
-        strm << "bar";
-        BOOST_CHECK(check_formatting(data::function_name_format(), rec, strm.str()));
-    }
-    {
-        sentry scope1(data::function_name6(), data::file(), line1);
-        string str;
-        osstream strm(str);
-        strm << "bar<int>";
-        BOOST_CHECK(check_formatting(data::function_name_format(), rec, strm.str()));
-    }
-//    {
-//        sentry scope1(data::function_name7(), data::file(), line1);
-//        string str;
-//        osstream strm(str);
-//        strm << "bar";
-//        BOOST_CHECK(check_formatting(data::function_name_format(), rec, strm.str()));
-//    }
-//    {
-//        sentry scope1(data::function_name8(), data::file(), line1);
-//        string str;
-//        osstream strm(str);
-//        strm << "bar<char (__stdcall xxx::*)()>";
-//        BOOST_CHECK(check_formatting(data::function_name_format(), rec, strm.str()));
-//    }
-//    {
-//        sentry scope1(data::function_name9(), data::file(), line1);
-//        string str;
-//        osstream strm(str);
-//        strm << "bar<char (__stdcall xxx::*)()>";
-//        BOOST_CHECK(check_formatting(data::function_name_format(), rec, strm.str()));
-//    }
 }
 
+// The test checks that function name formatters do not affect scopes denoted with BOOST_LOG_NAMED_SCOPE
+BOOST_AUTO_TEST_CASE_TEMPLATE(function_name_does_not_affect_non_function_scopes, CharT, char_types)
+{
+    typedef attrs::named_scope named_scope;
+    typedef named_scope::sentry sentry;
+    typedef attrs::named_scope_list scopes;
+    typedef attrs::named_scope_entry scope;
+
+    typedef logging::attribute_set attr_set;
+    typedef std::basic_string< CharT > string;
+    typedef logging::basic_formatting_ostream< CharT > osstream;
+    typedef logging::record_view record_view;
+    typedef named_scope_test_data< CharT > data;
+
+    named_scope attr;
+
+    attr_set set1;
+    set1[data::attr1()] = attr;
+
+    record_view rec = make_record_view(set1);
+
+    {
+        BOOST_LOG_NAMED_SCOPE("void foo()");
+        string str;
+        osstream strm(str);
+        strm << "void foo()";
+        BOOST_CHECK(check_formatting(data::scope_function_name_format(), rec, strm.str()));
+        BOOST_CHECK(check_formatting(data::function_name_format(), rec, strm.str()));
+    }
+}
