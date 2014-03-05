@@ -328,6 +328,21 @@ const named_scope_test_case named_scope_test_cases[] =
     { logging::str_literal("void (__cdecl namespc::my_class2::* __cdecl namespc::foo6(void (__cdecl *)(void)))(void)"), "namespc::foo6", "foo6" },
     { logging::str_literal("struct namespc::my_class<void __cdecl(int)> __cdecl namespc::foo7(void)"), "namespc::foo7", "foo7" },
     { logging::str_literal("void (__cdecl namespc::my_class2::* (&__cdecl namespc::foo8(void (__cdecl *)(void)))[2])(void)"), "namespc::foo8", "foo8" },
+    { logging::str_literal("__cdecl namespc::my_class2::my_class2(void)"), "namespc::my_class2::my_class2(void)", "my_class2(void)" },
+    { logging::str_literal("__cdecl namespc::my_class2::~my_class2(void)"), "namespc::my_class2::~my_class2(void)", "~my_class2(void)" },
+    // Operators not supported for now
+//    { logging::str_literal("void __cdecl namespc::my_class2::operator =(const struct namespc::my_class2 &)"), "namespc::my_class2::operator =", "operator =" },
+//    { logging::str_literal("void __cdecl namespc::my_class2::operator *(void) const"), "namespc::my_class2::operator *", "operator *" },
+//    { logging::str_literal("void __cdecl namespc::my_class2::operator ()(void)"), "namespc::my_class2::operator ()", "operator ()" },
+//    { logging::str_literal("bool __cdecl namespc::my_class2::operator <(int) const"), "namespc::my_class2::operator <", "operator <" },
+//    { logging::str_literal("bool __cdecl namespc::my_class2::operator >(int) const"), "namespc::my_class2::operator >", "operator >" },
+//    { logging::str_literal("bool __cdecl namespc::my_class2::operator <=(int) const"), "namespc::my_class2::operator <=", "operator <=" },
+//    { logging::str_literal("bool __cdecl namespc::my_class2::operator >=(int) const"), "namespc::my_class2::operator >=", "operator >=" },
+//    { logging::str_literal("__cdecl namespc::my_class2::operator bool(void) const"), "namespc::my_class2::operator bool", "operator bool" },
+//    { logging::str_literal("__cdecl namespc::my_class2::operator char (__cdecl *)(double)(__cdecl *(void) const)(double)"), "namespc::my_class2::operator char (__cdecl *)(double)", "operator char (__cdecl *)(double)" },
+//    { logging::str_literal("__cdecl namespc::my_class2::operator char (__cdecl namespc::my_class2::* )(double)(__cdecl namespc::my_class2::* (void) const)(double)"), "namespc::my_class2::operator char (__cdecl namespc::my_class2::* )(double)", "operator char (__cdecl namespc::my_class2::* )(double)" },
+//    { logging::str_literal("class std::basic_ostream<char,struct std::char_traits<char> > &__cdecl namespc::operator <<<char,struct std::char_traits<char>>(class std::basic_ostream<char,struct std::char_traits<char> > &,const struct namespc::my_class2 &)"), "namespc::operator <<<char,struct std::char_traits<char>>", "operator <<<char,struct std::char_traits<char>>" },
+//    { logging::str_literal("class std::basic_istream<char,struct std::char_traits<char> > &__cdecl namespc::operator >><char,struct std::char_traits<char>>(class std::basic_istream<char,struct std::char_traits<char> > &,struct namespc::my_class2 &)"), "namespc::operator >><char,struct std::char_traits<char>>", "operator >><char,struct std::char_traits<char>>" },
 
     // GCC-specific
     { logging::str_literal("namespc::strooct foo3(int*)"), "foo3", "foo3" },
