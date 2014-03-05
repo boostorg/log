@@ -355,6 +355,9 @@ const named_scope_test_case named_scope_test_cases[] =
 //    { logging::str_literal("bool namespc::my_class2::operator<=(int) const"), "namespc::my_class2::operator<=", "operator<=" },
 //    { logging::str_literal("bool namespc::my_class2::operator>=(int) const"), "namespc::my_class2::operator>=", "operator>=" },
 //    { logging::str_literal("namespc::my_class2::operator bool() const"), "namespc::my_class2::operator bool", "operator bool" },
+//    { logging::str_literal("namespc::my_class2::operator pfun1_t() const"), "namespc::my_class2::operator pfun1_t", "operator pfun1_t" },
+//    { logging::str_literal("std::basic_ostream<_CharT, _Traits>& namespc::operator<<(std::basic_ostream<_CharT, _Traits>&, const namespc::my_class2&) [with CharT = char; TraitsT = std::char_traits<char>]"), "namespc::operator<<", "operator<<" },
+//    { logging::str_literal("std::basic_istream<_CharT, _Traits>& namespc::operator>>(std::basic_istream<_CharT, _Traits>&, namespc::my_class2&) [with CharT = char; TraitsT = std::char_traits<char>]"), "namespc::operator>>", "operator>>" },
 
     // BOOST_CURRENT_FUNCTION fallback value
     { logging::str_literal("(unknown)"), "(unknown)", "(unknown)" }
