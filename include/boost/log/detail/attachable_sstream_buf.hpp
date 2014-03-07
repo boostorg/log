@@ -141,7 +141,7 @@ protected:
         BOOST_ASSERT(m_Storage != 0);
         basic_ostringstreambuf::sync();
         typedef typename string_type::size_type string_size_type;
-        register const string_size_type max_storage_left =
+        const string_size_type max_storage_left =
             m_Storage->max_size() - m_Storage->size();
         if (static_cast< string_size_type >(n) < max_storage_left)
         {
