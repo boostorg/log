@@ -328,8 +328,8 @@ const named_scope_test_case named_scope_test_cases[] =
     { logging::str_literal("void (__cdecl namespc::my_class2::* __cdecl namespc::foo6(void (__cdecl *)(void)))(void)"), "namespc::foo6", "foo6" },
     { logging::str_literal("struct namespc::my_class<void __cdecl(int)> __cdecl namespc::foo7(void)"), "namespc::foo7", "foo7" },
     { logging::str_literal("void (__cdecl namespc::my_class2::* (&__cdecl namespc::foo8(void (__cdecl *)(void)))[2])(void)"), "namespc::foo8", "foo8" },
-    { logging::str_literal("__cdecl namespc::my_class2::my_class2(void)"), "namespc::my_class2::my_class2(void)", "my_class2(void)" },
-    { logging::str_literal("__cdecl namespc::my_class2::~my_class2(void)"), "namespc::my_class2::~my_class2(void)", "~my_class2(void)" },
+    { logging::str_literal("__cdecl namespc::my_class2::my_class2(void)"), "namespc::my_class2::my_class2", "my_class2" },
+    { logging::str_literal("__cdecl namespc::my_class2::~my_class2(void)"), "namespc::my_class2::~my_class2", "~my_class2" },
     // Operators not supported for now
 //    { logging::str_literal("void __cdecl namespc::my_class2::operator =(const struct namespc::my_class2 &)"), "namespc::my_class2::operator =", "operator =" },
 //    { logging::str_literal("void __cdecl namespc::my_class2::operator *(void) const"), "namespc::my_class2::operator *", "operator *" },
