@@ -15,11 +15,11 @@
 
 #include <cstddef>
 #include <cstring>
-#include <cctype>
 #include <string>
 #include <vector>
 #include <limits>
 #include <algorithm>
+#include <boost/cstdint.hpp>
 #include <boost/move/core.hpp>
 #include <boost/move/utility.hpp>
 #include <boost/spirit/include/karma_uint.hpp>
@@ -52,13 +52,24 @@ BOOST_FORCEINLINE const char* skip_spaces(const char* p, const char* end)
 //! The function checks if the given character can be part of a function/type/namespace name
 BOOST_FORCEINLINE bool is_name_character(char c)
 {
-    return c == '_' || std::isalnum(c);
+    return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || c == '_' || (c >= 'a' && c <= 'z');
+}
+
+//! The function checks if there is 'operator' keyword at the specified position
+BOOST_FORCEINLINE bool is_operator_keyword(const char* p)
+{
+#if defined(__i386__) || defined(__x86_64__) || defined(_M_AMD64) || defined(_M_IX86)
+    // Intel architecture allows unaligned accesses, so just compare with the whole keyword at once
+    return *reinterpret_cast< const uint64_t* >(p) == UINT64_C(0x726f74617265706f);
+#else
+    return std::memcmp(p, "operator", 8) == 0;
+#endif
 }
 
 //! The function tries to parse operator signature
 bool detect_operator(const char* begin, const char* end, const char* operator_keyword, const char*& operator_end)
 {
-    if (end - operator_keyword < 9 || std::memcmp(operator_keyword, "operator", 8) != 0)
+    if (end - operator_keyword < 9 || !is_operator_keyword(operator_keyword))
         return false;
     // Check that it's not a function name ending with 'operator', like detect_operator
     if (operator_keyword > begin && is_name_character(*(operator_keyword - 1)))
