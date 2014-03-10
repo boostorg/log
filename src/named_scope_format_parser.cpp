@@ -15,13 +15,13 @@
 
 #include <cstddef>
 #include <cstring>
+#include <cctype>
 #include <string>
 #include <vector>
 #include <limits>
 #include <algorithm>
 #include <boost/move/core.hpp>
 #include <boost/move/utility.hpp>
-#include <boost/range/iterator_range_core.hpp>
 #include <boost/spirit/include/karma_uint.hpp>
 #include <boost/spirit/include/karma_generate.hpp>
 #include <boost/log/attributes/named_scope.hpp>
@@ -41,117 +41,422 @@ namespace aux {
 
 BOOST_LOG_ANONYMOUS_NAMESPACE {
 
-iterator_range< const char* > parse_function_name(string_literal const& signature, bool include_scope)
+//! The function skips any spaces from the current position
+BOOST_FORCEINLINE const char* skip_spaces(const char* p, const char* end)
 {
-    // The algorithm basically is: find the opening parenthesis with function arguments and extract the function name that is directly leftmost of it.
-    //
-    // Unfortunately, C++ syntax is too complex and context-dependent, there may be parenthesis in the return type and also in template parameters
-    // of the function class or the function itself. We cheat and ignore any template parameters at all by skipping any characters in top-level angle brackets.
-    //
-    // There is no such graceful solution to the function return types, parsing it correctly requires knowledge of types. Our trick here is to rely on the
-    // assumption that function name immediately preceeds the opening parenthesis, while in case of function return types there is a space between the return type
-    // of the function return type and the parenthesis. Technically, the space is not required by C++ grammar, so some compiler could omit it and the parser
-    // would get confused by it. Also, some compiler could insert a space after the function name and that would break it too. But for now I can't find
-    // another equivalently fast and viable solution.
-    //
-    // When the function name is detected, the algorithm searches for its beginning backwards, again skipping any template arguments. The beginning
-    // is detected by encountering a delimiter character, which can be a space or another punctuation character that is not allowed in function names.
-    // A colon served as a delimiter as well if the scope name is to be omitted.
-    //
-    // Operators pose another problem at this stage. They are curently not supported.
-    //
-    // Note that the algorithm should be tolerant to user's custom scope names which may not be function names at all. For this reason in case of any failure
-    // just return the original string intact.
+    while (p < end && *p == ' ')
+        ++p;
+    return p;
+}
 
-    const char* const begin = signature.c_str();
-    const char* const end = begin + signature.size();
+//! The function checks if the given character can be part of a function/type/namespace name
+BOOST_FORCEINLINE bool is_name_character(char c)
+{
+    return c == '_' || std::isalnum(c);
+}
+
+//! The function tries to parse operator signature
+bool detect_operator(const char* begin, const char* end, const char* operator_keyword, const char*& operator_end)
+{
+    if (end - operator_keyword < 9 || std::memcmp(operator_keyword, "operator", 8) != 0)
+        return false;
+    // Check that it's not a function name ending with 'operator', like detect_operator
+    if (operator_keyword > begin && is_name_character(*(operator_keyword - 1)))
+        return false;
+
+    const char* p = skip_spaces(operator_keyword + 8, end);
+    if (p == end)
+        return false;
+
+    // Check to see where the operator token ends
+    switch (*p)
+    {
+    case '(':
+        // Handle operator()
+        p = skip_spaces(++p, end);
+        if (p < end && *p == ')')
+        {
+            operator_end = p + 1;
+            return true;
+        }
+
+        return false;
+
+    case '[':
+        // Handle operator[]
+        p = skip_spaces(++p, end);
+        if (p < end && *p == ']')
+        {
+            operator_end = p + 1;
+            return true;
+        }
+
+        return false;
+
+    case '>':
+    case '<':
+        // Handle operator<=, operator>=, operator<<, operator>>, operator<<=, operator>>=
+        if (end - p >= 3 && (p[0] == p[1] && p[2] == '='))
+            operator_end = p + 3;
+        else if (end - p >= 2 && (p[0] == p[1] || p[1] == '='))
+            operator_end = p + 2;
+        else
+            operator_end = p + 1;
+
+        return true;
+
+    case '-':
+        // Handle operator->, operator->*
+        if (end - p >= 2 && p[1] == '>')
+        {
+            if (end - p >= 3 && p[2] == '*')
+                operator_end = p + 3;
+            else
+                operator_end = p + 2;
+
+            return true;
+        }
+        // Fall through to other cases involving '-'
+
+    case '=':
+    case '|':
+    case '&':
+    case '+':
+        // Handle operator=, operator==, operator+=, operator++, operator||, opeartor&&, etc.
+        if (end - p >= 2 && (p[0] == p[1] || p[1] == '='))
+            operator_end = p + 2;
+        else
+            operator_end = p + 1;
+
+        return true;
+
+    case '*':
+    case '/':
+    case '%':
+    case '^':
+        // Handle operator*, operator*=, etc.
+        if (end - p >= 2 && p[1] == '=')
+            operator_end = p + 2;
+        else
+            operator_end = p + 1;
+
+        return true;
+
+    case ',':
+    case '~':
+    case '!':
+        // Handle operator,, operator~, etc.
+        operator_end = p + 1;
+        return true;
+
+    case '"':
+        // Handle operator""
+        if (end - p >= 2 && p[0] == p[1])
+        {
+            p = skip_spaces(p + 2, end);
+            // Skip through the literal suffix
+            while (p < end && is_name_character(*p))
+                ++p;
+            operator_end = p;
+            return true;
+        }
+
+        return false;
+
+    default:
+        // Handle type conversion operators. We can't find the end of the type reliably here.
+        operator_end = p;
+        return true;
+    }
+}
+
+//! The function skips all template parameters
+inline const char* skip_template_parameters(const char* begin, const char* end)
+{
+    unsigned int depth = 1;
+    const char* p = begin;
+    while (depth > 0 && p != end)
+    {
+        switch (*p)
+        {
+        case '>':
+            --depth;
+            break;
+
+        case '<':
+            ++depth;
+            break;
+
+        case 'o':
+            {
+                // Skip operators (e.g. when an operator is a non-type template parameter)
+                const char* operator_end;
+                if (detect_operator(begin, end, p, operator_end))
+                {
+                    p = operator_end;
+                    continue;
+                }
+            }
+            break;
+
+        default:
+            break;
+        }
+
+        ++p;
+    }
+
+    return p;
+}
+
+//! The function seeks for the opening parenthesis and also tries to find the function name beginning
+inline const char* find_opening_parenthesis(const char* begin, const char* end, const char*& first_name_begin, const char*& last_name_begin)
+{
+    enum sequence_state
+    {
+        not_started,      // no significant (non-space) characters have been encountered so far
+        started,          // some name has started; the name is a contiguous sequence of characters that may constitute a function or scope name
+        continued,        // the previous characters were the scope operator ("::"), so the name is not finished yet
+        ended,            // the name has ended; in particular, this means that there were significant characters previously in the string
+        operator_detected // operator has been found in the string, don't parse for scopes anymore; this is needed for conversion operators
+    };
+    sequence_state state = not_started;
+
     const char* p = begin;
     while (p != end)
     {
-        // Search for the opening parenthesis or template arguments
-        p += std::strcspn(p, "(<");
-        if (p == begin || p == end)
+        char c = *p;
+        switch (c)
+        {
+        case '(':
+            if (state == not_started)
+            {
+                // If the opening brace is the first meaningful character in the string then this can't be a function signature.
+                // Pretend we didn't find the paranthesis to fail the parsing process.
+                return end;
+            }
+            return p;
+
+        case '<':
+            if (state == not_started)
+            {
+                // Template parameters cannot start as the first meaningful character in the signature.
+                // Pretend we didn't find the paranthesis to fail the parsing process.
+                return end;
+            }
+            p = skip_template_parameters(p + 1, end);
+            if (state != operator_detected)
+                state = ended;
+            continue;
+
+        case ' ':
+            if (state == started)
+                state = ended;
             break;
 
-        char c = *p;
-        if (c == '(')
-        {
-            c = *(p - 1);
-            if (c != ' ')
+        case ':':
+            ++p;
+            if (p != end && *p == ':')
             {
-                // Assume we found the function name, find its beginning
-                const char* const name_end = p--;
-                while (p != begin)
+                if (state == not_started)
                 {
-                    c = *p;
-                    if (c == ' ' || c == '*' || c == '&' || (!include_scope && c == ':'))
+                    // Include the starting "::" in the full name
+                    first_name_begin = p - 1;
+                }
+                if (state != operator_detected)
+                    state = continued;
+                ++p;
+            }
+            else if (state != operator_detected)
+            {
+                // Weird case, a single colon. Maybe, some compilers would put things like "public:" in front of the signature.
+                state = ended;
+            }
+            continue;
+
+        case 'o':
+            {
+                const char* operator_end;
+                if (detect_operator(begin, end, p, operator_end))
+                {
+                    if (state == not_started || state == ended)
+                        first_name_begin = p;
+                    last_name_begin = p;
+                    p = operator_end;
+                    state = operator_detected;
+                    continue;
+                }
+            }
+            // Fall through to process this character as other characters
+
+        default:
+            if (state != operator_detected)
+            {
+                if (is_name_character(c) || c == '~') // check for '~' in case of a destructor
+                {
+                    if (state != started)
                     {
-                        const char* const name_begin = p + 1;
-                        if (name_begin < name_end)
-                        {
-                            // We found it
-                            return iterator_range< const char* >(name_begin, name_end);
-                        }
-                        else
-                        {
-                            // Function name cannot be empty
-                            goto NotFoundL;
-                        }
-                    }
-                    else if (c == '>')
-                    {
-                        // It's template parameters, skip them
-                        unsigned int depth = 1;
-                        --p;
-                        while (p != begin && depth > 0)
-                        {
-                            c = *p;
-                            if (c == '<')
-                                --depth;
-                            else if (c == '>')
-                                ++depth;
-                            --p;
-                        }
-                    }
-                    else
-                    {
-                        --p;
+                        if (state == not_started || state == ended)
+                            first_name_begin = p;
+                        last_name_begin = p;
+                        state = started;
                     }
                 }
-
-                // If it came to this then the supposed function name begins from the start of the signature string (i.e. no return type at all).
-                // This is the case for constructors, destructors and conversion operators.
-                return iterator_range< const char* >(p, name_end);
-            }
-            else
-            {
-                // This must be the function return type, process characters inside the parenthesis
-                ++p;
-            }
-        }
-        else if (c == '<')
-        {
-            // Template parameters opened
-            unsigned int depth = 1;
-            do
-            {
-                ++p;
-                p += std::strcspn(p, "><");
-
-                if (p == end)
-                    break;
-                c = *p;
-                if (c == '>')
-                    --depth;
                 else
-                    ++depth;
+                {
+                    state = ended;
+                }
             }
-            while (depth > 0);
+            break;
         }
+
+        ++p;
     }
 
-NotFoundL:
-    return iterator_range< const char* >(signature.c_str(), signature.c_str() + signature.size());
+    return p;
+}
+
+//! The function seeks for the closing parenthesis
+inline const char* find_closing_parenthesis(const char* begin, const char* end, char& first_char)
+{
+    bool found_first_meaningful_char = false;
+    unsigned int depth = 1;
+    const char* p = begin;
+    while (p != end)
+    {
+        char c = *p;
+        switch (c)
+        {
+        case ')':
+            --depth;
+            if (depth == 0)
+                return p;
+            break;
+
+        case '(':
+            ++depth;
+            break;
+
+        case '<':
+            p = skip_template_parameters(p + 1, end);
+            continue;
+
+        case 'o':
+            {
+                const char* operator_end;
+                if (detect_operator(begin, end, p, operator_end))
+                {
+                    p = operator_end;
+                    continue;
+                }
+            }
+            // Fall through to process this character as other characters
+
+        default:
+            if (!found_first_meaningful_char && c != ' ')
+            {
+                found_first_meaningful_char = true;
+                first_char = c;
+            }
+            break;
+        }
+
+        ++p;
+    }
+
+    return p;
+}
+
+bool parse_function_name(const char*& begin, const char*& end, bool include_scope)
+{
+    // The algorithm tries to match several patterns to recognize function signatures. The most obvious is:
+    //
+    // A B(C)
+    //
+    // or just:
+    //
+    // B(C)
+    //
+    // in case of constructors, destructors and type conversion operators. The algorithm looks for the opening parenthesis and while doing that
+    // it detects the beginning of B. As a result B is the function name.
+    //
+    // The first significant complication is function and array return types, in which case the syntax becomes nested:
+    //
+    // A (*B(C))(D)
+    // A (&B(C))[D]
+    //
+    // In addition to that MSVC adds calling convention, such as __cdecl, to function types. In order to detect these cases the algorithm
+    // seeks for the closing parenthesis after the opening one. If there is an opening parenthesis or square bracket after the closing parenthesis
+    // then this is a function or array return type. The case of arrays is additionally complicated by GCC output:
+    //
+    // A B(C) [D]
+    //
+    // where D is template parameters description and is not part of the signature. To discern this special case from the array return type, the algorithm
+    // checks for the first significant character within the parenthesis. This character is '&' in case of arrays and something else otherwise.
+    //
+    // Speaking of template parameters, the parsing algorithm ignores them completely, assuming they are part of the name being parsed. This includes
+    // any possible parenthesis, nested template parameters and even operators, which may be present there as non-type template parameters.
+    //
+    // Operators pose another problem. This is especially the case for type conversion operators, and even more so for conversion operators to
+    // function types. In this latter case at least MSVC is known to produce incomprehensible strings which we cannot parse. In other cases it is
+    // too difficult to parse the type correctly. So we cheat a little. Whenever we find "operator", we know that we've found the function name
+    // already, and the name ends at the opening parenthesis. For other operators we are able to parse them correctly but that doesn't really matter.
+    //
+    // Note that the algorithm should be tolerant to different flavors of the input strings from different compilers, so we can't rely on spaces
+    // delimiting function names and other elements. Also, the algorithm should behave well in case of the fallback string generated by
+    // BOOST_CURRENT_FUNCTION (which is "(unknown)" currently). In case of any parsing failure the algorithm should return false, in whic case the
+    // full original string will be output.
+
+    const char* b = begin;
+    const char* e = end;
+    while (b != e)
+    {
+        // Find the opening parenthesis. While looking for it, also find the function name.
+        // first_name_begin is the beginning of the function scope, last_name_begin is the actual function name.
+        const char* first_name_begin = NULL, *last_name_begin = NULL;
+        const char* paren_open = find_opening_parenthesis(b, e, first_name_begin, last_name_begin);
+        if (paren_open == e)
+            return false;
+        // Find the closing parenthesis. Also peek at the first character in the parenthesis, which we'll use to detect array return types.
+        char first_char_in_parenthesis = 0;
+        const char* paren_close = find_closing_parenthesis(paren_open + 1, e, first_char_in_parenthesis);
+        if (paren_close == e)
+            return false;
+
+        const char* p = skip_spaces(paren_close + 1, e);
+
+        // Detect function and array return types
+        if (p < e && (*p == '(' || (*p == '[' && first_char_in_parenthesis == '&')))
+        {
+            // This is a function or array return type, the actual function name is within the parenthesis.
+            // Re-parse the string within the parenthesis as a function signature.
+            b = paren_open + 1;
+            e = paren_close;
+            continue;
+        }
+
+        // We found something that looks like a function signature
+        if (include_scope)
+        {
+            if (!first_name_begin)
+                return false;
+
+            begin = first_name_begin;
+        }
+        else
+        {
+            if (!last_name_begin)
+                return false;
+
+            begin = last_name_begin;
+        }
+
+        end = paren_open;
+
+        return true;
+    }
+
+    return false;
 }
 
 template< typename CharT >
@@ -204,13 +509,16 @@ public:
         {
             if (value.type == attributes::named_scope_entry::function)
             {
-                iterator_range< const char* > function_name = parse_function_name(value.scope_name, m_include_scope);
-                strm.write(function_name.begin(), function_name.size());
+                const char* begin = value.scope_name.c_str();
+                const char* end = begin + value.scope_name.size();
+                if (parse_function_name(begin, end, m_include_scope))
+                {
+                    strm.write(begin, end - begin);
+                    return;
+                }
             }
-            else
-            {
-                strm << value.scope_name;
-            }
+
+            strm << value.scope_name;
         }
 
     private:
