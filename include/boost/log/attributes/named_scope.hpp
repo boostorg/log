@@ -449,13 +449,25 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
     BOOST_LOG_NAMED_SCOPE_INTERNAL(BOOST_LOG_UNIQUE_IDENTIFIER_NAME(_boost_log_named_scope_sentry_), name, __FILE__, __LINE__, ::boost::log::attributes::named_scope_entry::general)
 
 /*!
- * Macro for function scope markup. The scope name is constructed with help of compiler and contains current function name.
+ * Macro for function scope markup. The scope name is constructed with help of compiler and contains the current function signature.
  * The scope name is pushed to the end of the current thread scope list.
  *
  * Not all compilers have support for this macro. The exact form of the scope name may vary from one compiler to another.
  */
 #define BOOST_LOG_FUNCTION()\
     BOOST_LOG_NAMED_SCOPE_INTERNAL(BOOST_LOG_UNIQUE_IDENTIFIER_NAME(_boost_log_named_scope_sentry_), BOOST_CURRENT_FUNCTION, __FILE__, __LINE__, ::boost::log::attributes::named_scope_entry::function)
+
+/*!
+ * Macro for function scope markup. The scope name is constructed with help of compiler and contains the current function name. It may be shorter than what \c BOOST_LOG_FUNCTION macro produces.
+ * The scope name is pushed to the end of the current thread scope list.
+ *
+ * Not all compilers have support for this macro. The exact form of the scope name may vary from one compiler to another.
+ */
+#if defined(_MSC_VER) || defined(__GNUC__)
+#define BOOST_LOG_FUNC() BOOST_LOG_NAMED_SCOPE(__FUNCTION__)
+#else
+#define BOOST_LOG_FUNC() BOOST_LOG_FUNCTION()
+#endif
 
 #include <boost/log/detail/footer.hpp>
 
