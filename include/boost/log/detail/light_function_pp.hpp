@@ -20,13 +20,13 @@ public:
 private:
     struct impl_base
     {
-        typedef result_type (*invoke_type)(impl_base* BOOST_PP_ENUM_TRAILING_PARAMS(BOOST_PP_ITERATION(), ArgT));
+        typedef result_type (*invoke_type)(void* BOOST_PP_ENUM_TRAILING_PARAMS(BOOST_PP_ITERATION(), ArgT));
         const invoke_type invoke;
 
-        typedef impl_base* (*clone_type)(const impl_base*);
+        typedef impl_base* (*clone_type)(const void*);
         const clone_type clone;
 
-        typedef void (*destroy_type)(impl_base*);
+        typedef void (*destroy_type)(void*);
         const destroy_type destroy;
 
         impl_base(invoke_type inv, clone_type cl, destroy_type dstr) : invoke(inv), clone(cl), destroy(dstr)
@@ -64,17 +64,17 @@ private:
         }
 #endif // !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
 
-        static void destroy_impl(impl_base* self)
+        static void destroy_impl(void* self)
         {
-            delete static_cast< impl* >(self);
+            delete static_cast< impl* >(static_cast< impl_base* >(self));
         }
-        static impl_base* clone_impl(const impl_base* self)
+        static impl_base* clone_impl(const void* self)
         {
-            return new impl(static_cast< const impl* >(self)->m_Function);
+            return new impl(static_cast< const impl* >(static_cast< const impl_base* >(self))->m_Function);
         }
-        static result_type invoke_impl(impl_base* self BOOST_PP_ENUM_TRAILING_BINARY_PARAMS(BOOST_PP_ITERATION(), ArgT, arg))
+        static result_type invoke_impl(void* self BOOST_PP_ENUM_TRAILING_BINARY_PARAMS(BOOST_PP_ITERATION(), ArgT, arg))
         {
-            return static_cast< impl* >(self)->m_Function(BOOST_PP_ENUM_PARAMS(BOOST_PP_ITERATION(), arg));
+            return static_cast< impl* >(static_cast< impl_base* >(self))->m_Function(BOOST_PP_ENUM_PARAMS(BOOST_PP_ITERATION(), arg));
         }
     };
 
@@ -223,13 +223,13 @@ public:
 private:
     struct impl_base
     {
-        typedef void (*invoke_type)(impl_base* BOOST_PP_ENUM_TRAILING_PARAMS(BOOST_PP_ITERATION(), ArgT));
+        typedef void (*invoke_type)(void* BOOST_PP_ENUM_TRAILING_PARAMS(BOOST_PP_ITERATION(), ArgT));
         const invoke_type invoke;
 
-        typedef impl_base* (*clone_type)(const impl_base*);
+        typedef impl_base* (*clone_type)(const void*);
         const clone_type clone;
 
-        typedef void (*destroy_type)(impl_base*);
+        typedef void (*destroy_type)(void*);
         const destroy_type destroy;
 
         impl_base(invoke_type inv, clone_type cl, destroy_type dstr) : invoke(inv), clone(cl), destroy(dstr)
@@ -267,17 +267,17 @@ private:
         }
 #endif // !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
 
-        static void destroy_impl(impl_base* self)
+        static void destroy_impl(void* self)
         {
-            delete static_cast< impl* >(self);
+            delete static_cast< impl* >(static_cast< impl_base* >(self));
         }
-        static impl_base* clone_impl(const impl_base* self)
+        static impl_base* clone_impl(const void* self)
         {
-            return new impl(static_cast< const impl* >(self)->m_Function);
+            return new impl(static_cast< const impl* >(static_cast< const impl_base* >(self))->m_Function);
         }
-        static result_type invoke_impl(impl_base* self BOOST_PP_ENUM_TRAILING_BINARY_PARAMS(BOOST_PP_ITERATION(), ArgT, arg))
+        static result_type invoke_impl(void* self BOOST_PP_ENUM_TRAILING_BINARY_PARAMS(BOOST_PP_ITERATION(), ArgT, arg))
         {
-            static_cast< impl* >(self)->m_Function(BOOST_PP_ENUM_PARAMS(BOOST_PP_ITERATION(), arg));
+            static_cast< impl* >(static_cast< impl_base* >(self))->m_Function(BOOST_PP_ENUM_PARAMS(BOOST_PP_ITERATION(), arg));
         }
     };
 

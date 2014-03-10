@@ -75,13 +75,13 @@ public:
 private:
     struct impl_base
     {
-        typedef result_type (*invoke_type)(impl_base*, ArgsT...);
+        typedef result_type (*invoke_type)(void*, ArgsT...);
         const invoke_type invoke;
 
-        typedef impl_base* (*clone_type)(const impl_base*);
+        typedef impl_base* (*clone_type)(const void*);
         const clone_type clone;
 
-        typedef void (*destroy_type)(impl_base*);
+        typedef void (*destroy_type)(void*);
         const destroy_type destroy;
 
         impl_base(invoke_type inv, clone_type cl, destroy_type dstr) : invoke(inv), clone(cl), destroy(dstr)
@@ -119,17 +119,17 @@ private:
         }
 #endif // !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
 
-        static void destroy_impl(impl_base* self)
+        static void destroy_impl(void* self)
         {
-            delete static_cast< impl* >(self);
+            delete static_cast< impl* >(static_cast< impl_base* >(self));
         }
-        static impl_base* clone_impl(const impl_base* self)
+        static impl_base* clone_impl(const void* self)
         {
-            return new impl(static_cast< const impl* >(self)->m_Function);
+            return new impl(static_cast< const impl* >(static_cast< const impl_base* >(self))->m_Function);
         }
-        static result_type invoke_impl(impl_base* self, ArgsT... args)
+        static result_type invoke_impl(void* self, ArgsT... args)
         {
-            return static_cast< impl* >(self)->m_Function(args...);
+            return static_cast< impl* >(static_cast< impl_base* >(self))->m_Function(args...);
         }
     };
 
@@ -276,13 +276,13 @@ public:
 private:
     struct impl_base
     {
-        typedef void (*invoke_type)(impl_base*, ArgsT...);
+        typedef void (*invoke_type)(void*, ArgsT...);
         const invoke_type invoke;
 
-        typedef impl_base* (*clone_type)(const impl_base*);
+        typedef impl_base* (*clone_type)(const void*);
         const clone_type clone;
 
-        typedef void (*destroy_type)(impl_base*);
+        typedef void (*destroy_type)(void*);
         const destroy_type destroy;
 
         impl_base(invoke_type inv, clone_type cl, destroy_type dstr) : invoke(inv), clone(cl), destroy(dstr)
@@ -320,17 +320,17 @@ private:
         }
 #endif // !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
 
-        static void destroy_impl(impl_base* self)
+        static void destroy_impl(void* self)
         {
-            delete static_cast< impl* >(self);
+            delete static_cast< impl* >(static_cast< impl_base* >(self));
         }
-        static impl_base* clone_impl(const impl_base* self)
+        static impl_base* clone_impl(const void* self)
         {
-            return new impl(static_cast< const impl* >(self)->m_Function);
+            return new impl(static_cast< const impl* >(static_cast< const impl_base* >(self))->m_Function);
         }
-        static result_type invoke_impl(impl_base* self, ArgsT... args)
+        static result_type invoke_impl(void* self, ArgsT... args)
         {
-            static_cast< impl* >(self)->m_Function(args...);
+            static_cast< impl* >(static_cast< impl_base* >(self))->m_Function(args...);
         }
     };
 
