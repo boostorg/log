@@ -101,8 +101,6 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(scopes_formatting, CharT, char_types)
 {
     typedef attrs::named_scope named_scope;
     typedef named_scope::sentry sentry;
-    typedef attrs::named_scope_list scopes;
-    typedef attrs::named_scope_entry scope;
 
     typedef logging::attribute_set attr_set;
     typedef std::basic_string< CharT > string;
@@ -223,8 +221,6 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(scopes_filename_formatting_posix, CharT, char_type
 {
     typedef attrs::named_scope named_scope;
     typedef named_scope::sentry sentry;
-    typedef attrs::named_scope_list scopes;
-    typedef attrs::named_scope_entry scope;
 
     typedef logging::attribute_set attr_set;
     typedef std::basic_string< CharT > string;
@@ -259,8 +255,6 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(scopes_filename_formatting_windows, CharT, char_ty
 {
     typedef attrs::named_scope named_scope;
     typedef named_scope::sentry sentry;
-    typedef attrs::named_scope_list scopes;
-    typedef attrs::named_scope_entry scope;
 
     typedef logging::attribute_set attr_set;
     typedef std::basic_string< CharT > string;
@@ -384,8 +378,6 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(scopes_scope_function_name_formatting, CharT, char
 {
     typedef attrs::named_scope named_scope;
     typedef named_scope::sentry sentry;
-    typedef attrs::named_scope_list scopes;
-    typedef attrs::named_scope_entry scope;
 
     typedef logging::attribute_set attr_set;
     typedef std::basic_string< CharT > string;
@@ -418,8 +410,6 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(scopes_function_name_formatting, CharT, char_types
 {
     typedef attrs::named_scope named_scope;
     typedef named_scope::sentry sentry;
-    typedef attrs::named_scope_list scopes;
-    typedef attrs::named_scope_entry scope;
 
     typedef logging::attribute_set attr_set;
     typedef std::basic_string< CharT > string;
