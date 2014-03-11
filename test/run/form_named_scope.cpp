@@ -226,7 +226,6 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(scopes_filename_formatting_posix, CharT, char_type
     typedef std::basic_string< CharT > string;
     typedef logging::basic_formatting_ostream< CharT > osstream;
     typedef logging::record_view record_view;
-    typedef logging::basic_formatter< CharT > formatter;
     typedef named_scope_test_data< CharT > data;
 
     named_scope attr;
@@ -260,7 +259,6 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(scopes_filename_formatting_windows, CharT, char_ty
     typedef std::basic_string< CharT > string;
     typedef logging::basic_formatting_ostream< CharT > osstream;
     typedef logging::record_view record_view;
-    typedef logging::basic_formatter< CharT > formatter;
     typedef named_scope_test_data< CharT > data;
 
     named_scope attr;
@@ -441,9 +439,6 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(scopes_function_name_formatting, CharT, char_types
 BOOST_AUTO_TEST_CASE_TEMPLATE(function_name_does_not_affect_non_function_scopes, CharT, char_types)
 {
     typedef attrs::named_scope named_scope;
-    typedef named_scope::sentry sentry;
-    typedef attrs::named_scope_list scopes;
-    typedef attrs::named_scope_entry scope;
 
     typedef logging::attribute_set attr_set;
     typedef std::basic_string< CharT > string;
