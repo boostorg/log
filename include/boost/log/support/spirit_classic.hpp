@@ -37,7 +37,11 @@
  * in other translation units. The only reliable way to settle this problem is to
  * define the macro for the whole project (i.e. all translation units).
  */
-#warning Boost.Log: Boost.Spirit requires BOOST_SPIRIT_THREADSAFE macro to be defined if parsers are used in a multithreaded context. It is strongly recommended to define this macro project-wide.
+#if defined(__GNUC__)
+#pragma message "Boost.Log: Boost.Spirit requires BOOST_SPIRIT_THREADSAFE macro to be defined if parsers are used in a multithreaded context. It is strongly recommended to define this macro project-wide."
+#elif defined(_MSC_VER)
+#pragma message("Boost.Log: Boost.Spirit requires BOOST_SPIRIT_THREADSAFE macro to be defined if parsers are used in a multithreaded context. It is strongly recommended to define this macro project-wide.")
+#endif
 #define BOOST_SPIRIT_THREADSAFE 1
 #endif // !defined(BOOST_LOG_NO_THREADS) && !defined(BOOST_SPIRIT_THREADSAFE)
 

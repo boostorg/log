@@ -47,9 +47,10 @@ rule test_all
 {
    local all_rules = ;
    local file ;
-   for file in [ path.glob-tree $(BOOST_ROOT)/libs/log/include/boost/log : *.hpp ]
+   local headers_path = [ path.make $(BOOST_ROOT)/libs/log/include/boost/log ] ;
+   for file in [ path.glob-tree $(headers_path) : *.hpp ]
    {
-      local rel_file = [ path.relative-to $(BOOST_ROOT)/libs/log/include/boost/log $(file) ] ;
+      local rel_file = [ path.relative-to $(headers_path) $(file) ] ;
       if ! [ MATCH "detail/(.*)" : $(rel_file) ]
       {
           #ECHO $(rel_file) ;
