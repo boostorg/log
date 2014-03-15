@@ -18,8 +18,7 @@
 #include <boost/log/detail/config.hpp>
 #include <boost/log/utility/functional/matches.hpp>
 #include <boost/spirit/include/qi_parse.hpp>
-#include <boost/spirit/include/qi_domain.hpp>
-#include <boost/spirit/include/support_component.hpp>
+#include <boost/spirit/home/qi/parser.hpp>
 #include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_HAS_PRAGMA_ONCE
@@ -35,7 +34,7 @@ namespace aux {
 //! The trait verifies if the type can be converted to a Boost.Spirit.Qi parser
 template< typename T >
 struct is_spirit_qi_parser< T, true > :
-    public spirit::traits::is_component< spirit::qi::domain, T >
+    public spirit::traits::is_parser< T >
 {
 };
 

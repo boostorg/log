@@ -15,7 +15,7 @@
 #ifndef BOOST_LOG_UTILITY_EXCEPTION_HANDLER_HPP_INCLUDED_
 #define BOOST_LOG_UTILITY_EXCEPTION_HANDLER_HPP_INCLUDED_
 
-#include <exception>
+#include <new> // std::nothrow_t
 #include <boost/mpl/bind.hpp>
 #include <boost/mpl/quote.hpp>
 #include <boost/mpl/fold.hpp>

@@ -22,6 +22,7 @@
 #include <boost/log/detail/config.hpp>
 #include <boost/log/detail/light_function.hpp>
 #include <boost/log/detail/locks.hpp>
+#include <boost/log/core/record.hpp>
 #include <boost/log/sources/threading_models.hpp>
 #include <boost/log/utility/strictest_lock.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
