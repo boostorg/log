@@ -61,6 +61,16 @@ struct custom_terminal< T, typename T::_is_boost_log_terminal >
     }
 };
 
+//namespace result_of {
+
+//template< typename T >
+//struct is_nullary< custom_terminal< T >, typename T::_is_boost_log_terminal > :
+//    public mpl::false_
+//{
+//};
+
+//} // namespace result_of
+
 } // namespace phoenix
 
 } // namespace boost

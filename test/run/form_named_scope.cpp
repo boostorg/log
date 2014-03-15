@@ -61,6 +61,8 @@ namespace {
         static logging::string_literal scope_function_name_format() { return logging::str_literal("%c"); }
         static logging::string_literal function_name_format() { return logging::str_literal("%C"); }
         static logging::string_literal delimiter1() { return logging::str_literal("|"); }
+        static logging::string_literal incomplete_marker() { return logging::str_literal("<<and more>>"); }
+        static logging::string_literal empty_marker() { return logging::str_literal("[empty]"); }
     };
 #endif // BOOST_LOG_USE_CHAR
 
@@ -76,6 +78,8 @@ namespace {
         static logging::wstring_literal scope_function_name_format() { return logging::str_literal(L"%c"); }
         static logging::wstring_literal function_name_format() { return logging::str_literal(L"%C"); }
         static logging::wstring_literal delimiter1() { return logging::str_literal(L"|"); }
+        static logging::wstring_literal incomplete_marker() { return logging::str_literal(L"<<and more>>"); }
+        static logging::wstring_literal empty_marker() { return logging::str_literal(L"[empty]"); }
     };
 #endif // BOOST_LOG_USE_WCHAR_T
 
@@ -178,7 +182,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(scopes_formatting, CharT, char_types)
             keywords::format = data::default_format().c_str(),
             keywords::depth = 1);
         f(rec, strm1);
-        strm2 << "...->" << data::scope2();
+        strm2 << "..." << data::scope2();
         BOOST_CHECK(equal_strings(strm1.str(), strm2.str()));
     }
     {
@@ -189,7 +193,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(scopes_formatting, CharT, char_types)
             keywords::depth = 1,
             keywords::iteration = expr::reverse);
         f(rec, strm1);
-        strm2 << data::scope2() << "<-...";
+        strm2 << data::scope2() << "...";
         BOOST_CHECK(equal_strings(strm1.str(), strm2.str()));
     }
     {
@@ -200,7 +204,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(scopes_formatting, CharT, char_types)
             keywords::delimiter = data::delimiter1().c_str(),
             keywords::depth = 1);
         f(rec, strm1);
-        strm2 << "...|" << data::scope2();
+        strm2 << "..." << data::scope2();
         BOOST_CHECK(equal_strings(strm1.str(), strm2.str()));
     }
     {
@@ -212,7 +216,76 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(scopes_formatting, CharT, char_types)
             keywords::depth = 1,
             keywords::iteration = expr::reverse);
         f(rec, strm1);
-        strm2 << data::scope2() << "|...";
+        strm2 << data::scope2() << "...";
+        BOOST_CHECK(equal_strings(strm1.str(), strm2.str()));
+    }
+    {
+        string str1, str2;
+        osstream strm1(str1), strm2(str2);
+        formatter f = expr::stream << expr::format_named_scope(data::attr1(),
+            keywords::format = data::default_format().c_str(),
+            keywords::incomplete_marker = data::incomplete_marker().c_str(),
+            keywords::depth = 1);
+        f(rec, strm1);
+        strm2 << "<<and more>>" << data::scope2();
+        BOOST_CHECK(equal_strings(strm1.str(), strm2.str()));
+    }
+    {
+        string str1, str2;
+        osstream strm1(str1), strm2(str2);
+        formatter f = expr::stream << expr::format_named_scope(data::attr1(),
+            keywords::format = data::default_format().c_str(),
+            keywords::incomplete_marker = data::incomplete_marker().c_str(),
+            keywords::depth = 1,
+            keywords::iteration = expr::reverse);
+        f(rec, strm1);
+        strm2 << data::scope2() << "<<and more>>";
+        BOOST_CHECK(equal_strings(strm1.str(), strm2.str()));
+    }
+}
+
+// The test checks that empty named scopes stack formatting works
+BOOST_AUTO_TEST_CASE_TEMPLATE(empty_scopes_formatting, CharT, char_types)
+{
+    typedef attrs::named_scope named_scope;
+    typedef named_scope::sentry sentry;
+
+    typedef logging::attribute_set attr_set;
+    typedef std::basic_string< CharT > string;
+    typedef logging::basic_formatting_ostream< CharT > osstream;
+    typedef logging::basic_formatter< CharT > formatter;
+    typedef logging::record_view record_view;
+    typedef named_scope_test_data< CharT > data;
+
+    named_scope attr;
+
+    attr_set set1;
+    set1[data::attr1()] = attr;
+
+    record_view rec = make_record_view(set1);
+
+    formatter f = expr::stream << expr::format_named_scope(data::attr1(),
+        keywords::format = data::default_format().c_str(),
+        keywords::empty_marker = data::empty_marker().c_str());
+
+    {
+        string str1, str2;
+        osstream strm1(str1), strm2(str2);
+        f(rec, strm1);
+        strm2 << "[empty]";
+        BOOST_CHECK(equal_strings(strm1.str(), strm2.str()));
+    }
+
+    const unsigned int line1 = __LINE__;
+    sentry scope1(data::scope1(), data::file(), line1);
+    const unsigned int line2 = __LINE__;
+    sentry scope2(data::scope2(), data::file(), line2);
+
+    {
+        string str1, str2;
+        osstream strm1(str1), strm2(str2);
+        f(rec, strm1);
+        strm2 << data::scope1() << "->" << data::scope2();
         BOOST_CHECK(equal_strings(strm1.str(), strm2.str()));
     }
 }

@@ -16,6 +16,8 @@
 * Added indexing operators with [class_log_attribute_name] arguments to [class_log_record] and [class_log_record_view]. The operators behave the same way as the similar operators of [class_log_attribute_value_set] (i.e. return an [class_log_attribute_value] identified by the name).
 * Added operators for non-const object output to [class_log_basic_formatting_ostream]. ([ticket 9389])
 * Added new format flags "%c", "%C" and "%F" to the [link log.detailed.expressions.formatters.named_scope named scope formatter]. The new flags allow putting function names and source file names of named scopes into the formatted strings. ([ticket 9263])
+* Added support for incomplete and empty markers to the [link log.detailed.expressions.formatters.named_scope named scope formatter]. The markers can be used to customize the scope list presentation when the list is empty or limited by the `depth` named parameter. ([ticket 9123])
+* The default presentation for incomplete named scope lists has changed. In previous releases the incomplete marker included a trailing delimiter, for example "scope1<-scope2<-...". From this release the trailing delimiter is omitted, so in the same case the formatting result would be: "scope1<-scope2..." (note the missing trailing "<-").
 
 [*Bug fixes:]
 

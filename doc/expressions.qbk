@@ -378,6 +378,8 @@ While the format string describes the presentation of each named scope in the li
 * `iteration`. The argument describes the direction of iteration through scopes. Can have values `forward` (default) or `reverse`.
 * `delimiter`. The argument can be used to specify the delimiters between scopes. The default delimiter depends on the `iteration` argument. If `iteration == forward` the default `delimiter` will be "->", otherwise it will be "<-".
 * `depth`. The argument can be used to limit the number of scopes to put to log. The formatter will print `depth` innermost scopes and, if there are more scopes left, append an ellipsis to the written sequence. By default the formatter will write all scope names.
+* `incomplete_marker`. The argument can be used to specify the string that is used to indicate that the list has been limited by the `depth` argument. By default the "..." string is used as the marker.
+* `empty_marker`. The argument can be used to specify the string to output in case if the scope list is empty. By default nothing is output in this case.
 
 Here are a few usage examples:
 
@@ -405,7 +407,7 @@ Here are a few usage examples:
     );
 
     // Puts the scope stack in forward order, no more than 2 inner scopes:
-    // ... -> outer scope -> inner scope
+    // ... outer scope -> inner scope
     sink->set_formatter
     (
         expr::stream
@@ -417,7 +419,7 @@ Here are a few usage examples:
     );
 
     // Puts the scope stack in reverse order, no more than 2 inner scopes:
-    // inner scope <- outer scope <- ...
+    // inner scope <- outer scope <<and more>>...
     sink->set_formatter
     (
         expr::stream
@@ -425,8 +427,11 @@ Here are a few usage examples:
                 "Scopes",
                 keywords::format = "%n",
                 keywords::iteration = expr::reverse,
+                keywords::incomplete_marker = " <<and more>>..."
                 keywords::depth = 2)
     );
+
+[tip An empty string can be specified as the `incomplete_marker` parameter, in which case there will be no indication that the list was truncated.]
 
 [endsect]
 
