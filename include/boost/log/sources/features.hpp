@@ -25,8 +25,8 @@
 #if defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
 #include <boost/preprocessor/repetition/enum_params.hpp>
+#include <boost/preprocessor/repetition/enum_binary_params.hpp>
 #include <boost/preprocessor/repetition/enum_shifted_params.hpp>
-#include <boost/preprocessor/repetition/enum_shifted_binary_params.hpp>
 #include <boost/preprocessor/facilities/intercept.hpp>
 
 //! The macro defines the maximum number of features that can be specified for a logger
