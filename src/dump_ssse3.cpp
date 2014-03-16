@@ -22,6 +22,12 @@
 #include <boost/log/detail/config.hpp>
 #include <boost/log/detail/header.hpp>
 
+#if defined(__x86_64) || defined(__x86_64__) || \
+    defined(__amd64__) || defined(__amd64) || \
+    defined(_M_X64)
+#define BOOST_LOG_AUX_X86_64
+#endif
+
 namespace boost {
 
 BOOST_LOG_OPEN_NAMESPACE
@@ -46,17 +52,43 @@ union xmm_constant
 {
     uint8_t as_bytes[16];
     __m128i as_mm;
+
+    BOOST_FORCEINLINE operator __m128i () const { return as_mm; }
 };
 
 static const xmm_constant mm_shuffle_pattern1 = {{ 0x80, 0, 1, 0x80, 2, 3, 0x80, 4, 5, 0x80, 6, 7, 0x80, 8, 9, 0x80 }};
 static const xmm_constant mm_shuffle_pattern2 = {{ 0, 1, 0x80, 2, 3, 0x80, 4, 5, 0x80, 6, 7, 0x80, 8, 9, 0x80, 10 }};
 static const xmm_constant mm_shuffle_pattern3 = {{ 5, 0x80, 6, 7, 0x80, 8, 9, 0x80, 10, 11, 0x80, 12, 13, 0x80, 14, 15 }};
 
+#if defined(BOOST_LOG_AUX_X86_64)
+
+// x86-64 architecture has more registers which we can utilize to pass constants
+#define BOOST_LOG_AUX_MM_CONSTANT_ARGS_DECL __m128i mm_15, __m128i mm_9, __m128i mm_char_0, __m128i mm_char_space,
+#define BOOST_LOG_AUX_MM_CONSTANT_ARGS mm_15, mm_9, mm_char_0, mm_char_space,
+#define BOOST_LOG_AUX_MM_CONSTANTS \
+    const __m128i mm_15 = _mm_set1_epi32(0x0F0F0F0F);\
+    const __m128i mm_9 = _mm_set1_epi32(0x09090909);\
+    const __m128i mm_char_0 = _mm_set1_epi32(0x30303030);\
+    const __m128i mm_char_space = _mm_set1_epi32(0x20202020);
+
+#else
+
+// MSVC in 32-bit mode is not able to pass all constants to dump_pack, and is also not able to align them on the stack, so we have to fetch them from global constants
+static const xmm_constant mm_15 = {{ 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F }};
+static const xmm_constant mm_9 = {{ 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09 }};
+static const xmm_constant mm_char_0 = {{ 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30 }};
+static const xmm_constant mm_char_space = {{ 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20 }};
+#define BOOST_LOG_AUX_MM_CONSTANT_ARGS_DECL
+#define BOOST_LOG_AUX_MM_CONSTANT_ARGS
+#define BOOST_LOG_AUX_MM_CONSTANTS
+
+#endif
+
 //! Dumps a pack of input data into a string of 8 bit ASCII characters
 static BOOST_FORCEINLINE void dump_pack
 (
-    __m128i mm_15, __m128i mm_9, __m128i mm_char_0, __m128i mm_char_10_to_a, __m128i mm_char_space,
-    __m128i mm_input,
+    BOOST_LOG_AUX_MM_CONSTANT_ARGS_DECL
+    __m128i mm_char_10_to_a, __m128i mm_input,
     __m128i& mm_output1, __m128i& mm_output2, __m128i& mm_output3
 )
 {
@@ -146,13 +178,10 @@ BOOST_FORCEINLINE void dump_data_ssse3(const void* data, std::size_t size, std::
     if (BOOST_UNLIKELY(prealign_size > 0))
     {
         __m128i mm_input = _mm_lddqu_si128(reinterpret_cast< const __m128i* >(p));
-        const __m128i mm_15 = _mm_set1_epi32(0x0F0F0F0F);
-        const __m128i mm_9 = _mm_set1_epi32(0x09090909);
-        const __m128i mm_char_0 = _mm_set1_epi32(0x30303030);
-        const __m128i mm_char_space = _mm_set1_epi32(0x20202020);
+        BOOST_LOG_AUX_MM_CONSTANTS
 
         __m128i mm_output1, mm_output2, mm_output3;
-        dump_pack(mm_15, mm_9, mm_char_0, mm_char_10_to_a, mm_char_space, mm_input, mm_output1, mm_output2, mm_output3);
+        dump_pack(BOOST_LOG_AUX_MM_CONSTANT_ARGS mm_char_10_to_a, mm_input, mm_output1, mm_output2, mm_output3);
 
         store_characters(mm_output1, buf);
         store_characters(mm_output2, buf + 16u);
@@ -169,16 +198,13 @@ BOOST_FORCEINLINE void dump_data_ssse3(const void* data, std::size_t size, std::
     for (std::size_t i = 0; i < stride_count; ++i)
     {
         char_type* b = buf;
-        const __m128i mm_15 = _mm_set1_epi32(0x0F0F0F0F);
-        const __m128i mm_9 = _mm_set1_epi32(0x09090909);
-        const __m128i mm_char_0 = _mm_set1_epi32(0x30303030);
-        const __m128i mm_char_space = _mm_set1_epi32(0x20202020);
+        BOOST_LOG_AUX_MM_CONSTANTS
 
         for (unsigned int j = 0; j < packs_per_stride; ++j, b += 3u * 16u, p += 16u)
         {
             __m128i mm_input = _mm_load_si128(reinterpret_cast< const __m128i* >(p));
             __m128i mm_output1, mm_output2, mm_output3;
-            dump_pack(mm_15, mm_9, mm_char_0, mm_char_10_to_a, mm_char_space, mm_input, mm_output1, mm_output2, mm_output3);
+            dump_pack(BOOST_LOG_AUX_MM_CONSTANT_ARGS mm_char_10_to_a, mm_input, mm_output1, mm_output2, mm_output3);
 
             store_characters(mm_output1, b);
             store_characters(mm_output2, b + 16u);
@@ -195,13 +221,10 @@ BOOST_FORCEINLINE void dump_data_ssse3(const void* data, std::size_t size, std::
         while (tail_size >= 16u)
         {
             __m128i mm_input = _mm_load_si128(reinterpret_cast< const __m128i* >(p));
-            const __m128i mm_15 = _mm_set1_epi32(0x0F0F0F0F);
-            const __m128i mm_9 = _mm_set1_epi32(0x09090909);
-            const __m128i mm_char_0 = _mm_set1_epi32(0x30303030);
-            const __m128i mm_char_space = _mm_set1_epi32(0x20202020);
+            BOOST_LOG_AUX_MM_CONSTANTS
 
             __m128i mm_output1, mm_output2, mm_output3;
-            dump_pack(mm_15, mm_9, mm_char_0, mm_char_10_to_a, mm_char_space, mm_input, mm_output1, mm_output2, mm_output3);
+            dump_pack(BOOST_LOG_AUX_MM_CONSTANT_ARGS mm_char_10_to_a, mm_input, mm_output1, mm_output2, mm_output3);
 
             store_characters(mm_output1, b);
             store_characters(mm_output2, b + 16u);

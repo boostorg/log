@@ -70,6 +70,25 @@ public:
     }
 };
 
+//! Default log record message formatter
+struct message_formatter
+{
+    typedef void result_type;
+
+    message_formatter() : m_MessageName(expressions::tag::message::get_name())
+    {
+    }
+
+    template< typename StreamT >
+    result_type operator() (record_view const& rec, StreamT& strm) const
+    {
+        boost::log::visit< expressions::tag::message::value_type >(m_MessageName, rec, boost::log::bind_output(strm));
+    }
+
+private:
+    const attribute_name m_MessageName;
+};
+
 } // namespace aux
 
 } // namespace expressions
@@ -96,24 +115,6 @@ private:
     //! Filter function type
     typedef boost::log::aux::light_function< void (record_view const&, expressions::aux::stream_ref< stream_type >) > formatter_type;
 
-    //! Default formatter, always returns \c true
-    struct default_formatter
-    {
-        typedef void result_type;
-
-        default_formatter() : m_MessageName(expressions::tag::message::get_name())
-        {
-        }
-
-        result_type operator() (record_view const& rec, stream_type& strm) const
-        {
-            boost::log::visit< expressions::tag::message::value_type >(m_MessageName, rec, boost::log::bind_output(strm));
-        }
-
-    private:
-        const attribute_name m_MessageName;
-    };
-
 private:
     //! Formatter function
     formatter_type m_Formatter;
@@ -122,7 +123,7 @@ public:
     /*!
      * Default constructor. Creates a formatter that only outputs log message.
      */
-    basic_formatter() : m_Formatter(default_formatter())
+    basic_formatter() : m_Formatter(expressions::aux::message_formatter())
     {
     }
     /*!

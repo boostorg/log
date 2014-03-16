@@ -25,15 +25,13 @@
 #include <boost/move/utility.hpp>
 #include <boost/optional/optional.hpp>
 #include <boost/utility/in_place_factory.hpp>
-#include <boost/phoenix/core.hpp>
-#include <boost/phoenix/operator.hpp>
-#include <boost/log/expressions/message.hpp>
-#include <boost/log/expressions/formatters/stream.hpp>
+#include <boost/log/expressions/formatter.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/exceptions.hpp>
 #include <boost/log/detail/singleton.hpp>
 #include <boost/log/detail/code_conversion.hpp>
 #include <boost/log/detail/default_attribute_names.hpp>
+#include <boost/log/utility/formatting_ostream.hpp>
 #include <boost/log/utility/functional/nop.hpp>
 #include <boost/log/utility/setup/formatter_parser.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
@@ -146,6 +144,28 @@ struct chained_formatter
 private:
     formatter_type m_first;
     SecondT m_second;
+};
+
+//! String literal formatter
+template< typename CharT >
+struct literal_formatter
+{
+    typedef void result_type;
+    typedef CharT char_type;
+    typedef std::basic_string< char_type > string_type;
+    typedef basic_formatting_ostream< char_type > stream_type;
+
+    explicit literal_formatter(BOOST_RV_REF(string_type) str) : m_str(boost::move(str))
+    {
+    }
+
+    result_type operator() (record_view const& rec, stream_type& strm) const
+    {
+        strm << m_str;
+    }
+
+private:
+    const string_type m_str;
 };
 
 //! Formatter parsing grammar
@@ -367,7 +387,7 @@ private:
         if (m_AttrName == log::aux::default_attribute_names::message())
         {
             // We make a special treatment for the message text formatter
-            append_formatter(expressions::stream << expressions::message);
+            append_formatter(expressions::aux::message_formatter());
         }
         else
         {
@@ -387,7 +407,7 @@ private:
     {
         string_type s(begin, end);
         constants::translate_escape_sequences(s);
-        append_formatter(expressions::stream << s);
+        append_formatter(literal_formatter< char_type >(boost::move(s)));
     }
 
     //! The method appends a formatter part to the final formatter

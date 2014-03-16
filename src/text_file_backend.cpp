@@ -48,12 +48,9 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/gregorian/gregorian_types.hpp>
 #include <boost/spirit/include/qi_core.hpp>
-#include <boost/spirit/include/qi_lit.hpp>
 #include <boost/log/detail/snprintf.hpp>
 #include <boost/log/detail/singleton.hpp>
 #include <boost/log/detail/light_function.hpp>
-#include <boost/log/utility/functional/bind_assign.hpp>
-#include <boost/log/utility/functional/as_action.hpp>
 #include <boost/log/exceptions.hpp>
 #include <boost/log/attributes/time_traits.hpp>
 #include <boost/log/sinks/text_file_backend.hpp>
@@ -135,7 +132,11 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         static const char_type dot = '.';
         static const char_type newline = '\n';
 
-        static bool is_digit(char c) { return (isdigit(c) != 0); }
+        static bool is_digit(char c)
+        {
+            using namespace std;
+            return (isdigit(c) != 0);
+        }
         static std::string default_file_name_pattern() { return "%5N.log"; }
     };
 
@@ -180,7 +181,11 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         static const char_type dot = L'.';
         static const char_type newline = L'\n';
 
-        static bool is_digit(wchar_t c) { return (iswdigit(c) != 0); }
+        static bool is_digit(wchar_t c)
+        {
+            using namespace std;
+            return (iswdigit(c) != 0);
+        }
         static std::wstring default_file_name_pattern() { return L"%5N.log"; }
     };
 
@@ -325,21 +330,47 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
     bool parse_counter_placeholder(path_string_type::const_iterator& it, path_string_type::const_iterator end, unsigned int& width)
     {
         typedef file_char_traits< path_char_type > traits_t;
-        return qi::parse
-        (
-            it, end,
-            (
-                -(
-                    qi::lit(traits_t::zero) |
-                    qi::lit(traits_t::plus) |
-                    qi::lit(traits_t::minus) |
-                    qi::lit(traits_t::space)
-                ) >>
-                -(qi::uint_[boost::log::as_action(boost::log::bind_assign(width))]) >>
-                -(qi::lit(traits_t::dot) >> qi::uint_) >>
-                qi::lit(traits_t::number_placeholder)
-            )
-        );
+        if (it == end)
+            return false;
+
+        path_char_type c = *it;
+        if (c == traits_t::zero || c == traits_t::space || c == traits_t::plus || c == traits_t::minus)
+        {
+            // Skip filler and alignment specification
+            ++it;
+            if (it == end)
+                return false;
+            c = *it;
+        }
+
+        if (traits_t::is_digit(c))
+        {
+            // Parse width
+            if (!qi::parse(it, end, qi::uint_, width))
+                return false;
+            if (it == end)
+                return false;
+            c = *it;
+        }
+
+        if (c == traits_t::dot)
+        {
+            // Skip precision
+            ++it;
+            while (it != end && traits_t::is_digit(*it))
+                ++it;
+            if (it == end)
+                return false;
+            c = *it;
+        }
+
+        if (c == traits_t::number_placeholder)
+        {
+            ++it;
+            return true;
+        }
+
+        return false;
     }
 
     //! The function matches the file name and the pattern
@@ -1222,15 +1253,19 @@ BOOST_LOG_API void text_file_backend::set_file_name_pattern_internal(filesystem:
 
         ++placeholder_count;
 
-        if (!counter_found && parse_counter_placeholder(it, end, width))
+        if (!counter_found)
         {
-            // We've found the file counter placeholder in the pattern
-            counter_found = true;
-            counter_pos = placeholder_begin - name_pattern.begin();
-            name_pattern.erase(counter_pos, it - placeholder_begin);
-            --placeholder_count;
-            it = name_pattern.begin() + counter_pos;
-            end = name_pattern.end();
+            path_string_type::const_iterator it2 = it;
+            if (parse_counter_placeholder(it2, end, width))
+            {
+                // We've found the file counter placeholder in the pattern
+                counter_found = true;
+                counter_pos = placeholder_begin - name_pattern.begin();
+                name_pattern.erase(counter_pos, it2 - placeholder_begin);
+                --placeholder_count;
+                it = name_pattern.begin() + counter_pos;
+                end = name_pattern.end();
+            }
         }
     }
     while (it != end);
