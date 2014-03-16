@@ -64,7 +64,7 @@ static const ymm_constant mm_shuffle_pattern13 = {{ 0x80, 0, 1, 0x80, 2, 3, 0x80
 #if defined(BOOST_LOG_AUX_X86_64)
 
 // x86-64 architecture has more registers which we can utilize to pass constants
-#define BOOST_LOG_AUX_MM_CONSTANT_ARGS_DECL __m128i mm_15, __m128i mm_9, __m128i mm_char_0, __m128i mm_char_space,
+#define BOOST_LOG_AUX_MM_CONSTANT_ARGS_DECL __m256i mm_15, __m256i mm_9, __m256i mm_char_0, __m256i mm_char_space,
 #define BOOST_LOG_AUX_MM_CONSTANT_ARGS mm_15, mm_9, mm_char_0, mm_char_space,
 #define BOOST_LOG_AUX_MM_CONSTANTS \
     const __m256i mm_15 = _mm256_set1_epi32(0x0F0F0F0F);\
