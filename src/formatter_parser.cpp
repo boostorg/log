@@ -155,7 +155,11 @@ struct literal_formatter
     typedef std::basic_string< char_type > string_type;
     typedef basic_formatting_ostream< char_type > stream_type;
 
-    explicit literal_formatter(BOOST_RV_REF(string_type) str) : m_str(boost::move(str))
+#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+    explicit literal_formatter(string_type&& str) : m_str(boost::move(str))
+#else
+    explicit literal_formatter(string_type const& str) : m_str(str)
+#endif
     {
     }
 
