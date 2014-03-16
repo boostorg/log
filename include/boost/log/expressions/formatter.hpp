@@ -201,7 +201,7 @@ public:
      */
     void reset()
     {
-        m_Formatter = default_formatter();
+        m_Formatter = expressions::aux::message_formatter();
     }
 
     /*!
