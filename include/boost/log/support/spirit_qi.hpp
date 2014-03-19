@@ -15,6 +15,7 @@
 #ifndef BOOST_LOG_SUPPORT_SPIRIT_QI_HPP_INCLUDED_
 #define BOOST_LOG_SUPPORT_SPIRIT_QI_HPP_INCLUDED_
 
+#include <boost/utility/enable_if.hpp>
 #include <boost/log/detail/config.hpp>
 #include <boost/log/utility/functional/matches.hpp>
 #include <boost/spirit/include/qi_parse.hpp>
@@ -31,21 +32,22 @@ BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
 
-//! The trait verifies if the type can be converted to a Boost.Spirit.Qi parser
-template< typename T >
-struct is_spirit_qi_parser< T, true > :
-    public spirit::traits::is_parser< T >
+//! This tag type is used if an expression is recognized as a Boost.Spirit.Qi expression
+struct boost_spirit_qi_expression_tag;
+
+//! The metafunction detects the matching expression kind and returns a tag that is used to specialize \c match_traits
+template< typename ExpressionT >
+struct matching_expression_kind< ExpressionT, typename boost::enable_if< spirit::traits::is_parser< ExpressionT > >::type >
 {
+    typedef boost_spirit_qi_expression_tag type;
 };
 
-//! The matching functor implementation
-template< >
-struct matches_fun_impl< boost_spirit_qi_expression_tag >
+//! The matching function implementation
+template< typename ExpressionT >
+struct match_traits< ExpressionT, boost_spirit_qi_expression_tag >
 {
-    template< typename StringT, typename ParserT >
-    static bool matches(
-        StringT const& str,
-        ParserT const& expr)
+    template< typename StringT >
+    static bool matches(StringT const& str, ExpressionT const& expr)
     {
         typedef typename StringT::const_iterator const_iterator;
         const_iterator it = str.begin(), end = str.end();

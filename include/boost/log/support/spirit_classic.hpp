@@ -16,6 +16,7 @@
 #define BOOST_LOG_SUPPORT_SPIRIT_CLASSIC_HPP_INCLUDED_
 
 #include <boost/mpl/bool.hpp>
+#include <boost/utility/enable_if.hpp>
 #include <boost/log/detail/config.hpp>
 #include <boost/log/utility/functional/matches.hpp>
 
@@ -55,9 +56,12 @@ BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
 
+//! This tag type is used if an expression is recognized as a Boost.Spirit.Classic expression
+struct boost_spirit_classic_expression_tag;
+
 //! The trait verifies if the type can be converted to a Boost.Spirit (classic) parser
 template< typename T >
-struct is_spirit_classic_parser< T, true >
+struct is_spirit_classic_parser
 {
 private:
     typedef char yes_type;
@@ -73,14 +77,19 @@ public:
     typedef mpl::bool_< value > type;
 };
 
-//! The matching functor implementation
-template< >
-struct matches_fun_impl< boost_spirit_classic_expression_tag >
+//! The metafunction detects the matching expression kind and returns a tag that is used to specialize \c match_traits
+template< typename ExpressionT >
+struct matching_expression_kind< ExpressionT, typename boost::enable_if_c< is_spirit_classic_parser< ExpressionT >::value >::type >
 {
-    template< typename StringT, typename ParserT >
-    static bool matches(
-        StringT const& str,
-        ParserT const& expr)
+    typedef boost_spirit_classic_expression_tag type;
+};
+
+//! The matching function implementation
+template< typename ExpressionT >
+struct match_traits< ExpressionT, boost_spirit_classic_expression_tag >
+{
+    template< typename StringT >
+    static bool matches(StringT const& str, ExpressionT const& expr)
     {
         typedef typename StringT::const_iterator const_iterator;
         spirit::classic::parse_info< const_iterator > info =
