@@ -216,6 +216,7 @@ The attribute can also be identified by an attribute keyword or name and type.
 
     // Supporting headers
     #include <``[boost_log_support_regex_hpp]``>
+    #include <``[boost_log_support_std_regex_hpp]``>
     #include <``[boost_log_support_xpressive_hpp]``>
     #include <``[boost_log_support_spirit_qi_hpp]``>
     #include <``[boost_log_support_spirit_classic_hpp]``>
