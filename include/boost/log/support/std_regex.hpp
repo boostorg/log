@@ -15,15 +15,26 @@
 #ifndef BOOST_LOG_SUPPORT_STD_REGEX_HPP_INCLUDED_
 #define BOOST_LOG_SUPPORT_STD_REGEX_HPP_INCLUDED_
 
-#include <regex>
-#include <string>
 #include <boost/log/detail/config.hpp>
-#include <boost/log/utility/functional/matches.hpp>
-#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_HAS_PRAGMA_ONCE
 #pragma once
 #endif
+
+#if defined(BOOST_NO_CXX11_HDR_REGEX)
+
+#if defined(__GNUC__)
+#pragma message "Boost.Log: This header requires support for std::regex in the standard library."
+#elif defined(_MSC_VER)
+#pragma message("Boost.Log: This header requires support for std::regex in the standard library.")
+#endif
+
+#else // defined(BOOST_NO_CXX11_HDR_REGEX)
+
+#include <regex>
+#include <string>
+#include <boost/log/utility/functional/matches.hpp>
+#include <boost/log/detail/header.hpp>
 
 namespace boost {
 
@@ -65,5 +76,7 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 } // namespace boost
 
 #include <boost/log/detail/footer.hpp>
+
+#endif // defined(BOOST_NO_CXX11_HDR_REGEX)
 
 #endif // BOOST_LOG_SUPPORT_STD_REGEX_HPP_INCLUDED_
