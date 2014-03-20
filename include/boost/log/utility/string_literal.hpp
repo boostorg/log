@@ -18,6 +18,7 @@
 #include <cstddef>
 #include <stdexcept>
 #include <iosfwd>
+#include <ios> // std::streamsize
 #include <string>
 #include <iterator>
 #include <boost/operators.hpp>
