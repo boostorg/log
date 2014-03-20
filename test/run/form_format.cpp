@@ -63,33 +63,21 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(formatting, CharT, char_types)
     typedef logging::basic_formatter< CharT > formatter;
     typedef format_test_data< CharT > data;
 
-    BOOST_TEST_CHECKPOINT("About to create attr1");
     attrs::constant< int > attr1(10);
-    BOOST_TEST_CHECKPOINT("Created attr1");
     attrs::constant< double > attr2(5.5);
-    BOOST_TEST_CHECKPOINT("Created attr2");
 
     attr_set set1;
-    BOOST_TEST_CHECKPOINT("Created set1");
     set1[data::attr1()] = attr1;
-    BOOST_TEST_CHECKPOINT("Inserted attr1");
     set1[data::attr2()] = attr2;
-    BOOST_TEST_CHECKPOINT("Inserted attr2");
 
     record_view rec = make_record_view(set1);
-    BOOST_TEST_CHECKPOINT("Created record_view");
 
     {
         string str1, str2;
-        BOOST_TEST_CHECKPOINT("Created strings");
         osstream strm1(str1), strm2(str2);
-        BOOST_TEST_CHECKPOINT("Created streams");
         formatter f = expr::format(data::format1()) % expr::attr< int >(data::attr1()) % expr::attr< double >(data::attr2());
-        BOOST_TEST_CHECKPOINT("Created formatter");
         f(rec, strm1);
-        BOOST_TEST_CHECKPOINT("Applied formatter");
         strm2 << 10 << ", " << 5.5;
-        BOOST_TEST_CHECKPOINT("Composed correct string");
         BOOST_CHECK(equal_strings(strm1.str(), strm2.str()));
     }
 }
