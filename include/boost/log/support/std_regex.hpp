@@ -65,7 +65,8 @@ struct match_traits< ExpressionT, std_regex_expression_tag >
     template< typename CharT, typename StringTraitsT, typename AllocatorT, typename ReTraitsT >
     static bool matches(std::basic_string< CharT, StringTraitsT, AllocatorT > const& str, std::basic_regex< CharT, ReTraitsT > const& expr, std::regex_constants::match_flag_type flags = std::regex_constants::match_default)
     {
-        return std::regex_match(str, expr, flags);
+        const CharT* p = str.c_str();
+        return std::regex_match(p, p + str.size(), expr, flags);
     }
 };
 

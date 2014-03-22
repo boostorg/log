@@ -15,6 +15,7 @@
 #ifndef BOOST_LOG_SUPPORT_REGEX_HPP_INCLUDED_
 #define BOOST_LOG_SUPPORT_REGEX_HPP_INCLUDED_
 
+#include <string>
 #include <boost/regex.hpp>
 #include <boost/log/detail/config.hpp>
 #include <boost/log/utility/functional/matches.hpp>
@@ -48,6 +49,16 @@ struct match_traits< ExpressionT, boost_regex_expression_tag >
     static bool matches(StringT const& str, boost::basic_regex< CharT, TraitsT > const& expr, boost::regex_constants::match_flag_type flags = boost::regex_constants::match_default)
     {
         return boost::regex_match(str.begin(), str.end(), expr, flags);
+    }
+
+    template< typename CharT, typename StringTraitsT, typename AllocatorT, typename ReTraitsT >
+    static bool matches(
+        std::basic_string< CharT, StringTraitsT, AllocatorT > const& str,
+        boost::basic_regex< CharT, ReTraitsT > const& expr,
+        boost::regex_constants::match_flag_type flags = boost::regex_constants::match_default)
+    {
+        const CharT* p = str.c_str();
+        return boost::regex_match(p, p + str.size(), expr, flags);
     }
 };
 

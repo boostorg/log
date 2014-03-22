@@ -15,6 +15,7 @@
 #ifndef BOOST_LOG_SUPPORT_XPRESSIVE_HPP_INCLUDED_
 #define BOOST_LOG_SUPPORT_XPRESSIVE_HPP_INCLUDED_
 
+#include <string>
 #include <boost/xpressive/basic_regex.hpp>
 #include <boost/xpressive/regex_constants.hpp>
 #include <boost/xpressive/regex_algorithms.hpp>
@@ -47,30 +48,16 @@ template< typename ExpressionT >
 struct match_traits< ExpressionT, boost_xpressive_expression_tag >
 {
     template< typename StringT, typename T >
-    static bool matches(
-        StringT const& str,
-        xpressive::basic_regex< T > const& expr,
-        xpressive::regex_constants::match_flag_type flags = xpressive::regex_constants::match_default)
+    static bool matches(StringT const& str, xpressive::basic_regex< T > const& expr, xpressive::regex_constants::match_flag_type flags = xpressive::regex_constants::match_default)
     {
         return xpressive::regex_match(str, expr, flags);
     }
 
-    template< typename StringT >
-    static bool matches(
-        StringT const& str,
-        xpressive::basic_regex< typename StringT::value_type* > const& expr,
-        xpressive::regex_constants::match_flag_type flags = xpressive::regex_constants::match_default)
+    template< typename CharT, typename TraitsT, typename AllocatorT >
+    static bool matches(std::basic_string< CharT, TraitsT, AllocatorT > const& str, xpressive::basic_regex< const CharT* > const& expr, xpressive::regex_constants::match_flag_type flags = xpressive::regex_constants::match_default)
     {
-        return xpressive::regex_match(str.c_str(), expr, flags);
-    }
-
-    template< typename StringT >
-    static bool matches(
-        StringT const& str,
-        xpressive::basic_regex< typename StringT::value_type const* > const& expr,
-        xpressive::regex_constants::match_flag_type flags = xpressive::regex_constants::match_default)
-    {
-        return xpressive::regex_match(str.c_str(), expr, flags);
+        const CharT* p = str.c_str();
+        return xpressive::regex_match(p, p + str.size(), expr, flags);
     }
 };
 
