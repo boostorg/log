@@ -22,11 +22,9 @@
 #endif
 
 #if !defined(BOOST_LOG_USE_BOOST_REGEX) && !defined(BOOST_LOG_USE_STD_REGEX) && !defined(BOOST_LOG_USE_BOOST_XPRESSIVE)
-#if defined(BOOST_NO_CXX11_HDR_REGEX)
-#define BOOST_LOG_USE_BOOST_XPRESSIVE
-#else
-#define BOOST_LOG_USE_STD_REGEX
-#endif
+// Use Boost.Regex backend by default. It produces smaller executables and also has the best performance for small string matching.
+// Note: This default has to be in sync with Boost.Log Jamfile.v2.
+#define BOOST_LOG_USE_BOOST_REGEX
 #endif
 
 #include <string>

@@ -96,7 +96,8 @@ rule select-regex-backend ( properties * )
 {
     local result = ;
 
-    if <define>BOOST_LOG_USE_BOOST_REGEX in $(properties)
+    # Use Boost.Regex backend by default. It produces smaller executables and also has the best performance for small string matching.
+    if ! ( <define>BOOST_LOG_USE_STD_REGEX in $(properties) || <define>BOOST_LOG_USE_BOOST_XPRESSIVE in $(properties) )
     {
         result = <library>/boost/regex//boost_regex ;
     }
