@@ -56,6 +56,9 @@ struct matching_expression_kind< std::basic_regex< CharT, ReTraitsT > >
 template< typename ExpressionT >
 struct match_traits< ExpressionT, std_regex_expression_tag >
 {
+    typedef ExpressionT compiled_type;
+    static compiled_type compile(ExpressionT const& expr) { return expr; }
+
     template< typename StringT, typename CharT, typename ReTraitsT >
     static bool matches(StringT const& str, std::basic_regex< CharT, ReTraitsT > const& expr, std::regex_constants::match_flag_type flags = std::regex_constants::match_default)
     {

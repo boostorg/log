@@ -47,6 +47,9 @@ struct matching_expression_kind< xpressive::basic_regex< T > >
 template< typename ExpressionT >
 struct match_traits< ExpressionT, boost_xpressive_expression_tag >
 {
+    typedef ExpressionT compiled_type;
+    static compiled_type compile(ExpressionT const& expr) { return expr; }
+
     template< typename StringT, typename T >
     static bool matches(StringT const& str, xpressive::basic_regex< T > const& expr, xpressive::regex_constants::match_flag_type flags = xpressive::regex_constants::match_default)
     {

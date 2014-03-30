@@ -88,6 +88,9 @@ struct matching_expression_kind< ExpressionT, typename boost::enable_if_c< is_sp
 template< typename ExpressionT >
 struct match_traits< ExpressionT, boost_spirit_classic_expression_tag >
 {
+    typedef ExpressionT compiled_type;
+    static compiled_type compile(ExpressionT const& expr) { return expr; }
+
     template< typename StringT >
     static bool matches(StringT const& str, ExpressionT const& expr)
     {
