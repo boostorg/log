@@ -16,7 +16,10 @@
 #ifndef BOOST_LOG_DETAIL_LOCKING_PTR_HPP_INCLUDED_
 #define BOOST_LOG_DETAIL_LOCKING_PTR_HPP_INCLUDED_
 
+#include <cstddef>
+#include <boost/move/core.hpp>
 #include <boost/smart_ptr/shared_ptr.hpp>
+#include <boost/thread/lock_options.hpp>
 #include <boost/log/detail/config.hpp>
 #include <boost/utility/explicit_operator_bool.hpp>
 #include <boost/log/detail/header.hpp>
@@ -31,60 +34,41 @@ BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
 
-//! Shared lock object to support locking_ptr
-struct BOOST_LOG_NO_VTABLE locking_ptr_counter_base
-{
-    unsigned int m_RefCounter;
-
-    locking_ptr_counter_base() : m_RefCounter(0)
-    {
-    }
-
-    virtual ~locking_ptr_counter_base() {}
-    virtual void lock() = 0;
-    virtual bool try_lock() = 0;
-    virtual void unlock() = 0;
-
-private:
-    locking_ptr_counter_base(locking_ptr_counter_base const&);
-    locking_ptr_counter_base& operator= (locking_ptr_counter_base const&);
-};
-
-struct try_lock_tag {};
-BOOST_CONSTEXPR_OR_CONST try_lock_tag try_lock = {};
-
 //! A pointer type that locks the backend until it's destroyed
-template< typename T >
+template< typename T, typename LockableT >
 class locking_ptr
 {
+    typedef locking_ptr this_type;
+    BOOST_COPYABLE_AND_MOVABLE_ALT(this_type)
+
 public:
     //! Pointed type
     typedef T element_type;
 
 private:
+    //! Lockable type
+    typedef LockableT lockable_type;
+
+private:
     //! The pointer to the backend
     shared_ptr< element_type > m_pElement;
     //! Reference to the shared lock control object
-    locking_ptr_counter_base* m_pLock;
+    lockable_type* m_pLock;
 
 public:
-    //! Constructor
-    locking_ptr(shared_ptr< element_type > const& p, locking_ptr_counter_base& l)
-        : m_pElement(p), m_pLock(&l)
+    //! Default constructor
+    locking_ptr() : m_pLock(NULL)
     {
-        if (m_pLock->m_RefCounter == 0)
-            m_pLock->lock();
-        ++m_pLock->m_RefCounter;
     }
     //! Constructor
-    locking_ptr(shared_ptr< element_type > const& p, locking_ptr_counter_base& l, try_lock_tag const&)
-        : m_pElement(p), m_pLock(&l)
+    locking_ptr(shared_ptr< element_type > const& p, lockable_type& l) : m_pElement(p), m_pLock(&l)
     {
-        if (m_pLock->m_RefCounter > 0 || m_pLock->try_lock())
-        {
-            ++m_pLock->m_RefCounter;
-        }
-        else
+        m_pLock->lock();
+    }
+    //! Constructor
+    locking_ptr(shared_ptr< element_type > const& p, lockable_type& l, try_to_lock_t const&) : m_pElement(p), m_pLock(&l)
+    {
+        if (!m_pLock->try_lock())
         {
             m_pElement.reset();
             m_pLock = NULL;
@@ -94,12 +78,19 @@ public:
     locking_ptr(locking_ptr const& that) : m_pElement(that.m_pElement), m_pLock(that.m_pLock)
     {
         if (m_pLock)
-            ++m_pLock->m_RefCounter;
+            m_pLock->lock();
     }
+    //! Move constructor
+    locking_ptr(BOOST_RV_REF(this_type) that) : m_pLock(that.m_pLock)
+    {
+        m_pElement.swap(that.m_pElement);
+        that.m_pLock = NULL;
+    }
+
     //! Destructor
     ~locking_ptr()
     {
-        if (m_pLock && --m_pLock->m_RefCounter == 0)
+        if (m_pLock)
             m_pLock->unlock();
     }
 
@@ -127,21 +118,21 @@ public:
     void swap(locking_ptr& that)
     {
         m_pElement.swap(that.m_pElement);
-        locking_ptr_counter_base* p = m_pLock;
+        lockable_type* p = m_pLock;
         m_pLock = that.m_pLock;
         that.m_pLock = p;
     }
 };
 
 //! Free raw pointer getter to assist generic programming
-template< typename T >
-inline T* get_pointer(locking_ptr< T > const& p)
+template< typename T, typename LockableT >
+inline T* get_pointer(locking_ptr< T, LockableT > const& p)
 {
     return p.get();
 }
 //! Free swap operation
-template< typename T >
-inline void swap(locking_ptr< T >& left, locking_ptr< T >& right)
+template< typename T, typename LockableT >
+inline void swap(locking_ptr< T, LockableT >& left, locking_ptr< T, LockableT >& right)
 {
     left.swap(right);
 }
