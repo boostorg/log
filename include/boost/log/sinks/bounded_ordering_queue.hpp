@@ -180,8 +180,7 @@ protected:
                 // We got a new element
                 rec = elem.m_record;
                 m_queue.pop();
-                if (size == MaxQueueSizeV)
-                    overflow_strategy::on_queue_space_available();
+                overflow_strategy::on_queue_space_available();
                 return true;
             }
         }
@@ -199,8 +198,7 @@ protected:
             enqueued_record const& elem = m_queue.top();
             rec = elem.m_record;
             m_queue.pop();
-            if (size == MaxQueueSizeV)
-                overflow_strategy::on_queue_space_available();
+            overflow_strategy::on_queue_space_available();
             return true;
         }
 
@@ -224,8 +222,7 @@ protected:
                 {
                     rec = elem.m_record;
                     m_queue.pop();
-                    if (size == MaxQueueSizeV)
-                        overflow_strategy::on_queue_space_available();
+                    overflow_strategy::on_queue_space_available();
                     return true;
                 }
                 else

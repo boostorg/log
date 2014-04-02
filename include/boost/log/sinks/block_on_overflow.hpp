@@ -74,16 +74,11 @@ private:
     //! Blocked threads
     thread_contexts m_thread_contexts;
 
-private:
-    //  Copying prohibited
-    block_on_overflow(block_on_overflow const&);
-    block_on_overflow& operator= (block_on_overflow const&);
-
 public:
     /*!
      * Default constructor.
      */
-    block_on_overflow() {}
+    BOOST_DEFAULTED_FUNCTION(block_on_overflow(), {})
 
     /*!
      * This method is called by the queue when overflow is detected.
@@ -134,6 +129,10 @@ public:
             m_thread_contexts.pop_front();
         }
     }
+
+    //  Copying prohibited
+    BOOST_DELETED_FUNCTION(block_on_overflow(block_on_overflow const&))
+    BOOST_DELETED_FUNCTION(block_on_overflow& operator= (block_on_overflow const&))
 #endif // BOOST_LOG_DOXYGEN_PASS
 };
 

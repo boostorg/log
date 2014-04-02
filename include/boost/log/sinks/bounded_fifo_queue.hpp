@@ -139,8 +139,7 @@ protected:
         {
             rec.swap(m_queue.front());
             m_queue.pop();
-            if (size == MaxQueueSizeV)
-                overflow_strategy::on_queue_space_available();
+            overflow_strategy::on_queue_space_available();
             return true;
         }
 
@@ -159,8 +158,7 @@ protected:
             {
                 rec.swap(m_queue.front());
                 m_queue.pop();
-                if (size == MaxQueueSizeV)
-                    overflow_strategy::on_queue_space_available();
+                overflow_strategy::on_queue_space_available();
                 return true;
             }
             else
