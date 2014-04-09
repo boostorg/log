@@ -127,8 +127,8 @@ project boost/log
         <toolset>clang:<cxxflags>-ftemplate-depth-1024
         <toolset>gcc:<cxxflags>-ftemplate-depth-1024
         <toolset>gcc:<cxxflags>-fno-strict-aliasing  # avoids strict aliasing violations in other Boost components
-        <toolset>gcc-mingw:<linkflags>-Wl,--enable-auto-import
-        <toolset>gcc-cygwin:<linkflags>-Wl,--enable-auto-import
+        <toolset>gcc,<target-os>windows:<linkflags>-Wl,--enable-auto-import
+        <toolset>gcc,<target-os>cygwin:<linkflags>-Wl,--enable-auto-import
         <library>/boost/date_time//boost_date_time
         <library>/boost/filesystem//boost_filesystem
         <library>/boost/system//boost_system
