@@ -203,7 +203,7 @@ public:
     void swap(date_time_formatter& that)
     {
         m_formatters.swap(that.m_formatters);
-        m_literal_lens.swap(that.m_literals);
+        m_literal_lens.swap(that.m_literal_lens);
         m_literal_chars.swap(that.m_literal_chars);
     }
 

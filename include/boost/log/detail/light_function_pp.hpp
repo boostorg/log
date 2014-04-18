@@ -59,7 +59,7 @@ private:
 #if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
         explicit impl(FunT&& fun) :
             impl_base(&this_type::invoke_impl, &this_type::clone_impl, &this_type::destroy_impl),
-            m_Function(fun)
+            m_Function(boost::forward< FunT >(fun))
         {
         }
 #endif // !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
@@ -262,7 +262,7 @@ private:
 #if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
         explicit impl(FunT&& fun) :
             impl_base(&this_type::invoke_impl, &this_type::clone_impl, &this_type::destroy_impl),
-            m_Function(fun)
+            m_Function(boost::forward< FunT >(fun))
         {
         }
 #endif // !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
