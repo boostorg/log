@@ -87,6 +87,9 @@ private:
         impl_base(invoke_type inv, clone_type cl, destroy_type dstr) : invoke(inv), clone(cl), destroy(dstr)
         {
         }
+
+        BOOST_DELETED_FUNCTION(impl_base(impl_base const&))
+        BOOST_DELETED_FUNCTION(impl_base& operator= (impl_base const&))
     };
 
 #if !defined(BOOST_LOG_NO_MEMBER_TEMPLATE_FRIENDS)
@@ -131,6 +134,9 @@ private:
         {
             return static_cast< impl* >(static_cast< impl_base* >(self))->m_Function(args...);
         }
+
+        BOOST_DELETED_FUNCTION(impl(impl const&))
+        BOOST_DELETED_FUNCTION(impl& operator= (impl const&))
     };
 
 private:
@@ -288,6 +294,9 @@ private:
         impl_base(invoke_type inv, clone_type cl, destroy_type dstr) : invoke(inv), clone(cl), destroy(dstr)
         {
         }
+
+        BOOST_DELETED_FUNCTION(impl_base(impl_base const&))
+        BOOST_DELETED_FUNCTION(impl_base& operator= (impl_base const&))
     };
 
 #if !defined(BOOST_LOG_NO_MEMBER_TEMPLATE_FRIENDS)
@@ -332,6 +341,9 @@ private:
         {
             static_cast< impl* >(static_cast< impl_base* >(self))->m_Function(args...);
         }
+
+        BOOST_DELETED_FUNCTION(impl(impl const&))
+        BOOST_DELETED_FUNCTION(impl& operator= (impl const&))
     };
 
 private:
