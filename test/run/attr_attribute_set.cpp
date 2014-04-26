@@ -237,7 +237,6 @@ BOOST_AUTO_TEST_CASE(erasure)
 {
     typedef logging::attribute_set attr_set;
     typedef test_data< char > data;
-    typedef std::basic_string< char > string;
 
     attrs::constant< int > attr1(10);
     attrs::constant< double > attr2(5.5);
