@@ -44,7 +44,6 @@ BOOST_AUTO_TEST_CASE(filtering)
     typedef logging::attribute_set attr_set;
     typedef logging::core core;
     typedef logging::record record_type;
-    typedef std::basic_string< char > string;
     typedef test_data< char > data;
 
     attrs::constant< int > attr1(10);
@@ -162,7 +161,6 @@ namespace {
         typedef test_data< char > data;
         typedef logging::core core;
         typedef logging::record record_type;
-        typedef std::basic_string< char > string;
         typedef logging::attribute_set attr_set;
         attrs::constant< short > attr4(255);
 
@@ -185,7 +183,6 @@ BOOST_AUTO_TEST_CASE(attributes)
     typedef logging::attribute_set attr_set;
     typedef logging::core core;
     typedef logging::record record_type;
-    typedef std::basic_string< char > string;
     typedef test_data< char > data;
 
     attrs::constant< int > attr1(10);

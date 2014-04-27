@@ -29,7 +29,6 @@ namespace logging = boost::log;
 BOOST_AUTO_TEST_CASE_TEMPLATE(unbounded_binary_lowercase_short_dump, CharT, char_types)
 {
     typedef CharT char_type;
-    typedef std::basic_string< char_type > string_type;
     typedef std::basic_ostringstream< char_type > ostream_type;
 
     std::vector< unsigned char > data;
@@ -56,7 +55,6 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(unbounded_binary_lowercase_short_dump, CharT, char
 BOOST_AUTO_TEST_CASE_TEMPLATE(unbounded_binary_uppercase_short_dump, CharT, char_types)
 {
     typedef CharT char_type;
-    typedef std::basic_string< char_type > string_type;
     typedef std::basic_ostringstream< char_type > ostream_type;
 
     std::vector< unsigned char > data;
@@ -83,7 +81,6 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(unbounded_binary_uppercase_short_dump, CharT, char
 BOOST_AUTO_TEST_CASE_TEMPLATE(unbounded_binary_pvoid_dump, CharT, char_types)
 {
     typedef CharT char_type;
-    typedef std::basic_string< char_type > string_type;
     typedef std::basic_ostringstream< char_type > ostream_type;
 
     std::vector< unsigned char > data;
@@ -110,7 +107,6 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(unbounded_binary_pvoid_dump, CharT, char_types)
 BOOST_AUTO_TEST_CASE_TEMPLATE(unbounded_binary_large_dump, CharT, char_types)
 {
     typedef CharT char_type;
-    typedef std::basic_string< char_type > string_type;
     typedef std::basic_ostringstream< char_type > ostream_type;
 
     std::vector< unsigned char > data;
@@ -134,7 +130,6 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(unbounded_binary_large_dump, CharT, char_types)
 BOOST_AUTO_TEST_CASE_TEMPLATE(unbounded_binary_tail_dump, CharT, char_types)
 {
     typedef CharT char_type;
-    typedef std::basic_string< char_type > string_type;
     typedef std::basic_ostringstream< char_type > ostream_type;
 
     std::vector< unsigned char > data;
@@ -159,7 +154,6 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(unbounded_binary_tail_dump, CharT, char_types)
 BOOST_AUTO_TEST_CASE_TEMPLATE(bounded_binary_dump, CharT, char_types)
 {
     typedef CharT char_type;
-    typedef std::basic_string< char_type > string_type;
     typedef std::basic_ostringstream< char_type > ostream_type;
 
     std::vector< unsigned char > data;
@@ -189,7 +183,6 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(bounded_binary_dump, CharT, char_types)
 BOOST_AUTO_TEST_CASE_TEMPLATE(unbounded_element_dump, CharT, char_types)
 {
     typedef CharT char_type;
-    typedef std::basic_string< char_type > string_type;
     typedef std::basic_ostringstream< char_type > ostream_type;
 
     std::vector< unsigned int > data;
@@ -218,7 +211,6 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(unbounded_element_dump, CharT, char_types)
 BOOST_AUTO_TEST_CASE_TEMPLATE(bounded_element_dump, CharT, char_types)
 {
     typedef CharT char_type;
-    typedef std::basic_string< char_type > string_type;
     typedef std::basic_ostringstream< char_type > ostream_type;
 
     std::vector< unsigned int > data;
