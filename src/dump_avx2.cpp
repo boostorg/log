@@ -226,6 +226,7 @@ BOOST_FORCEINLINE void dump_data_avx2(const void* data, std::size_t size, std::b
 
         _mm256_zeroall(); // need to zero all ymm registers to avoid register spills/restores the compler generates around the function call
         strm.write(buf_begin, prealign_size * 3u - 1u);
+
         buf_begin = buf;
         size -= prealign_size;
         p += prealign_size;
@@ -272,6 +273,7 @@ BOOST_FORCEINLINE void dump_data_avx2(const void* data, std::size_t size, std::b
             tail_size -= 16u;
         }
 
+        _mm256_zeroall(); // need to zero all ymm registers to avoid register spills/restores the compler generates around the function call
         const char* const char_table = (strm.flags() & std::ios_base::uppercase) ? g_uppercase_dump_char_table : g_lowercase_dump_char_table;
         for (unsigned int i = 0; i < tail_size; ++i, ++p, b += 3u)
         {
@@ -281,7 +283,6 @@ BOOST_FORCEINLINE void dump_data_avx2(const void* data, std::size_t size, std::b
             b[2] = static_cast< char_type >(char_table[n & 0x0F]);
         }
 
-        _mm256_zeroall(); // need to zero all ymm registers to avoid register spills/restores the compler generates around the function call
         strm.write(buf_begin, b - buf_begin);
     }
 }
