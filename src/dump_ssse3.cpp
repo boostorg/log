@@ -155,21 +155,6 @@ BOOST_FORCEINLINE void store_characters(__m128i mm_chars, CharT* buf)
     }
 }
 
-//! This function marks all xmm registers clobbered. It allows to force gcc to omit register spills/restores around function calls.
-BOOST_FORCEINLINE void clobber_xmm()
-{
-#if defined(__GNUC__)
-    __asm__ __volatile__
-    (
-        "" : : :
-        "xmm0", "xmm1", "xmm2", "xmm3", "xmm4", "xmm5", "xmm6", "xmm7"
-#if defined(BOOST_LOG_AUX_X86_64)
-        , "xmm8", "xmm9", "xmm10", "xmm11", "xmm12", "xmm13", "xmm14", "xmm15"
-#endif
-    );
-#endif
-}
-
 template< typename CharT >
 BOOST_FORCEINLINE void dump_data_ssse3(const void* data, std::size_t size, std::basic_ostream< CharT >& strm)
 {
@@ -202,7 +187,6 @@ BOOST_FORCEINLINE void dump_data_ssse3(const void* data, std::size_t size, std::
         store_characters(mm_output2, buf + 16u);
         store_characters(mm_output3, buf + 32u);
 
-        clobber_xmm();
         strm.write(buf_begin, prealign_size * 3u - 1u);
 
         buf_begin = buf;
@@ -228,7 +212,6 @@ BOOST_FORCEINLINE void dump_data_ssse3(const void* data, std::size_t size, std::
             store_characters(mm_output3, b + 32u);
         }
 
-        clobber_xmm();
         strm.write(buf_begin, buf_end - buf_begin);
         buf_begin = buf;
     }
@@ -253,7 +236,6 @@ BOOST_FORCEINLINE void dump_data_ssse3(const void* data, std::size_t size, std::
             tail_size -= 16u;
         }
 
-        clobber_xmm();
         const char* const char_table = (strm.flags() & std::ios_base::uppercase) ? g_uppercase_dump_char_table : g_lowercase_dump_char_table;
         for (unsigned int i = 0; i < tail_size; ++i, ++p, b += 3u)
         {
