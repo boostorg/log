@@ -50,13 +50,13 @@ public:
         void* m_pTrampoline;
 
     public:
-        explicit callback_base(void* visitor = 0, void* tramp = 0) :
+        explicit callback_base(void* visitor = 0, void* tramp = 0) BOOST_NOEXCEPT :
             m_pVisitor(visitor),
             m_pTrampoline(tramp)
         {
         }
         template< typename ValueT >
-        explicit callback_base(void* visitor, void (*tramp)(void*, ValueT const&)) :
+        explicit callback_base(void* visitor, void (*tramp)(void*, ValueT const&)) BOOST_NOEXCEPT :
             m_pVisitor(visitor)
         {
             typedef void (*trampoline_t)(void*, ValueT const&);
@@ -92,10 +92,10 @@ public:
         typedef T supported_type;
 
     public:
-        callback() : callback_base()
+        callback() BOOST_NOEXCEPT : callback_base()
         {
         }
-        explicit callback(callback_base const& base) : callback_base(base)
+        explicit callback(callback_base const& base) BOOST_NOEXCEPT : callback_base(base)
         {
         }
 
@@ -114,7 +114,7 @@ public:
 
         BOOST_EXPLICIT_OPERATOR_BOOL()
 
-        bool operator! () const { return (this->m_pVisitor == 0); }
+        bool operator! () const BOOST_NOEXCEPT { return (this->m_pVisitor == 0); }
     };
 
 #else // BOOST_LOG_DOXYGEN_PASS
@@ -141,7 +141,7 @@ public:
         /*!
          * The operator checks if the visitor is not attached to a receiver
          */
-        bool operator! () const;
+        bool operator! () const BOOST_NOEXCEPT;
     };
 
 #endif // BOOST_LOG_DOXYGEN_PASS
@@ -158,9 +158,10 @@ protected:
     /*!
      * Initializing constructor
      */
-    explicit type_dispatcher(get_callback_impl_type get_callback_impl) : m_get_callback_impl(get_callback_impl)
+    explicit type_dispatcher(get_callback_impl_type get_callback_impl) BOOST_NOEXCEPT : m_get_callback_impl(get_callback_impl)
     {
     }
+
     // Destructor and copying can only be called from the derived classes
     BOOST_DEFAULTED_FUNCTION(~type_dispatcher(), {})
     BOOST_DEFAULTED_FUNCTION(type_dispatcher(type_dispatcher const& that), : m_get_callback_impl(that.m_get_callback_impl) {})

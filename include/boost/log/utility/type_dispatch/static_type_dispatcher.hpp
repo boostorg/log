@@ -113,12 +113,11 @@ private:
 
 protected:
     //! Initializing constructor
-    template< typename VisitorT, std::size_t N >
-    type_sequence_dispatcher_base(array< dispatching_map_element_type, N > const& disp_map, VisitorT& visitor) :
+    type_sequence_dispatcher_base(const dispatching_map_element_type* disp_map, std::size_t disp_map_size, void* visitor) BOOST_NOEXCEPT :
         type_dispatcher(&type_sequence_dispatcher_base::get_callback),
-        m_dispatching_map_begin(disp_map.data()),
-        m_dispatching_map_size(N),
-        m_visitor((void*)boost::addressof(visitor))
+        m_dispatching_map_begin(disp_map),
+        m_dispatching_map_size(disp_map_size),
+        m_visitor(visitor)
     {
     }
 
@@ -171,7 +170,7 @@ public:
      */
     template< typename VisitorT >
     explicit type_sequence_dispatcher(VisitorT& visitor) :
-        type_sequence_dispatcher_base(get_dispatching_map< VisitorT >(), visitor)
+        type_sequence_dispatcher_base(get_dispatching_map< VisitorT >().data(), dispatching_map::static_size, (void*)boost::addressof(visitor))
     {
     }
 
@@ -217,7 +216,7 @@ private:
 
 protected:
     //! Initializing constructor
-    single_type_dispatcher_base(std::type_info const& type, callback_base const& callback) :
+    single_type_dispatcher_base(std::type_info const& type, callback_base const& callback) BOOST_NOEXCEPT :
         type_dispatcher(&single_type_dispatcher_base::get_callback),
         m_type(type),
         m_callback(callback)
@@ -248,7 +247,7 @@ class single_type_dispatcher :
 public:
     //! Constructor
     template< typename VisitorT >
-    explicit single_type_dispatcher(VisitorT& visitor) :
+    explicit single_type_dispatcher(VisitorT& visitor) BOOST_NOEXCEPT :
         single_type_dispatcher_base(typeid(visible_type< T >), callback_base((void*)boost::addressof(visitor), &callback_base::trampoline< VisitorT, T >))
     {
     }
@@ -292,6 +291,13 @@ private:
 public:
     /*!
      * Constructor. Initializes the dispatcher internals.
+     *
+     * The \a receiver object is not copied inside the dispatcher, but references to
+     * it may be kept by the dispatcher after construction. The receiver object must remain
+     * valid until the dispatcher is destroyed.
+     *
+     * \param receiver Unary function object that will be called on a dispatched value. The receiver
+     *                 must be callable with an argument of any of the supported types of the dispatcher.
      */
     template< typename ReceiverT >
     explicit static_type_dispatcher(ReceiverT& receiver) :
