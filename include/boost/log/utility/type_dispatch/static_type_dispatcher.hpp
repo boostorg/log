@@ -105,7 +105,9 @@ private:
 
 private:
     //! Dispatching map
-    const dispatching_map_element_type* m_dispatching_map_begin, *m_dispatching_map_end;
+    const dispatching_map_element_type* m_dispatching_map_begin;
+    //! Dispatching map size
+    std::size_t m_dispatching_map_size;
     //! Pointer to the receiver function
     void* m_visitor;
 
@@ -114,8 +116,8 @@ protected:
     template< typename VisitorT, std::size_t N >
     type_sequence_dispatcher_base(array< dispatching_map_element_type, N > const& disp_map, VisitorT& visitor) :
         type_dispatcher(&type_sequence_dispatcher_base::get_callback),
-        m_dispatching_map_begin(disp_map.begin()),
-        m_dispatching_map_end(disp_map.end()),
+        m_dispatching_map_begin(disp_map.data()),
+        m_dispatching_map_size(N),
         m_visitor((void*)boost::addressof(visitor))
     {
     }
@@ -127,14 +129,14 @@ private:
         type_sequence_dispatcher_base* const self = static_cast< type_sequence_dispatcher_base* >(p);
         type_info_wrapper wrapper(type);
         const dispatching_map_element_type* begin = self->m_dispatching_map_begin;
-        const dispatching_map_element_type* end = self->m_dispatching_map_end;
-        const dispatching_map_element_type* it =
-            std::lower_bound(
-                begin,
-                end,
-                dispatching_map_element_type(wrapper, (void*)0),
-                dispatching_map_order()
-            );
+        const dispatching_map_element_type* end = begin + self->m_dispatching_map_size;
+        const dispatching_map_element_type* it = std::lower_bound
+        (
+            begin,
+            end,
+            dispatching_map_element_type(wrapper, (void*)0),
+            dispatching_map_order()
+        );
 
         if (it != end && it->first == wrapper)
             return callback_base(self->m_visitor, it->second);
