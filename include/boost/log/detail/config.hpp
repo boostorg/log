@@ -30,7 +30,7 @@
 #   error Boost.Log: RTTI is required by the library
 #endif
 
-#if _MSC_VER >= 1600
+#if defined(_MSC_VER) && _MSC_VER >= 1600
 #   define BOOST_LOG_HAS_PRAGMA_DETECT_MISMATCH
 #endif
 
