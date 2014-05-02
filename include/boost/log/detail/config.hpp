@@ -30,6 +30,14 @@
 #   error Boost.Log: RTTI is required by the library
 #endif
 
+#if _MSC_VER >= 1600
+#   define BOOST_LOG_HAS_PRAGMA_DETECT_MISMATCH
+#endif
+
+#if defined(BOOST_LOG_HAS_PRAGMA_DETECT_MISMATCH)
+#include <boost/preprocessor/stringize.hpp>
+#endif
+
 #if !defined(BOOST_WINDOWS)
 #   ifndef BOOST_LOG_WITHOUT_DEBUG_OUTPUT
 #       define BOOST_LOG_WITHOUT_DEBUG_OUTPUT
@@ -337,6 +345,10 @@ namespace log {}
 #   define BOOST_LOG_CLOSE_NAMESPACE }
 
 #endif // !defined(BOOST_LOG_DOXYGEN_PASS)
+
+#if defined(BOOST_LOG_HAS_PRAGMA_DETECT_MISMATCH)
+#pragma detect_mismatch("boost_log_abi", BOOST_PP_STRINGIZE(BOOST_LOG_VERSION_NAMESPACE))
+#endif
 
 } // namespace boost
 
