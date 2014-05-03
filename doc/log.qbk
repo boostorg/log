@@ -171,6 +171,12 @@ The following compilers/platforms are not supported and will likely fail to comp
 
 Boost.Log should be compatible with all hardware architectures supported by Boost. However, in case of 32 bit x86 architecture the library requires at least i586 class CPU to run.
 
+[heading Notes for GCC users]
+
+GCC versions since 4.5 support link time optimization (LTO), when most of optimizations and binary code generation happens at linking stage. This allows to perform more advanced optimizations and produce faster code. Unfortunately, it does not play well with projects containing source files that need to be compiled with different compiler options. Boost.Log is one of such projects, some parts of its sources contain optimizations for modern CPUs and will not run on older CPUs. Enabling LTO for Boost.Log will produce binaries incompatible with older CPUs, which will likely result in crashes in run time. For this reason GCC LTO is not supported in Boost.Log.
+
+There is a GCC [@http://gcc.gnu.org/bugzilla/show_bug.cgi?id=60607 bug] which may cause compilation failures when `-march=native` command line argument is used. It is recommended to avoid using `-march=native` argument (or `instruction-set=native` bjam property) and instead explicitly specify the target CPU (e.g. `instruction-set=sandy-bridge`).
+
 [heading Notes for MinGW, Cygwin and Visual Studio Express Edition users]
 
 In order to compile the library with these compilers special preparations are needed. First, in case of MinGW or Cygwin make sure you have installed the latest GCC version. The library will most likely fail to compile with GCC 3.x.
