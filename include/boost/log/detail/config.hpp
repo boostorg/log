@@ -273,6 +273,11 @@
 #   endif
 #endif // defined(BOOST_LOG_USE_COMPILER_TLS)
 
+#ifndef BOOST_LOG_CPU_CACHE_LINE_SIZE
+//! The macro defines the CPU cache line size for the target architecture. This is mostly used for optimization.
+#define BOOST_LOG_CPU_CACHE_LINE_SIZE 64
+#endif
+
 namespace boost {
 
 // Setup namespace name
