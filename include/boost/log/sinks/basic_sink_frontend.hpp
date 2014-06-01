@@ -32,7 +32,6 @@
 #include <boost/thread/locks.hpp>
 #include <boost/log/detail/locks.hpp>
 #include <boost/log/detail/light_rw_mutex.hpp>
-#include <boost/concept_check.hpp>
 #endif // !defined(BOOST_LOG_NO_THREADS)
 #include <boost/log/detail/header.hpp>
 
