@@ -87,10 +87,10 @@ The [link log.detailed.sink_frontends.sync `synchronous_sink`] class template ab
 
 The [link log.detailed.sink_backends.text_ostream `text_ostream_backend`] class writes formatted log records into STL-compatible streams. We have used a file stream above but we could have used any type of stream. For example, adding output to console could look as follows:
 
-    #include <``[boost_log_utility_empty_deleter_hpp]``>
+    #include <boost/core/null_deleter.hpp>
 
     // We have to provide an empty deleter to avoid destroying the global stream object
-    boost::shared_ptr< std::ostream > stream(&std::clog, logging::empty_deleter());
+    boost::shared_ptr< std::ostream > stream(&std::clog, boost::null_deleter());
     sink->locked_backend()->add_stream(stream);
 
 The [link log.detailed.sink_backends.text_ostream `text_ostream_backend`] supports adding several streams. In that case its output will be duplicated to all added streams. It can be useful to duplicate the output to console and file since all the filtering, formatting and other overhead of the library happen only once per record for the sink.
