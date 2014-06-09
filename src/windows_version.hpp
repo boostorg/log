@@ -26,10 +26,13 @@
 #define _WIN32_WINNT 0x0600 // _WIN32_WINNT_LONGHORN
 #endif
 
-#else
+#elif !defined(_WIN32_WINNT)
 
-#ifndef _WIN32_WINNT
-#define _WIN32_WINNT 0x0500 // _WIN32_WINNT_WIN2K
+// Use the default WinAPI version
+#include <boost/detail/winapi/config.hpp>
+
+#if !defined(_WIN32_WINNT)
+#define _WIN32_WINNT BOOST_USE_WINAPI_VERSION
 #endif
 
 #endif // BOOST_LOG_USE_WINNT6_API
