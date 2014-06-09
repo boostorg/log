@@ -29,6 +29,15 @@ namespace aux {
 
 BOOST_LOG_ANONYMOUS_NAMESPACE {
 
+// cxxabi.h availability macro
+#if defined(BOOST_CLANG)
+#   if defined(__has_include) && __has_include(<cxxabi.h>)
+#       define BOOST_LOG_HAS_CXXABI_H
+#   endif
+#elif defined(__GLIBCXX__) || defined(__GLIBCPP__)
+#   define BOOST_LOG_HAS_CXXABI_H
+#endif
+
 #if defined(BOOST_LOG_HAS_CXXABI_H)
 // MinGW GCC 4.4 seem to not work the same way the newer GCC versions do. As a result, __cxa_get_globals based implementation will always return 0.
 // Just disable it for now and fall back to std::uncaught_exception().
