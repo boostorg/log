@@ -71,6 +71,7 @@ local doxygen_params =
                         BOOST_DEFAULTED_FUNCTION(x,y)=\"x = default;\" \\
                         BOOST_DELETED_FUNCTION(x)=\"x = delete;\" \\
                         BOOST_EXPLICIT_OPERATOR_BOOL()=\"explicit operator bool() const;\" \\
+                        BOOST_EXPLICIT_OPERATOR_BOOL_NOEXCEPT()=\"explicit operator bool() const noexcept;\" \\
                         BOOST_LOG_USE_CHAR \\
                         BOOST_LOG_USE_WCHAR_T \\
                         BOOST_LOG_API= \\
