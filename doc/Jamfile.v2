@@ -49,6 +49,7 @@ local doxygen_params =
                         BOOST_FORCEINLINE=inline \\
                         BOOST_STATIC_ASSERT(x)= \\
                         BOOST_STATIC_ASSERT_MSG(x,y)= \\
+                        BOOST_STATIC_CONSTANT(x,y)=\"static constexpr x y\" \\
                         BOOST_RV_REF(x)=\"x&&\" \\
                         BOOST_NESTED_TEMPLATE=template \\
                         BOOST_CONSTEXPR=constexpr \\
