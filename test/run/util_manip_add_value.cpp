@@ -67,6 +67,33 @@ inline std::basic_ostream< CharT, TraitsT >& operator<< (std::basic_ostream< Cha
     return strm;
 }
 
+struct my_pod_type
+{
+    unsigned int value;
+};
+
+inline bool operator== (my_pod_type const& left, my_pod_type const& right)
+{
+    return left.value == right.value;
+}
+
+inline bool operator!= (my_pod_type const& left, my_pod_type const& right)
+{
+    return left.value != right.value;
+}
+
+template< typename CharT, typename TraitsT >
+inline std::basic_ostream< CharT, TraitsT >& operator<< (std::basic_ostream< CharT, TraitsT >& strm, my_pod_type const& val)
+{
+    if (strm.good())
+    {
+        boost::io::ios_flags_saver flags(strm);
+        boost::io::basic_ios_fill_saver< CharT, TraitsT > fill(strm);
+        strm << std::hex << std::internal << std::setfill(static_cast< CharT >('0')) << std::setw(10) << val.value;
+    }
+    return strm;
+}
+
 BOOST_AUTO_TEST_CASE(manual_add_attr)
 {
     logging::record rec = make_record(logging::attribute_set());
@@ -74,15 +101,26 @@ BOOST_AUTO_TEST_CASE(manual_add_attr)
     logging::record_ostream strm(rec);
 
     my_type val(0xaaaaaaaa);
-    strm << logging::add_value("MyAttr1", val) << logging::add_value("MyAttr2", my_type(0xbbbbbbbb));
+    const my_type const_val(0xbbbbbbbb);
+    strm << logging::add_value("MyAttr1", val) << logging::add_value("MyAttr2", const_val) << logging::add_value("MyAttr3", my_type(0xcccccccc));
+
+    // Test for MSVC bug: if the value is a scalar type, it saves a dangling reference to the add_value_manip,
+    // which results in garbage in the attribute value
+    strm << logging::add_value("MyAttr4", 100u);
+    strm << logging::add_value("MyAttr5", my_pod_type());
+
     strm.detach_from_record();
 
     BOOST_CHECK_EQUAL(rec["MyAttr1"].extract< my_type >(), val);
-    BOOST_CHECK_EQUAL(rec["MyAttr2"].extract< my_type >(), my_type(0xbbbbbbbb));
+    BOOST_CHECK_EQUAL(rec["MyAttr2"].extract< my_type >(), const_val);
+    BOOST_CHECK_EQUAL(rec["MyAttr3"].extract< my_type >(), my_type(0xcccccccc));
+    BOOST_CHECK_EQUAL(rec["MyAttr4"].extract< unsigned int >(), 100u);
+    BOOST_CHECK_EQUAL(rec["MyAttr5"].extract< my_pod_type >(), my_pod_type());
 }
 
 BOOST_LOG_ATTRIBUTE_KEYWORD(a_my1, "MyAttr1", my_type)
 BOOST_LOG_ATTRIBUTE_KEYWORD(a_my2, "MyAttr2", my_type)
+BOOST_LOG_ATTRIBUTE_KEYWORD(a_my3, "MyAttr3", my_type)
 
 BOOST_AUTO_TEST_CASE(keyword_add_attr)
 {
@@ -91,9 +129,11 @@ BOOST_AUTO_TEST_CASE(keyword_add_attr)
     logging::record_ostream strm(rec);
 
     my_type val(0xaaaaaaaa);
-    strm << logging::add_value(a_my1, val) << logging::add_value(a_my2, my_type(0xbbbbbbbb));
+    const my_type const_val(0xbbbbbbbb);
+    strm << logging::add_value(a_my1, val) << logging::add_value(a_my2, const_val) << logging::add_value(a_my3, my_type(0xcccccccc));
     strm.detach_from_record();
 
     BOOST_CHECK_EQUAL(rec[a_my1], val);
-    BOOST_CHECK_EQUAL(rec[a_my2], my_type(0xbbbbbbbb));
+    BOOST_CHECK_EQUAL(rec[a_my2], const_val);
+    BOOST_CHECK_EQUAL(rec[a_my3], my_type(0xcccccccc));
 }
