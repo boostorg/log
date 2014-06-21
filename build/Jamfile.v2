@@ -113,22 +113,36 @@ project boost/log
         <conditional>@select-regex-backend
         <define>BOOST_SPIRIT_USE_PHOENIX_V3=1
         <define>BOOST_THREAD_DONT_USE_CHRONO=1 # Don't introduce false dependency on Boost.Chrono
+
+        # Disable warnings about using 'insecure' standard C functions
         <toolset>msvc:<define>_SCL_SECURE_NO_WARNINGS
         <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE
         <toolset>msvc:<define>_CRT_SECURE_NO_WARNINGS
         <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE
-        <toolset>msvc:<cxxflags>/bigobj
-        <toolset>msvc:<cxxflags>/wd4503 # decorated name length exceeded, name was truncated
         <toolset>intel-win:<define>_SCL_SECURE_NO_WARNINGS
         <toolset>intel-win:<define>_SCL_SECURE_NO_DEPRECATE
         <toolset>intel-win:<define>_CRT_SECURE_NO_WARNINGS
         <toolset>intel-win:<define>_CRT_SECURE_NO_DEPRECATE
+
+        <toolset>msvc:<cxxflags>/bigobj
+        <toolset>msvc:<cxxflags>/wd4503 # decorated name length exceeded, name was truncated
+
+        # Disable Intel warnings:
+        # warning #177: function "X" was declared but never referenced
+        # warning #780: using-declaration ignored -- it refers to the current namespace
+        # warning #2196: routine is both "inline" and "noinline"
+        <toolset>intel-win:<cxxflags>/Qwd177,780,2196
+        <toolset>intel-linux:<cxxflags>-wd177,780,2196
+        <toolset>intel-darwin:<cxxflags>-wd177,780,2196
+
         <toolset>darwin:<cxxflags>-ftemplate-depth-1024
         <toolset>clang:<cxxflags>-ftemplate-depth-1024
         <toolset>gcc:<cxxflags>-ftemplate-depth-1024
+
         <toolset>gcc:<cxxflags>-fno-strict-aliasing  # avoids strict aliasing violations in other Boost components
         <toolset>gcc,<target-os>windows:<linkflags>-Wl,--enable-auto-import
         <toolset>gcc,<target-os>cygwin:<linkflags>-Wl,--enable-auto-import
+
         <library>/boost/date_time//boost_date_time
         <library>/boost/filesystem//boost_filesystem
         <library>/boost/system//boost_system
@@ -207,7 +221,7 @@ rule ssse3-targets-cond ( properties * )
                 }
                 else
                 {
-                    result = <cxxflags>"-march=core2 -msse -msse2 -msse3 -mssse3" ;
+                    result = <cxxflags>"-march=core2" ;
                 }
             }
             else if <toolset>msvc in $(properties)
@@ -269,11 +283,11 @@ rule avx2-targets-cond ( properties * )
             {
                 if <toolset-intel:platform>win in $(properties)
                 {
-                    result = <cxxflags>"/QxAVX2" ;
+                    result = <cxxflags>"/arch:CORE-AVX2" ;
                 }
                 else
                 {
-                    result = <cxxflags>"-march=core-avx2 -mavx -mavx2 -fabi-version=0" ;
+                    result = <cxxflags>"-march=core-avx2 -fabi-version=0" ;
                 }
             }
             else if <toolset>msvc in $(properties)
