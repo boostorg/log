@@ -391,26 +391,33 @@ private:
             p = new node(key, data, true);
         }
 
+        node_list::iterator it;
         if (b.first == NULL)
         {
             // The bucket is empty
             b.first = b.last = p;
-            m_Nodes.push_back(*p);
+            it = m_Nodes.end();
+        }
+        else if (where == b.first)
+        {
+            // The new element should become the first element of the bucket
+            it = m_Nodes.iterator_to(*where);
+            b.first = p;
         }
         else if (where == b.last && key.id() > where->m_Value.first.id())
         {
             // The new element should become the last element of the bucket
-            node_list::iterator it = m_Nodes.iterator_to(*where);
+            it = m_Nodes.iterator_to(*where);
             ++it;
-            m_Nodes.insert(it, *p);
             b.last = p;
         }
         else
         {
             // The new element should be within the bucket
-            node_list::iterator it = m_Nodes.iterator_to(*where);
-            m_Nodes.insert(it, *p);
+            it = m_Nodes.iterator_to(*where);
         }
+
+        m_Nodes.insert(it, *p);
 
         return p;
     }

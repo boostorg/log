@@ -276,26 +276,33 @@ public:
         node* const n = m_Allocator.allocate(1, NULL);
         new (n) node(key, data);
 
+        node_list::iterator it;
         if (b.first == NULL)
         {
             // The bucket is empty
             b.first = b.last = n;
-            m_Nodes.push_back(*n);
+            it = m_Nodes.end();
+        }
+        else if (p == b.first)
+        {
+            // The new element should become the first element of the bucket
+            it = m_Nodes.iterator_to(*p);
+            b.first = n;
         }
         else if (p == b.last && key.id() > p->m_Value.first.id())
         {
             // The new element should become the last element of the bucket
-            node_list::iterator it = m_Nodes.iterator_to(*p);
+            it = m_Nodes.iterator_to(*p);
             ++it;
-            m_Nodes.insert(it, *n);
             b.last = n;
         }
         else
         {
             // The new element should be within the bucket
-            node_list::iterator it = m_Nodes.iterator_to(*p);
-            m_Nodes.insert(it, *n);
+            it = m_Nodes.iterator_to(*p);
         }
+
+        m_Nodes.insert(it, *n);
 
         return std::make_pair(iterator(n), true);
     }
@@ -309,24 +316,23 @@ public:
 
         // Adjust bucket boundaries, if needed
         bucket& b = get_bucket(it->first.id());
-        unsigned int choice = (static_cast< unsigned int >(p == b.first) << 1) |
-            static_cast< unsigned int >(p == b.last);
-        switch (choice)
+        if (p == b.first)
         {
-        case 1: // The erased element is the last one in the bucket
+            if (p == b.last)
+            {
+                // The erased element is the only one in the bucket
+                b.first = b.last = NULL;
+            }
+            else
+            {
+                // The erased element is the first one in the bucket
+                b.first = value_traits::to_value_ptr(node_traits::get_next(b.first));
+            }
+        }
+        else if (p == b.last)
+        {
+            // The erased element is the last one in the bucket
             b.last = value_traits::to_value_ptr(node_traits::get_previous(b.last));
-            break;
-
-        case 2: // The erased element is the first one in the bucket
-            b.first = value_traits::to_value_ptr(node_traits::get_next(b.first));
-            break;
-
-        case 3: // The erased element is the only one in the bucket
-            b.first = b.last = NULL;
-            break;
-
-        default: // The erased element is somewhere in the middle of the bucket
-            break;
         }
 
         m_Nodes.erase_and_dispose(m_Nodes.iterator_to(*p), disposer(m_Allocator));
