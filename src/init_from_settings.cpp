@@ -37,10 +37,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/mpl/if.hpp>
 #include <boost/type_traits/is_unsigned.hpp>
-#include <boost/spirit/include/qi_core.hpp>
-#include <boost/spirit/include/qi_lit.hpp>
-#include <boost/spirit/include/qi_eoi.hpp>
-#include <boost/spirit/include/qi_symbols.hpp>
+#include <boost/spirit/home/qi/numeric/numeric_utils.hpp>
 #include <boost/log/detail/code_conversion.hpp>
 #include <boost/log/detail/singleton.hpp>
 #include <boost/log/detail/default_attribute_names.hpp>
@@ -50,11 +47,10 @@
 #include <boost/log/sinks/frontend_requirements.hpp>
 #include <boost/log/expressions/filter.hpp>
 #include <boost/log/expressions/formatter.hpp>
+#include <boost/log/utility/string_literal.hpp>
 #include <boost/log/utility/setup/from_settings.hpp>
 #include <boost/log/utility/setup/filter_parser.hpp>
 #include <boost/log/utility/setup/formatter_parser.hpp>
-#include <boost/log/utility/functional/bind_assign.hpp>
-#include <boost/log/utility/functional/as_action.hpp>
 #if !defined(BOOST_LOG_NO_ASIO)
 #include <boost/asio/ip/address.hpp>
 #endif
@@ -90,26 +86,57 @@ inline IntT param_cast_to_int(const char* param_name, std::basic_string< CharT >
     IntT res = 0;
     typedef typename mpl::if_<
         is_unsigned< IntT >,
-        qi::uint_parser< IntT >,
-        qi::int_parser< IntT >
-    >::type int_parser_t;
-    if (qi::parse(value.begin(), value.end(), int_parser_t() >> qi::eoi, res))
+        qi::extract_uint< IntT, 10, 1, -1 >,
+        qi::extract_int< IntT, 10, 1, -1 >
+    >::type extract;
+    const CharT* begin = value.c_str(), *end = begin + value.size();
+    if (extract::call(begin, end, res) && begin == end)
         return res;
     else
         throw_invalid_value(param_name);
 }
 
+//! Case-insensitive character comparison predicate
+struct is_case_insensitive_equal
+{
+    typedef bool result_type;
+
+    template< typename CharT >
+    result_type operator() (CharT left, CharT right) const BOOST_NOEXCEPT
+    {
+        typedef typename boost::log::aux::encoding< CharT >::type encoding;
+        return encoding::tolower(left) == encoding::tolower(right);
+    }
+};
+
 //! Extracts a boolean value from parameter value
 template< typename CharT >
 inline bool param_cast_to_bool(const char* param_name, std::basic_string< CharT > const& value)
 {
-    typedef boost::log::aux::encoding_specific< typename boost::log::aux::encoding< CharT >::type > encoding_specific;
+    typedef CharT char_type;
+    typedef boost::log::aux::char_constants< char_type > constants;
+    typedef boost::log::basic_string_literal< char_type > literal_type;
 
-    unsigned int res = 0;
-    if (qi::parse(value.begin(), value.end(), encoding_specific::no_case[ qi::uint_ | qi::bool_ ] >> qi::eoi, res))
-        return res != 0;
+    const char_type* begin = value.c_str(), *end = begin + value.size();
+    std::size_t len = end - begin;
+
+    literal_type keyword = constants::true_keyword();
+    if (keyword.size() == len && std::equal(begin, end, keyword.c_str(), is_case_insensitive_equal()))
+    {
+        return true;
+    }
     else
-        throw_invalid_value(param_name);
+    {
+        keyword = constants::false_keyword();
+        if (keyword.size() == len && std::equal(begin, end, keyword.c_str(), is_case_insensitive_equal()))
+        {
+            return false;
+        }
+        else
+        {
+            return param_cast_to_int< unsigned int >(param_name, value) != 0;
+        }
+    }
 }
 
 #if !defined(BOOST_LOG_NO_ASIO)
@@ -121,64 +148,103 @@ inline std::string param_cast_to_address(const char* param_name, std::basic_stri
 }
 #endif // !defined(BOOST_LOG_NO_ASIO)
 
+template< typename CharT >
+inline bool is_weekday(const CharT* str, std::size_t len, boost::log::basic_string_literal< CharT > const& weekday, boost::log::basic_string_literal< CharT > const& short_weekday)
+{
+    return (len == weekday.size() && std::equal(weekday.begin(), weekday.end(), str)) ||
+        (len == short_weekday.size() && std::equal(short_weekday.begin(), short_weekday.end(), str));
+}
+
 //! The function extracts the file rotation time point predicate from the parameter
 template< typename CharT >
 sinks::file::rotation_at_time_point param_cast_to_rotation_time_point(const char* param_name, std::basic_string< CharT > const& value)
 {
     typedef CharT char_type;
-    typedef boost::log::aux::encoding_specific< typename boost::log::aux::encoding< char_type >::type > encoding_specific;
     typedef boost::log::aux::char_constants< char_type > constants;
-    typedef std::basic_string< char_type > string_type;
+    typedef typename boost::log::aux::encoding< char_type >::type encoding;
+    typedef boost::log::aux::encoding_specific< encoding > encoding_specific;
+    typedef boost::log::basic_string_literal< char_type > literal_type;
+    typedef qi::extract_uint< unsigned short, 10, 1, 2 > day_extract;
+    typedef qi::extract_uint< unsigned char, 10, 2, 2 > time_component_extract;
 
     const char_type colon = static_cast< char_type >(':');
-    qi::uint_parser< unsigned char, 10, 2, 2 > time_component_p;
-    qi::uint_parser< unsigned short, 10, 1, 2 > day_p;
-
-    qi::symbols< CharT, date_time::weekdays > weekday_p;
-    weekday_p.add
-        (constants::monday_keyword(), date_time::Monday)
-        (constants::tuesday_keyword(), date_time::Tuesday)
-        (constants::wednesday_keyword(), date_time::Wednesday)
-        (constants::thursday_keyword(), date_time::Thursday)
-        (constants::friday_keyword(), date_time::Friday)
-        (constants::saturday_keyword(), date_time::Saturday)
-        (constants::sunday_keyword(), date_time::Sunday);
-    weekday_p.add
-        (constants::short_monday_keyword(), date_time::Monday)
-        (constants::short_tuesday_keyword(), date_time::Tuesday)
-        (constants::short_wednesday_keyword(), date_time::Wednesday)
-        (constants::short_thursday_keyword(), date_time::Thursday)
-        (constants::short_friday_keyword(), date_time::Friday)
-        (constants::short_saturday_keyword(), date_time::Saturday)
-        (constants::short_sunday_keyword(), date_time::Sunday);
-
     optional< date_time::weekdays > weekday;
     optional< unsigned short > day;
     unsigned char hour = 0, minute = 0, second = 0;
+    const char_type* begin = value.c_str(), *end = begin + value.size();
 
-    bool result = qi::parse
-    (
-        value.begin(), value.end(),
-        (
-            -(
-                // First check for a weekday
-                (weekday_p >> qi::omit[ +encoding_specific::space ])[boost::log::as_action(boost::log::bind_assign(weekday))] |
-                // ... or a day in month
-                (day_p >> qi::omit[ +encoding_specific::space ])[boost::log::as_action(boost::log::bind_assign(day))]
-            ) >>
-            // Then goes the time of day
-            (
-                time_component_p[boost::log::as_action(boost::log::bind_assign(hour))] >> colon >>
-                time_component_p[boost::log::as_action(boost::log::bind_assign(minute))] >> colon >>
-                time_component_p[boost::log::as_action(boost::log::bind_assign(second))]
-            ) >>
-            qi::eoi
-        )
-    );
-
-    if (!result)
+    if (!encoding::isalnum(*begin)) // begin is null-terminated, so we also check that the string is not empty here
         throw_invalid_value(param_name);
 
+    const char_type* p = begin + 1;
+    if (encoding::isalpha(*begin))
+    {
+        // This must be a weekday
+        while (encoding::isalpha(*p))
+            ++p;
+
+        std::size_t len = p - begin;
+        if (is_weekday(begin, len, constants::monday_keyword(), constants::short_monday_keyword()))
+            weekday = date_time::Monday;
+        else if (is_weekday(begin, len, constants::tuesday_keyword(), constants::short_tuesday_keyword()))
+            weekday = date_time::Tuesday;
+        else if (is_weekday(begin, len, constants::wednesday_keyword(), constants::short_wednesday_keyword()))
+            weekday = date_time::Wednesday;
+        else if (is_weekday(begin, len, constants::thursday_keyword(), constants::short_thursday_keyword()))
+            weekday = date_time::Thursday;
+        else if (is_weekday(begin, len, constants::friday_keyword(), constants::short_friday_keyword()))
+            weekday = date_time::Friday;
+        else if (is_weekday(begin, len, constants::saturday_keyword(), constants::short_saturday_keyword()))
+            weekday = date_time::Saturday;
+        else if (is_weekday(begin, len, constants::sunday_keyword(), constants::short_sunday_keyword()))
+            weekday = date_time::Sunday;
+        else
+            throw_invalid_value(param_name);
+    }
+    else
+    {
+        // This may be either a month day or an hour
+        while (encoding::isdigit(*p))
+            ++p;
+
+        if (encoding::isspace(*p))
+        {
+            // This is a month day
+            unsigned short mday = 0;
+            const char_type* b = begin;
+            if (!day_extract::call(b, p, mday) || b != p)
+                throw_invalid_value(param_name);
+
+            day = mday;
+        }
+        else if (*p == colon)
+        {
+            // This is an hour, reset the pointer
+            p = begin;
+        }
+        else
+            throw_invalid_value(param_name);
+    }
+
+    // Skip spaces
+    while (encoding::isspace(*p))
+        ++p;
+
+    // Parse hour
+    if (!time_component_extract::call(p, end, hour) || *p != colon)
+        throw_invalid_value(param_name);
+    ++p;
+
+    // Parse minute
+    if (!time_component_extract::call(p, end, minute) || *p != colon)
+        throw_invalid_value(param_name);
+    ++p;
+
+    // Parse second
+    if (!time_component_extract::call(p, end, second) || p != end)
+        throw_invalid_value(param_name);
+
+    // Construct the predicate
     if (weekday)
         return sinks::file::rotation_at_time_point(weekday.get(), hour, minute, second);
     else if (day)
