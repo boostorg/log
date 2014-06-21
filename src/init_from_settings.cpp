@@ -16,6 +16,7 @@
 #ifndef BOOST_LOG_WITHOUT_SETTINGS_PARSERS
 
 #include "windows_version.hpp"
+#include <cstddef>
 #include <ios>
 #include <map>
 #include <vector>
