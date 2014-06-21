@@ -368,12 +368,12 @@ public:
     /*!
      * Checks if the section refers to the container.
      */
-    BOOST_EXPLICIT_OPERATOR_BOOL()
+    BOOST_EXPLICIT_OPERATOR_BOOL_NOEXCEPT()
 
     /*!
      * Checks if the section refers to the container.
      */
-    bool operator! () const { return !m_ptree; }
+    bool operator! () const BOOST_NOEXCEPT { return !m_ptree; }
 
     /*!
      * Returns an iterator over the nested subsections and parameters.

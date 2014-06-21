@@ -14,6 +14,7 @@
  */
 
 #include <memory>
+#include <utility>
 #include <algorithm>
 #include <boost/optional/optional.hpp>
 #include <boost/log/attributes/attribute.hpp>
@@ -237,38 +238,35 @@ BOOST_LOG_API named_scope_list::~named_scope_list()
 //! Swaps two instances of the container
 BOOST_LOG_API void named_scope_list::swap(named_scope_list& that)
 {
-    using std::swap;
-
-    unsigned int choice =
-        static_cast< unsigned int >(this->empty()) | (static_cast< unsigned int >(that.empty()) << 1);
-    switch (choice)
+    if (!this->empty())
     {
-    case 0: // both containers are not empty
-        swap(m_RootNode._m_pNext->_m_pPrev, that.m_RootNode._m_pNext->_m_pPrev);
-        swap(m_RootNode._m_pPrev->_m_pNext, that.m_RootNode._m_pPrev->_m_pNext);
-        swap(m_RootNode, that.m_RootNode);
-        swap(m_Size, that.m_Size);
-        swap(m_fNeedToDeallocate, that.m_fNeedToDeallocate);
-        break;
-
-    case 1: // that is not empty
+        if (!that.empty())
+        {
+            // both containers are not empty
+            std::swap(m_RootNode._m_pNext->_m_pPrev, that.m_RootNode._m_pNext->_m_pPrev);
+            std::swap(m_RootNode._m_pPrev->_m_pNext, that.m_RootNode._m_pPrev->_m_pNext);
+            std::swap(m_RootNode, that.m_RootNode);
+            std::swap(m_Size, that.m_Size);
+            std::swap(m_fNeedToDeallocate, that.m_fNeedToDeallocate);
+        }
+        else
+        {
+            // this is not empty
+            m_RootNode._m_pNext->_m_pPrev = m_RootNode._m_pPrev->_m_pNext = &that.m_RootNode;
+            that.m_RootNode = m_RootNode;
+            m_RootNode._m_pNext = m_RootNode._m_pPrev = &m_RootNode;
+            std::swap(m_Size, that.m_Size);
+            std::swap(m_fNeedToDeallocate, that.m_fNeedToDeallocate);
+        }
+    }
+    else if (!that.empty())
+    {
+        // that is not empty
         that.m_RootNode._m_pNext->_m_pPrev = that.m_RootNode._m_pPrev->_m_pNext = &m_RootNode;
         m_RootNode = that.m_RootNode;
         that.m_RootNode._m_pNext = that.m_RootNode._m_pPrev = &that.m_RootNode;
-        swap(m_Size, that.m_Size);
-        swap(m_fNeedToDeallocate, that.m_fNeedToDeallocate);
-        break;
-
-    case 2: // this is not empty
-        m_RootNode._m_pNext->_m_pPrev = m_RootNode._m_pPrev->_m_pNext = &that.m_RootNode;
-        that.m_RootNode = m_RootNode;
-        m_RootNode._m_pNext = m_RootNode._m_pPrev = &m_RootNode;
-        swap(m_Size, that.m_Size);
-        swap(m_fNeedToDeallocate, that.m_fNeedToDeallocate);
-        break;
-
-    default: // both containers are empty, nothing to do here
-        break;
+        std::swap(m_Size, that.m_Size);
+        std::swap(m_fNeedToDeallocate, that.m_fNeedToDeallocate);
     }
 }
 

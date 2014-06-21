@@ -447,7 +447,7 @@ public:
     /*!
      * The operator verifies if the wrapper refers to a value.
      */
-    BOOST_EXPLICIT_OPERATOR_BOOL()
+    BOOST_EXPLICIT_OPERATOR_BOOL_NOEXCEPT()
 
     /*!
      * The operator verifies if the wrapper does not refer to a value.

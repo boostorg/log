@@ -112,7 +112,7 @@ public:
             (caster.as_trampoline)(this->m_pVisitor, value);
         }
 
-        BOOST_EXPLICIT_OPERATOR_BOOL()
+        BOOST_EXPLICIT_OPERATOR_BOOL_NOEXCEPT()
 
         bool operator! () const BOOST_NOEXCEPT { return (this->m_pVisitor == 0); }
     };
@@ -136,7 +136,7 @@ public:
         /*!
          * The operator checks if the visitor is attached to a receiver
          */
-        BOOST_EXPLICIT_OPERATOR_BOOL()
+        BOOST_EXPLICIT_OPERATOR_BOOL_NOEXCEPT()
 
         /*!
          * The operator checks if the visitor is not attached to a receiver

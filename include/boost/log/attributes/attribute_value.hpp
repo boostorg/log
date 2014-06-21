@@ -154,7 +154,7 @@ public:
     /*!
      * The operator checks if the attribute value is empty
      */
-    BOOST_EXPLICIT_OPERATOR_BOOL()
+    BOOST_EXPLICIT_OPERATOR_BOOL_NOEXCEPT()
     /*!
      * The operator checks if the attribute value is empty
      */

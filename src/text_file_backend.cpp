@@ -1271,25 +1271,31 @@ BOOST_LOG_API void text_file_backend::set_file_name_pattern_internal(filesystem:
     while (it != end);
 
     // Construct the formatter functor
-    unsigned int choice = (static_cast< unsigned int >(placeholder_count > 0) << 1) |
-                          static_cast< unsigned int >(counter_found);
-    switch (choice)
+    if (placeholder_count > 0)
     {
-    case 1: // Only counter placeholder in the pattern
+        if (counter_found)
+        {
+            // Both counter and date/time placeholder in the pattern
+            m_pImpl->m_FileNameGenerator = boost::bind(date_and_time_formatter(),
+                boost::bind(file_counter_formatter(counter_pos, width), name_pattern, _1), _1);
+        }
+        else
+        {
+            // Only date/time placeholders in the pattern
+            m_pImpl->m_FileNameGenerator =
+                boost::bind(date_and_time_formatter(), name_pattern, _1);
+        }
+    }
+    else if (counter_found)
+    {
+        // Only counter placeholder in the pattern
         m_pImpl->m_FileNameGenerator =
             boost::bind(file_counter_formatter(counter_pos, width), name_pattern, _1);
-        break;
-    case 2: // Only date/time placeholders in the pattern
-        m_pImpl->m_FileNameGenerator =
-            boost::bind(date_and_time_formatter(), name_pattern, _1);
-        break;
-    case 3: // Counter and date/time placeholder in the pattern
-        m_pImpl->m_FileNameGenerator = boost::bind(date_and_time_formatter(),
-            boost::bind(file_counter_formatter(counter_pos, width), name_pattern, _1), _1);
-        break;
-    default: // No placeholders detected
+    }
+    else
+    {
+        // No placeholders detected
         m_pImpl->m_FileNameGenerator = empty_formatter(name_pattern);
-        break;
     }
 }
 

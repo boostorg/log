@@ -140,7 +140,7 @@ public:
      *
      * \return \c true if <tt>*this</tt> was constructed with an attribute name, \c false otherwise
      */
-    BOOST_EXPLICIT_OPERATOR_BOOL()
+    BOOST_EXPLICIT_OPERATOR_BOOL_NOEXCEPT()
     /*!
      * Checks if the object was default-constructed
      *

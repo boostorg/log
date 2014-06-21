@@ -250,7 +250,7 @@ public:
         return m_pImpl->invoke(m_pImpl, args...);
     }
 
-    BOOST_EXPLICIT_OPERATOR_BOOL()
+    BOOST_EXPLICIT_OPERATOR_BOOL_NOEXCEPT()
     bool operator! () const BOOST_NOEXCEPT { return (m_pImpl == NULL); }
     bool empty() const BOOST_NOEXCEPT { return (m_pImpl == NULL); }
     void clear() BOOST_NOEXCEPT
@@ -456,7 +456,7 @@ public:
         m_pImpl->invoke(m_pImpl, args...);
     }
 
-    BOOST_EXPLICIT_OPERATOR_BOOL()
+    BOOST_EXPLICIT_OPERATOR_BOOL_NOEXCEPT()
     bool operator! () const BOOST_NOEXCEPT { return (m_pImpl == NULL); }
     bool empty() const BOOST_NOEXCEPT { return (m_pImpl == NULL); }
     void clear() BOOST_NOEXCEPT

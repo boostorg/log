@@ -103,7 +103,7 @@ public:
      * \return \c true, if stream is valid and ready for formatting, \c false, if the stream is not valid. The latter also applies to
      *         the case when the stream is not attached to a log record.
      */
-    BOOST_EXPLICIT_OPERATOR_BOOL()
+    BOOST_EXPLICIT_OPERATOR_BOOL_NOEXCEPT()
 
     /*!
      * Inverted conversion to an unspecified boolean type

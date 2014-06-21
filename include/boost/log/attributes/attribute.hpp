@@ -137,7 +137,7 @@ public:
     /*!
      * Verifies that the factory is not in empty state
      */
-    BOOST_EXPLICIT_OPERATOR_BOOL()
+    BOOST_EXPLICIT_OPERATOR_BOOL_NOEXCEPT()
 
     /*!
      * Verifies that the factory is in empty state

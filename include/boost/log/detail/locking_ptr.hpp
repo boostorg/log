@@ -57,7 +57,7 @@ private:
 
 public:
     //! Default constructor
-    locking_ptr() : m_pLock(NULL)
+    locking_ptr() BOOST_NOEXCEPT : m_pLock(NULL)
     {
     }
     //! Constructor
@@ -81,7 +81,7 @@ public:
             m_pLock->lock();
     }
     //! Move constructor
-    locking_ptr(BOOST_RV_REF(this_type) that) : m_pLock(that.m_pLock)
+    locking_ptr(BOOST_RV_REF(this_type) that) BOOST_NOEXCEPT : m_pLock(that.m_pLock)
     {
         m_pElement.swap(that.m_pElement);
         that.m_pLock = NULL;
@@ -95,27 +95,27 @@ public:
     }
 
     //! Assignment
-    locking_ptr& operator= (locking_ptr that)
+    locking_ptr& operator= (locking_ptr that) BOOST_NOEXCEPT
     {
         this->swap(that);
         return *this;
     }
 
     //! Indirection
-    element_type* operator-> () const { return m_pElement.get(); }
+    element_type* operator-> () const BOOST_NOEXCEPT { return m_pElement.get(); }
     //! Dereferencing
-    element_type& operator* () const { return *m_pElement; }
+    element_type& operator* () const BOOST_NOEXCEPT { return *m_pElement; }
 
     //! Accessor to the raw pointer
-    element_type* get() const { return m_pElement.get(); }
+    element_type* get() const BOOST_NOEXCEPT { return m_pElement.get(); }
 
     //! Checks for null pointer
-    BOOST_EXPLICIT_OPERATOR_BOOL()
+    BOOST_EXPLICIT_OPERATOR_BOOL_NOEXCEPT()
     //! Checks for null pointer
-    bool operator! () const { return !m_pElement; }
+    bool operator! () const BOOST_NOEXCEPT { return !m_pElement; }
 
     //! Swaps two pointers
-    void swap(locking_ptr& that)
+    void swap(locking_ptr& that) BOOST_NOEXCEPT
     {
         m_pElement.swap(that.m_pElement);
         lockable_type* p = m_pLock;
@@ -126,13 +126,13 @@ public:
 
 //! Free raw pointer getter to assist generic programming
 template< typename T, typename LockableT >
-inline T* get_pointer(locking_ptr< T, LockableT > const& p)
+inline T* get_pointer(locking_ptr< T, LockableT > const& p) BOOST_NOEXCEPT
 {
     return p.get();
 }
 //! Free swap operation
 template< typename T, typename LockableT >
-inline void swap(locking_ptr< T, LockableT >& left, locking_ptr< T, LockableT >& right)
+inline void swap(locking_ptr< T, LockableT >& left, locking_ptr< T, LockableT >& right) BOOST_NOEXCEPT
 {
     left.swap(right);
 }

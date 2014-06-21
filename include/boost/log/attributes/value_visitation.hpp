@@ -71,7 +71,7 @@ public:
      *
      * \return \c true if the value was visited successfully, \c false otherwise.
      */
-    BOOST_EXPLICIT_OPERATOR_BOOL()
+    BOOST_EXPLICIT_OPERATOR_BOOL_NOEXCEPT()
     /*!
      * Checks if the visitation was unsuccessful.
      *
