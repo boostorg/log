@@ -203,6 +203,7 @@ local BOOST_LOG_COMMON_SRC =
     default_sink.cpp
     text_ostream_backend.cpp
     text_file_backend.cpp
+    text_multifile_backend.cpp
     syslog_backend.cpp
     thread_specific.cpp
     once_block.cpp
