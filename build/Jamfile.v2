@@ -152,6 +152,7 @@ project boost/log
         <target-os>freebsd:<linkflags>"-lrt"
         <target-os>linux:<linkflags>"-lrt -lpthread"
         <toolset>pgi:<linkflags>"-lrt"
+        <toolset>qcc:<linkflags>"-lsocket"
     : usage-requirements
         <toolset>clang:<cxxflags>-Wno-bind-to-temporary-copy
         <toolset>clang:<cxxflags>-Wno-unused-function
