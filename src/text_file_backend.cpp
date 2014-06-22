@@ -47,7 +47,7 @@
 #include <boost/intrusive/options.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/gregorian/gregorian_types.hpp>
-#include <boost/spirit/include/qi_core.hpp>
+#include <boost/spirit/home/qi/numeric/numeric_utils.hpp>
 #include <boost/log/detail/snprintf.hpp>
 #include <boost/log/detail/singleton.hpp>
 #include <boost/log/detail/light_function.hpp>
@@ -329,6 +329,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
     //! The function parses the format placeholder for file counter
     bool parse_counter_placeholder(path_string_type::const_iterator& it, path_string_type::const_iterator end, unsigned int& width)
     {
+        typedef qi::extract_uint< unsigned int, 10, 1, -1 > width_extract;
         typedef file_char_traits< path_char_type > traits_t;
         if (it == end)
             return false;
@@ -346,7 +347,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         if (traits_t::is_digit(c))
         {
             // Parse width
-            if (!qi::parse(it, end, qi::uint_, width))
+            if (!width_extract::call(it, end, width))
                 return false;
             if (it == end)
                 return false;
@@ -376,6 +377,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
     //! The function matches the file name and the pattern
     bool match_pattern(path_string_type const& file_name, path_string_type const& pattern, unsigned int& file_counter)
     {
+        typedef qi::extract_uint< unsigned int, 10, 1, -1 > file_counter_extract;
         typedef file_char_traits< path_char_type > traits_t;
 
         struct local
@@ -470,9 +472,10 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
                         path_string_type::const_iterator f = f_it;
                         if (!local::scan_digits(f, f_end, width))
                             return false;
-                        for (; f != f_end && traits_t::is_digit(*f); ++f);
+                        while (f != f_end && traits_t::is_digit(*f))
+                            ++f;
 
-                        if (!qi::parse(f_it, f, qi::uint_, file_counter))
+                        if (!file_counter_extract::call(f_it, f, file_counter))
                             return false;
 
                         p_it = p;
