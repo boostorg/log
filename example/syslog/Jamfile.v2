@@ -15,6 +15,8 @@ project
         <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE
         <toolset>msvc:<cxxflags>/bigobj
         <toolset>msvc:<cxxflags>/wd4503 # decorated name length exceeded, name was truncated
+        <toolset>msvc:<cxxflags>/wd4456 # declaration of 'A' hides previous local declaration
+        <toolset>msvc:<cxxflags>/wd4459 # declaration of 'A' hides global declaration
         <toolset>intel-win:<define>_SCL_SECURE_NO_WARNINGS
         <toolset>intel-win:<define>_SCL_SECURE_NO_DEPRECATE
         <toolset>intel-win:<define>_CRT_SECURE_NO_WARNINGS

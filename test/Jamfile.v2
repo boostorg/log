@@ -26,6 +26,8 @@ project
 
         <toolset>msvc:<cxxflags>/bigobj
         <toolset>msvc:<cxxflags>/wd4503 # decorated name length exceeded, name was truncated
+        <toolset>msvc:<cxxflags>/wd4456 # declaration of 'A' hides previous local declaration
+        <toolset>msvc:<cxxflags>/wd4459 # declaration of 'A' hides global declaration
 
         # Disable Intel warnings:
         # warning #177: function "X" was declared but never referenced

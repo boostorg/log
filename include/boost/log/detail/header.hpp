@@ -38,6 +38,10 @@
 #pragma warning(disable: 4714)
 // decorated name length exceeded, name was truncated
 #pragma warning(disable: 4503)
+// declaration of 'A' hides previous local declaration
+#pragma warning(disable: 4456)
+// declaration of 'A' hides global declaration
+#pragma warning(disable: 4459)
 
 #elif defined(__GNUC__) && !(defined(__INTEL_COMPILER) || defined(__ICL) || defined(__ICC) || defined(__ECC)) \
     && (__GNUC__ * 100 + __GNUC_MINOR__) >= 406
