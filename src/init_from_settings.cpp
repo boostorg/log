@@ -19,7 +19,7 @@
     && (__GNUC__ * 100 + __GNUC_MINOR__) >= 407
 // This warning is caused by a compiler bug which is exposed when boost::optional is used: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=47679
 // It has to be disabled here, before any code is included, since otherwise it doesn't help and the warning is still emitted.
-// ‘*((void*)& foo +2)’ may be used uninitialized in this function
+// '*((void*)& foo +2)' may be used uninitialized in this function
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 #endif
 
