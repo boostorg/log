@@ -140,7 +140,7 @@ int main(int argc, char* argv[])
         }
 
         // Test that XML character decoration works
-        BOOST_LOG(lg) << "Special XML characters: &, <, >, '";
+        BOOST_LOG(lg) << "Special XML characters: &, <, >, \", '";
 
         return 0;
     }

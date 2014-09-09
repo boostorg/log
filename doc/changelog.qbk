@@ -9,6 +9,12 @@
 
 [section:changelog Changelog]
 
+[heading 2.4, Boost 1.57]
+
+[*Bug fixes:]
+
+* [link log.detailed.expressions.formatters.decorators XML character decorator] now escapes quote (\") characters.
+
 [heading 2.3, Boost 1.56]
 
 [*General changes:]

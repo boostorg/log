@@ -43,7 +43,7 @@ struct xml_decorator_traits< char >
     {
         static const char* const patterns[] =
         {
-            "&", "<", ">", "'"
+            "&", "<", ">", "\"", "'"
         };
         return boost::make_iterator_range(patterns);
     }
@@ -51,7 +51,7 @@ struct xml_decorator_traits< char >
     {
         static const char* const replacements[] =
         {
-            "&amp;", "&lt;", "&gt;", "&apos;"
+            "&amp;", "&lt;", "&gt;", "&quot;", "&apos;"
         };
         return boost::make_iterator_range(replacements);
     }
@@ -66,7 +66,7 @@ struct xml_decorator_traits< wchar_t >
     {
         static const wchar_t* const patterns[] =
         {
-            L"&", L"<", L">", L"'"
+            L"&", L"<", L">", L"\"", L"'"
         };
         return boost::make_iterator_range(patterns);
     }
@@ -74,7 +74,7 @@ struct xml_decorator_traits< wchar_t >
     {
         static const wchar_t* const replacements[] =
         {
-            L"&amp;", L"&lt;", L"&gt;", L"&apos;"
+            L"&amp;", L"&lt;", L"&gt;", L"&quot;", L"&apos;"
         };
         return boost::make_iterator_range(replacements);
     }
