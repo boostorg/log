@@ -36,6 +36,7 @@
 #include <boost/utility/enable_if.hpp>
 #include <boost/type_traits/is_same.hpp>
 #include <boost/mpl/or.hpp>
+#include <boost/mpl/bool.hpp>
 #else
 #include <boost/type_traits/remove_reference.hpp>
 #endif
@@ -174,7 +175,7 @@ public:
     }
 #else
     template< typename FunT >
-    light_function(FunT const& fun, typename disable_if< mpl::or_< move_detail::is_rv< FunT >, is_same< FunT, this_type > >, int >::type = 0) :
+    light_function(FunT const& fun, typename disable_if< mpl::or_< mpl::bool_< move_detail::is_rv< FunT >::value >, is_same< FunT, this_type > >, int >::type = 0) :
         m_pImpl(new impl< FunT >(fun))
     {
     }
@@ -236,7 +237,7 @@ public:
     }
 #else
     template< typename FunT >
-    typename disable_if< mpl::or_< move_detail::is_rv< FunT >, is_same< FunT, this_type > >, this_type& >::type
+    typename disable_if< mpl::or_< mpl::bool_< move_detail::is_rv< FunT >::value >, is_same< FunT, this_type > >, this_type& >::type
     operator= (FunT const& fun)
     {
         light_function tmp(fun);
@@ -380,7 +381,7 @@ public:
     }
 #else
     template< typename FunT >
-    light_function(FunT const& fun, typename disable_if< mpl::or_< move_detail::is_rv< FunT >, is_same< FunT, this_type > >, int >::type = 0) :
+    light_function(FunT const& fun, typename disable_if< mpl::or_< mpl::bool_< move_detail::is_rv< FunT >::value >, is_same< FunT, this_type > >, int >::type = 0) :
         m_pImpl(new impl< FunT >(fun))
     {
     }
@@ -442,7 +443,7 @@ public:
     }
 #else
     template< typename FunT >
-    typename disable_if< mpl::or_< move_detail::is_rv< FunT >, is_same< FunT, this_type > >, this_type& >::type
+    typename disable_if< mpl::or_< mpl::bool_< move_detail::is_rv< FunT >::value >, is_same< FunT, this_type > >, this_type& >::type
     operator= (FunT const& fun)
     {
         light_function tmp(fun);

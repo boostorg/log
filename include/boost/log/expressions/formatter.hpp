@@ -147,7 +147,7 @@ public:
     basic_formatter(FunT const& fun)
 #else
     template< typename FunT >
-    basic_formatter(FunT const& fun, typename disable_if< move_detail::is_rv< FunT >, int >::type = 0)
+    basic_formatter(FunT const& fun, typename disable_if_c< move_detail::is_rv< FunT >::value, int >::type = 0)
 #endif
         : m_Formatter(fun)
     {
