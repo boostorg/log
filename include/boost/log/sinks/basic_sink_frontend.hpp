@@ -204,6 +204,7 @@ protected:
             if (this->exception_handler().empty())
                 throw;
             this->exception_handler()();
+            return false;
         }
 #endif
         // No need to lock anything in the feed_record method
@@ -481,6 +482,7 @@ protected:
             if (this->exception_handler().empty())
                 throw;
             this->exception_handler()();
+            return false;
         }
 #endif
         // No need to lock anything in the feed_record method
