@@ -333,4 +333,4 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 #include <boost/log/detail/footer.hpp>
 
-#endif // BOOST_LOG_DETAIL_SNPRINTF_HPP_INCLUDED_
+#endif // BOOST_LOG_DETAIL_FORMAT_HPP_INCLUDED_

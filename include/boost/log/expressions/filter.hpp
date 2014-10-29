@@ -82,14 +82,32 @@ public:
      */
 #if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
     template< typename FunT >
-    filter(FunT const& fun)
-#else
-    template< typename FunT >
-    filter(FunT const& fun, typename disable_if_c< move_detail::is_rv< FunT >::value, int >::type = 0)
-#endif
-        : m_Filter(fun)
+    filter(FunT&& fun) : m_Filter(boost::forward< FunT >(fun))
     {
     }
+#elif !defined(BOOST_MSVC) || BOOST_MSVC > 1400
+    template< typename FunT >
+    filter(FunT const& fun, typename disable_if_c< move_detail::is_rv< FunT >::value, int >::type = 0) : m_Filter(fun)
+    {
+    }
+#else
+    // MSVC 8 blows up in unexpected ways if we use SFINAE to disable constructor instantiation
+    template< typename FunT >
+    filter(FunT const& fun) : m_Filter(fun)
+    {
+    }
+    template< typename FunT >
+    filter(rv< FunT >& fun) : m_Filter(fun)
+    {
+    }
+    template< typename FunT >
+    filter(rv< FunT > const& fun) : m_Filter(static_cast< FunT const& >(fun))
+    {
+    }
+    filter(rv< filter > const& that) : m_Filter(that.m_Filter)
+    {
+    }
+#endif
 
     /*!
      * Move assignment. The moved-from filter is left in an unspecified state.
