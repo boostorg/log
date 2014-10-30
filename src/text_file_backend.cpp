@@ -48,7 +48,6 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/gregorian/gregorian_types.hpp>
 #include <boost/spirit/home/qi/numeric/numeric_utils.hpp>
-#include <boost/log/detail/snprintf.hpp>
 #include <boost/log/detail/singleton.hpp>
 #include <boost/log/detail/light_function.hpp>
 #include <boost/log/exceptions.hpp>

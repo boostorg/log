@@ -373,7 +373,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
 
         // The packet size is mandated in RFC3164, plus one for the terminating zero
         char packet[1025];
-        std::size_t packet_size = boost::log::aux::snprintf
+        int n = boost::log::aux::snprintf
         (
             packet,
             sizeof(packet),
@@ -387,8 +387,11 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
             local_host_name,
             message
         );
-
-        m_Socket.send_to(asio::buffer(packet, packet_size), target);
+        if (n > 0)
+        {
+            std::size_t packet_size = static_cast< std::size_t >(n) >= sizeof(packet) ? sizeof(packet) - 1u : static_cast< std::size_t >(n);
+            m_Socket.send_to(asio::buffer(packet, packet_size), target);
+        }
     }
 
 } // namespace
