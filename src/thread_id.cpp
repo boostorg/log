@@ -226,25 +226,33 @@ BOOST_LOG_API thread::id const& get_id()
 
 } // namespace this_thread
 
-// Used in default_sink.cpp
-void format_thread_id(char* buf, std::size_t size, thread::id tid)
-{
-    static const char char_table[] = "0123456789abcdef";
+BOOST_LOG_ANONYMOUS_NAMESPACE {
 
+template< typename CharT >
+inline void format_thread_id_impl(CharT* buf, std::size_t size, thread::id tid, const CharT (&char_table)[18])
+{
     // Input buffer is assumed to be always larger than 2 chars
-    *buf++ = '0';
-    *buf++ = 'x';
+    *buf++ = char_table[0];  // '0'
+    *buf++ = char_table[16]; // 'x'
 
     size -= 3; // reserve space for the terminating 0
     thread::id::native_type id = tid.native_id();
     unsigned int i = 0;
     const unsigned int n = (size > (tid_size * 2u)) ? static_cast< unsigned int >(tid_size * 2u) : static_cast< unsigned int >(size);
-    for (unsigned int shift = n * 4u; i < n; ++i, shift -= 4u)
+    for (unsigned int shift = n * 4u - 4u; i < n; ++i, shift -= 4u)
     {
         buf[i] = char_table[(id >> shift) & 15u];
     }
 
     buf[i] = '\0';
+}
+
+} // namespace
+
+// Used in default_sink.cpp
+void format_thread_id(char* buf, std::size_t size, thread::id tid)
+{
+    format_thread_id_impl(buf, size, tid, "0123456789abcdefx");
 }
 
 template< typename CharT, typename TraitsT >
@@ -253,10 +261,13 @@ operator<< (std::basic_ostream< CharT, TraitsT >& strm, thread::id const& tid)
 {
     if (strm.good())
     {
-        io::ios_flags_saver flags_saver(strm, (strm.flags() & std::ios_base::uppercase) | std::ios_base::hex | std::ios_base::internal | std::ios_base::showbase);
-        io::basic_ios_fill_saver< CharT, TraitsT > fill_saver(strm, static_cast< CharT >('0'));
-        strm.width(static_cast< std::streamsize >(tid_size * 2 + 2)); // 2 chars per byte + 2 chars for the leading 0x
-        strm << static_cast< uint_t< tid_size * 8 >::least >(tid.native_id());
+        static const CharT lowercase[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'x', '\0' };
+        static const CharT uppercase[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'X', '\0' };
+
+        CharT buf[tid_size * 2 + 3]; // 2 chars per byte + 3 chars for the leading 0x and terminating zero
+        format_thread_id_impl(buf, sizeof(buf) / sizeof(*buf), tid, (strm.flags() & std::ios_base::uppercase) ? uppercase : lowercase);
+
+        strm << buf;
     }
 
     return strm;
