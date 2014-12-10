@@ -19,9 +19,11 @@
 
 #include <new>
 #include <iostream>
-#include <boost/integer.hpp>
 #include <boost/throw_exception.hpp>
-#include <boost/io/ios_state.hpp>
+#if !defined(BOOST_WINDOWS)
+#include <cstring>
+#include <boost/predef/other/endian.h>
+#endif
 #include <boost/log/detail/thread_id.hpp>
 #if defined(BOOST_LOG_USE_COMPILER_TLS)
 #include <boost/aligned_storage.hpp>
@@ -80,6 +82,12 @@ BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
 
+enum
+{
+    headroom_size = sizeof(pthread_t) > sizeof(uintmax_t) ? 0u : (sizeof(uintmax_t) - sizeof(pthread_t)),
+    tid_size = sizeof(uintmax_t) - headroom_size
+};
+
 BOOST_LOG_ANONYMOUS_NAMESPACE {
 
     //! The function returns current thread identifier
@@ -88,19 +96,17 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         // According to POSIX, pthread_t may not be an integer type:
         // http://pubs.opengroup.org/onlinepubs/009695399/basedefs/sys/types.h.html
         // For now we use the hackish cast to get some opaque number that hopefully correlates with system thread identification.
-        union
-        {
-            thread::id::native_type as_uint;
-            pthread_t as_pthread;
-        }
-        caster = {};
-        caster.as_pthread = pthread_self();
-        return thread::id(caster.as_uint);
+        thread::id::native_type int_id = 0;
+        pthread_t pthread_id = pthread_self();
+#if BOOST_ENDIAN_BIG_BYTE || BOOST_ENDIAN_BIG_WORD
+        std::memcpy(reinterpret_cast< unsigned char* >(&int_id) + headroom_size, &pthread_id, tid_size);
+#else
+        std::memcpy(&int_id, &pthread_id, tid_size);
+#endif
+        return thread::id(int_id);
     }
 
 } // namespace
-
-enum { tid_size = sizeof(pthread_t) > sizeof(uintmax_t) ? sizeof(uintmax_t) : sizeof(pthread_t) };
 
 } // namespace aux
 

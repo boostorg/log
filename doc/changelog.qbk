@@ -13,7 +13,7 @@
 
 [*Bug fixes:]
 
-* Fixed thread id formatting. The thread identifiers could be presented as zeros on some platforms. Also the lower 4 bits of the ids were lost in the output.
+* Fixed thread id formatting. The thread identifiers could be presented as zeros on big-endian platforms. Also the lower 4 bits of the ids were lost in the output.
 
 [heading 2.4, Boost 1.57]
 
