@@ -17,7 +17,10 @@
 
 #include <boost/move/core.hpp>
 #include <boost/move/utility.hpp>
+#if defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
 #include <boost/utility/enable_if.hpp>
+#include <boost/type_traits/is_same.hpp>
+#endif
 #include <boost/log/detail/config.hpp>
 #include <boost/log/attributes/attribute_value_set.hpp>
 #include <boost/log/detail/light_function.hpp>
