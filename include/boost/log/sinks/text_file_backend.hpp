@@ -525,6 +525,9 @@ private:
 
     //! The method sets file name mask
     BOOST_LOG_API void set_file_name_pattern_internal(filesystem::path const& pattern);
+
+    //! Closes the currently open file
+    void close_file();
 #endif // BOOST_LOG_DOXYGEN_PASS
 };
 
