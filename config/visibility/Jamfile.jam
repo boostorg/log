@@ -16,4 +16,7 @@ project /boost/log/visibility
 obj visibility : visibility.cpp
     :
         <cxxflags>"-fvisibility=hidden"
+        # Some compilers may not support visibility but just ignore the option with a warning
+        <warnings>all
+        <warnings-as-errors>on
     ;

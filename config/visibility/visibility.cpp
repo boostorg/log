@@ -5,6 +5,11 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  */
 
+// Guess what, MSVC doesn't ever fail on unknown options, even with /WX. Hence this additional check.
+#if !defined(__GNUC__)
+#error Visibility option is only supported by gcc and compatible compilers
+#endif
+
 int main(int, char*[])
 {
     return 0;
