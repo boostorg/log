@@ -62,6 +62,7 @@
 #include <boost/log/utility/setup/filter_parser.hpp>
 #include <boost/log/utility/setup/formatter_parser.hpp>
 #if !defined(BOOST_LOG_NO_ASIO)
+#include "asio_config.hpp"
 #include <boost/asio/ip/address.hpp>
 #endif
 #if !defined(BOOST_LOG_NO_THREADS)
