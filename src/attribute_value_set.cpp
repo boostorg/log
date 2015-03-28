@@ -119,8 +119,6 @@ private:
 
     //! The container with elements
     node_list m_Nodes;
-    //! The pointer to the beginning of the storage of the elements
-    node* m_pStorage;
     //! The pointer to the end of the allocated elements within the storage
     node* m_pEnd;
     //! The pointer to the end of storage
@@ -141,7 +139,6 @@ private:
         m_pSourceAttributes(source_attrs),
         m_pThreadAttributes(thread_attrs),
         m_pGlobalAttributes(global_attrs),
-        m_pStorage(storage),
         m_pEnd(storage),
         m_pEOS(eos)
     {
