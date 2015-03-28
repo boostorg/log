@@ -330,7 +330,7 @@ public:
      */
     BOOST_LOG_API size_type size() const;
     /*!
-     * \return true if there are no elements in the container, false otherwise.
+     * \return \c true if there are no elements in the container, \c false otherwise.
      */
     bool empty() const { return (this->size() == 0); }
 
