@@ -9,6 +9,16 @@
 
 [section:changelog Changelog]
 
+[heading 2.6, Boost 1.59]
+
+[*General changes:]
+
+* On systems with [@https://gcc.gnu.org/wiki/Visibility symbol visibility] support (e.g. Linux) the library is now built with all internal symbols hidden. API symbols still have default visibility, so this shouldn't affect linking with the library.
+* *Breaking change:* The library has been ported to __boost_type_index__ for its underlying type info management tool. This affected the following public interfaces:
+  * `invalid_type` exceptions thrown by the library now have `typeindex::type_index` attached as the description of the offending type. The type was previously identified by `type_info_wrapper`.
+  * __boost_exception__ `type_info_info` error information now contains `typeindex::type_index` instead of `type_info_wrapper`. This is the error info that can be used to obtain the type info from `invalid_type` exceptions.
+  * `attribute_value::get_type()` now returns `typeindex::type_index` instead of `type_info_wrapper`. If the `attribute_value` object is empty, the returned `type_index` is default-constructed (i.e. refers to the `void` type). User-defined attribute value implementations should be similatly changed (the `attribute_value::impl::get_type()` virtual method now also returns `typeindex::type_index`).
+
 [heading 2.5, Boost 1.58]
 
 [*Bug fixes:]
