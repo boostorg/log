@@ -22,6 +22,10 @@
 * `type_info_wrapper` component has been deprecated and will be removed in future releases. __boost_type_index__ is recommended as a replacement.
 * Removed the previously deprecated headers: `boost/log/utility/intrusive_ref_counter.hpp`, `boost/log/utility/explicit_operator_bool.hpp`, `boost/log/utility/empty_deleter.hpp`.
 
+[*Bug fixes:]
+
+* Fixed incorrect behavior of `attribute_value_set::insert()` and `attribute_value_set` constructor in some cases. The inserted elements could have made some previously inserted elements not findable. The constructor from `attribute_set`s could leave some of the attribute values acquired from attributes not findable. ([ticket 11190])
+
 [heading 2.5, Boost 1.58]
 
 [*Bug fixes:]
