@@ -19,6 +19,7 @@
 #include <string>
 #include <memory>
 #include <locale>
+#include <boost/core/explicit_operator_bool.hpp>
 #include <boost/utility/string_ref_fwd.hpp>
 #include <boost/type_traits/remove_cv.hpp>
 #include <boost/log/detail/config.hpp>
@@ -26,7 +27,6 @@
 #include <boost/log/detail/code_conversion.hpp>
 #include <boost/log/utility/string_literal_fwd.hpp>
 #include <boost/log/utility/formatting_ostream_fwd.hpp>
-#include <boost/utility/explicit_operator_bool.hpp>
 #include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_HAS_PRAGMA_ONCE
@@ -529,6 +529,71 @@ public:
     {
         return strm.formatted_write(str.data(), static_cast< std::streamsize >(str.size()));
     }
+
+    template< typename OtherCharT, typename OtherTraitsT, typename OtherAllocatorT >
+    friend typename aux::enable_if_char_type< OtherCharT, basic_formatting_ostream& >::type
+    operator<< (basic_formatting_ostream& strm, std::basic_string< OtherCharT, OtherTraitsT, OtherAllocatorT >& str)
+    {
+        return strm.formatted_write(str.c_str(), static_cast< std::streamsize >(str.size()));
+    }
+
+    template< typename OtherCharT, typename OtherTraitsT >
+    friend typename aux::enable_if_char_type< OtherCharT, basic_formatting_ostream& >::type
+    operator<< (basic_formatting_ostream& strm, basic_string_literal< OtherCharT, OtherTraitsT >& str)
+    {
+        return strm.formatted_write(str.c_str(), static_cast< std::streamsize >(str.size()));
+    }
+
+    template< typename OtherCharT, typename OtherTraitsT >
+    friend typename aux::enable_if_char_type< OtherCharT, basic_formatting_ostream& >::type
+    operator<< (basic_formatting_ostream& strm, basic_string_ref< OtherCharT, OtherTraitsT >& str)
+    {
+        return strm.formatted_write(str.data(), static_cast< std::streamsize >(str.size()));
+    }
+
+#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+    template< typename OtherCharT, typename OtherTraitsT, typename OtherAllocatorT >
+    friend typename aux::enable_if_char_type< OtherCharT, basic_formatting_ostream& >::type
+    operator<< (basic_formatting_ostream&& strm, std::basic_string< OtherCharT, OtherTraitsT, OtherAllocatorT > const& str)
+    {
+        return strm.formatted_write(str.c_str(), static_cast< std::streamsize >(str.size()));
+    }
+
+    template< typename OtherCharT, typename OtherTraitsT >
+    friend typename aux::enable_if_char_type< OtherCharT, basic_formatting_ostream& >::type
+    operator<< (basic_formatting_ostream&& strm, basic_string_literal< OtherCharT, OtherTraitsT > const& str)
+    {
+        return strm.formatted_write(str.c_str(), static_cast< std::streamsize >(str.size()));
+    }
+
+    template< typename OtherCharT, typename OtherTraitsT >
+    friend typename aux::enable_if_char_type< OtherCharT, basic_formatting_ostream& >::type
+    operator<< (basic_formatting_ostream&& strm, basic_string_ref< OtherCharT, OtherTraitsT > const& str)
+    {
+        return strm.formatted_write(str.data(), static_cast< std::streamsize >(str.size()));
+    }
+
+    template< typename OtherCharT, typename OtherTraitsT, typename OtherAllocatorT >
+    friend typename aux::enable_if_char_type< OtherCharT, basic_formatting_ostream& >::type
+    operator<< (basic_formatting_ostream&& strm, std::basic_string< OtherCharT, OtherTraitsT, OtherAllocatorT >& str)
+    {
+        return strm.formatted_write(str.c_str(), static_cast< std::streamsize >(str.size()));
+    }
+
+    template< typename OtherCharT, typename OtherTraitsT >
+    friend typename aux::enable_if_char_type< OtherCharT, basic_formatting_ostream& >::type
+    operator<< (basic_formatting_ostream&& strm, basic_string_literal< OtherCharT, OtherTraitsT >& str)
+    {
+        return strm.formatted_write(str.c_str(), static_cast< std::streamsize >(str.size()));
+    }
+
+    template< typename OtherCharT, typename OtherTraitsT >
+    friend typename aux::enable_if_char_type< OtherCharT, basic_formatting_ostream& >::type
+    operator<< (basic_formatting_ostream&& strm, basic_string_ref< OtherCharT, OtherTraitsT >& str)
+    {
+        return strm.formatted_write(str.data(), static_cast< std::streamsize >(str.size()));
+    }
+#endif
 
 private:
     void init_stream()
