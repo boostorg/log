@@ -218,7 +218,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(operator_forwarding, CharT, char_types)
     string_type str_fmt;
     formatting_ostream_type strm_fmt(str_fmt);
 
-    const my_namespace::A a; // const lvalue
+    const my_namespace::A a = my_namespace::A(); // const lvalue
     my_namespace::B b; // lvalue
     strm_fmt << a << b << my_namespace::C(); // rvalue
     strm_fmt.flush();
