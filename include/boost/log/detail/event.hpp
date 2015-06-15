@@ -21,7 +21,7 @@
 
 #ifndef BOOST_LOG_NO_THREADS
 
-#if defined(BOOST_THREAD_PLATFORM_PTHREAD)
+#if defined(BOOST_THREAD_PLATFORM_PTHREAD) && !defined(BOOST_LOG_EVENT_USE_BOOST_CONDITION)
 #   if defined(_POSIX_SEMAPHORES) && (_POSIX_SEMAPHORES + 0) > 0
 #       if defined(__GNUC__) && defined(__GCC_HAVE_SYNC_COMPARE_AND_SWAP_4)
 #           include <semaphore.h>
@@ -29,7 +29,7 @@
 #           define BOOST_LOG_EVENT_USE_POSIX_SEMAPHORE
 #       endif
 #   endif
-#elif defined(BOOST_THREAD_PLATFORM_WIN32)
+#elif defined(BOOST_THREAD_PLATFORM_WIN32) && !defined(BOOST_LOG_EVENT_USE_BOOST_CONDITION)
 #   include <boost/cstdint.hpp>
 #   define BOOST_LOG_EVENT_USE_WINAPI
 #endif
@@ -37,7 +37,9 @@
 #if !defined(BOOST_LOG_EVENT_USE_POSIX_SEMAPHORE) && !defined(BOOST_LOG_EVENT_USE_WINAPI)
 #   include <boost/thread/mutex.hpp>
 #   include <boost/thread/condition_variable.hpp>
-#   define BOOST_LOG_EVENT_USE_BOOST_CONDITION
+#   ifndef BOOST_LOG_EVENT_USE_BOOST_CONDITION
+#     define BOOST_LOG_EVENT_USE_BOOST_CONDITION
+#   endif
 #endif
 
 #include <boost/log/detail/header.hpp>
