@@ -97,18 +97,15 @@ BOOST_LOG_API void futex_based_event::wait()
             }
 
             const int err = errno;
-            if (err != EINTR)
+            if (err == EWOULDBLOCK)
             {
-                if (err == EWOULDBLOCK)
-                {
-                    // Another thread has set the event before sleeping
-                    break;
-                }
-                else
-                {
-                    BOOST_THROW_EXCEPTION(system::system_error(
-                        err, system::system_category(), "Failed to block on the futex"));
-                }
+                // Another thread has set the event before sleeping
+                break;
+            }
+            else if (err != EINTR)
+            {
+                BOOST_THROW_EXCEPTION(system::system_error(
+                    err, system::system_category(), "Failed to block on the futex"));
             }
         }
 
