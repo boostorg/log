@@ -20,6 +20,7 @@
   * `attribute_value::get_type()` now returns `typeindex::type_index` instead of `type_info_wrapper`. If the `attribute_value` object is empty, the returned `type_index` is default-constructed (i.e. refers to the `void` type). User-defined attribute value implementations should be similatly changed (the `attribute_value::impl::get_type()` virtual method now also returns `typeindex::type_index`).
 * `type_info_wrapper` component has been deprecated and will be removed in future releases. __boost_type_index__ is recommended as a replacement.
 * Removed the previously deprecated headers: `boost/log/utility/intrusive_ref_counter.hpp`, `boost/log/utility/explicit_operator_bool.hpp`, `boost/log/utility/empty_deleter.hpp`.
+* Added support for building the library for OpenBSD. ([ticket 11446])
 
 [*Bug fixes:]
 
