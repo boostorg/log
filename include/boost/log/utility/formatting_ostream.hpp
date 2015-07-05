@@ -54,6 +54,11 @@ template< typename R >
 struct enable_if_char_type< char32_t, R > { typedef R type; };
 #endif
 
+template< typename StreamT, typename R >
+struct enable_if_formatting_ostream {};
+template< typename CharT, typename TraitsT, typename AllocatorT, typename R >
+struct enable_if_formatting_ostream< basic_formatting_ostream< CharT, TraitsT, AllocatorT >, R > { typedef R type; };
+
 } // namespace aux
 
 /*!
@@ -768,17 +773,19 @@ void basic_formatting_ostream< CharT, TraitsT, AllocatorT >::aligned_write(const
     }
 }
 
-template< typename CharT, typename TraitsT, typename AllocatorT, typename T >
-inline basic_formatting_ostream< CharT, TraitsT, AllocatorT >&
-operator<< (basic_formatting_ostream< CharT, TraitsT, AllocatorT >& strm, T const& value)
+// Implementation note: these operators below should be the least attractive for the compiler
+// so that user's overloads are chosen, when present. We use function template partial ordering for this purpose.
+template< typename StreamT, typename T >
+inline typename boost::log::aux::enable_if_formatting_ostream< StreamT, StreamT& >::type
+operator<< (StreamT& strm, T const& value)
 {
     strm.stream() << value;
     return strm;
 }
 
-template< typename CharT, typename TraitsT, typename AllocatorT, typename T >
-inline basic_formatting_ostream< CharT, TraitsT, AllocatorT >&
-operator<< (basic_formatting_ostream< CharT, TraitsT, AllocatorT >& strm, T& value)
+template< typename StreamT, typename T >
+inline typename boost::log::aux::enable_if_formatting_ostream< StreamT, StreamT& >::type
+operator<< (StreamT& strm, T& value)
 {
     strm.stream() << value;
     return strm;
@@ -786,19 +793,19 @@ operator<< (basic_formatting_ostream< CharT, TraitsT, AllocatorT >& strm, T& val
 
 #if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
 
-template< typename CharT, typename TraitsT, typename AllocatorT, typename T >
-inline basic_formatting_ostream< CharT, TraitsT, AllocatorT >&
-operator<< (basic_formatting_ostream< CharT, TraitsT, AllocatorT >&& strm, T const& value)
+template< typename StreamT, typename T >
+inline typename boost::log::aux::enable_if_formatting_ostream< StreamT, StreamT& >::type
+operator<< (StreamT&& strm, T const& value)
 {
-    static_cast< basic_formatting_ostream< CharT, TraitsT, AllocatorT >& >(strm) << value;
+    strm.stream() << value;
     return strm;
 }
 
-template< typename CharT, typename TraitsT, typename AllocatorT, typename T >
-inline basic_formatting_ostream< CharT, TraitsT, AllocatorT >&
-operator<< (basic_formatting_ostream< CharT, TraitsT, AllocatorT >&& strm, T& value)
+template< typename StreamT, typename T >
+inline typename boost::log::aux::enable_if_formatting_ostream< StreamT, StreamT& >::type
+operator<< (StreamT&& strm, T& value)
 {
-    static_cast< basic_formatting_ostream< CharT, TraitsT, AllocatorT >& >(strm) << value;
+    strm.stream() << value;
     return strm;
 }
 
