@@ -246,6 +246,8 @@ The library provides the `BOOST_LOG_USE_COMPILER_TLS` configuration macro that a
 * The application executable must be linked with the Boost.Log library. It should not be loaded dynamically during run time.
 * The application must not use logging in global constructors or destructors.
 
+Note that the `BOOST_LOG_USE_COMPILER_TLS` macro only controls use of TLS in Boost.Log but not in other libraries used by Boost.Log. For example, __boost_asio__ uses compiler-supplied TLS by default. In order to build Boost.Log binaries completely free from use of compiler-supplied TLS, this feature has to be disabled in those other libraries as well (in case of __boost_asio__ this can be achieved by defining `BOOST_ASIO_DISABLE_THREAD_KEYWORD_EXTENSION` when building and using Boost).
+
 [endsect]
 
 [endsect]

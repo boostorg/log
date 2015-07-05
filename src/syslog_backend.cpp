@@ -27,7 +27,6 @@
 #include <boost/smart_ptr/make_shared_object.hpp>
 #include <boost/throw_exception.hpp>
 #if !defined(BOOST_LOG_NO_ASIO)
-#include "asio_config.hpp"
 #include <boost/asio/buffer.hpp>
 #include <boost/asio/socket_base.hpp>
 #include <boost/asio/io_service.hpp>

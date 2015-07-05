@@ -13,7 +13,6 @@
 
 [*General changes:]
 
-* The library now enforces compiler-based TLS configuration of __boost_asio__ according to Boost.Log configuration. Unless compiler-based TLS is enabled by defining `BOOST_LOG_USE_COMPILER_TLS` at Boost.Log compilation stage, compiler-based TLS in __boost_asio__ is disabled by defining `BOOST_ASIO_DISABLE_THREAD_KEYWORD_EXTENSION`. On some systems this may cause ODR violation issues, if user's code uses __boost_asio__ with a different configuration (by default compiler-based TLS is enabled in __boost_asio__). It is *strongly advised* to align Boost.Log and __boost_asio__ configuration (either enable or disable compiler-based TLS for both libraries).
 * On systems with [@https://gcc.gnu.org/wiki/Visibility symbol visibility] support (e.g. Linux) the library is now built with all internal symbols hidden. API symbols still have default visibility, so this shouldn't affect linking with the library.
 * *Breaking change:* The library has been ported to __boost_type_index__ for its underlying type info management tool. This improved library compatibility with hidden symbol visibility mode on some compilers. This affected the following public interfaces:
   * `invalid_type` exceptions thrown by the library now have `typeindex::type_index` attached as the description of the offending type. The type was previously identified by `type_info_wrapper`.
