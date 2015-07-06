@@ -76,7 +76,6 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(operator_overrides, CharT, char_types)
     typedef std::basic_string< CharT > string;
     typedef logging::basic_formatting_ostream< CharT > osstream;
     typedef logging::basic_formatter< CharT > formatter;
-    typedef test_data< CharT > data;
 
     attrs::constant< my_class > attr1(my_class(77));
     attrs::constant< std::string > attr2("Hello");
