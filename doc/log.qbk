@@ -17,6 +17,7 @@
 
 [/ Links to external resources /]
 [def __boost_config__ [@http://www.boost.org/doc/libs/release/libs/config/doc/html/index.html Boost.Config]]
+[def __boost_atomic__ [@http://www.boost.org/doc/libs/release/doc/html/atomic.html Boost.Atomic]]
 [def __boost_smart_ptr__ [@http://www.boost.org/doc/libs/release/libs/smart_ptr/smart_ptr.htm Boost.SmartPtr]]
 [def __boost_function__ [@http://www.boost.org/doc/libs/release/doc/html/function.html Boost.Function]]
 [def __boost_filesystem__ [@http://www.boost.org/doc/libs/release/libs/filesystem/doc/index.htm Boost.Filesystem]]
@@ -46,6 +47,7 @@
 [def __boost_asio__ [@http://www.boost.org/doc/libs/release/doc/html/boost_asio.html Boost.ASIO]]
 [def __boost_move__ [@http://www.boost.org/doc/libs/release/doc/html/move.html Boost.Move]]
 [def __boost_locale__ [@http://www.boost.org/doc/libs/release/libs/locale/doc/html/index.html Boost.Locale]]
+[def __boost_type_index__ [@http://www.boost.org/doc/libs/release/doc/html/boost_typeindex.html Boost.TypeIndex]]
 [def __boost_utility__ [@http://www.boost.org/doc/libs/release/libs/utility/utility.htm Boost.Utility]]
 [def __boost_quickbook__ [@http://www.boost.org/doc/libs/release/doc/html/quickbook.html Boost.Quickbook]]
 
@@ -244,6 +246,8 @@ The library provides the `BOOST_LOG_USE_COMPILER_TLS` configuration macro that a
 
 * The application executable must be linked with the Boost.Log library. It should not be loaded dynamically during run time.
 * The application must not use logging in global constructors or destructors.
+
+Note that the `BOOST_LOG_USE_COMPILER_TLS` macro only controls use of TLS in Boost.Log but not in other libraries used by Boost.Log. For example, __boost_asio__ uses compiler-supplied TLS by default. In order to build Boost.Log binaries completely free from use of compiler-supplied TLS, this feature has to be disabled in those other libraries as well (in case of __boost_asio__ this can be achieved by defining `BOOST_ASIO_DISABLE_THREAD_KEYWORD_EXTENSION` when building and using Boost).
 
 [endsect]
 

@@ -16,6 +16,7 @@
 #include <memory>
 #include <utility>
 #include <algorithm>
+#include <boost/type_index.hpp>
 #include <boost/optional/optional.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/attribute_value.hpp>
@@ -105,7 +106,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         /*!
          * \return The attribute value type
          */
-        type_info_wrapper get_type() const { return type_info_wrapper(typeid(scope_stack)); }
+        typeindex::type_index get_type() const { return typeindex::type_id< scope_stack >(); }
 
         //! The method is called when the attribute value is passed to another thread (e.g.
         //! in case of asynchronous logging). The value should ensure it properly owns all thread-specific data.
