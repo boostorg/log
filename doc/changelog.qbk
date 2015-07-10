@@ -26,6 +26,7 @@
 [*Bug fixes:]
 
 * Fixed incorrect behavior of `attribute_value_set::insert()` and `attribute_value_set` constructor in some cases. The inserted elements could have made some previously inserted elements not findable. The constructor from `attribute_set`s could leave some of the attribute values acquired from attributes not findable. ([ticket 11190])
+* Added missing function template exports. ([ticket 11495])
 
 [heading 2.5, Boost 1.58]
 
