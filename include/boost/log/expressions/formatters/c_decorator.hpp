@@ -231,7 +231,6 @@ struct c_ascii_decorator_gen
     template< typename SubactorT >
     BOOST_FORCEINLINE char_decorator_actor< SubactorT, c_ascii_pattern_replacer< char_type > > operator[] (SubactorT const& subactor) const
     {
-        typedef c_decorator_traits< char_type > traits_type;
         typedef c_ascii_pattern_replacer< char_type > replacer_type;
         typedef char_decorator_actor< SubactorT, replacer_type > result_type;
         typedef typename result_type::terminal_type terminal_type;
