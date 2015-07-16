@@ -148,7 +148,7 @@ struct c_decorator_gen
  * can be used to construct the actual decorator. For example:
  *
  * <code>
- * c_decor[ attr< std::string >("MyAttr") ]
+ * c_decor[ stream << attr< std::string >("MyAttr") ]
  * </code>
  *
  * For wide-character formatting there is the similar \c wc_decor decorator generator object.
@@ -248,7 +248,7 @@ struct c_ascii_decorator_gen
  * can be used to construct the actual decorator. For example:
  *
  * <code>
- * c_ascii_decor[ attr< std::string >("MyAttr") ]
+ * c_ascii_decor[ stream << attr< std::string >("MyAttr") ]
  * </code>
  *
  * For wide-character formatting there is the similar \c wc_ascii_decor decorator generator object.
