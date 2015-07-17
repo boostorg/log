@@ -496,6 +496,8 @@ BOOST_LOG_API void basic_event_log_backend< CharT >::construct(
 {
     if (reg_mode != event_log::never)
     {
+        if (message_file_name.empty())
+            BOOST_THROW_EXCEPTION(std::invalid_argument("Message file name not specified."));
         aux::registry_params< char_type > reg_params;
         string_type file_name;
         log::aux::code_convert(message_file_name.string(), file_name);
