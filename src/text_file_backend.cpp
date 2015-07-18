@@ -21,7 +21,6 @@
 #include <cstdlib>
 #include <cstddef>
 #include <list>
-#include <memory>
 #include <string>
 #include <locale>
 #include <ostream>
@@ -54,6 +53,7 @@
 #include <boost/log/exceptions.hpp>
 #include <boost/log/attributes/time_traits.hpp>
 #include <boost/log/sinks/text_file_backend.hpp>
+#include "unique_ptr.hpp"
 
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/thread/locks.hpp>
@@ -224,7 +224,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         //! Constructor
         date_and_time_formatter() : m_pFacet(NULL)
         {
-            std::auto_ptr< time_facet_type > pFacet(new time_facet_type());
+            log::aux::unique_ptr< time_facet_type > pFacet(new time_facet_type());
             m_pFacet = pFacet.get();
             std::locale loc(m_Stream.getloc(), m_pFacet);
             pFacet.release();
