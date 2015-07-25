@@ -9,6 +9,12 @@
 
 [section:changelog Changelog]
 
+[heading 2.7, Boost 1.60]
+
+[*General changes:]
+
+* Changed the format of dates produced by the default formatter constructed from strings (e.g. when initializing the library from a config file). The new format displays months as numbers instead of abbreviated names. This allows for easier log record ordering when post-processing log files. ([ticket 8839])
+
 [heading 2.6, Boost 1.59]
 
 [*General changes:]
