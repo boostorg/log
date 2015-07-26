@@ -105,9 +105,15 @@ private:
                 std::tm t = boost::posix_time::to_tm(value);
                 char buf[32];
                 std::size_t len = std::strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &t);
-                int res = boost::log::aux::snprintf(buf + len, sizeof(buf) - len, ".%06u", static_cast< unsigned int >(value.time_of_day().total_microseconds() % 1000000));
-                if (res > 0)
+                std::size_t size = sizeof(buf) - len;
+                int res = boost::log::aux::snprintf(buf + len, size, ".%.6u", static_cast< unsigned int >(value.time_of_day().total_microseconds() % 1000000));
+                if (res < 0)
+                    buf[len] = '\0';
+                else if (static_cast< std::size_t >(res) >= size)
+                    len += size - 1;
+                else
                     len += res;
+
                 m_strm.write(buf, len);
             }
             else
@@ -160,9 +166,12 @@ private:
                 unsigned int seconds = total_useconds / 1000000ull % 60ull;
                 unsigned int useconds = total_useconds % 1000000ull;
                 char buf[64];
-                int len = boost::log::aux::snprintf(buf, sizeof(buf), "%02llu:%02u:%02u.%06u", hours, minutes, seconds, useconds);
+                int len = boost::log::aux::snprintf(buf, sizeof(buf), "%.2llu:%.2u:%.2u.%.6u", hours, minutes, seconds, useconds);
                 if (len > 0)
-                    m_strm.write(buf, len);
+                {
+                    unsigned int size = static_cast< unsigned int >(len) >= sizeof(buf) ? static_cast< unsigned int >(sizeof(buf)) : static_cast< unsigned int >(len);
+                    m_strm.write(buf, size);
+                }
             }
             else
             {
