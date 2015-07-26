@@ -39,8 +39,7 @@ BOOST_LOG_API void code_convert_impl(const wchar_t* str1, std::size_t len, std::
 //! The function converts one string to the character type of another
 BOOST_LOG_API void code_convert_impl(const char* str1, std::size_t len, std::wstring& str2, std::locale const& loc = std::locale());
 
-// Note: MSVC 2015 (aka VC14) implement char16_t and char32_t types but not codecvt locale facets
-#if !defined(BOOST_MSVC)
+#if !defined(BOOST_LOG_NO_CXX11_CODECVT_FACETS)
 #if !defined(BOOST_NO_CXX11_CHAR16_T)
 //! The function converts one string to the character type of another
 BOOST_LOG_API void code_convert_impl(const char16_t* str1, std::size_t len, std::string& str2, std::locale const& loc = std::locale());
@@ -63,7 +62,7 @@ BOOST_LOG_API void code_convert_impl(const char16_t* str1, std::size_t len, std:
 //! The function converts one string to the character type of another
 BOOST_LOG_API void code_convert_impl(const char32_t* str1, std::size_t len, std::u16string& str2, std::locale const& loc = std::locale());
 #endif
-#endif // !defined(BOOST_MSVC)
+#endif // !defined(BOOST_LOG_NO_CXX11_CODECVT_FACETS)
 
 //! The function converts one string to the character type of another
 template< typename SourceCharT, typename SourceTraitsT, typename SourceAllocatorT, typename TargetCharT, typename TargetTraitsT, typename TargetAllocatorT >

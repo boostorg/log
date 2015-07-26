@@ -126,8 +126,7 @@ BOOST_LOG_API void code_convert_impl(const char* str1, std::size_t len, std::wst
     code_convert(str1, str1 + len, str2, std::use_facet< std::codecvt< wchar_t, char, std::mbstate_t > >(loc));
 }
 
-// Note: MSVC 2015 (aka VC14) implement char16_t and char32_t types but not codecvt locale facets
-#if !defined(BOOST_MSVC)
+#if !defined(BOOST_LOG_NO_CXX11_CODECVT_FACETS)
 
 #if !defined(BOOST_NO_CXX11_CHAR16_T)
 
@@ -197,7 +196,7 @@ BOOST_LOG_API void code_convert_impl(const char32_t* str1, std::size_t len, std:
 
 #endif
 
-#endif // !defined(BOOST_MSVC)
+#endif // !defined(BOOST_LOG_NO_CXX11_CODECVT_FACETS)
 
 } // namespace aux
 
