@@ -54,7 +54,7 @@ inline int vsnprintf(char* buf, std::size_t size, const char* format, std::va_li
     int n = _vsnprintf(buf, size, format, args);
     if (static_cast< unsigned int >(n) >= size)
     {
-        n = static_cast< int >(size - 1);
+        n = static_cast< int >(size);
         buf[size - 1] = '\0';
     }
     return n;
@@ -66,7 +66,7 @@ inline int vswprintf(wchar_t* buf, std::size_t size, const wchar_t* format, std:
     int n = _vsnwprintf(buf, size, format, args);
     if (static_cast< unsigned int >(n) >= size)
     {
-        n = static_cast< int >(size - 1);
+        n = static_cast< int >(size);
         buf[size - 1] = L'\0';
     }
     return n;
