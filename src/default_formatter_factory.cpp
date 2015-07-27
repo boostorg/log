@@ -22,6 +22,7 @@
 #include <boost/preprocessor/cat.hpp>
 #include <boost/preprocessor/seq/enum.hpp>
 #include <boost/preprocessor/seq/size.hpp>
+#include <boost/date_time/special_defs.hpp>
 #include <boost/date_time/gregorian/gregorian_types.hpp>
 #include <boost/date_time/local_time/local_time_types.hpp>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
@@ -217,13 +218,13 @@ private:
         {
             switch (value)
             {
-            case boost::date_time::special_values::not_a_date_time:
+            case boost::date_time::not_a_date_time:
                 m_strm << "not-a-date-time";
                 break;
-            case boost::date_time::special_values::pos_infin:
+            case boost::date_time::pos_infin:
                 m_strm << "+infinity";
                 break;
-            case boost::date_time::special_values::neg_infin:
+            case boost::date_time::neg_infin:
                 m_strm << "-infinity";
                 break;
             default:
