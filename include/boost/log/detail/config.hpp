@@ -96,11 +96,10 @@
 #   define BOOST_LOG_BROKEN_CONSTANT_EXPRESSIONS
 #endif
 
-#if defined(BOOST_NO_CXX11_HDR_CODECVT) || defined(_MSC_VER)
+#if defined(BOOST_NO_CXX11_HDR_CODECVT)
     // The compiler does not support std::codecvt<char16_t> and std::codecvt<char32_t> specializations.
-    // Note that MSVC-14 RTM has the codecvt specializations but fails at link time (DevDiv#1060849,
-    // https://connect.microsoft.com/VisualStudio/feedback/details/1348277/link-error-when-using-std-codecvt-utf8-utf16-char16-t).
-    // Later MSVC versions has not been tested.
+    // The BOOST_NO_CXX11_HDR_CODECVT means there's no usable <codecvt>, which is slightly different from this macro.
+    // But in order for <codecvt> to be implemented there have to be std::codecvt specializations implemented as well.
 #   define BOOST_LOG_NO_CXX11_CODECVT_FACETS
 #endif
 
