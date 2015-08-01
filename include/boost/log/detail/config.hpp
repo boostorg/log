@@ -96,7 +96,7 @@
 #   define BOOST_LOG_BROKEN_CONSTANT_EXPRESSIONS
 #endif
 
-#if defined(BOOST_NO_CXX11_HDR_CODECVT)
+#if defined(BOOST_NO_CXX11_HDR_CODECVT) || (defined(_CPPLIB_VER) && (_CPPLIB_VER+0) == 650)
     // The compiler does not support std::codecvt<char16_t> and std::codecvt<char32_t> specializations.
     // The BOOST_NO_CXX11_HDR_CODECVT means there's no usable <codecvt>, which is slightly different from this macro.
     // But in order for <codecvt> to be implemented there have to be std::codecvt specializations implemented as well.
