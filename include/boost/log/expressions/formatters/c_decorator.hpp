@@ -60,7 +60,7 @@ struct c_decorator_traits< char >
     template< unsigned int N >
     static std::size_t print_escaped(char (&buf)[N], char c)
     {
-        int n = boost::log::aux::snprintf(buf, N, "\\x%0.2X", static_cast< unsigned int >(static_cast< uint8_t >(c)));
+        int n = boost::log::aux::snprintf(buf, N, "\\x%.2X", static_cast< unsigned int >(static_cast< uint8_t >(c)));
         if (n < 0)
         {
             n = 0;
@@ -98,17 +98,17 @@ struct c_decorator_traits< wchar_t >
         unsigned int val;
         if (sizeof(wchar_t) == 1)
         {
-            format = L"\\x%0.2X";
+            format = L"\\x%.2X";
             val = static_cast< uint8_t >(c);
         }
         else if (sizeof(wchar_t) == 2)
         {
-            format = L"\\x%0.4X";
+            format = L"\\x%.4X";
             val = static_cast< uint16_t >(c);
         }
         else
         {
-            format = L"\\x%0.8X";
+            format = L"\\x%.8X";
             val = static_cast< uint32_t >(c);
         }
 

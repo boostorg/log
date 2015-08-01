@@ -22,6 +22,7 @@
 * Removed the previously deprecated headers: `boost/log/utility/intrusive_ref_counter.hpp`, `boost/log/utility/explicit_operator_bool.hpp`, `boost/log/utility/empty_deleter.hpp`.
 * Added support for building the library for OpenBSD. ([ticket 11446])
 * Improved internal implementation of the event synchronization primitive used for asynchronous logging. The updated implementation relies on __boost_atomic__ for atomic operations which provides better portability. On Linux the implementation uses futexes directly. ([ticket 11398])
+* Changed the format of dates produced by the default formatter constructed from strings (e.g. when initializing the library from a config file). The new format displays months as numbers instead of abbreviated names. This allows for easier log record ordering when post-processing log files. ([ticket 8839])
 
 [*Bug fixes:]
 
