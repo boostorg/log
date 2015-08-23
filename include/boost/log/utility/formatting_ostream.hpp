@@ -128,6 +128,10 @@ public:
         {
         }
 
+        // A workaround for Solaris Studio 12.4 compiler, see: https://svn.boost.org/trac/boost/ticket/11545
+        BOOST_EXPLICIT_OPERATOR_BOOL()
+        bool operator! () const { return !static_cast< base_type const& >(*this); }
+
         BOOST_DELETED_FUNCTION(sentry(sentry const&))
         BOOST_DELETED_FUNCTION(sentry& operator= (sentry const&))
     };
