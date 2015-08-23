@@ -16,6 +16,7 @@
 * Fixed compilation for Android using Google NDK. ([ticket 11559])
 * Fixed compilation of some logging statements, where the first object to be put into stream is not directly supported by `formatting_ostream`. ([ticket 11549])
 * Added a workaround for Solaris Studio 12.4, which should fix the compilation of `formatting_ostream`. ([ticket 11545])
+* Fixed compilation when native `wchar_t` type is disabled. Added a note of discouragement to the [link log.installation.config configuration] section. ([ticket 11541])
 
 [heading 2.6, Boost 1.59]
 

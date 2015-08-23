@@ -403,6 +403,8 @@ public:
         return this->formatted_write(p, static_cast< std::streamsize >(std::char_traits< char >::length(p)));
     }
 
+    // When no native character type is supported, the following overloads are disabled as they have ambiguous meaning.
+    // Use basic_string_ref, basic_string_view or basic_string to explicitly indicate that the data is a string.
 #if !defined(BOOST_NO_INTRINSIC_WCHAR_T)
     basic_formatting_ostream& operator<< (wchar_t c)
     {

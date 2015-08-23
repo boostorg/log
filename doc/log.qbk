@@ -249,6 +249,18 @@ The library provides the `BOOST_LOG_USE_COMPILER_TLS` configuration macro that a
 
 Note that the `BOOST_LOG_USE_COMPILER_TLS` macro only controls use of TLS in Boost.Log but not in other libraries used by Boost.Log. For example, __boost_asio__ uses compiler-supplied TLS by default. In order to build Boost.Log binaries completely free from use of compiler-supplied TLS, this feature has to be disabled in those other libraries as well (in case of __boost_asio__ this can be achieved by defining `BOOST_ASIO_DISABLE_THREAD_KEYWORD_EXTENSION` when building and using Boost).
 
+[heading Notes about native `wchar_t` support]
+
+Some compilers, most notably MSVC, have an option to disable the native `wchar_t` type, emulating it with a typedef for one of the standard integral types. From the C++ language perspective this behavior is not conforming but it may be useful for compatibility with some legacy code which is difficult to update.
+
+By default, Boost (and Boost.Log being part of it) is built with native `wchar_t` enabled. At the time of this writing, user will have to modify Boost.Build to enable the emulation mode. It is possible to build Boost.Log in this mode, but there are several caveats that have to be kept in mind:
+
+* The compiled Boost.Log binaries will be exporting symbols corresponding to the configuration chosen at build time. The user's code will have to use the same setting as was used when building Boost.Log, otherwise linking errors will appear.
+* Since in emulation mode `wchar_t` is undistinguishable from one of the integer types, certain parts of the library may behave differently from the normal mode with native `wchar_t`. In particular, wide-character literals may be rejected or formatted differently.
+* The emulation mode is not tested, so unexpected breakages are possible.
+
+Because of that using the emulation mode is discouraged and should be avoided. In future releases of the library its support may be removed completely.
+
 [endsect]
 
 [endsect]

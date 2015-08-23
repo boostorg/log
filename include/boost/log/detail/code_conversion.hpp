@@ -34,6 +34,9 @@ BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
 
+// Implementation note: We have to implement char<->wchar_t conversions even in the absence of the native wchar_t
+// type. These conversions are used in sinks, e.g. to convert multibyte strings to wide-character filesystem paths.
+
 //! The function converts one string to the character type of another
 BOOST_LOG_API void code_convert_impl(const wchar_t* str1, std::size_t len, std::string& str2, std::locale const& loc = std::locale());
 //! The function converts one string to the character type of another
@@ -111,8 +114,12 @@ inline std::string const& to_narrow(std::string const& str, std::locale const&)
 inline std::string to_narrow(std::wstring const& str, std::locale const& loc = std::locale())
 {
     std::string res;
-    aux::code_convert(str, res, loc);
+    aux::code_convert_impl(str.c_str(), str.size(), res, loc);
+#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+    return static_cast< std::string&& >(res);
+#else
     return res;
+#endif
 }
 
 //! The function converts the passed string to the wide-character encoding
@@ -131,8 +138,12 @@ inline std::wstring const& to_wide(std::wstring const& str, std::locale const&)
 inline std::wstring to_wide(std::string const& str, std::locale const& loc = std::locale())
 {
     std::wstring res;
-    aux::code_convert(str, res, loc);
+    aux::code_convert_impl(str.c_str(), str.size(), res, loc);
+#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+    return static_cast< std::wstring&& >(res);
+#else
     return res;
+#endif
 }
 
 } // namespace aux
