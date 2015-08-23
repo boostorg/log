@@ -32,6 +32,13 @@
 #include <linux/futex.h>
 #include <boost/memory_order.hpp>
 
+// Some Android NDKs (Google NDK and older Crystax.NET NDK versions) don't define SYS_futex
+#if defined(SYS_futex)
+#define BOOST_LOG_SYS_FUTEX SYS_futex
+#else
+#define BOOST_LOG_SYS_FUTEX __NR_futex
+#endif
+
 #if defined(FUTEX_WAIT_PRIVATE)
 #define BOOST_LOG_FUTEX_WAIT FUTEX_WAIT_PRIVATE
 #else
@@ -90,7 +97,7 @@ BOOST_LOG_API void futex_based_event::wait()
     {
         while (true)
         {
-            if (::syscall(SYS_futex, &m_state.storage(), BOOST_LOG_FUTEX_WAIT, 0, NULL, NULL, 0) == 0)
+            if (::syscall(BOOST_LOG_SYS_FUTEX, &m_state.storage(), BOOST_LOG_FUTEX_WAIT, 0, NULL, NULL, 0) == 0)
             {
                 // Another thread has set the event while sleeping
                 break;
@@ -118,7 +125,7 @@ BOOST_LOG_API void futex_based_event::set_signalled()
 {
     if (m_state.exchange(1, boost::memory_order_release) == 0)
     {
-        if (BOOST_UNLIKELY(::syscall(SYS_futex, &m_state.storage(), BOOST_LOG_FUTEX_WAKE, 1, NULL, NULL, 0) < 0))
+        if (BOOST_UNLIKELY(::syscall(BOOST_LOG_SYS_FUTEX, &m_state.storage(), BOOST_LOG_FUTEX_WAKE, 1, NULL, NULL, 0) < 0))
         {
             const int err = errno;
             BOOST_THROW_EXCEPTION(system::system_error(
