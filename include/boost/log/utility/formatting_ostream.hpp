@@ -779,6 +779,13 @@ void basic_formatting_ostream< CharT, TraitsT, AllocatorT >::aligned_write(const
 
 // Implementation note: these operators below should be the least attractive for the compiler
 // so that user's overloads are chosen, when present. We use function template partial ordering for this purpose.
+// We also don't use perfect forwarding for the right hand argument because in ths case the generic overload
+// would be more preferred than the typical one written by users:
+//
+// formatting_ostream& operator<< (formatting_ostream& strm, my_type const& arg);
+//
+// This is because my_type rvalues require adding const to the type, which counts as a conversion that is not required
+// if there is a perfect forwarding overload.
 template< typename StreamT, typename T >
 inline typename boost::log::aux::enable_if_formatting_ostream< StreamT, StreamT& >::type
 operator<< (StreamT& strm, T const& value)
