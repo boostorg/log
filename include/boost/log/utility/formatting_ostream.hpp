@@ -367,7 +367,7 @@ public:
     write(const OtherCharT* p, std::streamsize size)
     {
         sentry guard(*this);
-        if (guard)
+        if (!!guard)
         {
             m_stream.flush();
 
@@ -628,7 +628,7 @@ private:
     basic_formatting_ostream& formatted_write(const char_type* p, std::streamsize size)
     {
         sentry guard(*this);
-        if (guard)
+        if (!!guard)
         {
             m_stream.flush();
 
@@ -647,7 +647,7 @@ private:
     basic_formatting_ostream& formatted_write(const OtherCharT* p, std::streamsize size)
     {
         sentry guard(*this);
-        if (guard)
+        if (!!guard)
         {
             m_stream.flush();
 
