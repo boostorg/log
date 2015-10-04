@@ -235,7 +235,8 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
             m_Facet.format(pattern.c_str());
             m_Stream.str(path_string_type());
             // Note: the regular operator<< fails because std::use_facet fails to find the facet in the locale because
-            // the facet type in Boost.DateTime has hidden visibility.
+            // the facet type in Boost.DateTime has hidden visibility. See this ticket:
+            // https://svn.boost.org/trac/boost/ticket/11707
             std::ostreambuf_iterator< path_char_type > sbuf_it(m_Stream);
             m_Facet.put(sbuf_it, m_Stream, m_Stream.fill(), boost::log::attributes::local_time_traits::get_clock());
             if (m_Stream.good())
