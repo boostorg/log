@@ -217,31 +217,27 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         typedef date_time::time_facet< posix_time::ptime, path_char_type > time_facet_type;
 
     private:
-        time_facet_type* m_pFacet;
+        mutable time_facet_type m_Facet;
         mutable std::basic_ostringstream< path_char_type > m_Stream;
 
     public:
         //! Constructor
-        date_and_time_formatter() : m_pFacet(NULL)
+        date_and_time_formatter() : m_Facet(1u)
         {
-            log::aux::unique_ptr< time_facet_type > pFacet(new time_facet_type());
-            m_pFacet = pFacet.get();
-            std::locale loc(m_Stream.getloc(), m_pFacet);
-            pFacet.release();
-            m_Stream.imbue(loc);
         }
         //! Copy constructor
-        date_and_time_formatter(date_and_time_formatter const& that) :
-            m_pFacet(that.m_pFacet)
+        date_and_time_formatter(date_and_time_formatter const& that) : m_Facet(1u)
         {
-            m_Stream.imbue(that.m_Stream.getloc());
         }
         //! The method formats the current date and time according to the format string str and writes the result into it
         path_string_type operator()(path_string_type const& pattern, unsigned int counter) const
         {
-            m_pFacet->format(pattern.c_str());
+            m_Facet.format(pattern.c_str());
             m_Stream.str(path_string_type());
-            m_Stream << boost::log::attributes::local_time_traits::get_clock();
+            // Note: the regular operator<< fails because std::use_facet fails to find the facet in the locale because
+            // the facet type in Boost.DateTime has hidden visibility.
+            std::ostreambuf_iterator< path_char_type > sbuf_it(m_Stream);
+            m_Facet.put(sbuf_it, m_Stream, m_Stream.fill(), boost::log::attributes::local_time_traits::get_clock());
             if (m_Stream.good())
             {
                 return m_Stream.str();
@@ -252,6 +248,8 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
                 return pattern;
             }
         }
+
+        BOOST_DELETED_FUNCTION(date_and_time_formatter& operator= (date_and_time_formatter const&))
     };
 
     //! The functor formats the file counter into the file name
@@ -297,6 +295,8 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
 
             return file_name;
         }
+
+        BOOST_DELETED_FUNCTION(file_counter_formatter& operator= (file_counter_formatter const&))
     };
 
     //! The function returns the pattern as the file name
@@ -323,6 +323,8 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         {
             return m_Pattern;
         }
+
+        BOOST_DELETED_FUNCTION(empty_formatter& operator= (empty_formatter const&))
     };
 
     //! The function parses the format placeholder for file counter
