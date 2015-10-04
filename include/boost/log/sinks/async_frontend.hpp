@@ -386,8 +386,6 @@ public:
      * The method feeds all log records that may have been buffered to the backend and returns.
      * Unlike \c feed_records, in case of ordering queueing the method also feeds records
      * that were enqueued during the ordering window, attempting to empty the queue completely.
-     *
-     * \pre The sink frontend must be constructed without spawning a dedicated thread
      */
     void flush()
     {
