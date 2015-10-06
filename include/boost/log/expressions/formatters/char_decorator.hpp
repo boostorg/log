@@ -28,6 +28,7 @@
 #include <boost/range/value_type.hpp>
 #include <boost/move/core.hpp>
 #include <boost/move/utility.hpp>
+#include <boost/core/enable_if.hpp>
 #include <boost/utility/addressof.hpp>
 #include <boost/phoenix/core/actor.hpp>
 #include <boost/phoenix/core/meta_grammar.hpp>
@@ -55,9 +56,6 @@ BOOST_LOG_OPEN_NAMESPACE
 
 namespace expressions {
 
-template< typename CharT >
-class pattern_replacer;
-
 namespace aux {
 
 template< typename RangeT >
@@ -70,12 +68,6 @@ template< >
 struct string_const_iterator< wchar_t* > { typedef wchar_t* type; };
 template< >
 struct string_const_iterator< const wchar_t* > { typedef const wchar_t* type; };
-
-// This is needed for a workaround against an MSVC-10 and older bug in constructor overload resolution
-template< typename T >
-struct disable_if_pattern_replacer { typedef int type; };
-template< typename CharT >
-struct disable_if_pattern_replacer< pattern_replacer< CharT > > {};
 
 } // namespace aux
 
@@ -118,7 +110,12 @@ public:
      * of each pair is the source pattern, and the second one is the corresponding replacement.
      */
     template< typename RangeT >
-    explicit pattern_replacer(RangeT const& decorations, typename aux::disable_if_pattern_replacer< RangeT >::type = 0)
+    explicit pattern_replacer(RangeT const& decorations
+#ifndef BOOST_LOG_DOXYGEN_PASS
+        // This is needed for a workaround against an MSVC-10 and older bug in constructor overload resolution
+        , typename boost::enable_if_has_type< typename range_const_iterator< RangeT >::type, int >::type = 0
+#endif
+    )
     {
         typedef typename range_const_iterator< RangeT >::type iterator;
         for (iterator it = boost::begin(decorations), end_ = boost::end(decorations); it != end_; ++it)
