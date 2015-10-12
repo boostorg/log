@@ -214,10 +214,10 @@ private:
 
 protected:
     //! Initializing constructor
-    single_type_dispatcher_base(typeindex::type_index type, callback_base const& callback) BOOST_NOEXCEPT :
+    single_type_dispatcher_base(typeindex::type_index type, callback_base const& cb) BOOST_NOEXCEPT :
         type_dispatcher(&single_type_dispatcher_base::get_callback),
         m_type(type),
-        m_callback(callback)
+        m_callback(cb)
     {
     }
 
