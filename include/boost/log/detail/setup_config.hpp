@@ -31,13 +31,8 @@
 #   endif
 
 #   if defined(BOOST_LOG_SETUP_DLL)
-#       if defined(BOOST_SYMBOL_IMPORT)
-#           define BOOST_LOG_SETUP_API BOOST_SYMBOL_IMPORT
-#       elif defined(BOOST_HAS_DECLSPEC)
-#           define BOOST_LOG_SETUP_API __declspec(dllimport)
-#       endif
-#   endif
-#   ifndef BOOST_LOG_SETUP_API
+#       define BOOST_LOG_SETUP_API BOOST_SYMBOL_IMPORT
+#   else
 #       define BOOST_LOG_SETUP_API
 #   endif
 
@@ -55,13 +50,8 @@
 #else // !defined(BOOST_LOG_SETUP_BUILDING_THE_LIB)
 
 #   if defined(BOOST_LOG_SETUP_DLL)
-#       if defined(BOOST_SYMBOL_EXPORT)
-#           define BOOST_LOG_SETUP_API BOOST_SYMBOL_EXPORT
-#       elif defined(BOOST_HAS_DECLSPEC)
-#           define BOOST_LOG_SETUP_API __declspec(dllexport)
-#       endif
-#   endif
-#   ifndef BOOST_LOG_SETUP_API
+#       define BOOST_LOG_SETUP_API BOOST_SYMBOL_EXPORT
+#   else
 #       define BOOST_LOG_SETUP_API BOOST_SYMBOL_VISIBLE
 #   endif
 
