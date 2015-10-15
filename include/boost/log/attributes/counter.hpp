@@ -56,7 +56,7 @@ public:
 
 protected:
     //! Factory implementation
-    class BOOST_LOG_NO_VTABLE BOOST_SYMBOL_VISIBLE impl :
+    class BOOST_SYMBOL_VISIBLE impl :
         public attribute::impl
     {
     private:
