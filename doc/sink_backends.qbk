@@ -160,6 +160,26 @@ If using formatters is not appropriate for some reason, you can provide your own
 
 [endsect]
 
+[section:text_ipc_message_queue Text IPC message queue backend]
+
+    #include <``[boost_log_sinks_text_ipc_message_queue_backend_hpp]``>
+
+Sometimes, it would be convenient to use a viewer process to monitor the interaction of multiple logger processes on a local machine. To implement this idea, a sink backend that sends logs across processes is needed. The text interprocess communication (IPC) message queue sink backend supports sending formatted log messages to an interprocess message queue, which can then be retrieved and processed by another process. In particular, one may choose to encode a log record with various attribute values into a JSON or XML formatted text message, and then decode the message at the viewer side for processing such as filtering and displaying. As an alternative, one may consider using a network mechanism, e.g., sockets. But doing so would be less efficient and less convenient for this particular purpose.
+
+The backend is implemented by the [class_sinks_basic_text_ipc_message_queue_backend] class template (`text_ipc_message_queue_backend` and `wtext_ipc_message_queue_backend` convenience typedefs provided for narrow and wide character support). It has a supporting message queue implementation that is defined as the member class `message_queue_type`. This member class is intended to be used at the viewer side to extract messages from a message queue. The following two example programs illustrate a logger and a viewer process, respectively. First comes the logger process.
+
+[example_sinks_ipc_logger]
+
+[@boost:/libs/log/example/doc/sinks_ipc_logger.cpp See the complete code].
+
+Here is the viewer process.
+
+[example_sinks_ipc_viewer]
+
+[@boost:/libs/log/example/doc/sinks_ipc_viewer.cpp See the complete code].
+
+[endsect]
+
 [section:syslog Syslog backend]
 
     #include <``[boost_log_sinks_syslog_backend_hpp]``>
