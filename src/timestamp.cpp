@@ -49,6 +49,13 @@ BOOST_LOG_API get_tick_count_t get_tick_count = &GetTickCount64;
 
 #else // _WIN32_WINNT >= 0x0600
 
+#if defined(UNDER_CE)
+// On WindowsCE GetProcAddress takes a wide-char string instead
+#  define GET_PROC_ADDRESS_PROC_NAME(t) L##t
+#else
+#  define GET_PROC_ADDRESS_PROC_NAME(t) t
+#endif
+
 BOOST_LOG_ANONYMOUS_NAMESPACE {
 
 #if defined(_MSC_VER) && !defined(_M_CEE_PURE)
@@ -179,10 +186,10 @@ uint64_t __stdcall get_tick_count64()
 
 uint64_t __stdcall get_tick_count_init()
 {
-    HMODULE hKernel32 = GetModuleHandleA("kernel32.dll");
+    HMODULE hKernel32 = GetModuleHandleW(L"kernel32.dll");
     if (hKernel32)
     {
-        get_tick_count_t p = (get_tick_count_t)GetProcAddress(hKernel32, "GetTickCount64");
+        get_tick_count_t p = (get_tick_count_t)GetProcAddress(hKernel32, GET_PROC_ADDRESS_PROC_NAME("GetTickCount64"));
         if (p)
         {
             // Use native API

@@ -32,6 +32,13 @@
 
 #include <boost/log/detail/header.hpp>
 
+#if defined(UNDER_CE)
+// On WindowsCE GetProcAddress takes a wide-char string instead
+#  define GET_PROC_ADDRESS_PROC_NAME(t) L##t
+#else
+#  define GET_PROC_ADDRESS_PROC_NAME(t) t
+#endif
+
 namespace boost {
 
 BOOST_LOG_OPEN_NAMESPACE
@@ -111,27 +118,27 @@ unlock_shared_fun_t g_pUnlockSharedLWRWMutex = NULL;
 //! The function dynamically initializes the implementation pointers
 void init_light_rw_mutex_impl()
 {
-    HMODULE hKernel32 = GetModuleHandleA("kernel32.dll");
+    HMODULE hKernel32 = GetModuleHandleW(L"kernel32.dll");
     if (hKernel32)
     {
         g_pInitializeLWRWMutex =
-            (init_fun_t)GetProcAddress(hKernel32, "InitializeSRWLock");
+            (init_fun_t)GetProcAddress(hKernel32, GET_PROC_ADDRESS_PROC_NAME("InitializeSRWLock"));
         if (g_pInitializeLWRWMutex)
         {
             g_pLockExclusiveLWRWMutex =
-                (lock_exclusive_fun_t)GetProcAddress(hKernel32, "AcquireSRWLockExclusive");
+                (lock_exclusive_fun_t)GetProcAddress(hKernel32, GET_PROC_ADDRESS_PROC_NAME("AcquireSRWLockExclusive"));
             if (g_pLockExclusiveLWRWMutex)
             {
                 g_pUnlockExclusiveLWRWMutex =
-                    (unlock_exclusive_fun_t)GetProcAddress(hKernel32, "ReleaseSRWLockExclusive");
+                    (unlock_exclusive_fun_t)GetProcAddress(hKernel32, GET_PROC_ADDRESS_PROC_NAME("ReleaseSRWLockExclusive"));
                 if (g_pUnlockExclusiveLWRWMutex)
                 {
                     g_pLockSharedLWRWMutex =
-                        (lock_shared_fun_t)GetProcAddress(hKernel32, "AcquireSRWLockShared");
+                        (lock_shared_fun_t)GetProcAddress(hKernel32, GET_PROC_ADDRESS_PROC_NAME("AcquireSRWLockShared"));
                     if (g_pLockSharedLWRWMutex)
                     {
                         g_pUnlockSharedLWRWMutex =
-                            (unlock_shared_fun_t)GetProcAddress(hKernel32, "ReleaseSRWLockShared");
+                            (unlock_shared_fun_t)GetProcAddress(hKernel32, GET_PROC_ADDRESS_PROC_NAME("ReleaseSRWLockShared"));
                         if (g_pUnlockSharedLWRWMutex)
                         {
                             g_pDestroyLWRWMutex = &DeinitializeSRWLock;

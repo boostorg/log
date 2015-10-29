@@ -112,6 +112,13 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 #include <boost/thread/condition_variable.hpp>
 #include <boost/log/detail/header.hpp>
 
+#if defined(UNDER_CE)
+// On WindowsCE GetProcAddress takes a wide-char string instead
+#  define GET_PROC_ADDRESS_PROC_NAME(t) L##t
+#else
+#  define GET_PROC_ADDRESS_PROC_NAME(t) t
+#endif
+
 namespace boost {
 
 BOOST_LOG_OPEN_NAMESPACE
@@ -275,31 +282,31 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
 
     once_block_impl_base* create_once_block_impl()
     {
-        HMODULE hKernel32 = GetModuleHandleA("kernel32.dll");
+        HMODULE hKernel32 = GetModuleHandleW(L"kernel32.dll");
         if (hKernel32)
         {
             once_block_impl_nt6::InitializeSRWLock_t pInitializeSRWLock =
-                (once_block_impl_nt6::InitializeSRWLock_t)GetProcAddress(hKernel32, "InitializeSRWLock");
+                (once_block_impl_nt6::InitializeSRWLock_t)GetProcAddress(hKernel32, GET_PROC_ADDRESS_PROC_NAME("InitializeSRWLock"));
             if (pInitializeSRWLock)
             {
                 once_block_impl_nt6::AcquireSRWLockExclusive_t pAcquireSRWLockExclusive =
-                    (once_block_impl_nt6::AcquireSRWLockExclusive_t)GetProcAddress(hKernel32, "AcquireSRWLockExclusive");
+                    (once_block_impl_nt6::AcquireSRWLockExclusive_t)GetProcAddress(hKernel32, GET_PROC_ADDRESS_PROC_NAME("AcquireSRWLockExclusive"));
                 if (pAcquireSRWLockExclusive)
                 {
                     once_block_impl_nt6::ReleaseSRWLockExclusive_t pReleaseSRWLockExclusive =
-                        (once_block_impl_nt6::ReleaseSRWLockExclusive_t)GetProcAddress(hKernel32, "ReleaseSRWLockExclusive");
+                        (once_block_impl_nt6::ReleaseSRWLockExclusive_t)GetProcAddress(hKernel32, GET_PROC_ADDRESS_PROC_NAME("ReleaseSRWLockExclusive"));
                     if (pReleaseSRWLockExclusive)
                     {
                         once_block_impl_nt6::InitializeConditionVariable_t pInitializeConditionVariable =
-                            (once_block_impl_nt6::InitializeConditionVariable_t)GetProcAddress(hKernel32, "InitializeConditionVariable");
+                            (once_block_impl_nt6::InitializeConditionVariable_t)GetProcAddress(hKernel32, GET_PROC_ADDRESS_PROC_NAME("InitializeConditionVariable"));
                         if (pInitializeConditionVariable)
                         {
                             once_block_impl_nt6::SleepConditionVariableSRW_t pSleepConditionVariableSRW =
-                                (once_block_impl_nt6::SleepConditionVariableSRW_t)GetProcAddress(hKernel32, "SleepConditionVariableSRW");
+                                (once_block_impl_nt6::SleepConditionVariableSRW_t)GetProcAddress(hKernel32, GET_PROC_ADDRESS_PROC_NAME("SleepConditionVariableSRW"));
                             if (pSleepConditionVariableSRW)
                             {
                                 once_block_impl_nt6::WakeAllConditionVariable_t pWakeAllConditionVariable =
-                                    (once_block_impl_nt6::WakeAllConditionVariable_t)GetProcAddress(hKernel32, "WakeAllConditionVariable");
+                                    (once_block_impl_nt6::WakeAllConditionVariable_t)GetProcAddress(hKernel32, GET_PROC_ADDRESS_PROC_NAME("WakeAllConditionVariable"));
                                 if (pWakeAllConditionVariable)
                                 {
                                     return new once_block_impl_nt6(
