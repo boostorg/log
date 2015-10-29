@@ -19,7 +19,9 @@
 #if defined(_MSC_VER)
 #include "windows_version.hpp"
 #include <windows.h>
+# ifndef UNDER_CE
 #include <intrin.h> // __cpuid
+# endif
 #endif
 #include <boost/log/detail/header.hpp>
 
