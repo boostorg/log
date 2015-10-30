@@ -151,13 +151,13 @@ public:
     basic_formatter(FunT&& fun) : m_Formatter(boost::forward< FunT >(fun))
     {
     }
-#elif !defined(BOOST_MSVC) || BOOST_MSVC > 1400
+#elif !defined(BOOST_MSVC) || BOOST_MSVC >= 1600
     template< typename FunT >
     basic_formatter(FunT const& fun, typename disable_if_c< move_detail::is_rv< FunT >::value, int >::type = 0) : m_Formatter(fun)
     {
     }
 #else
-    // MSVC 8 blows up in unexpected ways if we use SFINAE to disable constructor instantiation
+    // MSVC 9 blows up in unexpected ways if we use SFINAE to disable constructor instantiation
     template< typename FunT >
     basic_formatter(FunT const& fun) : m_Formatter(fun)
     {
