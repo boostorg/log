@@ -262,7 +262,13 @@ public:
     ~asynchronous_sink()
     {
         boost::this_thread::disable_interruption no_interrupts;
-        stop();
+        try
+        {
+            stop();
+        }
+        catch (...)
+        {
+        }
     }
 
     /*!
