@@ -15,6 +15,7 @@
 #ifndef BOOST_LOG_SINKS_ASYNC_FRONTEND_HPP_INCLUDED_
 #define BOOST_LOG_SINKS_ASYNC_FRONTEND_HPP_INCLUDED_
 
+#include <exception> // std::terminate
 #include <boost/log/detail/config.hpp>
 
 #ifdef BOOST_HAS_PRAGMA_ONCE
@@ -259,10 +260,17 @@ public:
     /*!
      * Destructor. Implicitly stops the dedicated feeding thread, if one is running.
      */
-    ~asynchronous_sink()
+    ~asynchronous_sink() BOOST_NOEXCEPT
     {
-        boost::this_thread::disable_interruption no_interrupts;
-        stop();
+        try
+        {
+            boost::this_thread::disable_interruption no_interrupts;
+            stop();
+        }
+        catch (...)
+        {
+            std::terminate();
+        }
     }
 
     /*!
