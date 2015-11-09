@@ -21,13 +21,11 @@
 
 #if !defined(BOOST_LOG_NO_THREADS)
 
-#include <boost/log/detail/header.hpp>
-
-
 #if defined(BOOST_THREAD_PLATFORM_WIN32)
 
 #include "windows_version.hpp"
 #include <windows.h>
+#include <boost/log/detail/header.hpp>
 
 namespace boost {
 
@@ -42,7 +40,6 @@ thread_specific_base::thread_specific_base()
     {
         BOOST_LOG_THROW_DESCR(system_error, "TLS capacity depleted");
     }
-    set_content(0);
 }
 
 thread_specific_base::~thread_specific_base()
@@ -70,6 +67,7 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 #include <cstddef>
 #include <pthread.h>
+#include <boost/log/detail/header.hpp>
 
 namespace boost {
 
