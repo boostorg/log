@@ -33,6 +33,7 @@
 #include <boost/log/attributes.hpp>
 #include <boost/log/sinks.hpp>
 #include <boost/log/sinks/basic_sink_backend.hpp>
+#include <boost/log/sources/logger.hpp>
 
 #include <boost/log/expressions.hpp>
 
@@ -40,7 +41,7 @@
 
 enum config
 {
-    RECORD_COUNT = 50000000,
+    RECORD_COUNT = 20000000,
     THREAD_COUNT = 8,
     SINK_COUNT = 3
 };
@@ -78,12 +79,14 @@ namespace {
 void test(unsigned int record_count, boost::barrier& bar)
 {
     BOOST_LOG_SCOPED_THREAD_TAG("ThreadID", boost::this_thread::get_id());
+    src::severity_logger< severity_level > slg;
+//    src::logger lg;
     bar.wait();
 
-    src::severity_logger< severity_level > slg;
     for (unsigned int i = 0; i < record_count; ++i)
     {
         BOOST_LOG_SEV(slg, warning) << "Test record";
+//        BOOST_LOG(lg) << "Test record";
     }
 }
 
