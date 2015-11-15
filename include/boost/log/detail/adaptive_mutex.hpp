@@ -38,50 +38,25 @@
 #if defined(BOOST_LOG_ADAPTIVE_MUTEX_USE_WINAPI)
 
 #include <boost/detail/interlocked.hpp>
-
-#if defined(BOOST_USE_WINDOWS_H)
-
-#ifndef _WIN32_WINNT
-#define _WIN32_WINNT 0x0500
-#endif
-
-#include <windows.h>
-
-#else // defined(BOOST_USE_WINDOWS_H)
-
-namespace boost {
-
-BOOST_LOG_OPEN_NAMESPACE
-
-namespace aux {
-
-extern "C" {
-
-__declspec(dllimport) int __stdcall SwitchToThread();
-
-} // extern "C"
-
-} // namespace aux
-
-BOOST_LOG_CLOSE_NAMESPACE // namespace log
-
-} // namespace boost
-
-#endif // BOOST_USE_WINDOWS_H
+#include <boost/detail/winapi/thread.hpp>
 
 #if defined(__INTEL_COMPILER) || defined(_MSC_VER)
 #    if defined(_M_IX86)
 #        define BOOST_LOG_PAUSE_OP __asm { pause }
 #    elif defined(_M_AMD64)
 extern "C" void _mm_pause(void);
-#pragma intrinsic(_mm_pause)
+#        if defined(BOOST_MSVC)
+#            pragma intrinsic(_mm_pause)
+#        endif
 #        define BOOST_LOG_PAUSE_OP _mm_pause()
 #    endif
 #    if defined(__INTEL_COMPILER)
 #        define BOOST_LOG_COMPILER_BARRIER __memory_barrier()
 #    else
 extern "C" void _ReadWriteBarrier(void);
-#pragma intrinsic(_ReadWriteBarrier)
+#        if defined(BOOST_MSVC)
+#            pragma intrinsic(_ReadWriteBarrier)
+#        endif
 #        define BOOST_LOG_COMPILER_BARRIER _ReadWriteBarrier()
 #    endif
 #elif defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__))
