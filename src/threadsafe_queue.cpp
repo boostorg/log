@@ -30,7 +30,7 @@
 #include <boost/throw_exception.hpp>
 #include <boost/align/aligned_alloc.hpp>
 #include <boost/type_traits/alignment_of.hpp>
-#include <boost/log/detail/spin_mutex.hpp>
+#include <boost/log/detail/adaptive_mutex.hpp>
 #include <boost/log/detail/locks.hpp>
 #include <boost/log/detail/header.hpp>
 
