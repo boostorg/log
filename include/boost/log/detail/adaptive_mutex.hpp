@@ -5,7 +5,7 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  */
 /*!
- * \file   spin_mutex.hpp
+ * \file   adaptive_mutex.hpp
  * \author Andrey Semashev
  * \date   01.08.2010
  *
@@ -13,8 +13,8 @@
  *         at http://www.boost.org/doc/libs/release/libs/log/doc/html/index.html.
  */
 
-#ifndef BOOST_LOG_DETAIL_SPIN_MUTEX_HPP_INCLUDED_
-#define BOOST_LOG_DETAIL_SPIN_MUTEX_HPP_INCLUDED_
+#ifndef BOOST_LOG_DETAIL_ADAPTIVE_MUTEX_HPP_INCLUDED_
+#define BOOST_LOG_DETAIL_ADAPTIVE_MUTEX_HPP_INCLUDED_
 
 #include <boost/log/detail/config.hpp>
 
@@ -28,14 +28,14 @@
 #include <boost/thread/exceptions.hpp>
 
 #if defined(BOOST_THREAD_POSIX) // This one can be defined by users, so it should go first
-#define BOOST_LOG_SPIN_MUTEX_USE_PTHREAD
+#define BOOST_LOG_ADAPTIVE_MUTEX_USE_PTHREAD
 #elif defined(BOOST_WINDOWS)
-#define BOOST_LOG_SPIN_MUTEX_USE_WINAPI
+#define BOOST_LOG_ADAPTIVE_MUTEX_USE_WINAPI
 #elif defined(BOOST_HAS_PTHREADS)
-#define BOOST_LOG_SPIN_MUTEX_USE_PTHREAD
+#define BOOST_LOG_ADAPTIVE_MUTEX_USE_PTHREAD
 #endif
 
-#if defined(BOOST_LOG_SPIN_MUTEX_USE_WINAPI)
+#if defined(BOOST_LOG_ADAPTIVE_MUTEX_USE_WINAPI)
 
 #include <boost/detail/interlocked.hpp>
 
@@ -97,8 +97,8 @@ BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
 
-//! A simple spinning mutex
-class spin_mutex
+//! A mutex that performs spinning or thread yielding in case of contention
+class adaptive_mutex
 {
 private:
     enum state
@@ -110,7 +110,7 @@ private:
     long m_State;
 
 public:
-    spin_mutex() : m_State(0) {}
+    adaptive_mutex() : m_State(0) {}
 
     bool try_lock()
     {
@@ -157,8 +157,8 @@ public:
     }
 
     //  Non-copyable
-    BOOST_DELETED_FUNCTION(spin_mutex(spin_mutex const&))
-    BOOST_DELETED_FUNCTION(spin_mutex& operator= (spin_mutex const&))
+    BOOST_DELETED_FUNCTION(adaptive_mutex(adaptive_mutex const&))
+    BOOST_DELETED_FUNCTION(adaptive_mutex& operator= (adaptive_mutex const&))
 };
 
 #undef BOOST_LOG_PAUSE_OP
@@ -172,11 +172,15 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 #include <boost/log/detail/footer.hpp>
 
-#elif defined(BOOST_LOG_SPIN_MUTEX_USE_PTHREAD)
+#elif defined(BOOST_LOG_ADAPTIVE_MUTEX_USE_PTHREAD)
 
 #include <pthread.h>
 #include <boost/assert.hpp>
 #include <boost/log/detail/header.hpp>
+
+#if defined(PTHREAD_ADAPTIVE_MUTEX_INITIALIZER_NP)
+#define BOOST_LOG_ADAPTIVE_MUTEX_USE_PTHREAD_MUTEX_ADAPTIVE_NP
+#endif
 
 namespace boost {
 
@@ -184,82 +188,30 @@ BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
 
-#if defined(_POSIX_SPIN_LOCKS) && _POSIX_SPIN_LOCKS > 0
-
-//! A simple spinning mutex
-class spin_mutex
-{
-private:
-    pthread_spinlock_t m_State;
-
-public:
-    spin_mutex()
-    {
-        const int err = pthread_spin_init(&m_State, PTHREAD_PROCESS_PRIVATE);
-        if (err != 0)
-            throw_exception< thread_resource_error >(err, "failed to initialize a spin mutex", "spin_mutex::spin_mutex()", __FILE__, __LINE__);
-    }
-
-    ~spin_mutex()
-    {
-        BOOST_VERIFY(pthread_spin_destroy(&m_State) == 0);
-    }
-
-    bool try_lock()
-    {
-        const int err = pthread_spin_trylock(&m_State);
-        if (err == 0)
-            return true;
-        if (err != EBUSY)
-            throw_exception< lock_error >(err, "failed to lock a spin mutex", "spin_mutex::try_lock()", __FILE__, __LINE__);
-        return false;
-    }
-
-    void lock()
-    {
-        const int err = pthread_spin_lock(&m_State);
-        if (err != 0)
-            throw_exception< lock_error >(err, "failed to lock a spin mutex", "spin_mutex::lock()", __FILE__, __LINE__);
-    }
-
-    void unlock()
-    {
-        BOOST_VERIFY(pthread_spin_unlock(&m_State) == 0);
-    }
-
-    //  Non-copyable
-    BOOST_DELETED_FUNCTION(spin_mutex(spin_mutex const&))
-    BOOST_DELETED_FUNCTION(spin_mutex& operator= (spin_mutex const&))
-
-private:
-    template< typename ExceptionT >
-    static BOOST_NOINLINE BOOST_LOG_NORETURN void throw_exception(int err, const char* descr, const char* func, const char* file, int line)
-    {
-#if !defined(BOOST_EXCEPTION_DISABLE)
-        boost::exception_detail::throw_exception_(ExceptionT(err, descr), func, file, line);
-#else
-        boost::throw_exception(ExceptionT(err, descr));
-#endif
-    }
-};
-
-#else // defined(_POSIX_SPIN_LOCKS)
-
-//! Backup implementation in case if pthreads don't support spin locks
-class spin_mutex
+//! A mutex that performs spinning or thread yielding in case of contention
+class adaptive_mutex
 {
 private:
     pthread_mutex_t m_State;
 
 public:
-    spin_mutex()
+    adaptive_mutex()
     {
+#if defined(BOOST_LOG_ADAPTIVE_MUTEX_USE_PTHREAD_MUTEX_ADAPTIVE_NP)
+        pthread_mutexattr_t attrs;
+        pthread_mutexattr_init(&attrs);
+        pthread_mutexattr_settype(&attrs, PTHREAD_MUTEX_ADAPTIVE_NP);
+
+        const int err = pthread_mutex_init(&m_State, &attrs);
+        pthread_mutexattr_destroy(&attrs);
+#else
         const int err = pthread_mutex_init(&m_State, NULL);
-        if (err != 0)
-            throw_exception< thread_resource_error >(err, "failed to initialize a spin mutex", "spin_mutex::spin_mutex()", __FILE__, __LINE__);
+#endif
+        if (BOOST_UNLIKELY(err != 0))
+            throw_exception< thread_resource_error >(err, "Failed to initialize an adaptive mutex", "adaptive_mutex::adaptive_mutex()", __FILE__, __LINE__);
     }
 
-    ~spin_mutex()
+    ~adaptive_mutex()
     {
         BOOST_VERIFY(pthread_mutex_destroy(&m_State) == 0);
     }
@@ -269,16 +221,16 @@ public:
         const int err = pthread_mutex_trylock(&m_State);
         if (err == 0)
             return true;
-        if (err != EBUSY)
-            throw_exception< lock_error >(err, "failed to lock a spin mutex", "spin_mutex::try_lock()", __FILE__, __LINE__);
+        if (BOOST_UNLIKELY(err != EBUSY))
+            throw_exception< lock_error >(err, "Failed to lock an adaptive mutex", "adaptive_mutex::try_lock()", __FILE__, __LINE__);
         return false;
     }
 
     void lock()
     {
         const int err = pthread_mutex_lock(&m_State);
-        if (err != 0)
-            throw_exception< lock_error >(err, "failed to lock a spin mutex", "spin_mutex::lock()", __FILE__, __LINE__);
+        if (BOOST_UNLIKELY(err != 0))
+            throw_exception< lock_error >(err, "Failed to lock an adaptive mutex", "adaptive_mutex::lock()", __FILE__, __LINE__);
     }
 
     void unlock()
@@ -287,8 +239,8 @@ public:
     }
 
     //  Non-copyable
-    BOOST_DELETED_FUNCTION(spin_mutex(spin_mutex const&))
-    BOOST_DELETED_FUNCTION(spin_mutex& operator= (spin_mutex const&))
+    BOOST_DELETED_FUNCTION(adaptive_mutex(adaptive_mutex const&))
+    BOOST_DELETED_FUNCTION(adaptive_mutex& operator= (adaptive_mutex const&))
 
 private:
     template< typename ExceptionT >
@@ -301,8 +253,6 @@ private:
 #endif
     }
 };
-
-#endif // defined(_POSIX_SPIN_LOCKS)
 
 } // namespace aux
 
@@ -316,4 +266,4 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 #endif // BOOST_LOG_NO_THREADS
 
-#endif // BOOST_LOG_DETAIL_SPIN_MUTEX_HPP_INCLUDED_
+#endif // BOOST_LOG_DETAIL_ADAPTIVE_MUTEX_HPP_INCLUDED_

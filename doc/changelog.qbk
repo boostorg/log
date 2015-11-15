@@ -15,6 +15,7 @@
 
 * On Windows, the configuration macro `BOOST_LOG_USE_WINNT6_API` is no longer used by the library. The target Windows version should be configured by defining macro `BOOST_USE_WINAPI_VERSION` to the desired WinAPI version (e.g. 0x0501 for Windows XP). This macro is used in multiple different Boost libraries besides Boost.Log.
 * The default target Windows version is now Vista on compilers with recent enough Windows SDK and XP on others. The default is no longer chosen by Boost.Log but by the common WinAPI submodule used by different Boost libraries.
+* Changed internal mutex type in the thread-safe queue implementation that is used in asynchronous sink frontends with the `unbounded_fifo_queue` policy. The updated queue has improved performance in case of heavy thread contention (hundreds and thousands of logging threads) on POSIX-compatible systems.
 
 [*Bug fixes:]
 
