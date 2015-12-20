@@ -17,8 +17,10 @@
 #define BOOST_LOG_DETAIL_TIMESTAMP_HPP_INCLUDED_
 
 #include <boost/cstdint.hpp>
-#include <boost/detail/winapi/basic_types.hpp>
 #include <boost/log/detail/config.hpp>
+#if defined(BOOST_WINDOWS) && !defined(__CYGWIN__)
+#include <boost/detail/winapi/basic_types.hpp>
+#endif
 #include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_HAS_PRAGMA_ONCE

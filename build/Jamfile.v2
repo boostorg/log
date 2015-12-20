@@ -133,6 +133,7 @@ project boost/log
         <conditional>@select-regex-backend
         <conditional>@check-visibility
 
+        <define>__STDC_CONSTANT_MACROS # Use system-defined macros for integer constants, if possible
         <define>BOOST_SPIRIT_USE_PHOENIX_V3=1
         <define>BOOST_THREAD_DONT_USE_CHRONO=1 # Don't introduce false dependency on Boost.Chrono
 
