@@ -19,7 +19,9 @@
 #if defined(_MSC_VER) && (defined(BOOST_LOG_USE_SSSE3) || defined(BOOST_LOG_USE_AVX2))
 #include "windows_version.hpp"
 #include <windows.h>
+# ifndef UNDER_CE
 #include <intrin.h> // __cpuid
+# endif
 #endif
 #include <boost/log/detail/header.hpp>
 
