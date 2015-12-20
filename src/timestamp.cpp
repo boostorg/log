@@ -18,7 +18,8 @@
 #if defined(BOOST_WINDOWS) && !defined(__CYGWIN__)
 #include <boost/detail/interlocked.hpp>
 #include "windows_version.hpp"
-#include <windows.h>
+#include <boost/detail/winapi/dll.hpp>
+#include <boost/detail/winapi/time.hpp>
 #else
 #include <unistd.h> // for config macros
 #if defined(macintosh) || defined(__APPLE__) || defined(__APPLE_CC__)
@@ -42,12 +43,12 @@ namespace aux {
 
 #if defined(BOOST_WINDOWS) && !defined(__CYGWIN__)
 
-#if _WIN32_WINNT >= 0x0600
+#if BOOST_USE_WINAPI_VERSION >= BOOST_WINAPI_VERSION_WIN6
 
 // Directly use API from Vista and later
-BOOST_LOG_API get_tick_count_t get_tick_count = &GetTickCount64;
+BOOST_LOG_API get_tick_count_t get_tick_count = &boost::detail::winapi::GetTickCount64;
 
-#else // _WIN32_WINNT >= 0x0600
+#else // BOOST_USE_WINAPI_VERSION >= BOOST_WINAPI_VERSION_WIN6
 
 BOOST_LOG_ANONYMOUS_NAMESPACE {
 
@@ -163,12 +164,12 @@ union ticks_caster
 };
 
 //! Artifical implementation of GetTickCount64
-uint64_t __stdcall get_tick_count64()
+uint64_t WINAPI get_tick_count64()
 {
     ticks_caster state;
     move64(&g_ticks, &state.as_uint64);
 
-    uint32_t new_ticks = GetTickCount();
+    uint32_t new_ticks = boost::detail::winapi::GetTickCount();
 
     state.as_components.counter += new_ticks < state.as_components.ticks;
     state.as_components.ticks = new_ticks;
@@ -177,12 +178,12 @@ uint64_t __stdcall get_tick_count64()
     return state.as_uint64;
 }
 
-uint64_t __stdcall get_tick_count_init()
+uint64_t WINAPI get_tick_count_init()
 {
-    HMODULE hKernel32 = GetModuleHandleA("kernel32.dll");
+    boost::detail::winapi::HMODULE_ hKernel32 = boost::detail::winapi::GetModuleHandleW(L"kernel32.dll");
     if (hKernel32)
     {
-        get_tick_count_t p = (get_tick_count_t)GetProcAddress(hKernel32, "GetTickCount64");
+        get_tick_count_t p = (get_tick_count_t)boost::detail::winapi::get_proc_address(hKernel32, "GetTickCount64");
         if (p)
         {
             // Use native API

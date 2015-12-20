@@ -17,6 +17,7 @@
 #define BOOST_LOG_DETAIL_TIMESTAMP_HPP_INCLUDED_
 
 #include <boost/cstdint.hpp>
+#include <boost/detail/winapi/basic_types.hpp>
 #include <boost/log/detail/config.hpp>
 #include <boost/log/detail/header.hpp>
 
@@ -73,7 +74,7 @@ public:
  */
 #if defined(BOOST_WINDOWS) && !defined(__CYGWIN__)
 
-typedef uint64_t (__stdcall* get_tick_count_t)();
+typedef uint64_t (WINAPI* get_tick_count_t)();
 extern BOOST_LOG_API get_tick_count_t get_tick_count;
 
 inline timestamp get_timestamp()
