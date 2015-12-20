@@ -21,7 +21,6 @@
 #include <boost/memory_order.hpp>
 #include <boost/atomic/atomic.hpp>
 #endif
-#include "windows_version.hpp"
 #include <boost/detail/winapi/dll.hpp>
 #include <boost/detail/winapi/time.hpp>
 #else

@@ -15,6 +15,7 @@
  * The code in this file is based on the \c call_once function implementation in Boost.Thread.
  */
 
+#include <boost/log/detail/config.hpp>
 #include <boost/log/utility/once_block.hpp>
 #ifndef BOOST_LOG_NO_THREADS
 
@@ -23,7 +24,6 @@
 
 #if defined(BOOST_THREAD_PLATFORM_WIN32)
 
-#include "windows_version.hpp"
 #include <boost/detail/winapi/wait.hpp> // INFINITE
 #include <boost/detail/winapi/srw_lock.hpp>
 #include <boost/detail/winapi/condition_variable.hpp>

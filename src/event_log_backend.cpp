@@ -15,7 +15,7 @@
 
 #ifndef BOOST_LOG_WITHOUT_EVENT_LOG
 
-#include "windows_version.hpp"
+#include <boost/log/detail/config.hpp>
 #include <string>
 #include <vector>
 #include <ostream>
@@ -34,16 +34,6 @@
 #include <windows.h>
 #include <psapi.h>
 #include "simple_event_log.h"
-
-#if defined(_MSC_VER) && !defined(BOOST_ALL_NO_LIB) && !defined(BOOST_LOG_NO_LIB)
-# define BOOST_AUTO_LINK_NOMANGLE
-# define BOOST_LIB_NAME "psapi"
-# include <boost/config/auto_link.hpp>
-# define BOOST_LIB_NAME "advapi32"
-# include <boost/config/auto_link.hpp>
-# undef BOOST_AUTO_LINK_NOMANGLE
-#endif
-
 #include <boost/log/detail/header.hpp>
 
 namespace boost {

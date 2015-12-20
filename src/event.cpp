@@ -60,7 +60,6 @@
 
 #elif defined(BOOST_LOG_EVENT_USE_WINAPI)
 
-#include "windows_version.hpp"
 #include <windows.h>
 #include <boost/detail/interlocked.hpp>
 

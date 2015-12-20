@@ -13,7 +13,6 @@
  *         at http://www.boost.org/doc/libs/release/libs/log/doc/html/index.html.
  */
 
-// This first include is to ensure that __MSVCRT_VERSION__ is defined properly
 #include <boost/log/detail/config.hpp>
 #include <boost/log/detail/light_rw_mutex.hpp>
 
@@ -28,7 +27,6 @@
 #include <boost/thread/shared_mutex.hpp>
 #include <boost/log/utility/once_block.hpp>
 
-#include "windows_version.hpp"
 #include <boost/detail/winapi/basic_types.hpp>
 #include <boost/detail/winapi/dll.hpp>
 

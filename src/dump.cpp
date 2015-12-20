@@ -13,11 +13,11 @@
  *         at http://www.boost.org/doc/libs/release/libs/log/doc/html/index.html.
  */
 
+#include <boost/log/detail/config.hpp>
 #include <ostream>
 #include <boost/cstdint.hpp>
 #include <boost/log/utility/manipulators/dump.hpp>
 #if defined(_MSC_VER) && (defined(BOOST_LOG_USE_SSSE3) || defined(BOOST_LOG_USE_AVX2))
-#include "windows_version.hpp"
 #include <boost/detail/winapi/dll.hpp>
 #include <intrin.h> // __cpuid
 #endif

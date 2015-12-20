@@ -44,9 +44,6 @@
 
 #if defined(BOOST_WINDOWS)
 
-#define WIN32_LEAN_AND_MEAN
-
-#include "windows_version.hpp"
 #include <windows.h>
 
 namespace boost {

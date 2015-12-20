@@ -16,15 +16,14 @@
 #ifndef BOOST_LOG_EVENT_LOG_REGISTRY_HPP_INCLUDED_
 #define BOOST_LOG_EVENT_LOG_REGISTRY_HPP_INCLUDED_
 
-#include "windows_version.hpp"
+#include <boost/log/detail/config.hpp>
 #include <cwchar>
 #include <cstring>
 #include <string>
 #include <sstream>
 #include <stdexcept>
 #include <boost/version.hpp>
-#include <boost/optional.hpp>
-#include <boost/log/detail/config.hpp>
+#include <boost/optional/optional.hpp>
 #include <boost/log/detail/code_conversion.hpp>
 #include <boost/log/exceptions.hpp>
 #include <windows.h>

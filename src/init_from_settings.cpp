@@ -23,7 +23,7 @@
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 #endif
 
-#include "windows_version.hpp"
+#include <boost/log/detail/setup_config.hpp>
 #include <cstddef>
 #include <ios>
 #include <map>
