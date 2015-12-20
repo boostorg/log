@@ -29,6 +29,15 @@ BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
 
+#if defined(_MSC_VER)
+# if defined(UNDER_CE)
+// On WindowsCE GetProcAddress takes a wide-char string instead
+#   define GET_PROC_ADDRESS_PROC_NAME(t) L##t
+# else
+#   define GET_PROC_ADDRESS_PROC_NAME(t) t
+# endif
+#endif
+
 #if defined(BOOST_LOG_USE_SSSE3)
 extern dump_data_char_t dump_data_char_ssse3;
 extern dump_data_wchar_t dump_data_wchar_ssse3;
@@ -159,11 +168,11 @@ struct function_pointer_initializer
                     mmstate = (eax & 6U) == 6U;
 #elif defined(_MSC_VER)
                     // MSVC does not have an intrinsic for xgetbv, we have to query OS
-                    HMODULE hKernel32 = GetModuleHandleA("kernel32.dll");
+                    HMODULE hKernel32 = GetModuleHandleW(L"kernel32.dll");
                     if (hKernel32)
                     {
                         typedef uint64_t (__stdcall* get_enabled_extended_features_t)(uint64_t);
-                        get_enabled_extended_features_t get_enabled_extended_features = (get_enabled_extended_features_t)GetProcAddress(hKernel32, "GetEnabledExtendedFeatures");
+                        get_enabled_extended_features_t get_enabled_extended_features = (get_enabled_extended_features_t)GetProcAddress(hKernel32, GET_PROC_ADDRESS_PROC_NAME("GetEnabledExtendedFeatures"));
                         if (get_enabled_extended_features)
                         {
                             // XSTATE_MASK_LEGACY_SSE | XSTATE_MASK_GSSE == 6
