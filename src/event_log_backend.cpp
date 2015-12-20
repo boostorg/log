@@ -36,9 +36,12 @@
 #include "simple_event_log.h"
 #include <boost/log/detail/header.hpp>
 
-#ifdef _MSC_VER
-#pragma comment(lib, "psapi.lib")
-#pragma comment(lib, "advapi32.lib")
+#if defined(_MSC_VER) && !defined(BOOST_ALL_NO_LIB) && !defined(BOOST_LOG_NO_LIB)
+# define BOOST_AUTO_LINK_NOMANGLE
+# define BOOST_LIB_NAME "psapi"
+# include <boost/config/auto_link.hpp>
+# define BOOST_LIB_NAME "advapi32"
+# include <boost/config/auto_link.hpp>
 #endif
 
 
