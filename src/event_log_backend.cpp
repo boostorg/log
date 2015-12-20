@@ -34,7 +34,6 @@
 #include <windows.h>
 #include <psapi.h>
 #include "simple_event_log.h"
-#include <boost/log/detail/header.hpp>
 
 #if defined(_MSC_VER) && !defined(BOOST_ALL_NO_LIB) && !defined(BOOST_LOG_NO_LIB)
 # define BOOST_AUTO_LINK_NOMANGLE
@@ -45,6 +44,7 @@
 # undef BOOST_AUTO_LINK_NOMANGLE
 #endif
 
+#include <boost/log/detail/header.hpp>
 
 namespace boost {
 
