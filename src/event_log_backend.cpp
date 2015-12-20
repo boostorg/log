@@ -42,6 +42,7 @@
 # include <boost/config/auto_link.hpp>
 # define BOOST_LIB_NAME "advapi32"
 # include <boost/config/auto_link.hpp>
+# undef BOOST_AUTO_LINK_NOMANGLE
 #endif
 
 
