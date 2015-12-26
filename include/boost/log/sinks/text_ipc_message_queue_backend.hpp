@@ -25,17 +25,13 @@
 #include <boost/log/keywords/max_queue_size.hpp>
 #include <boost/log/keywords/queue_policy.hpp>
 #include <boost/log/keywords/message_policy.hpp>
-#include <boost/log/keywords/permission.hpp>
+#include <boost/log/keywords/permissions.hpp>
 #include <boost/log/detail/config.hpp>
 #include <boost/log/detail/parameter_tools.hpp>
+#include <boost/log/utility/permissions.hpp>
 #include <boost/log/sinks/basic_sink_backend.hpp>
 #include <boost/log/sinks/frontend_requirements.hpp>
 #include <boost/log/detail/header.hpp>
-#ifdef BOOST_WINDOWS
-#include <windows.h>
-#else // BOOST_WINDOWS
-#include <sys/stat.h>
-#endif // BOOST_WINDOWS
 
 #ifdef BOOST_HAS_PRAGMA_ONCE
 #pragma once
@@ -97,115 +93,6 @@ public:
             open_or_create
         };
 
-        /*!
-         * \brief Access permission type for \c message_queue_type.
-         *
-         * On Windows platforms, it represents a \c SECURITY_ATTRIBUTES pointer.
-         * On POSIX platforms, it represents a \c mode_t value.
-         */
-        class permission
-        {
-            //! \cond
-
-            BOOST_COPYABLE_AND_MOVABLE(permission)
-
-            friend class message_queue_type;
-            friend struct message_queue_type::implementation;
-
-#ifdef BOOST_TEST_MODULE
-        public:
-#endif
-
-            struct implementation;
-            implementation* m_pImpl;
-
-            //! \endcond
-
-        public:
-            /*!
-             * Default constructor. The method constructs an object that represents
-             * a null \c SECURITY_ATTRIBUTES pointer on Windows platforms, and a
-             * \c mode_t value \c 0644 on POSIX platforms.
-             */
-            BOOST_LOG_API permission();
-
-            /*!
-             * Constructor. The method constructs an object and initializes it with a
-             * Boost shared \c SECURITY_ATTRIBUTES pointer on Windows platforms, and a
-             * \c mode_t value on POSIX platforms. In the shared pointer case, a custom
-             * deleter is usually required.
-             *
-             * \param native_value A native access permission value used to initialize
-             *                     the object.
-             */
-#ifndef BOOST_LOG_DOXYGEN_PASS
-#ifdef BOOST_WINDOWS
-            BOOST_LOG_API permission(shared_ptr< SECURITY_ATTRIBUTES > p_security_attr);
-#else
-            BOOST_LOG_API permission(mode_t mode);
-#endif
-#else
-            permission(implementation-defined native_permission_value);
-#endif // BOOST_LOG_DOXYGEN_PASS
-
-            /*!
-             * Destructor. On Windows platforms, the method destroys the managed
-             * shared \c SECURITY_ATTRIBUTES pointer.
-             */
-            BOOST_LOG_API ~permission();
-
-            /*!
-             * Copy constructor. The method constructs an object that is a copy of
-             * \c other.
-             *
-             * \param other The object to be copied.
-             */
-            BOOST_LOG_API permission(permission const& other);
-
-            /*!
-             * Move constructor. The method move-constructs an object from \c other.
-             * After the call, the constructed object becomes \c other, while \c other
-             * is left in default-constructed state.
-             *
-             * \param other The object to be moved.
-             */
-            BOOST_LOG_API permission(BOOST_RV_REF(permission) other);
-
-            /*!
-             * Copy assignment operator. The method copy-assigns the object from
-             * \c other. After the call, the object is a copy of \c other.
-             *
-             * \param other The object to be copied.
-             *
-             * \return A reference to the assigned object.
-             */
-            BOOST_LOG_API permission& operator =(permission const& other);
-
-            /*!
-             * Move assignment operator. The method move-assigns the object from
-             * \c other. After the call, the object becomes \c other, while \c other
-             * is left in default constructed state.
-             *
-             * \param other The object to be moved.
-             *
-             * \return A reference to the assigned object.
-             */
-            BOOST_LOG_API permission& operator =(BOOST_RV_REF(permission) other);
-
-            /*!
-             * The method swaps the object with \c other.
-             *
-             * \param other The other object to swap with.
-             */
-            BOOST_LOG_API void swap(permission& other);
-
-            //! Swaps the two \c permission objects.
-            friend void swap(permission& a, permission& b)
-            {
-                a.swap(b);
-            }
-        };
-
     public:
         /*!
          * Default constructor. The method constructs an object that is not associated with any
@@ -234,13 +121,13 @@ public:
          *             is thrown.
          * \param max_queue_size Maximum number of messages the queue can hold.
          * \param max_message_size Maximum size in bytes of each message allowed by the queue.
-         * \param permission_value Access permission for the associated message queue if it is
-         *                         created by this object. The parameter is ignored otherwise.
+         * \param perms Access permissions for the associated message queue if it is
+         *              created by this object. The parameter is ignored otherwise.
          */
         BOOST_LOG_API explicit message_queue_type(
             char const* name, open_mode mode = open_or_create,
             unsigned int max_queue_size = 10, unsigned int max_message_size = 1000,
-            permission const& permission_value = permission());
+            permissions const& perms = permissions());
 
         /*!
          * Destructor. Calls <tt>close()</tt> and the precondition to calling <tt>close()</tt>
@@ -304,15 +191,15 @@ public:
          *             is thrown.
          * \param max_queue_size Maximum number of messages the queue can hold.
          * \param max_message_size Maximum size in bytes of each message allowed by the queue.
-         * \param permission_value Access permission for the associated message queue if it is
-         *                         created by this object. The parameter is ignored otherwise.
+         * \param perms Access permissions for the associated message queue if it is
+         *              created by this object. The parameter is ignored otherwise.
          *
          * \return \c true if the operation is successful, and \c false otherwise.
          */
         BOOST_LOG_API bool open(
             char const* name, open_mode mode = open_or_create,
             unsigned int max_queue_size = 10, unsigned int max_message_size = 1000,
-            permission const& permission_value = permission());
+            permissions const& perms = permissions());
 
         /*!
          * Tests whether the object is associated with any message queue.
@@ -483,8 +370,6 @@ public:
     BOOST_LOG_API static open_mode const open_only = message_queue_type::open_only;
     //! Convenient open mode value imported from \c message_queue_type.
     BOOST_LOG_API static open_mode const open_or_create = message_queue_type::open_or_create;
-    //! Convenient typedef for <tt>message_queue_type::permission</tt>.
-    typedef typename message_queue_type::permission permission;
 
     //! Queue policy type
     enum queue_policy_type
@@ -554,9 +439,9 @@ public:
      * \li \c message_policy - Specifies the policy to use when the message to send is too long for the associated
      *                         message queue. The parameter is given as a \c message_policy_type value, with the
      *                         default being \c throw_when_too_long.
-     * \li \c permission - Specifies access permission for the associated message queue if it is created by this
-     *                     object. The parameter is ignored otherwise. The parameter is of type \c permission with
-     *                     the default being a default-constructed \c permission object.
+     * \li \c permissions - Specifies access permissions for the associated message queue if it is created by this
+     *                      object. The parameter is ignored otherwise. The parameter is of type \c permissions with
+     *                      the default being a default-constructed \c permissions object.
      */
 #ifndef BOOST_LOG_DOXYGEN_PASS
     BOOST_LOG_PARAMETRIZED_CONSTRUCTORS_CALL(basic_text_ipc_message_queue_backend, construct)
@@ -616,15 +501,15 @@ public:
      *             is thrown.
      * \param max_queue_size Maximum number of messages the queue can hold.
      * \param max_message_size Maximum size in bytes of each message allowed by the queue.
-     * \param permission_value Access permission for the associated message queue if it is
-     *                         created by this object. The parameter is ignored otherwise.
+     * \param perms Access permissions for the associated message queue if it is
+     *              created by this object. The parameter is ignored otherwise.
      *
      * \return \c true if the operation is successful, and \c false otherwise.
      */
     BOOST_LOG_API bool open(
         char const* name, open_mode mode = open_only,
         unsigned int max_queue_size = 10, unsigned int max_message_size = 1000,
-        permission const& permission_value = permission());
+        permissions const& perms = permissions());
 
     /*!
      * Tests whether the object is associated with any message queue. Only when the backend has
@@ -734,7 +619,7 @@ private:
             args[keywords::max_message_size   | 1000],
             args[keywords::queue_policy       | drop_when_full],
             args[keywords::message_policy     | throw_when_too_long],
-            args[keywords::permission         | permission()]);
+            args[keywords::permissions        | permissions()]);
     }
     //! Constructor implementation
     BOOST_LOG_API void construct(
@@ -744,7 +629,7 @@ private:
         unsigned int max_message_size,
         queue_policy_type queue_policy_val,
         message_policy_type message_policy_val,
-        permission const& permission_value);
+        permissions const& perms);
 #endif // BOOST_LOG_DOXYGEN_PASS
 };
 

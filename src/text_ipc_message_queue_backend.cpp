@@ -72,11 +72,11 @@ BOOST_LOG_API void basic_text_ipc_message_queue_backend< CharT >::construct(
   unsigned int max_message_size,
   queue_policy_type queue_policy_val,
   message_policy_type message_policy_val,
-  permission const& permission_value)
+  permissions const& perms)
 {
     m_pImpl = new implementation();
     m_pImpl->m_MessageQueue.open(message_queue_name, mode, max_queue_size,
-        max_message_size, permission_value);
+        max_message_size, perms);
     m_pImpl->m_QueuePolicy = queue_policy_val;
     m_pImpl->m_MessagePolicy = message_policy_val;
 }
@@ -110,9 +110,9 @@ BOOST_LOG_API std::string basic_text_ipc_message_queue_backend< CharT >::name() 
 template < typename CharT >
 BOOST_LOG_API bool basic_text_ipc_message_queue_backend< CharT >::open(
   char const* name, open_mode mode, unsigned int max_queue_size, unsigned int max_message_size,
-  permission const& permission_value)
+  permissions const& perms)
 {
-    return message_queue().open(name, mode, max_queue_size, max_message_size, permission_value);
+    return message_queue().open(name, mode, max_queue_size, max_message_size, perms);
 }
 
 template < typename CharT >
