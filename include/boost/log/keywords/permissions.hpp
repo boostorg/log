@@ -5,15 +5,15 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  */
 /*!
- * \file   keywords/permission.hpp
+ * \file   keywords/permissions.hpp
  * \author Lingxi Li
  * \date   26.10.2015
  *
- * The header contains the \c permission keyword declaration.
+ * The header contains the \c permissions keyword declaration.
  */
 
-#ifndef BOOST_LOG_KEYWORDS_PERMISSION_HPP_INCLUDED_
-#define BOOST_LOG_KEYWORDS_PERMISSION_HPP_INCLUDED_
+#ifndef BOOST_LOG_KEYWORDS_PERMISSIONS_HPP_INCLUDED_
+#define BOOST_LOG_KEYWORDS_PERMISSIONS_HPP_INCLUDED_
 
 #include <boost/parameter/keyword.hpp>
 #include <boost/log/detail/config.hpp>
@@ -29,7 +29,7 @@ BOOST_LOG_OPEN_NAMESPACE
 namespace keywords {
 
 //! The keyword allows to pass access permissions
-BOOST_PARAMETER_KEYWORD(tag, permission)
+BOOST_PARAMETER_KEYWORD(tag, permissions)
 
 } // namespace keywords
 
@@ -37,4 +37,4 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 
-#endif // BOOST_LOG_KEYWORDS_PERMISSION_HPP_INCLUDED_
+#endif // BOOST_LOG_KEYWORDS_PERMISSIONS_HPP_INCLUDED_
