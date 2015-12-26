@@ -243,7 +243,7 @@ struct basic_text_ipc_message_queue_backend< CharT >::message_queue_type::implem
         m_Name = name;
         if (*name)
         {
-            unsigned int memory_size = sizeof(header) + 
+            unsigned int memory_size = sizeof(header) +
                 (sizeof(unsigned int) + max_message_size) * max_queue_size;
 
             static char const uuid[] = "37394D1EBAC14602BC9492CB1971F756";
@@ -259,7 +259,7 @@ struct basic_text_ipc_message_queue_backend< CharT >::message_queue_type::implem
                     m_hMutex = aux::create_mutex(get_psa(permission_value), FALSE, mutex_name.c_str());
                     mode = GetLastError() == ERROR_ALREADY_EXISTS ? open_only : create_only;
                 }
-                
+
                 if (mode == create_only)
                 {
                     if (!m_hMutex)
@@ -399,7 +399,7 @@ struct basic_text_ipc_message_queue_backend< CharT >::message_queue_type::implem
         if (message_size > m_pHeader->m_MaxMessageSize) throw std::logic_error("Message is too long");
         errno = 0;
         mutex_type locker(m_hMutex);
-        
+
         while (true)
         {
             if (locker.lock() == WAIT_ABANDONED) clear_queue();
@@ -407,7 +407,7 @@ struct basic_text_ipc_message_queue_backend< CharT >::message_queue_type::implem
             {
                 aux::reset_event(m_hNonFullQueueEvent);
                 locker.unlock();
-                
+
                 HANDLE handles[2] = { m_hStopEvent, m_hNonFullQueueEvent };
                 DWORD wait_result = aux::wait_for_multiple_objects(2, handles, FALSE, INFINITE);
                 if (wait_result == WAIT_OBJECT_0)
@@ -441,7 +441,7 @@ struct basic_text_ipc_message_queue_backend< CharT >::message_queue_type::implem
         if (buffer_size < m_pHeader->m_MaxMessageSize) throw std::logic_error("Insufficient buffer");
         errno = 0;
         mutex_type locker(m_hMutex);
-        
+
         while (true)
         {
             if (locker.lock() == WAIT_ABANDONED) clear_queue();
@@ -449,7 +449,7 @@ struct basic_text_ipc_message_queue_backend< CharT >::message_queue_type::implem
             {
                 aux::reset_event(m_hNonEmptyQueueEvent);
                 locker.unlock();
-                
+
                 HANDLE handles[2] = { m_hStopEvent, m_hNonEmptyQueueEvent };
                 DWORD wait_result = aux::wait_for_multiple_objects(2, handles, FALSE, INFINITE);
                 if (wait_result == WAIT_OBJECT_0)

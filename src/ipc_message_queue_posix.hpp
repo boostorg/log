@@ -264,7 +264,7 @@ struct basic_text_ipc_message_queue_backend< CharT >::message_queue_type::implem
     {
         if (is_open())
         {
-            unsigned int memory_size = sizeof(header) + 
+            unsigned int memory_size = sizeof(header) +
                 (sizeof(unsigned int) + m_pHeader->m_MaxMessageSize) *
                 m_pHeader->m_MaxQueueSize;
             bool locked = false;
@@ -298,7 +298,7 @@ struct basic_text_ipc_message_queue_backend< CharT >::message_queue_type::implem
       unsigned int max_queue_size, unsigned int max_message_size,
       permission const& permission_value)
     {
-        unsigned int memory_size = sizeof(header) + 
+        unsigned int memory_size = sizeof(header) +
             (sizeof(unsigned int) + max_message_size) * max_queue_size;
         bool mutex_inited = false;
         bool non_empty_queue_inited = false;
@@ -371,7 +371,7 @@ struct basic_text_ipc_message_queue_backend< CharT >::message_queue_type::implem
             int err = aux::pthread_mutex_lock(&m_pHeader->m_Mutex);
             locked = true;
             if (err == EOWNERDEAD)
-            {   
+            {
                 clear_queue();
                 aux::pthread_mutex_consistent(&m_pHeader->m_Mutex);
             }
@@ -394,7 +394,7 @@ struct basic_text_ipc_message_queue_backend< CharT >::message_queue_type::implem
     {
         close();
         errno = 0;
-        
+
         if (*name)
         {
             m_Name = m_Name + "/" + name;
@@ -508,7 +508,7 @@ struct basic_text_ipc_message_queue_backend< CharT >::message_queue_type::implem
         if (message_size > m_pHeader->m_MaxMessageSize) throw std::logic_error("Message is too long");
         errno = 0;
         bool locked = false;
-        
+
         try
         {
             int err = aux::pthread_mutex_lock(&m_pHeader->m_Mutex);
@@ -543,7 +543,7 @@ struct basic_text_ipc_message_queue_backend< CharT >::message_queue_type::implem
             throw;
         }
     }
-    
+
     bool try_send(void const* message_data, unsigned int message_size)
     {
         if (!is_open()) throw std::logic_error("IPC message queue not opened");
@@ -580,7 +580,7 @@ struct basic_text_ipc_message_queue_backend< CharT >::message_queue_type::implem
         if (buffer_size < m_pHeader->m_MaxMessageSize) throw std::logic_error("Insufficient buffer");
         errno = 0;
         bool locked = false;
-        
+
         try
         {
             int err = aux::pthread_mutex_lock(&m_pHeader->m_Mutex);

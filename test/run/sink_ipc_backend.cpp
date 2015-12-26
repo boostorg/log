@@ -410,7 +410,7 @@ BOOST_AUTO_TEST_CASE(ipc_backend)
     // stop() and reset().
     {
         backend_t queue(
-            message_queue_name = "queue", 
+            message_queue_name = "queue",
             open_mode = queue_t::open_or_create,
             max_queue_size = 1,
             queue_policy = backend_t::block_when_full);

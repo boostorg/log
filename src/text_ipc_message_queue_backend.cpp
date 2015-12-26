@@ -47,7 +47,7 @@ struct basic_text_ipc_message_queue_backend< CharT >::implementation
 };
 
 template < typename CharT >
-BOOST_LOG_API typename basic_text_ipc_message_queue_backend< CharT >::open_mode const 
+BOOST_LOG_API typename basic_text_ipc_message_queue_backend< CharT >::open_mode const
     basic_text_ipc_message_queue_backend< CharT >::create_only;
 
 template < typename CharT >
@@ -75,7 +75,7 @@ BOOST_LOG_API void basic_text_ipc_message_queue_backend< CharT >::construct(
   permission const& permission_value)
 {
     m_pImpl = new implementation();
-    m_pImpl->m_MessageQueue.open(message_queue_name, mode, max_queue_size, 
+    m_pImpl->m_MessageQueue.open(message_queue_name, mode, max_queue_size,
         max_message_size, permission_value);
     m_pImpl->m_QueuePolicy = queue_policy_val;
     m_pImpl->m_MessagePolicy = message_policy_val;
@@ -185,7 +185,7 @@ BOOST_LOG_API void basic_text_ipc_message_queue_backend< CharT >::consume(
     if (!is_open()) return;
 
     unsigned int message_size = static_cast< unsigned int >(message.size() * sizeof(char_type));
-    
+
     // Deal with messages that are too long.
     if (message_size > max_message_size())
     {

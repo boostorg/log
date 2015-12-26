@@ -71,13 +71,13 @@ public:
     /*!
      * \brief An implementation of a supporting interprocess message queue used
      *        by \c basic_text_ipc_message_queue_backend. Methods of this class
-     *        are not thread-safe, unless otherwise specified. 
+     *        are not thread-safe, unless otherwise specified.
      */
     class message_queue_type
     {
     private:
         //! \cond
-        
+
         BOOST_MOVABLE_BUT_NOT_COPYABLE(message_queue_type)
 
         struct implementation;
@@ -99,7 +99,7 @@ public:
 
         /*!
          * \brief Access permission type for \c message_queue_type.
-         *        
+         *
          * On Windows platforms, it represents a \c SECURITY_ATTRIBUTES pointer.
          * On POSIX platforms, it represents a \c mode_t value.
          */
@@ -107,14 +107,15 @@ public:
         {
             //! \cond
 
-            BOOST_COPYABLE_AND_MOVABLE(permission)            
+            BOOST_COPYABLE_AND_MOVABLE(permission)
 
             friend class message_queue_type;
             friend struct message_queue_type::implementation;
 
 #ifdef BOOST_TEST_MODULE
         public:
-#endif          
+#endif
+
             struct implementation;
             implementation* m_pImpl;
 
@@ -160,7 +161,7 @@ public:
              * \param other The object to be copied.
              */
             BOOST_LOG_API permission(permission const& other);
-            
+
             /*!
              * Move constructor. The method move-constructs an object from \c other.
              * After the call, the constructed object becomes \c other, while \c other
@@ -169,7 +170,7 @@ public:
              * \param other The object to be moved.
              */
             BOOST_LOG_API permission(BOOST_RV_REF(permission) other);
-            
+
             /*!
              * Copy assignment operator. The method copy-assigns the object from
              * \c other. After the call, the object is a copy of \c other.
@@ -345,7 +346,7 @@ public:
          * \return Maximum number of messages the associated message queue can hold.
          */
         BOOST_LOG_API unsigned int max_queue_size() const;
-        
+
         /*!
          * The method returns the maximum size in bytes of each message allowed by the
          * associated message queue. Note that the returned value may be different from the
@@ -484,7 +485,7 @@ public:
     BOOST_LOG_API static open_mode const open_or_create = message_queue_type::open_or_create;
     //! Convenient typedef for <tt>message_queue_type::permission</tt>.
     typedef typename message_queue_type::permission permission;
-    
+
     //! Queue policy type
     enum queue_policy_type
     {
@@ -505,7 +506,7 @@ public:
         //! Truncate the message when it is too long for the queue
         truncate_when_too_long
     };
-    
+
 private:
     //! \cond
 
@@ -679,7 +680,7 @@ public:
      * should be using this object before calling this method. The <tt>stop()</tt> method
      * could be used to have any threads currently blocking on <tt>consume()</tt> return,
      * and prevent further calls to <tt>consume()</tt> from blocking. The associated message
-     * queue is destroyed, if the object represents the last outstanding reference to it. 
+     * queue is destroyed, if the object represents the last outstanding reference to it.
      */
     BOOST_LOG_API void close();
 

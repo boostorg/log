@@ -130,9 +130,9 @@ inline HANDLE open_file_mapping(DWORD access, BOOL inheritable, char const* name
 }
 
 inline void* map_view_of_file(
-  HANDLE hfilemapping, 
-  DWORD access, 
-  DWORD offset_high, 
+  HANDLE hfilemapping,
+  DWORD access,
+  DWORD offset_high,
   DWORD offset_low,
   SIZE_T size)
 {
