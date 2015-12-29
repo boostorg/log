@@ -27,6 +27,7 @@
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/log/keywords/max_size.hpp>
+#include <boost/log/keywords/max_files.hpp>
 #include <boost/log/keywords/min_free_space.hpp>
 #include <boost/log/keywords/target.hpp>
 #include <boost/log/keywords/file_name.hpp>
@@ -129,7 +130,8 @@ namespace aux {
     BOOST_LOG_API shared_ptr< collector > make_collector(
         filesystem::path const& target_dir,
         uintmax_t max_size,
-        uintmax_t min_free_space
+        uintmax_t min_free_space,
+        uintmax_t max_files = (std::numeric_limits< uintmax_t >::max)()
     );
     template< typename ArgsT >
     inline shared_ptr< collector > make_collector(ArgsT const& args)
@@ -137,7 +139,8 @@ namespace aux {
         return aux::make_collector(
             filesystem::path(args[keywords::target]),
             args[keywords::max_size | (std::numeric_limits< uintmax_t >::max)()],
-            args[keywords::min_free_space | static_cast< uintmax_t >(0)]);
+            args[keywords::min_free_space | static_cast< uintmax_t >(0)],
+            args[keywords::max_files | (std::numeric_limits< uintmax_t >::max)()]);
     }
 
 } // namespace aux
@@ -190,6 +193,9 @@ inline shared_ptr< collector > make_collector(T1 const& a1, T2 const& a2, T3 con
  *                         the collector tries to maintain. If the threshold is exceeded, the oldest
  *                         file(s) is deleted to free space. The threshold is not maintained, if not
  *                         specified.
+ * \li \c max_files - Specifies the maximum number of log files stored.  If the number of files exceeds
+ *                    this threshold, the oldest file(s) is deleted to free space.  The threshhold is
+ *                    not maintained if not specified.
  *
  * \return The file collector.
  */
