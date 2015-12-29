@@ -162,6 +162,11 @@ inline shared_ptr< collector > make_collector(T1 const& a1, T2 const& a2, T3 con
 {
     return aux::make_collector((a1, a2, a3));
 }
+template< typename T1, typename T2, typename T3, typename T4 >
+inline shared_ptr< collector > make_collector(T1 const& a1, T2 const& a2, T3 const& a3, T4 const& a4)
+{
+    return aux::make_collector((a1, a2, a3, a4));
+}
 
 #else
 
