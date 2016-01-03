@@ -99,80 +99,6 @@ private:
 } // unnamed namespace
 
 ////////////////////////////////////////////////////////////////////////////////
-//  Permission implementation
-////////////////////////////////////////////////////////////////////////////////
-//! Permission implementation data
-template < typename CharT >
-struct basic_text_ipc_message_queue_backend< CharT >::message_queue_type::permission::implementation
-{
-    mode_t m_Mode;
-};
-
-template < typename CharT >
-BOOST_LOG_API basic_text_ipc_message_queue_backend< CharT >::message_queue_type::permission::permission()
-  : m_pImpl(new implementation())
-{
-    m_pImpl->m_Mode = 0644;
-}
-
-template < typename CharT >
-BOOST_LOG_API basic_text_ipc_message_queue_backend< CharT >::message_queue_type::permission::permission(
-  mode_t mode)
-  : m_pImpl(new implementation())
-{
-    m_pImpl->m_Mode = mode;
-}
-
-template < typename CharT >
-BOOST_LOG_API basic_text_ipc_message_queue_backend< CharT >::message_queue_type::permission::~permission()
-{
-    delete m_pImpl;
-}
-
-template < typename CharT >
-BOOST_LOG_API basic_text_ipc_message_queue_backend< CharT >::message_queue_type::permission::permission(
-  permission const& other)
-  : m_pImpl(new implementation())
-{
-    m_pImpl->m_Mode = other.m_pImpl->m_Mode;
-}
-
-template < typename CharT >
-BOOST_LOG_API basic_text_ipc_message_queue_backend< CharT >::message_queue_type::permission::permission(
-  BOOST_RV_REF(permission) other)
-  : m_pImpl(new implementation())
-{
-    m_pImpl->m_Mode = 0644;
-    swap(other);
-}
-
-template < typename CharT >
-BOOST_LOG_API typename basic_text_ipc_message_queue_backend< CharT >::message_queue_type::permission&
-basic_text_ipc_message_queue_backend< CharT >::message_queue_type::permission::operator =(permission const& other)
-{
-    m_pImpl->m_Mode = other.m_pImpl->m_Mode;
-    return *this;
-}
-
-template < typename CharT >
-BOOST_LOG_API typename basic_text_ipc_message_queue_backend< CharT >::message_queue_type::permission&
-basic_text_ipc_message_queue_backend< CharT >::message_queue_type::permission::operator =(BOOST_RV_REF(permission) other)
-{
-    if (this != &other)
-    {
-        m_pImpl->m_Mode = 0644;
-        swap(other);
-    }
-    return *this;
-}
-
-template < typename CharT >
-BOOST_LOG_API void basic_text_ipc_message_queue_backend< CharT >::message_queue_type::permission::swap(permission& other)
-{
-    std::swap(m_pImpl, other.m_pImpl);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 //  Interprocess message queue implementation
 ////////////////////////////////////////////////////////////////////////////////
 //! Message queue implementation data
@@ -181,16 +107,16 @@ struct basic_text_ipc_message_queue_backend< CharT >::message_queue_type::implem
 {
     struct header
     {
-        atomic_bool     m_Created;
-        unsigned int    m_MaxQueueSize;
-        unsigned int    m_MaxMessageSize;
+        atomic_bool m_Created;
+        uint32_t m_MaxQueueSize;
+        uint32_t m_MaxMessageSize;
         pthread_mutex_t m_Mutex;
-        unsigned int    m_RefCount;
+        uint32_t m_RefCount;
         pthread_cond_t  m_NonEmptyQueue;
         pthread_cond_t  m_NonFullQueue;
-        unsigned int    m_QueueSize;
-        unsigned int    m_PutPos;
-        unsigned int    m_GetPos;
+        uint32_t m_QueueSize;
+        uint32_t m_PutPos;
+        uint32_t m_GetPos;
     };
 
     atomic_bool m_fStop;

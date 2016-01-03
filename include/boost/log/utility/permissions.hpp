@@ -8,6 +8,7 @@
 /*!
  * \file   permissions.hpp
  * \author Lingxi Li
+ * \author Andrey Semashev
  * \date   14.10.2015
  *
  * The header contains an abstraction wrapper for security permissions.
