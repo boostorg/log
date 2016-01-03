@@ -190,6 +190,7 @@ project boost/log
         <target-os>windows:<define>BOOST_USE_WINDOWS_H
         <target-os>windows:<library>ws2_32
         <target-os>windows:<library>mswsock
+        <target-os>windows:<library>advapi32
 
         <target-os>cygwin:<define>NOMINMAX
         <target-os>cygwin:<define>WIN32_LEAN_AND_MEAN
@@ -197,6 +198,7 @@ project boost/log
         <target-os>cygwin:<define>BOOST_USE_WINDOWS_H
         <target-os>cygwin:<library>ws2_32
         <target-os>cygwin:<library>mswsock
+        <target-os>cygwin:<library>advapi32
 
         <target-os>linux:<library>rt
         <target-os>linux:<define>_XOPEN_SOURCE=600
@@ -403,9 +405,24 @@ rule select-log-api-specific-sources ( properties * )
         result = <source>simple_event_log.mc ;
         result += <source>event_log_backend.cpp ;
         result += <library>psapi ;
-        result += <library>advapi32 ;
 
         DEPENDS event_log_backend.cpp : simple_event_log.mc ;
+    }
+
+    return $(result) ;
+}
+
+rule select-target-os-specific-sources ( properties * )
+{
+    local result ;
+
+    if <target-os>windows in $(properties)
+    {
+        result = <source>interprocess_message_queue_win.cpp ;
+    }
+    else
+    {
+        result = <source>interprocess_message_queue_posix.cpp ;
     }
 
     return $(result) ;
@@ -418,6 +435,7 @@ lib boost_log
         $(BOOST_LOG_COMMON_AVX2_SRC)
         platform-specific-sources
     : ## requirements ##
+        <conditional>@select-target-os-specific-sources
         <conditional>@select-log-api-specific-sources
         <link>shared:<define>BOOST_LOG_DLL
         <define>BOOST_LOG_BUILDING_THE_LIB=1
