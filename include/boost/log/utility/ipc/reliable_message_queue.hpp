@@ -11,7 +11,7 @@
  * \author Andrey Semashev
  * \date   01.01.2016
  *
- * The header contains declaration of an interprocess message queue.
+ * The header contains declaration of a reliable interprocess message queue.
  */
 
 #ifndef BOOST_LOG_UTILITY_IPC_RELIABLE_MESSAGE_QUEUE_HPP_INCLUDED_
@@ -42,7 +42,7 @@ namespace ipc {
  */
 class reliable_message_queue
 {
-    //! \cond
+#if !defined(BOOST_LOG_DOXYGEN_PASS)
 
     BOOST_MOVABLE_BUT_NOT_COPYABLE(reliable_message_queue)
 
@@ -50,7 +50,7 @@ private:
     struct implementation;
     implementation* m_impl;
 
-    //! \endcond
+#endif // !defined(BOOST_LOG_DOXYGEN_PASS)
 
 public:
     /*!
@@ -74,21 +74,21 @@ public:
      *             can be used as a C++ identifier or is a keyword.
      *             On Windows platforms, the name is used to compose kernel object names, and
      *             you may need to add the "Global\" prefix to the name in certain cases.
-     * \param max_queue_size Maximum number of messages the queue can hold.
-     * \param max_message_size Maximum size in bytes of each message allowed by the queue.
+     * \param capacity Maximum number of allocation blocks the queue can hold.
+     * \param block_size Size in bytes of allocation block. Must be a power of 2.
      * \param perms Access permissions for the associated message queue.
      */
     reliable_message_queue
     (
         open_mode::create_only_tag,
         char const* name,
-        uint32_t max_queue_size,
-        uint32_t max_message_size,
+        uint32_t capacity,
+        uint32_t block_size,
         permissions const& perms = permissions()
     ) :
         m_impl(NULL)
     {
-        this->create(name, max_queue_size, max_message_size, perms);
+        this->create(name, capacity, block_size, perms);
     }
 
     /*!
@@ -104,21 +104,21 @@ public:
      *             can be used as a C++ identifier or is a keyword.
      *             On Windows platforms, the name is used to compose kernel object names, and
      *             you may need to add the "Global\" prefix to the name in certain cases.
-     * \param max_queue_size Maximum number of messages the queue can hold.
-     * \param max_message_size Maximum size in bytes of each message allowed by the queue.
+     * \param capacity Maximum number of allocation blocks the queue can hold.
+     * \param block_size Size in bytes of allocation block. Must be a power of 2.
      * \param perms Access permissions for the associated message queue.
      */
     reliable_message_queue
     (
         open_mode::open_or_create_tag,
         char const* name,
-        uint32_t max_queue_size,
-        uint32_t max_message_size,
+        uint32_t capacity,
+        uint32_t block_size,
         permissions const& perms = permissions()
     ) :
         m_impl(NULL)
     {
-        this->open_or_create(name, max_queue_size, max_message_size, perms);
+        this->open_or_create(name, capacity, block_size, perms);
     }
 
     /*!
@@ -203,15 +203,15 @@ public:
      *             that can be used as a C++ identifier or is a keyword.
      *             On Windows platforms, the name is used to compose kernel object names,
      *             and you may need to add the "Global\" prefix to the name in certain cases.
-     * \param max_queue_size Maximum number of messages the queue can hold.
-     * \param max_message_size Maximum size in bytes of each message allowed by the queue.
+     * \param capacity Maximum number of allocation blocks the queue can hold.
+     * \param block_size Size in bytes of allocation block. Must be a power of 2.
      * \param perms Access permissions for the associated message queue.
      */
     BOOST_LOG_API void create
     (
         char const* name,
-        uint32_t max_queue_size,
-        uint32_t max_message_size,
+        uint32_t capacity,
+        uint32_t block_size,
         permissions const& perms = permissions()
     );
 
@@ -229,15 +229,15 @@ public:
      *             that can be used as a C++ identifier or is a keyword.
      *             On Windows platforms, the name is used to compose kernel object names,
      *             and you may need to add the "Global\" prefix to the name in certain cases.
-     * \param max_queue_size Maximum number of messages the queue can hold.
-     * \param max_message_size Maximum size in bytes of each message allowed by the queue.
+     * \param capacity Maximum number of allocation blocks the queue can hold.
+     * \param block_size Size in bytes of allocation block. Must be a power of 2.
      * \param perms Access permissions for the associated message queue.
      */
     BOOST_LOG_API void open_or_create
     (
         char const* name,
-        uint32_t max_queue_size,
-        uint32_t max_message_size,
+        uint32_t capacity,
+        uint32_t block_size,
         permissions const& perms = permissions()
     );
 
@@ -282,31 +282,29 @@ public:
     BOOST_LOG_API const char* name() const;
 
     /*!
-     * The method returns the maximum number of messages the associated message queue
+     * The method returns the maximum number of allocation blocks the associated message queue
      * can hold. Note that the returned value may be different from the corresponding
-     * value passed to the constructor or <tt>open()</tt>, for the message queue may
-     * not be created by this object. Throws <tt>std::logic_error</tt> if the object
-     * is not associated with any message queue.
+     * value passed to the constructor or <tt>open_or_create()</tt>, for the message queue may
+     * not have been created by this object.
      *
      * \pre <tt>is_open() == true</tt>
      *
-     * \return Maximum number of messages the associated message queue can hold.
+     * \return Maximum number of allocation blocks the associated message queue can hold.
      */
-    BOOST_LOG_API uint32_t max_queue_size() const;
+    BOOST_LOG_API uint32_t capacity() const;
 
     /*!
-     * The method returns the maximum size in bytes of each message allowed by the
-     * associated message queue. Note that the returned value may be different from the
-     * corresponding value passed to the constructor or <tt>open()</tt>, for the
-     * message queue may not be created by this object. Throws <tt>std::logic_error</tt>
-     * if the object is not associated with any message queue.
+     * The method returns the allocation block size, in bytes. Each message in the
+     * associated message queue consumes an integer number of allocation blocks.
+     * Note that the returned value may be different from the corresponding value passed
+     * to the constructor or <tt>open_or_create()</tt>, for the message queue may not
+     * have been created by this object.
      *
      * \pre <tt>is_open() == true</tt>
      *
-     * \return Maximum size in bytes of each message allowed by the associated message
-     *         queue.
+     * \return Allocation block size, in bytes.
      */
-    BOOST_LOG_API uint32_t max_message_size() const;
+    BOOST_LOG_API uint32_t block_size() const;
 
     /*!
      * The method wakes up all threads that are blocked in calls to <tt>send()</tt> or

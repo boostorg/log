@@ -15,6 +15,7 @@
 #ifndef BOOST_LOG_SUPPORT_EXCEPTION_HPP_INCLUDED_
 #define BOOST_LOG_SUPPORT_EXCEPTION_HPP_INCLUDED_
 
+#include <string>
 #include <boost/type_index.hpp>
 #include <boost/exception/info.hpp>
 #include <boost/log/detail/config.hpp>
@@ -62,6 +63,11 @@ inline current_scope_info current_scope()
 {
     return current_scope_info(attributes::named_scope::get_scopes());
 }
+
+/*!
+ * System resource name
+ */
+typedef error_info< struct resource_name_tag, std::string > resource_name_info;
 
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 

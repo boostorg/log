@@ -1,150 +1,396 @@
 /*
  *                 Copyright Lingxi Li 2015.
+ *              Copyright Andrey Semashev 2016.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
  */
 /*!
- * \file   ipc_message_queue_posix.hpp
+ * \file   ipc_reliable_message_queue_posix.cpp
  * \author Lingxi Li
+ * \author Andrey Semashev
  * \date   17.11.2015
  *
  * \brief  This header is the Boost.Log library implementation, see the library documentation
  *         at http://www.boost.org/doc/libs/release/libs/log/doc/html/index.html.
  *
- * This file provides an IPC message queue implementation on POSIX platforms,
- * and is for inclusion into text_ipc_message_queue_backend.cpp.
+ * This file provides an interprocess message queue implementation on POSIX platforms.
  */
 
-#ifndef BOOST_LOG_IPC_MESSAGE_QUEUE_POSIX_HPP_INCLUDED_
-#define BOOST_LOG_IPC_MESSAGE_QUEUE_POSIX_HPP_INCLUDED_
-
+#include <boost/log/detail/config.hpp>
+#include <cstddef>
 #include <cerrno>
+#include <cstring>
+#include <new>
+#include <string>
 #include <exception>
 #include <stdexcept>
-#include <string>
-#include <boost/atomic.hpp>
-#include <boost/log/sinks/text_ipc_message_queue_backend.hpp>
-#include "posix_wrapper.hpp"
+#include <algorithm>
+#include <unistd.h>
+#if defined(BOOST_HAS_SCHED_YIELD)
+#include <sched.h>
+#elif defined(BOOST_HAS_PTHREAD_YIELD)
+#include <pthread.h>
+#elif defined(BOOST_HAS_NANOSLEEP)
+#include <time.h>
+#endif
+#include <boost/assert.hpp>
+#include <boost/static_assert.hpp>
+#include <boost/cstdint.hpp>
+#include <boost/atomic/atomic.hpp>
+#include <boost/atomic/capabilities.hpp>
+#include <boost/throw_exception.hpp>
+#include <boost/log/exceptions.hpp>
+#include <boost/log/utility/ipc/reliable_message_queue.hpp>
+#include <boost/log/support/exception.hpp>
+#include <boost/log/detail/pause.hpp>
+#include <boost/exception/info.hpp>
+#include <boost/exception/enable_error_info.hpp>
+#include <boost/interprocess/creation_tags.hpp>
+#include <boost/interprocess/exceptions.hpp>
+#include <boost/interprocess/permissions.hpp>
+#include <boost/interprocess/mapped_region.hpp>
+#include <boost/interprocess/shared_memory_object.hpp>
+#include <boost/interprocess/sync/scoped_lock.hpp>
+#include <boost/type_traits/declval.hpp>
+#include "pthread_wrappers.hpp"
 #include <boost/log/detail/header.hpp>
 
-#ifndef BOOST_WINDOWS
-
-#include <sched.h>
+#if BOOST_ATOMIC_INT32_LOCK_FREE != 2
+// 32-bit atomic ops are required to be able to place atomic<uint32_t> in the process-shared memory
+#error Boost.Log: Native 32-bit atomic operations are required but not supported by Boost.Atomic on the target platform
+#endif
 
 namespace boost {
 
 BOOST_LOG_OPEN_NAMESPACE
 
-namespace sinks {
+namespace aux {
 
-namespace {
+BOOST_LOG_ANONYMOUS_NAMESPACE {
 
-typedef unsigned char byte;
-
-class mutex_attr_type
+//! 32-bit MurmurHash3 algorithm implementation (https://en.wikipedia.org/wiki/MurmurHash)
+class murmur3
 {
+private:
+    uint32_t m_state;
+    uint32_t m_len;
+
+    static BOOST_CONSTEXPR_OR_CONST uint32_t c1 = 0xcc9e2d51;
+    static BOOST_CONSTEXPR_OR_CONST uint32_t c2 = 0x1b873593;
+    static BOOST_CONSTEXPR_OR_CONST uint32_t r1 = 15;
+    static BOOST_CONSTEXPR_OR_CONST uint32_t r2 = 13;
+    static BOOST_CONSTEXPR_OR_CONST uint32_t m = 5;
+    static BOOST_CONSTEXPR_OR_CONST uint32_t n = 0xe6546b64;
+
 public:
-    mutex_attr_type()
+    explicit BOOST_CONSTEXPR murmur3(uint32_t seed) BOOST_NOEXCEPT : m_state(seed), m_len(0u)
     {
-        aux::pthread_mutexattr_init(ptr());
-    }
-    ~mutex_attr_type()
-    {
-        if (pthread_mutexattr_destroy(ptr()) != 0)
-        {
-            std::terminate();
-        }
-    }
-    pthread_mutexattr_t* ptr()
-    {
-        return &m_Value;
-    }
-    pthread_mutexattr_t const* ptr() const
-    {
-        return &m_Value;
     }
 
-private:
-    pthread_mutexattr_t m_Value;
+    //! Mixing stage of the 32-bit MurmurHash3 algorithm
+    void mix(uint32_t value) BOOST_NOEXCEPT
+    {
+        value *= c1;
+        value = (value << r1) | (value >> (32u - r1));
+        value *= c2;
+
+        uint32_t h = m_state ^ value;
+        m_state = ((h << r2) | (h >> (32u - r2))) * m + n;
+        m_len += 4u;
+    }
+
+    //! Finalization stage of the 32-bit MurmurHash3 algorithm
+    uint32_t finalize() BOOST_NOEXCEPT
+    {
+        uint32_t h = m_state ^ m_len;
+        h ^= h >> 16u;
+        h *= 0x85ebca6bu;
+        h ^= h >> 13u;
+        h *= 0xc2b2ae35u;
+        h ^= h >> 16u;
+        m_state = h;
+        return h;
+    }
 };
 
-class cond_attr_type
+BOOST_CONSTEXPR_OR_CONST uint32_t murmur3::c1;
+BOOST_CONSTEXPR_OR_CONST uint32_t murmur3::c2;
+BOOST_CONSTEXPR_OR_CONST uint32_t murmur3::r1;
+BOOST_CONSTEXPR_OR_CONST uint32_t murmur3::r2;
+BOOST_CONSTEXPR_OR_CONST uint32_t murmur3::m;
+BOOST_CONSTEXPR_OR_CONST uint32_t murmur3::n;
+
+//! Aligns the \a size argument up to me an integer multiple of \a alignment, which must be a power of 2.
+inline BOOST_CONSTEXPR std::size_t align_size(std::size_t size, std::size_t alignment) BOOST_NOEXCEPT
 {
-public:
-    cond_attr_type()
-    {
-        aux::pthread_condattr_init(ptr());
-    }
-    ~cond_attr_type()
-    {
-        if (pthread_condattr_destroy(ptr()) != 0)
-        {
-            std::terminate();
-        }
-    }
-    pthread_condattr_t* ptr()
-    {
-        return &m_Value;
-    }
-    pthread_condattr_t const* ptr() const
-    {
-        return &m_Value;
-    }
+    return (size + alignment - 1u) & ~(alignment - 1u);
+}
 
-private:
-    pthread_condattr_t m_Value;
-};
+} // namespace
 
-} // unnamed namespace
+} // namespace aux
 
-////////////////////////////////////////////////////////////////////////////////
-//  Interprocess message queue implementation
-////////////////////////////////////////////////////////////////////////////////
+namespace ipc {
+
 //! Message queue implementation data
-template < typename CharT >
-struct basic_text_ipc_message_queue_backend< CharT >::message_queue_type::implementation
+struct reliable_message_queue::implementation
 {
-    struct header
+private:
+    //! Header of an allocation block within the message queue. Placed at the beginning of the block within the shared memory segment.
+    struct block_header
     {
-        atomic_bool m_Created;
-        uint32_t m_MaxQueueSize;
-        uint32_t m_MaxMessageSize;
-        pthread_mutex_t m_Mutex;
-        uint32_t m_RefCount;
-        pthread_cond_t  m_NonEmptyQueue;
-        pthread_cond_t  m_NonFullQueue;
-        uint32_t m_QueueSize;
-        uint32_t m_PutPos;
-        uint32_t m_GetPos;
+        // Element data alignment, in bytes
+        enum { data_alignment = 32u };
+
+        //! Size of the element data, in bytes
+        uint32_t m_size;
+
+        //! Returns a pointer to the element data
+        void* get_data() const BOOST_NOEXCEPT
+        {
+            return const_cast< unsigned char* >(reinterpret_cast< const unsigned char* >(this)) + boost::log::aux::align_size(sizeof(block_header), data_alignment);
+        }
     };
 
-    atomic_bool m_fStop;
-    std::string m_Name;
-    int m_fdSharedMemory;
-    header* m_pHeader;
-
-    static mode_t get_mode(permission const& perm)
+    //! Header of the message queue. Placed at the beginning of the shared memory segment.
+    struct header
     {
-        return perm.m_pImpl->m_Mode;
+        // Increment this constant whenever you change the binary layout of the queue (apart from this header structure)
+        enum { abi_version = 0 };
+
+        // !!! Whenever you add/remove members in this structure, also modify get_abi_tag() function accordingly !!!
+
+        //! A tag value to ensure the correct binary layout of the message queue data structures. Must be placed first and always have a fixed size and alignment.
+        uint32_t m_abi_tag;
+        //! Padding to protect against alignment changes in Boost.Atomic. Don't use BOOST_ALIGNMENT to ensure portability.
+        uint8_t m_padding[BOOST_LOG_CPU_CACHE_LINE_SIZE - sizeof(uint32_t)];
+        //! Reference counter. Also acts as a flag indicating that the queue is constructed (i.e. the queue is constructed when the counter is not 0).
+        boost::atomic< uint32_t > m_ref_count;
+        //! Number of allocation blocks in the queue.
+        uint32_t m_capacity;
+        //! Size of an allocation block, in bytes.
+        uint32_t m_block_size;
+        //! Mutex for protecting queue data structures.
+        boost::log::aux::interprocess_mutex m_mutex;
+        //! Condition variable used to block readers when the queue is empty.
+        boost::log::aux::interprocess_condition_variable m_nonempty_queue;
+        //! Condition variable used to block writers when the queue is full.
+        boost::log::aux::interprocess_condition_variable m_nonfull_queue;
+        //! The current number of allocated blocks in the queue.
+        uint32_t m_size;
+        //! The current writing position (allocation block index).
+        uint32_t m_put_pos;
+        //! The current reading position (allocation block index).
+        uint32_t m_get_pos;
+
+        header(uint32_t capacity, uint32_t block_size) :
+            m_abi_tag(get_abi_tag()),
+            m_capacity(capacity),
+            m_block_size(block_size),
+            m_size(0u),
+            m_put_pos(0u),
+            m_get_pos(0u)
+        {
+            // Must be initialized last. m_ref_count is zero-initialized initially.
+            m_ref_count.fetch_add(1u, boost::memory_order_release);
+        }
+
+        //! Returns the header structure ABI tag
+        static uint32_t get_abi_tag() BOOST_NOEXCEPT
+        {
+            // The members in this sequence must be enumerated in the same order as they are declared in the header structure.
+            // The ABI tag is supposed change whenever a member changes size or alignment (we rely on the fact that pthread
+            // structures are already ABI-stable, so we don't check their internals).
+
+            header* p = NULL;
+            boost::log::aux::murmur3 hash(abi_version);
+
+            // We will use these constants to align pointers
+            hash.mix(BOOST_LOG_CPU_CACHE_LINE_SIZE);
+            hash.mix(block_header::data_alignment);
+
+#define BOOST_LOG_MIX_HEADER_MEMBER(name)\
+            hash.mix(static_cast< uint32_t >(sizeof(p->name)));\
+            hash.mix(static_cast< uint32_t >(offsetof(header, name)))
+
+            BOOST_LOG_MIX_HEADER_MEMBER(m_abi_tag);
+            BOOST_LOG_MIX_HEADER_MEMBER(m_padding);
+            BOOST_LOG_MIX_HEADER_MEMBER(m_ref_count);
+            BOOST_LOG_MIX_HEADER_MEMBER(m_capacity);
+            BOOST_LOG_MIX_HEADER_MEMBER(m_block_size);
+            BOOST_LOG_MIX_HEADER_MEMBER(m_mutex);
+            BOOST_LOG_MIX_HEADER_MEMBER(m_nonempty_queue);
+            BOOST_LOG_MIX_HEADER_MEMBER(m_nonfull_queue);
+            BOOST_LOG_MIX_HEADER_MEMBER(m_queue_size);
+            BOOST_LOG_MIX_HEADER_MEMBER(m_put_pos);
+            BOOST_LOG_MIX_HEADER_MEMBER(m_get_pos);
+
+#undef BOOST_LOG_MIX_HEADER_MEMBER
+
+            return hash.finalize();
+        }
+
+        //! Returns an element header at the specified index
+        block_header* get_block(uint32_t index) const BOOST_NOEXCEPT
+        {
+            BOOST_ASSERT(index < m_capacity);
+            unsigned char* p = const_cast< unsigned char* >(reinterpret_cast< const unsigned char* >(this)) + boost::log::aux::align_size(sizeof(header), BOOST_LOG_CPU_CACHE_LINE_SIZE);
+            p += static_cast< std::size_t >(m_block_size) * static_cast< std::size_t >(index);
+            return reinterpret_cast< block_header* >(p);
+        }
+    };
+
+private:
+    boost::interprocess::shared_memory_object m_shared_memory;
+    boost::interprocess::mapped_region m_region;
+    boost::atomic< bool > m_stop;
+
+public:
+    //! The constructor creates a new shared memory segment
+    implementation
+    (
+        open_mode::create_only_tag,
+        char const* name,
+        uint32_t capacity,
+        uint32_t block_size,
+        permissions const& perms
+    ) :
+        m_shared_memory(boost::interprocess::create_only, name, boost::interprocess::read_write, boost::interprocess::permissions(perms.get_native())),
+        m_region(),
+        m_stop(false)
+    {
+        create_region(capacity, block_size);
     }
 
-    implementation()
-      : m_fStop(true)
-      , m_fdSharedMemory(-1)
-      , m_pHeader(NULL)
+    //! The constructor creates a new shared memory segment or opens the existing one
+    implementation
+    (
+        open_mode::open_or_create_tag,
+        char const* name,
+        uint32_t capacity,
+        uint32_t block_size,
+        permissions const& perms
+    ) :
+        m_shared_memory(boost::interprocess::open_or_create, name, boost::interprocess::read_write, boost::interprocess::permissions(perms.get_native())),
+        m_region(),
+        m_stop(false)
     {
+        boost::interprocess::offset_t shmem_size = 0;
+        if (!m_shared_memory.get_size(shmem_size) || shmem_size == 0)
+            create_region(capacity, block_size);
+        else
+            adopt_region(shmem_size);
+    }
+
+    //! The constructor opens the existing shared memory segment
+    implementation
+    (
+        open_mode::open_only_tag,
+        char const* name
+    ) :
+        m_shared_memory(boost::interprocess::open_only, name, boost::interprocess::read_write),
+        m_region(),
+        m_stop(false)
+    {
+        boost::interprocess::offset_t shmem_size = 0;
+        if (!m_shared_memory.get_size(shmem_size))
+            BOOST_LOG_THROW_DESCR(setup_error, "Boost.Log interprocess message queue cannot be opened: shared memory segment not found");
+
+        adopt_region(shmem_size);
     }
 
     ~implementation()
     {
-        try
+        close_region();
+    }
+
+private:
+    header* get_header() const BOOST_NOEXCEPT
+    {
+        return static_cast< header* >(m_region.get_address());
+    }
+
+    static std::size_t estimate_region_size(uint32_t capacity, uint32_t block_size) BOOST_NOEXCEPT
+    {
+        return boost::log::aux::align_size(sizeof(header), BOOST_LOG_CPU_CACHE_LINE_SIZE) + static_cast< std::size_t >(capacity) * static_cast< std::size_t >(block_size);
+    }
+
+    void create_region(uint32_t capacity, uint32_t block_size)
+    {
+        const std::size_t shmem_size = estimate_region_size(capacity, block_size);
+        m_shared_memory.truncate(shmem_size);
+        boost::interprocess::mapped_region(m_shared_memory, boost::interprocess::read_write, 0u, shmem_size).swap(m_region);
+
+        new (m_region.get_address()) header(capacity, block_size);
+    }
+
+    void adopt_region(std::size_t shmem_size)
+    {
+        if (shmem_size < sizeof(header))
+            BOOST_LOG_THROW_DESCR(setup_error, "Boost.Log interprocess message queue cannot be opened: shared memory segment size too small");
+
+        boost::interprocess::mapped_region(m_shared_memory, boost::interprocess::read_write, 0u, shmem_size).swap(m_region);
+
+        // Wait until the mapped region becomes initialized
+        header* const hdr = get_header();
+        BOOST_CONSTEXPR_OR_CONST unsigned int wait_loops = 200u, spin_loops = 16u, spins = 16u;
+        for (unsigned int i = 0; i < wait_loops; ++i)
         {
-            close();
+            uint32_t ref_count = hdr->m_ref_count.load(boost::memory_order_acquire);
+            while (ref_count > 0u)
+            {
+                if (hdr->m_ref_count.compare_exchange_weak(ref_count, ref_count + 1u, boost::memory_order_acq_rel, boost::memory_order_acquire))
+                    goto done;
+            }
+
+            if (i < spin_loops)
+            {
+                for (unsigned int j = 0; j < spins; ++j)
+                {
+                    boost::log::aux::pause();
+                }
+            }
+            else
+            {
+#if defined(BOOST_HAS_SCHED_YIELD)
+                sched_yield();
+#elif defined(BOOST_HAS_PTHREAD_YIELD)
+                pthread_yield();
+#elif defined(BOOST_HAS_NANOSLEEP)
+                timespec ts = {};
+                ts.tv_sec = 0;
+                ts.tv_nsec = 1000;
+                nanosleep(&ts, NULL);
+#else
+                usleep(1);
+#endif
+            }
         }
-        catch (...)
+
+        BOOST_LOG_THROW_DESCR(setup_error, "Boost.Log interprocess message queue cannot be opened: shared memory segment is not initialized by creator for too long");
+
+    done:
+        // Check that the queue layout matches the current process ABI
+        if (hdr->m_abi_tag != header::get_abi_tag())
         {
-            std::terminate();
+            close_region();
+            BOOST_LOG_THROW_DESCR(setup_error, "Boost.Log interprocess message queue cannot be opened: the queue ABI is incompatible");
+        }
+    }
+
+    void close_region() BOOST_NOEXCEPT
+    {
+        header* const hdr = get_header();
+
+        if (hdr->m_ref_count.fetch_sub(1u, boost::memory_order_release) == 1u)
+        {
+            boost::interprocess::shared_memory_object::remove(m_shared_memory.get_name());
+
+            hdr->~header();
+
+            boost::interprocess::mapped_region().swap(m_region);
+            boost::interprocess::shared_memory_object().swap(m_shared_memory);
         }
     }
 
@@ -184,135 +430,6 @@ struct basic_text_ipc_message_queue_backend< CharT >::message_queue_type::implem
     void reset()
     {
         m_fStop = false;
-    }
-
-    void close()
-    {
-        if (is_open())
-        {
-            unsigned int memory_size = sizeof(header) +
-                (sizeof(unsigned int) + m_pHeader->m_MaxMessageSize) *
-                m_pHeader->m_MaxQueueSize;
-            bool locked = false;
-            try
-            {
-                int err = aux::pthread_mutex_lock(&m_pHeader->m_Mutex);
-                locked = true;
-                if (err == EOWNERDEAD)
-                {
-                    clear_queue();
-                    aux::pthread_mutex_consistent(&m_pHeader->m_Mutex);
-                }
-                if (--m_pHeader->m_RefCount == 0) aux::shm_unlink(m_Name.c_str());
-                aux::pthread_mutex_unlock(&m_pHeader->m_Mutex);
-                locked = false;
-                aux::munmap(m_pHeader, memory_size);
-                m_pHeader = NULL;
-                aux::close(m_fdSharedMemory);
-                m_fdSharedMemory = -1;
-                m_Name.clear();
-            }
-            catch (...)
-            {
-                if (locked) aux::pthread_mutex_unlock(&m_pHeader->m_Mutex);
-                throw;
-            }
-        }
-    }
-
-    void create_message_queue(
-      unsigned int max_queue_size, unsigned int max_message_size,
-      permission const& permission_value)
-    {
-        unsigned int memory_size = sizeof(header) +
-            (sizeof(unsigned int) + max_message_size) * max_queue_size;
-        bool mutex_inited = false;
-        bool non_empty_queue_inited = false;
-        bool non_full_queue_inited = false;
-        try
-        {
-            m_fdSharedMemory = aux::shm_open(m_Name.c_str(), O_RDWR | O_CREAT | O_EXCL,
-                get_mode(permission_value));
-            // Enter critical section
-            aux::ftruncate(m_fdSharedMemory, memory_size);
-            m_pHeader = aux::typed_mmap< header* >(
-                NULL, memory_size, PROT_READ | PROT_WRITE,
-                MAP_SHARED, m_fdSharedMemory, 0);
-
-            mutex_attr_type mutex_attr;
-            aux::pthread_mutexattr_settype(mutex_attr.ptr(), PTHREAD_MUTEX_NORMAL);
-            aux::pthread_mutexattr_setpshared(mutex_attr.ptr(), PTHREAD_PROCESS_SHARED);
-            aux::pthread_mutexattr_setrobust(mutex_attr.ptr(), PTHREAD_MUTEX_ROBUST);
-            aux::pthread_mutex_init(&m_pHeader->m_Mutex, mutex_attr.ptr());
-            mutex_inited = true;
-
-            cond_attr_type cond_attr;
-            aux::pthread_condattr_setpshared(cond_attr.ptr(), PTHREAD_PROCESS_SHARED);
-            aux::pthread_cond_init(&m_pHeader->m_NonEmptyQueue, cond_attr.ptr());
-            non_empty_queue_inited = true;
-            aux::pthread_cond_init(&m_pHeader->m_NonFullQueue, cond_attr.ptr());
-            non_full_queue_inited = true;
-
-            m_pHeader->m_MaxQueueSize = max_queue_size;
-            m_pHeader->m_MaxMessageSize = max_message_size;
-            m_pHeader->m_RefCount = 1;
-            m_pHeader->m_QueueSize = 0;
-            m_pHeader->m_PutPos = 0;
-            m_pHeader->m_GetPos = 0;
-            m_pHeader->m_Created = true;
-            // Leave section ends
-        }
-        catch (...)
-        {
-            if (mutex_inited) aux::pthread_mutex_destroy(&m_pHeader->m_Mutex);
-            if (non_empty_queue_inited) aux::pthread_cond_destroy(&m_pHeader->m_NonEmptyQueue);
-            if (non_full_queue_inited) aux::pthread_cond_destroy(&m_pHeader->m_NonFullQueue);
-            aux::safe_munmap(m_pHeader, memory_size);
-            if (m_fdSharedMemory >= 0)
-            {
-                aux::shm_unlink(m_Name.c_str());
-                aux::close(m_fdSharedMemory);
-                m_fdSharedMemory = -1;
-            }
-            m_Name.clear();
-            throw;
-        }
-    }
-
-    void open_message_queue(unsigned int max_queue_size, unsigned int max_message_size,
-      permission const& permission_value)
-    {
-        bool locked = false;
-        struct stat status = {};
-        try
-        {
-            m_fdSharedMemory = aux::shm_open(m_Name.c_str(), O_RDWR, get_mode(permission_value));
-            aux::fstat(m_fdSharedMemory, &status);
-            if (!status.st_size) throw aux::make_system_error("shm_open", ENOENT);
-            m_pHeader = aux::typed_mmap< header* >(
-                NULL, status.st_size, PROT_READ | PROT_WRITE,
-                MAP_SHARED, m_fdSharedMemory, 0);
-
-            if (!m_pHeader->m_Created) throw aux::make_system_error("shm_open", ENOENT);
-            int err = aux::pthread_mutex_lock(&m_pHeader->m_Mutex);
-            locked = true;
-            if (err == EOWNERDEAD)
-            {
-                clear_queue();
-                aux::pthread_mutex_consistent(&m_pHeader->m_Mutex);
-            }
-            if (!m_pHeader->m_RefCount) throw aux::make_system_error("shm_open", ENOENT);
-            ++m_pHeader->m_RefCount;
-            aux::pthread_mutex_unlock(&m_pHeader->m_Mutex);
-        }
-        catch (...)
-        {
-            if (locked) aux::pthread_mutex_unlock(&m_pHeader->m_Mutex);
-            aux::safe_munmap(m_pHeader, status.st_size);
-            aux::safe_close(m_fdSharedMemory);
-            m_Name.clear();
-            throw;
-        }
     }
 
     bool open(char const* name, open_mode mode, unsigned int max_queue_size,
@@ -405,7 +522,7 @@ struct basic_text_ipc_message_queue_backend< CharT >::message_queue_type::implem
     // Mutual exclusion should be guaranteed upon calling this function.
     void put_message(void const* message_data, unsigned int message_size)
     {
-        byte* p = reinterpret_cast< byte* >(m_pHeader);
+        uint8_t* p = reinterpret_cast< uint8_t* >(m_pHeader);
         p += sizeof(header) + (sizeof(unsigned int) + m_pHeader->m_MaxMessageSize) * m_pHeader->m_PutPos;
         std::memcpy(p, &message_size, sizeof(unsigned int));
         p += sizeof(unsigned int);
@@ -418,7 +535,7 @@ struct basic_text_ipc_message_queue_backend< CharT >::message_queue_type::implem
     // Mutual exclusion should be guaranteed upon calling this function.
     void get_message(void* buffer, unsigned int, unsigned int& message_size)
     {
-        byte* p = reinterpret_cast< byte* >(m_pHeader);
+        uint8_t* p = reinterpret_cast< uint8_t* >(m_pHeader);
         p += sizeof(header) + (sizeof(unsigned int) + m_pHeader->m_MaxMessageSize) * m_pHeader->m_GetPos;
         std::memcpy(&message_size, p, sizeof(unsigned int));
         p += sizeof(unsigned int);
@@ -573,162 +690,174 @@ struct basic_text_ipc_message_queue_backend< CharT >::message_queue_type::implem
     }
 };
 
-////////////////////////////////////////////////////////////////////////////////
-//  message_queue_type implementation
-////////////////////////////////////////////////////////////////////////////////
-template < typename CharT >
-BOOST_LOG_API basic_text_ipc_message_queue_backend< CharT >::message_queue_type::message_queue_type()
-  : m_pImpl(new implementation())
+BOOST_LOG_API void reliable_message_queue::create(char const* name, uint32_t capacity, uint32_t block_size, permissions const& perms)
 {
-}
-
-template < typename CharT >
-BOOST_LOG_API basic_text_ipc_message_queue_backend< CharT >::message_queue_type::message_queue_type(
-  char const* name, open_mode mode, unsigned int max_queue_size, unsigned int max_message_size,
-  permission const& permission_value)
-  : m_pImpl(new implementation())
-{
-    open(name, mode, max_queue_size, max_message_size, permission_value);
-}
-
-template < typename CharT >
-BOOST_LOG_API basic_text_ipc_message_queue_backend< CharT >::message_queue_type::~message_queue_type()
-{
-    delete m_pImpl;
-}
-
-template < typename CharT >
-BOOST_LOG_API basic_text_ipc_message_queue_backend< CharT >::message_queue_type::message_queue_type(
-  BOOST_RV_REF(message_queue_type) other)
-  : m_pImpl(new implementation())
-{
-    swap(other);
-}
-
-template < typename CharT >
-BOOST_LOG_API typename basic_text_ipc_message_queue_backend< CharT >::message_queue_type&
-basic_text_ipc_message_queue_backend< CharT >::message_queue_type::operator =(
-  BOOST_RV_REF(message_queue_type) other)
-{
-    if (this != &other)
+    BOOST_ASSERT(m_impl == NULL);
+    try
     {
-        close();
-        swap(other);
+        m_impl = new implementation(open_mode::create_only, name, capacity, boost::log::aux::align_size(block_size, BOOST_LOG_CPU_CACHE_LINE_SIZE), perms);
     }
-    return *this;
-}
-
-template < typename CharT >
-BOOST_LOG_API void basic_text_ipc_message_queue_backend< CharT >::message_queue_type::swap(
-  message_queue_type& other)
-{
-    std::swap(m_pImpl, other.m_pImpl);
-}
-
-template < typename CharT >
-BOOST_LOG_API bool basic_text_ipc_message_queue_backend< CharT >::message_queue_type::open(
-  char const* name, open_mode mode, unsigned int max_queue_size, unsigned int max_message_size,
-  permission const& permission_value)
-{
-    if (mode != open_or_create)
+    catch (boost::exception& e)
     {
-        return m_pImpl->open(name, mode, max_queue_size, max_message_size, permission_value);
-    }
-    else
-    {
-        while (true)
-        {
-            if (m_pImpl->open(name, create_only, max_queue_size, max_message_size, permission_value)) return true;
-            if (m_pImpl->open(name, open_only, max_queue_size, max_message_size, permission_value)) return true;
-            sched_yield();
-        }
+        e << boost::log::resource_name_info(name);
+        throw;
     }
 }
 
-template < typename CharT >
-BOOST_LOG_API bool basic_text_ipc_message_queue_backend< CharT >::message_queue_type::is_open() const
+BOOST_LOG_API void reliable_message_queue::open_or_create(char const* name, uint32_t capacity, uint32_t block_size, permissions const& perms)
 {
-    return m_pImpl->is_open();
+    BOOST_ASSERT(m_impl == NULL);
+    try
+    {
+        m_impl = new implementation(open_mode::open_or_create, name, capacity, boost::log::aux::align_size(block_size, BOOST_LOG_CPU_CACHE_LINE_SIZE), perms);
+    }
+    catch (boost::exception& e)
+    {
+        e << boost::log::resource_name_info(name);
+        throw;
+    }
 }
 
-template < typename CharT >
-BOOST_LOG_API void basic_text_ipc_message_queue_backend< CharT >::message_queue_type::clear()
+BOOST_LOG_API void reliable_message_queue::open(char const* name)
 {
-    m_pImpl->clear();
+    BOOST_ASSERT(m_impl == NULL);
+    try
+    {
+        m_impl = new implementation(open_mode::open_only, name);
+    }
+    catch (boost::exception& e)
+    {
+        e << boost::log::resource_name_info(name);
+        throw;
+    }
 }
 
-template < typename CharT >
-BOOST_LOG_API std::string basic_text_ipc_message_queue_backend< CharT >::message_queue_type::name() const
+BOOST_LOG_API void reliable_message_queue::clear()
 {
-    return m_pImpl->name();
+    BOOST_ASSERT(m_impl != NULL);
+    try
+    {
+        m_impl->clear();
+    }
+    catch (boost::exception& e)
+    {
+        e << boost::log::resource_name_info(m_impl->name());
+        throw;
+    }
 }
 
-template < typename CharT >
-BOOST_LOG_API unsigned int basic_text_ipc_message_queue_backend< CharT >::message_queue_type::max_queue_size() const
+BOOST_LOG_API const char* reliable_message_queue::name() const
 {
-    return m_pImpl->max_queue_size();
+    BOOST_ASSERT(m_impl != NULL);
+    return m_impl->name();
 }
 
-template < typename CharT >
-BOOST_LOG_API unsigned int basic_text_ipc_message_queue_backend< CharT >::message_queue_type::max_message_size() const
+BOOST_LOG_API uint32_t reliable_message_queue::capacity() const
 {
-    return m_pImpl->max_message_size();
+    BOOST_ASSERT(m_impl != NULL);
+    return m_impl->capacity();
 }
 
-template < typename CharT >
-BOOST_LOG_API void basic_text_ipc_message_queue_backend< CharT >::message_queue_type::stop()
+BOOST_LOG_API uint32_t reliable_message_queue::block_size() const
 {
-    m_pImpl->stop();
+    BOOST_ASSERT(m_impl != NULL);
+    return m_impl->block_size();
 }
 
-template < typename CharT >
-BOOST_LOG_API void basic_text_ipc_message_queue_backend< CharT >::message_queue_type::reset()
+BOOST_LOG_API void reliable_message_queue::stop()
 {
-    m_pImpl->reset();
+    BOOST_ASSERT(m_impl != NULL);
+    try
+    {
+        m_impl->stop();
+    }
+    catch (boost::exception& e)
+    {
+        e << boost::log::resource_name_info(m_impl->name());
+        throw;
+    }
 }
 
-template < typename CharT >
-BOOST_LOG_API void basic_text_ipc_message_queue_backend< CharT >::message_queue_type::close()
+BOOST_LOG_API void reliable_message_queue::reset()
 {
-    m_pImpl->close();
+    BOOST_ASSERT(m_impl != NULL);
+    try
+    {
+        m_impl->reset();
+    }
+    catch (boost::exception& e)
+    {
+        e << boost::log::resource_name_info(m_impl->name());
+        throw;
+    }
 }
 
-template < typename CharT >
-BOOST_LOG_API bool basic_text_ipc_message_queue_backend< CharT >::message_queue_type::send(
-  void const* message_data, unsigned int message_size)
+BOOST_LOG_API void reliable_message_queue::do_close() BOOST_NOEXCEPT
 {
-    return m_pImpl->send(message_data, message_size);
+    delete m_impl;
+    m_impl = NULL;
 }
 
-template < typename CharT >
-BOOST_LOG_API bool basic_text_ipc_message_queue_backend< CharT >::message_queue_type::try_send(
-  void const* message_data, unsigned int message_size)
+BOOST_LOG_API bool reliable_message_queue::send(void const* message_data, uint32_t message_size)
 {
-    return m_pImpl->try_send(message_data, message_size);
+    BOOST_ASSERT(m_impl != NULL);
+    try
+    {
+        return m_impl->send(message_data, message_size);
+    }
+    catch (boost::exception& e)
+    {
+        e << boost::log::resource_name_info(m_impl->name());
+        throw;
+    }
 }
 
-template < typename CharT >
-BOOST_LOG_API bool basic_text_ipc_message_queue_backend< CharT >::message_queue_type::receive(
-  void* buffer, unsigned int buffer_size, unsigned int& message_size)
+BOOST_LOG_API bool reliable_message_queue::try_send(void const* message_data, uint32_t message_size)
 {
-    return m_pImpl->receive(buffer, buffer_size, message_size);
+    BOOST_ASSERT(m_impl != NULL);
+    try
+    {
+        return m_impl->try_send(message_data, message_size);
+    }
+    catch (boost::exception& e)
+    {
+        e << boost::log::resource_name_info(m_impl->name());
+        throw;
+    }
 }
 
-template < typename CharT >
-BOOST_LOG_API bool basic_text_ipc_message_queue_backend< CharT >::message_queue_type::try_receive(
-  void* buffer, unsigned int buffer_size, unsigned int& message_size)
+BOOST_LOG_API bool reliable_message_queue::receive(void* buffer, uint32_t buffer_size, uint32_t& message_size)
 {
-    return m_pImpl->try_receive(buffer, buffer_size, message_size);
+    BOOST_ASSERT(m_impl != NULL);
+    try
+    {
+        return m_impl->receive(buffer, buffer_size, message_size);
+    }
+    catch (boost::exception& e)
+    {
+        e << boost::log::resource_name_info(m_impl->name());
+        throw;
+    }
 }
 
-} // namespace sinks
+BOOST_LOG_API bool reliable_message_queue::try_receive(void* buffer, uint32_t buffer_size, uint32_t& message_size)
+{
+    BOOST_ASSERT(m_impl != NULL);
+    try
+    {
+        return m_impl->try_receive(buffer, buffer_size, message_size);
+    }
+    catch (boost::exception& e)
+    {
+        e << boost::log::resource_name_info(m_impl->name());
+        throw;
+    }
+}
+
+} // namespace ipc
 
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 
-#endif // BOOST_WINDOWS
-
 #include <boost/log/detail/footer.hpp>
-
-#endif // BOOST_LOG_IPC_MESSAGE_QUEUE_POSIX_HPP_INCLUDED_
