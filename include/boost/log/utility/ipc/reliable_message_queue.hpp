@@ -6,7 +6,7 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  */
 /*!
- * \file   interprocess_message_queue.hpp
+ * \file   utility/ipc/reliable_message_queue.hpp
  * \author Lingxi Li
  * \author Andrey Semashev
  * \date   01.01.2016
@@ -14,8 +14,8 @@
  * The header contains declaration of an interprocess message queue.
  */
 
-#ifndef BOOST_LOG_UTILITY_INTERPROCESS_MESSAGE_QUEUE_HPP_INCLUDED_
-#define BOOST_LOG_UTILITY_INTERPROCESS_MESSAGE_QUEUE_HPP_INCLUDED_
+#ifndef BOOST_LOG_UTILITY_IPC_RELIABLE_MESSAGE_QUEUE_HPP_INCLUDED_
+#define BOOST_LOG_UTILITY_IPC_RELIABLE_MESSAGE_QUEUE_HPP_INCLUDED_
 
 #include <boost/log/detail/config.hpp>
 #include <cstddef>
@@ -33,20 +33,22 @@ namespace boost {
 
 BOOST_LOG_OPEN_NAMESPACE
 
+namespace ipc {
+
 /*!
  * \brief An implementation of a supporting interprocess message queue used
  *        by \c basic_text_ipc_message_queue_backend. Methods of this class
  *        are not thread-safe, unless otherwise specified.
  */
-class interprocess_message_queue
+class reliable_message_queue
 {
     //! \cond
 
-    BOOST_MOVABLE_BUT_NOT_COPYABLE(interprocess_message_queue)
+    BOOST_MOVABLE_BUT_NOT_COPYABLE(reliable_message_queue)
 
 private:
     struct implementation;
-    implementation* m_pImpl;
+    implementation* m_impl;
 
     //! \endcond
 
@@ -57,7 +59,7 @@ public:
      *
      * \post <tt>is_open() == false</tt>
      */
-    interprocess_message_queue() BOOST_NOEXCEPT : m_pImpl(NULL)
+    reliable_message_queue() BOOST_NOEXCEPT : m_impl(NULL)
     {
     }
 
@@ -76,7 +78,7 @@ public:
      * \param max_message_size Maximum size in bytes of each message allowed by the queue.
      * \param perms Access permissions for the associated message queue.
      */
-    explicit interprocess_message_queue
+    reliable_message_queue
     (
         open_mode::create_only_tag,
         char const* name,
@@ -84,7 +86,7 @@ public:
         uint32_t max_message_size,
         permissions const& perms = permissions()
     ) :
-        m_pImpl(NULL)
+        m_impl(NULL)
     {
         this->create(name, max_queue_size, max_message_size, perms);
     }
@@ -106,7 +108,7 @@ public:
      * \param max_message_size Maximum size in bytes of each message allowed by the queue.
      * \param perms Access permissions for the associated message queue.
      */
-    explicit interprocess_message_queue
+    reliable_message_queue
     (
         open_mode::open_or_create_tag,
         char const* name,
@@ -114,7 +116,7 @@ public:
         uint32_t max_message_size,
         permissions const& perms = permissions()
     ) :
-        m_pImpl(NULL)
+        m_impl(NULL)
     {
         this->open_or_create(name, max_queue_size, max_message_size, perms);
     }
@@ -128,8 +130,8 @@ public:
      *
      * \param name Name of the message queue to be associated with.
      */
-    explicit interprocess_message_queue(open_mode::open_only_tag, char const* name) :
-        m_pImpl(NULL)
+    reliable_message_queue(open_mode::open_only_tag, char const* name) :
+        m_impl(NULL)
     {
         this->open(name);
     }
@@ -137,7 +139,7 @@ public:
     /*!
      * Destructor. Calls <tt>close()</tt>.
      */
-    ~interprocess_message_queue() BOOST_NOEXCEPT
+    ~reliable_message_queue() BOOST_NOEXCEPT
     {
         this->close();
     }
@@ -149,10 +151,10 @@ public:
      *
      * \param that The object to be moved.
      */
-    interprocess_message_queue(BOOST_RV_REF(interprocess_message_queue) that) BOOST_NOEXCEPT :
-        m_pImpl(that.m_pImpl)
+    reliable_message_queue(BOOST_RV_REF(reliable_message_queue) that) BOOST_NOEXCEPT :
+        m_impl(that.m_impl)
     {
-        that.m_pImpl = NULL;
+        that.m_impl = NULL;
     }
 
     /*!
@@ -165,9 +167,9 @@ public:
      *
      * \return A reference to the assigned object.
      */
-    interprocess_message_queue& operator= (BOOST_RV_REF(interprocess_message_queue) that) BOOST_NOEXCEPT
+    reliable_message_queue& operator= (BOOST_RV_REF(reliable_message_queue) that) BOOST_NOEXCEPT
     {
-        interprocess_message_queue other(static_cast< BOOST_RV_REF(interprocess_message_queue) >(that));
+        reliable_message_queue other(static_cast< BOOST_RV_REF(reliable_message_queue) >(that));
         this->swap(other);
         return *this;
     }
@@ -177,15 +179,15 @@ public:
      *
      * \param that The other object to swap with.
      */
-    void swap(interprocess_message_queue& that) BOOST_NOEXCEPT
+    void swap(reliable_message_queue& that) BOOST_NOEXCEPT
     {
-        implementation* p = m_pImpl;
-        m_pImpl = that.m_pImpl;
-        that.m_pImpl = p;
+        implementation* p = m_impl;
+        m_impl = that.m_impl;
+        that.m_impl = p;
     }
 
-    //! Swaps the two \c interprocess_message_queue objects.
-    friend void swap(interprocess_message_queue& a, interprocess_message_queue& b) BOOST_NOEXCEPT
+    //! Swaps the two \c reliable_message_queue objects.
+    friend void swap(reliable_message_queue& a, reliable_message_queue& b) BOOST_NOEXCEPT
     {
         a.swap(b);
     }
@@ -258,7 +260,7 @@ public:
      */
     bool is_open() const BOOST_NOEXCEPT
     {
-        return m_pImpl != NULL;
+        return m_impl != NULL;
     }
 
     /*!
@@ -447,10 +449,12 @@ private:
 #endif
 };
 
+} // namespace ipc
+
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 
 #include <boost/log/detail/footer.hpp>
 
-#endif // BOOST_LOG_UTILITY_INTERPROCESS_MESSAGE_QUEUE_HPP_INCLUDED_
+#endif // BOOST_LOG_UTILITY_IPC_RELIABLE_MESSAGE_QUEUE_HPP_INCLUDED_

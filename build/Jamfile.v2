@@ -21,6 +21,7 @@ project.push-current [ project.current ] ;
 project.load [ path.join [ path.make $(here:D) ] ../config/message-compiler ] ;
 project.load [ path.join [ path.make $(here:D) ] ../config/x86-ext ] ;
 project.load [ path.join [ path.make $(here:D) ] ../config/visibility ] ;
+project.load [ path.join [ path.make $(here:D) ] ../config/pthread-mutex-robust ] ;
 project.pop-current ;
 
 # Windows libs
@@ -126,6 +127,19 @@ rule check-visibility ( properties * )
     return $(result) ;
 }
 
+rule check-pthread-mutex-robust ( properties * )
+{
+    local result = ;
+
+    local has_pthread_mutex_robust = [ configure.builds /boost/log/pthread-mutex-robust//pthread_mutex_robust : $(properties) : pthread-supports-robust-mutexes ] ;
+    if $(has_pthread_mutex_robust)
+    {
+        result = <define>BOOST_LOG_HAS_PTHREAD_MUTEX_ROBUST ;
+    }
+
+    return $(result) ;
+}
+
 project boost/log
     : source-location ../src
     : requirements
@@ -133,6 +147,7 @@ project boost/log
         <conditional>@check-instruction-set
         <conditional>@select-regex-backend
         <conditional>@check-visibility
+        <conditional>@check-pthread-mutex-robust
 
         <define>__STDC_CONSTANT_MACROS # Use system-defined macros for integer constants, if possible
         <define>BOOST_SPIRIT_USE_PHOENIX_V3=1
@@ -386,15 +401,23 @@ for local src in $(BOOST_LOG_COMMON_AVX2_SRC)
         ;
 }
 
-alias platform-specific-sources
-    : ## sources ##
-        debug_output_backend.cpp
-        light_rw_mutex.cpp
-    : ## requirements ##
-        <target-os>windows
-    ;
+rule select-target-os-specific-sources ( properties * )
+{
+    local result ;
 
-alias platform-specific-sources ;
+    if <target-os>windows in $(properties)
+    {
+        result = <source>ipc_reliable_message_queue_win.cpp ;
+        result += <source>debug_output_backend.cpp ;
+        result += <source>light_rw_mutex.cpp ;
+    }
+    else
+    {
+        result = <source>ipc_reliable_message_queue_posix.cpp ;
+    }
+
+    return $(result) ;
+}
 
 rule select-log-api-specific-sources ( properties * )
 {
@@ -412,28 +435,11 @@ rule select-log-api-specific-sources ( properties * )
     return $(result) ;
 }
 
-rule select-target-os-specific-sources ( properties * )
-{
-    local result ;
-
-    if <target-os>windows in $(properties)
-    {
-        result = <source>interprocess_message_queue_win.cpp ;
-    }
-    else
-    {
-        result = <source>interprocess_message_queue_posix.cpp ;
-    }
-
-    return $(result) ;
-}
-
 lib boost_log
     : ## sources ##
         $(BOOST_LOG_COMMON_SRC)
         $(BOOST_LOG_COMMON_SSSE3_SRC)
         $(BOOST_LOG_COMMON_AVX2_SRC)
-        platform-specific-sources
     : ## requirements ##
         <conditional>@select-target-os-specific-sources
         <conditional>@select-log-api-specific-sources
