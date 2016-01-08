@@ -1,5 +1,6 @@
 /*
  *                 Copyright Lingxi Li 2015.
+ *              Copyright Andrey Semashev 2016.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -7,6 +8,7 @@
 /*!
  * \file   text_ipc_message_queue_backend.hpp
  * \author Lingxi Li
+ * \author Andrey Semashev
  * \date   14.10.2015
  *
  * The header contains implementation of a text interprocess message queue sink
@@ -17,8 +19,10 @@
 #define BOOST_LOG_SINKS_TEXT_IPC_MESSAGE_QUEUE_BACKEND_HPP_INCLUDED_
 
 #include <string>
+#include <boost/cstdint.hpp>
 #include <boost/move/move.hpp>
-#include <boost/smart_ptr/shared_ptr.hpp>
+#include <boost/throw_exception.hpp>
+#include <boost/log/exceptions.hpp>
 #include <boost/log/keywords/message_queue_name.hpp>
 #include <boost/log/keywords/open_mode.hpp>
 #include <boost/log/keywords/max_message_size.hpp>
@@ -43,6 +47,21 @@ BOOST_LOG_OPEN_NAMESPACE
 
 namespace sinks {
 
+namespace ipc {
+
+//! Interprocess queue overflow policies
+enum queue_overflow_policy
+{
+    //! Drop the message when the queue is full
+    drop_on_overflow,
+    //! Throw an exception when the queue is full
+    throw_on_overflow,
+    //! Block the send operation when the queue is full
+    block_on_overflow
+};
+
+} // namespace ipc
+
 /*!
  * \brief An implementation of a text interprocess message queue sink backend and
  *        a supporting interprocess message queue.
@@ -51,64 +70,33 @@ namespace sinks {
  * which can be extracted by a viewer process. Methods of this class are not
  * thread-safe, unless otherwise specified.
  */
-template < typename CharT >
-class basic_text_ipc_message_queue_backend :
-    public basic_formatted_sink_backend< CharT, concurrent_feeding >
+template< typename QueueT, ipc::queue_overflow_policy OverflowPolicyV = ipc::drop_on_overflow >
+class text_ipc_message_queue_backend :
+    public basic_formatted_sink_backend< char, concurrent_feeding >
 {
     //! Base type
-    typedef basic_formatted_sink_backend< CharT > base_type;
+    typedef basic_formatted_sink_backend< char, concurrent_feeding > base_type;
 
 public:
     //! Character type
-    typedef typename base_type::char_type char_type;
+    typedef base_type::char_type char_type;
     //! String type to be used as a message text holder
-    typedef typename base_type::string_type string_type;
-
-
-    //! Convenient typedef for <tt>message_queue_type::open_mode</tt>.
-    typedef typename message_queue_type::open_mode open_mode;
-    //! Convenient open mode value imported from \c message_queue_type.
-    BOOST_LOG_API static open_mode const create_only = message_queue_type::create_only;
-    //! Convenient open mode value imported from \c message_queue_type.
-    BOOST_LOG_API static open_mode const open_only = message_queue_type::open_only;
-    //! Convenient open mode value imported from \c message_queue_type.
-    BOOST_LOG_API static open_mode const open_or_create = message_queue_type::open_or_create;
-
-    //! Queue policy type
-    enum queue_policy_type
-    {
-        //! Drop the message when the queue is full (default)
-        drop_when_full,
-        //! Throw an exception when the queue is full
-        throw_when_full,
-        //! Block the send operation when the queue is full
-        block_when_full
-    };
-    //! Message policy type
-    enum message_policy_type
-    {
-        //! Throw an exception when the message is too long for the queue (default)
-        throw_when_too_long,
-        //! Drop the the message when it is too long for the queue
-        drop_when_too_long,
-        //! Truncate the message when it is too long for the queue
-        truncate_when_too_long
-    };
+    typedef base_type::string_type string_type;
+    //! Interprocess message queue type
+    typedef QueueT queue_type;
 
 private:
-    //! \cond
-
-    struct implementation;
-    implementation* m_pImpl;
-
-    //! \endcond
+    //! Interprocess queue
+    queue_type m_queue;
 
 public:
     /*!
      * Default constructor. The method constructs the backend using default values
      * of all the parameters.
      */
-    BOOST_LOG_API basic_text_ipc_message_queue_backend();
+    text_ipc_message_queue_backend() BOOST_NOEXCEPT
+    {
+    }
 
     /*!
      * Constructor. The method creates a backend that sends messages to an associated
@@ -147,39 +135,25 @@ public:
      *                      the default being a default-constructed \c permissions object.
      */
 #ifndef BOOST_LOG_DOXYGEN_PASS
-    BOOST_LOG_PARAMETRIZED_CONSTRUCTORS_CALL(basic_text_ipc_message_queue_backend, construct)
+    BOOST_LOG_PARAMETRIZED_CONSTRUCTORS_CALL(text_ipc_message_queue_backend, construct)
 #else
     template< typename... ArgsT >
-    explicit basic_text_ipc_message_queue_backend(ArgsT... const& args);
+    explicit text_ipc_message_queue_backend(ArgsT... const& args);
 #endif
 
     /*!
-     * Destructor. Calls <tt>close()</tt> and the precondition to calling
-     * <tt>close()</tt> applies.
+     * The method returns a reference to the managed \c queue_type object.
+     *
+     * \return A reference to the managed \c queue_type object.
      */
-    BOOST_LOG_API ~basic_text_ipc_message_queue_backend();
+    queue_type& message_queue() BOOST_NOEXCEPT { return m_queue; }
 
     /*!
-     * The method returns a reference to the managed \c message_queue_type object.
+     * The method returns a const reference to the managed \c queue_type object.
      *
-     * \return A reference to the managed \c message_queue_type object.
+     * \return A const reference to the managed \c queue_type object.
      */
-    BOOST_LOG_API message_queue_type& message_queue();
-
-    /*!
-     * The method returns a const reference to the managed \c message_queue_type object.
-     *
-     * \return A const reference to the managed \c message_queue_type object.
-     */
-    BOOST_LOG_API message_queue_type const& message_queue() const;
-
-    /*!
-     * The method returns the name of the associated message queue.
-     *
-     * \return Name of the associated message queue, or an empty string if there
-     *         is no associated message queue.
-     */
-    BOOST_LOG_API std::string name() const;
+    queue_type const& message_queue() const BOOST_NOEXCEPT { return m_queue; }
 
     /*!
      * The method sets the message queue to be associated with the object. If the object is
@@ -209,9 +183,10 @@ public:
      *
      * \return \c true if the operation is successful, and \c false otherwise.
      */
-    BOOST_LOG_API bool open(
-        char const* name, open_mode mode = open_only,
-        unsigned int max_queue_size = 10, unsigned int max_message_size = 1000,
+    void create(
+        char const* name,
+        uint32_t capacity,
+        uint32_t max_message_size = 1000,
         permissions const& perms = permissions());
 
     /*!
@@ -220,30 +195,7 @@ public:
      *
      * \return \c true if the object is associated with a message queue, and \c false otherwise.
      */
-    BOOST_LOG_API bool is_open() const;
-
-    /*!
-     * The method returns the maximum number of messages the associated message queue
-     * can hold. Note that the returned value may be different from the corresponding
-     * value passed to the constructor or <tt>open()</tt>, for the message queue may
-     * not be created by this object. Throws <tt>std::logic_error</tt> if the object
-     * is not associated with any message queue.
-     *
-     * \return Maximum number of messages the associated message queue can hold.
-     */
-    BOOST_LOG_API unsigned int max_queue_size() const;
-
-    /*!
-     * The method returns the maximum size in bytes of each message allowed by the
-     * associated message queue. Note that the returned value may be different from the
-     * corresponding value passed to the constructor or <tt>open()</tt>, for the
-     * message queue may not be created by this object. Throws <tt>std::logic_error</tt>
-     * if the object is not associated with any message queue.
-     *
-     * \return Maximum size in bytes of each message allowed by the associated message
-     *         queue.
-     */
-    BOOST_LOG_API unsigned int max_message_size() const;
+    bool is_open() const BOOST_NOEXCEPT { return m_queue.is_open(); }
 
     /*!
      * The method wakes up all threads that are blocking on calls to <tt>consume()</tt>.
@@ -255,13 +207,19 @@ public:
      * dropping the messages they are trying to send, when they would otherwise block in
      * running state. Concurrent calls to this method and <tt>consume()</tt> are OK.
      */
-    BOOST_LOG_API void stop();
+    void stop()
+    {
+        m_queue.stop();
+    }
 
     /*!
      * The method puts the object in running state where calls to <tt>consume()</tt>
-     * may block. This method is thread-safe.
+     * may block.
      */
-    BOOST_LOG_API void reset();
+    void reset()
+    {
+        m_queue.reset();
+    }
 
     /*!
      * The method disassociates the associated message queue, if any. No other threads
@@ -270,36 +228,17 @@ public:
      * and prevent further calls to <tt>consume()</tt> from blocking. The associated message
      * queue is destroyed, if the object represents the last outstanding reference to it.
      */
-    BOOST_LOG_API void close();
-
-    /*!
-     * The method sets the policy to use when sending to a full message queue.
-     *
-     * \param policy The queue policy to set.
-     */
-    BOOST_LOG_API void set_queue_policy(queue_policy_type policy);
-
-    /*!
-     * The method sets the policy to use when the message to send is too long for
-     * the associated message queue.
-     *
-     * \param policy The message policy to set.
-     */
-    BOOST_LOG_API void set_message_policy(message_policy_type policy);
+    void close()
+    {
+        m_queue.close();
+    }
 
     /*!
      * The method queries the current queue policy.
      *
      * \return Current queue policy.
      */
-    BOOST_LOG_API queue_policy_type queue_policy() const;
-
-    /*!
-     * The method queries the current message policy.
-     *
-     * \return Current message policy.
-     */
-    BOOST_LOG_API message_policy_type message_policy() const;
+    ipc::queue_overflow_policy queue_overflow_policy() const BOOST_NOEXCEPT { return OverflowPolicyV; }
 
     /*!
      * The method writes the message to the backend. Concurrent calls to this method
@@ -307,7 +246,24 @@ public:
      * can be used to have a blocked <tt>consume()</tt> call return and prevent future
      * calls to <tt>consume()</tt> from blocking.
      */
-    BOOST_LOG_API void consume(record_view const& rec, string_type const& formatted_message);
+    void consume(record_view const&, string_type const& formatted_message)
+    {
+        if (m_queue.is_open())
+        {
+            if (OverflowPolicyV == ipc::block_when_full)
+            {
+                m_queue.send(formatted_message.data(), formatted_message.size());
+            }
+            else
+            {
+                if (!m_queue.try_send(formatted_message.data(), formatted_message.size()))
+                {
+                    if (OverflowPolicyV == ipc::throw_when_full)
+                        BOOST_THROW_EXCEPTION(runtime_error("Interprocess message queue is full"));
+                }
+            }
+        }
+    }
 
 private:
 #ifndef BOOST_LOG_DOXYGEN_PASS
@@ -335,13 +291,6 @@ private:
         permissions const& perms);
 #endif // BOOST_LOG_DOXYGEN_PASS
 };
-
-#ifdef BOOST_LOG_USE_CHAR
-typedef basic_text_ipc_message_queue_backend< char > text_ipc_message_queue_backend;      //!< Convenience typedef for narrow-character logging
-#endif
-#ifdef BOOST_LOG_USE_WCHAR_T
-typedef basic_text_ipc_message_queue_backend< wchar_t > wtext_ipc_message_queue_backend;  //!< Convenience typedef for wide-character logging
-#endif
 
 } // namespace sinks
 

@@ -82,6 +82,18 @@ struct pthread_condition_variable_attributes
 //! Interprocess mutex wrapper
 struct interprocess_mutex
 {
+    struct auto_unlock
+    {
+        explicit auto_unlock(interprocess_mutex& mutex) BOOST_NOEXCEPT : m_mutex(mutex) {}
+        ~auto_unlock() { m_mutex.unlock(); }
+
+        BOOST_DELETED_FUNCTION(auto_unlock(auto_unlock const&))
+        BOOST_DELETED_FUNCTION(auto_unlock& operator=(auto_unlock const&))
+
+    private:
+        interprocess_mutex& m_mutex;
+    };
+
     pthread_mutex_t mutex;
 
     interprocess_mutex()
@@ -158,6 +170,27 @@ struct interprocess_condition_variable
     ~interprocess_condition_variable()
     {
         BOOST_VERIFY(pthread_cond_destroy(&this->cond) == 0);
+    }
+
+    void notify_one()
+    {
+        int err = pthread_cond_signal(&this->cond);
+        if (BOOST_UNLIKELY(err != 0))
+            BOOST_LOG_THROW_DESCR(boost::log::system_error, "Failed to notify one thread on a pthread condition variable");
+    }
+
+    void notify_all()
+    {
+        int err = pthread_cond_broadcast(&this->cond);
+        if (BOOST_UNLIKELY(err != 0))
+            BOOST_LOG_THROW_DESCR(boost::log::system_error, "Failed to notify all threads on a pthread condition variable");
+    }
+
+    void wait(interprocess_mutex& mutex)
+    {
+        int err = pthread_cond_wait(&this->cond, &mutex.mutex);
+        if (BOOST_UNLIKELY(err != 0))
+            BOOST_LOG_THROW_DESCR(boost::log::system_error, "Failed to wait on a pthread condition variable");
     }
 
     BOOST_DELETED_FUNCTION(interprocess_condition_variable(interprocess_condition_variable const&))

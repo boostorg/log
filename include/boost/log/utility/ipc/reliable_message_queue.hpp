@@ -35,6 +35,19 @@ BOOST_LOG_OPEN_NAMESPACE
 
 namespace ipc {
 
+namespace aux {
+
+template< typename T, typename R >
+struct enable_if_byte {};
+template< typename R >
+struct enable_if_byte< char, R > { typedef R type; };
+template< typename R >
+struct enable_if_byte< signed char, R > { typedef R type; };
+template< typename R >
+struct enable_if_byte< unsigned char, R > { typedef R type; };
+
+} // namespace aux
+
 /*!
  * \brief An implementation of a supporting interprocess message queue used
  *        by \c basic_text_ipc_message_queue_backend. Methods of this class
@@ -42,11 +55,27 @@ namespace ipc {
  */
 class reliable_message_queue
 {
+public:
+    //! Result codes for various operations on the queue
+    enum operation_result
+    {
+        succeeded,    //!< The operation has completed successfully
+        aborted       //!< The operation has been aborted because the queue method <tt>stop()</tt> has been called
+    };
+
 #if !defined(BOOST_LOG_DOXYGEN_PASS)
 
     BOOST_MOVABLE_BUT_NOT_COPYABLE(reliable_message_queue)
 
 private:
+    typedef void (*receive_handler)(void* state, const void* data, uint32_t size);
+
+    struct fixed_buffer_state
+    {
+        uint8_t* data;
+        uint32_t size;
+    };
+
     struct implementation;
     implementation* m_impl;
 
@@ -353,26 +382,29 @@ public:
 
     /*!
      * The method sends a message to the associated message queue. When the object is in
-     * running state and the queue is full, the method blocks. The blocking is interrupted
-     * when <tt>stop()</tt> is called, in which case the method returns \c false with
-     * \c errno \c EINTR. When the object is in stopped state and the queue is full, the
-     * method does not block but returns immediately with return value \c false and \c errno
-     * \c EINTR. If the object is not associated with any message queue, an <tt>std::logic_error</tt>
-     * exception is thrown. <tt>boost::system::system_error</tt> is thrown for errors resulting
-     * from native operating system calls. It is possible to send an empty message by passing
-     * \c 0 to the parameter \c message_size. Concurrent calls to <tt>send()</tt>, <tt>try_send()</tt>,
-     * <tt>receive()</tt>, <tt>try_receive()</tt>, <tt>stop()</tt>, and <tt>clear()</tt> are OK.
+     * running state and the queue has no free space for the message, the method blocks.
+     * The blocking is interrupted when <tt>stop()</tt> is called, in which case the method
+     * returns \c operation_result::aborted. When the object is already in the stopped state,
+     * the method does not block but returns immediately with return value \c operation_result::aborted.
+     *
+     * It is possible to send an empty message by passing \c 0 to the parameter \c message_size.
+     *
+     * Concurrent calls to <tt>send()</tt>, <tt>try_send()</tt>, <tt>receive()</tt>, <tt>try_receive()</tt>,
+     * <tt>stop()</tt>, and <tt>clear()</tt> are allowed.
      *
      * \pre <tt>is_open() == true</tt>
      *
      * \param message_data The message data to send. Ignored when \c message_size is \c 0.
-     * \param message_size Size of the message data in bytes. If the size is larger than the
-     *                     maximum size allowed by the associated message queue, an
-     *                     <tt>std::logic_error</tt> exception is thrown.
+     * \param message_size Size of the message data in bytes. If the size is larger than
+     *                     the associated message queue capacity, an <tt>std::logic_error</tt> exception is thrown.
      *
-     * \return \c true if the operation is successful, and \c false otherwise.
+     * \return \c operation_result::succeeded if the operation is successful, or
+     *         \c operation_result::aborted if <tt>stop()</tt> was called.
+     *
+     * <b>Throws:</b> <tt>std::logic_error</tt> in case if the message size exceeds the queue
+     *                capacity, <tt>system_error</tt> in case if a native OS method fails.
      */
-    BOOST_LOG_API bool send(void const* message_data, uint32_t message_size);
+    BOOST_LOG_API operation_result send(void const* message_data, uint32_t message_size);
 
     /*!
      * The method performs an attempt to send a message to the associated message queue.
@@ -382,7 +414,7 @@ public:
      * operating system calls. Note that it is possible to send an empty message by passing
      * \c 0 to the parameter \c message_size. Concurrent calls to <tt>send()</tt>,
      * <tt>try_send()</tt>, <tt>receive()</tt>, <tt>try_receive()</tt>, <tt>stop()</tt>,
-     * and <tt>clear()</tt> are OK.
+     * and <tt>clear()</tt> are allowed.
      *
      * \pre <tt>is_open() == true</tt>
      *
@@ -393,57 +425,142 @@ public:
      *
      * \return \c true if the message is successfully sent, and \c false otherwise (e.g.,
      *         when the queue is full).
+     *
+     * <b>Throws:</b> <tt>std::logic_error</tt> in case if the message size exceeds the queue
+     *                capacity, <tt>system_error</tt> in case if a native OS method fails.
      */
     BOOST_LOG_API bool try_send(void const* message_data, uint32_t message_size);
 
     /*!
      * The method takes a message from the associated message queue. When the object is in
      * running state and the queue is empty, the method blocks. The blocking is interrupted
-     * when <tt>stop()</tt> is called, in which case the method returns \c false with
-     * \c errno \c EINTR. When the object is in stopped state and the queue is empty, the
-     * method does not block but returns immediately with return value \c false and \c errno
-     * \c EINTR. If the object is not associated with any message queue, an <tt>std::logic_error</tt>
-     * exception is thrown. <tt>boost::system::system_error</tt> is thrown for errors resulting
-     * from native operating system calls. Concurrent calls to <tt>send()</tt>, <tt>try_send()</tt>,
-     * <tt>receive()</tt>, <tt>try_receive()</tt>, <tt>stop()</tt>, and <tt>clear()</tt> are OK.
+     * when <tt>stop()</tt> is called, in which case the method returns \c operation_result::aborted.
+     * When the object is already in the stopped state and the queue is empty, the method
+     * does not block but returns immediately with return value \c operation_result::aborted.
+     *
+     * Concurrent calls to <tt>send()</tt>, <tt>try_send()</tt>, <tt>receive()</tt>,
+     * <tt>try_receive()</tt>, <tt>stop()</tt>, and <tt>clear()</tt> are allowed.
      *
      * \pre <tt>is_open() == true</tt>
      *
-     * \param buffer The memory buffer to store the received message.
-     * \param buffer_size The size of the buffer in bytes. This parameter should be no smaller
-     *                    than the maximum message size allowed by the associated message queue.
-     *                    Otherwise, an <tt>std::logic_error</tt> exception is thrown.
+     * \param buffer The memory buffer to store the received message in.
+     * \param buffer_size The size of the buffer, in bytes.
      * \param message_size Receives the size of the received message, in bytes.
      *
      * \return \c true if the operation is successful, and \c false otherwise.
      */
-    BOOST_LOG_API bool receive(void* buffer, uint32_t buffer_size, uint32_t& message_size);
+    operation_result receive(void* buffer, uint32_t buffer_size, uint32_t& message_size)
+    {
+        fixed_buffer_state state = { static_cast< uint8_t* >(buffer), buffer_size };
+        operation_result result = do_receive(&reliable_message_queue::fixed_buffer_receive_handler, &state);
+        message_size = buffer_size - state.size;
+        return result;
+    }
 
     /*!
-     * The method performs an attempt to take a message from the associated message queue. The
-     * method is non-blocking, and always returns immediately. If the object is not associated
-     * with any message queue, an <tt>std::logic_error</tt> exception is thrown.
-     * <tt>boost::system::system_error</tt> is thrown for errors resulting from native operating
-     * system calls. Concurrent calls to <tt>send()</tt>, <tt>try_send()</tt>, <tt>receive()</tt>,
-     * <tt>try_receive()</tt>, <tt>stop()</tt>, and <tt>clear()</tt> are OK.
+     * The method takes a message from the associated message queue. When the object is in
+     * running state and the queue is empty, the method blocks. The blocking is interrupted
+     * when <tt>stop()</tt> is called, in which case the method returns \c operation_result::aborted.
+     * When the object is already in the stopped state and the queue is empty, the method
+     * does not block but returns immediately with return value \c operation_result::aborted.
+     *
+     * Concurrent calls to <tt>send()</tt>, <tt>try_send()</tt>, <tt>receive()</tt>,
+     * <tt>try_receive()</tt>, <tt>stop()</tt>, and <tt>clear()</tt> are allowed.
      *
      * \pre <tt>is_open() == true</tt>
      *
-     * \param buffer The memory buffer to store the received message.
-     * \param buffer_size The size of the buffer in bytes. This parameter should be no smaller
-     *                    than the maximum message size allowed by the associated message queue.
-     *                    Otherwise, an <tt>std::logic_error</tt> exception is thrown.
+     * \param container The container to store the received message in. The container should have
+     *                  value type of <tt>char</tt>, <tt>signed char</tt> or <tt>unsigned char</tt>
+     *                  and support inserting elements at the end.
+     *
+     * \return \c true if the operation is successful, and \c false otherwise.
+     */
+    template< typename ContainerT >
+#if !defined(BOOST_LOG_DOXYGEN_PASS)
+    typename aux::enable_if_byte< typename ContainerT::value_type, operation_result >::type
+#else
+    operation_result
+#endif
+    receive(ContainerT& container)
+    {
+        return do_receive(&reliable_message_queue::container_receive_handler< ContainerT >, &container);
+    }
+
+    /*!
+     * The method performs an attempt to take a message from the associated message queue. The
+     * method is non-blocking, and always returns immediately.
+     *
+     * Concurrent calls to <tt>send()</tt>, <tt>try_send()</tt>, <tt>receive()</tt>,
+     * <tt>try_receive()</tt>, <tt>stop()</tt>, and <tt>clear()</tt> are allowed.
+     *
+     * \pre <tt>is_open() == true</tt>
+     *
+     * \param buffer The memory buffer to store the received message in.
+     * \param buffer_size The size of the buffer, in bytes.
      * \param message_size Receives the size of the received message, in bytes.
      *
      * \return \c true if a message is successfully received, and \c false otherwise (e.g.,
      *         when the queue is empty).
      */
-    BOOST_LOG_API bool try_receive(void* buffer, uint32_t buffer_size, uint32_t& message_size);
+    bool try_receive(void* buffer, uint32_t buffer_size, uint32_t& message_size)
+    {
+        fixed_buffer_state state = { static_cast< uint8_t* >(buffer), buffer_size };
+        bool result = do_try_receive(&reliable_message_queue::fixed_buffer_receive_handler, &state);
+        message_size = buffer_size - state.size;
+        return result;
+    }
+
+    /*!
+     * The method performs an attempt to take a message from the associated message queue. The
+     * method is non-blocking, and always returns immediately.
+     *
+     * Concurrent calls to <tt>send()</tt>, <tt>try_send()</tt>, <tt>receive()</tt>,
+     * <tt>try_receive()</tt>, <tt>stop()</tt>, and <tt>clear()</tt> are allowed.
+     *
+     * \pre <tt>is_open() == true</tt>
+     *
+     * \param container The container to store the received message in. The container should have
+     *                  value type of <tt>char</tt>, <tt>signed char</tt> or <tt>unsigned char</tt>
+     *                  and support inserting elements at the end.
+     *
+     * \return \c true if a message is successfully received, and \c false otherwise (e.g.,
+     *         when the queue is empty).
+     */
+    template< typename ContainerT >
+#if !defined(BOOST_LOG_DOXYGEN_PASS)
+    typename aux::enable_if_byte< typename ContainerT::value_type, bool >::type
+#else
+    bool
+#endif
+    try_receive(ContainerT& container)
+    {
+        return do_try_receive(&reliable_message_queue::container_receive_handler< ContainerT >, &container);
+    }
 
 #if !defined(BOOST_LOG_DOXYGEN_PASS)
 private:
     //! Closes the message queue, if it's open
     BOOST_LOG_API void do_close() BOOST_NOEXCEPT;
+
+    //! Receives the message from the queue and calls the handler to place the data in the user's storage
+    BOOST_LOG_API operation_result do_receive(receive_handler handler, void* state);
+    //! Attempts to receives the message from the queue and calls the handler to place the data in the user's storage
+    BOOST_LOG_API bool do_try_receive(receive_handler handler, void* state);
+
+    //! Fixed buffer receive handler
+    static BOOST_LOG_API void fixed_buffer_receive_handler(void* state, const void* data, uint32_t size);
+    //! Receive handler for a container
+    template< typename ContainerT >
+    static void container_receive_handler(void* state, const void* data, uint32_t size)
+    {
+        ContainerT* const container = static_cast< ContainerT* >(state);
+        container->insert
+        (
+            container->end(),
+            static_cast< typename ContainerT::value_type const* >(data),
+            static_cast< typename ContainerT::value_type const* >(data) + size
+        );
+    }
 #endif
 };
 
