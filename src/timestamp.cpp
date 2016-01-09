@@ -29,12 +29,12 @@
 #include <mach/mach_time.h>
 #include <mach/kern_return.h>
 #include <boost/log/utility/once_block.hpp>
+#include <boost/system/error_code.hpp>
 #endif
 #include <time.h>
 #include <errno.h>
 #include <boost/throw_exception.hpp>
-#include <boost/system/error_code.hpp>
-#include <boost/system/system_error.hpp>
+#include <boost/log/exceptions.hpp>
 #endif
 #include <boost/log/detail/header.hpp>
 
@@ -132,8 +132,7 @@ timestamp get_timestamp_realtime_clock()
     if (BOOST_UNLIKELY(clock_gettime(CLOCK_REALTIME, &ts) != 0))
     {
         const int err = errno;
-        BOOST_THROW_EXCEPTION(boost::system::system_error(
-            err, boost::system::system_category(), "Failed to acquire current time"));
+        BOOST_LOG_THROW_DESCR_PARAMS(system_error, "Failed to acquire current time", (err));
     }
 
     return timestamp(static_cast< uint64_t >(ts.tv_sec) * UINT64_C(1000000000) + ts.tv_nsec);
@@ -156,8 +155,7 @@ timestamp get_timestamp_monotonic_clock()
             get_timestamp = &get_timestamp_realtime_clock;
             return get_timestamp_realtime_clock();
         }
-        BOOST_THROW_EXCEPTION(boost::system::system_error(
-            err, boost::system::system_category(), "Failed to acquire current time"));
+        BOOST_LOG_THROW_DESCR_PARAMS(system_error, "Failed to acquire current time", (err));
     }
 
     return timestamp(static_cast< uint64_t >(ts.tv_sec) * UINT64_C(1000000000) + ts.tv_nsec);
@@ -186,8 +184,7 @@ BOOST_LOG_API int64_t duration::milliseconds() const
         kern_return_t err = mach_timebase_info(&timebase_info);
         if (err != KERN_SUCCESS)
         {
-            BOOST_THROW_EXCEPTION(boost::system::system_error(
-                err, boost::system::system_category(), "Failed to initialize timebase info"));
+            BOOST_LOG_THROW_DESCR_PARAMS(system_error, "Failed to initialize timebase info", (boost::system::errc::not_supported));
         }
     }
 

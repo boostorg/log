@@ -29,6 +29,8 @@ namespace boost {
 
 BOOST_LOG_OPEN_NAMESPACE
 
+namespace ipc {
+
 namespace aux {
 
 #if defined(BOOST_LOG_HAS_PTHREAD_MUTEX_ROBUST)
@@ -46,7 +48,7 @@ struct pthread_mutex_attributes
     {
         int err = pthread_mutexattr_init(&this->attrs);
         if (BOOST_UNLIKELY(err != 0))
-            BOOST_LOG_THROW_DESCR(boost::log::system_error, "Failed to initialize pthread mutex attributes");
+            BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, "Failed to initialize pthread mutex attributes", (err));
     }
 
     ~pthread_mutex_attributes()
@@ -67,7 +69,7 @@ struct pthread_condition_variable_attributes
     {
         int err = pthread_condattr_init(&this->attrs);
         if (BOOST_UNLIKELY(err != 0))
-            BOOST_LOG_THROW_DESCR(boost::log::system_error, "Failed to initialize pthread condition variable attributes");
+            BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, "Failed to initialize pthread condition variable attributes", (err));
     }
 
     ~pthread_condition_variable_attributes()
@@ -101,19 +103,19 @@ struct interprocess_mutex
         pthread_mutex_attributes attrs;
         int err = pthread_mutexattr_settype(&attrs.attrs, PTHREAD_MUTEX_NORMAL);
         if (BOOST_UNLIKELY(err != 0))
-            BOOST_LOG_THROW_DESCR(boost::log::system_error, "Failed to set pthread mutex type");
+            BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, "Failed to set pthread mutex type", (err));
         err = pthread_mutexattr_setpshared(&attrs.attrs, PTHREAD_PROCESS_SHARED);
         if (BOOST_UNLIKELY(err != 0))
-            BOOST_LOG_THROW_DESCR(boost::log::system_error, "Failed to make pthread mutex process-shared");
+            BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, "Failed to make pthread mutex process-shared", (err));
 #if defined(BOOST_LOG_HAS_PTHREAD_MUTEX_ROBUST)
         err = pthread_mutexattr_setrobust(&attrs.attrs, PTHREAD_MUTEX_ROBUST);
         if (BOOST_UNLIKELY(err != 0))
-            BOOST_LOG_THROW_DESCR(boost::log::system_error, "Failed to make pthread mutex robust");
+            BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, "Failed to make pthread mutex robust", (err));
 #endif
 
         err = pthread_mutex_init(&this->mutex, &attrs.attrs);
         if (BOOST_UNLIKELY(err != 0))
-            BOOST_LOG_THROW_DESCR(boost::log::system_error, "Failed to initialize pthread mutex");
+            BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, "Failed to initialize pthread mutex", (err));
     }
 
     ~interprocess_mutex()
@@ -129,7 +131,7 @@ struct interprocess_mutex
             throw lock_owner_dead();
 #endif
         if (BOOST_UNLIKELY(err != 0))
-            BOOST_LOG_THROW_DESCR(boost::log::system_error, "Failed to lock pthread mutex");
+            BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, "Failed to lock pthread mutex", (err));
     }
 
     void unlock() BOOST_NOEXCEPT
@@ -142,7 +144,7 @@ struct interprocess_mutex
     {
         int err = pthread_mutex_consistent(&this->mutex);
         if (BOOST_UNLIKELY(err != 0))
-            BOOST_LOG_THROW_DESCR(boost::log::system_error, "Failed to recover pthread mutex from a crashed thread");
+            BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, "Failed to recover pthread mutex from a crashed thread", (err));
     }
 #endif
 
@@ -160,11 +162,11 @@ struct interprocess_condition_variable
         pthread_condition_variable_attributes attrs;
         int err = pthread_condattr_setpshared(&attrs.attrs, PTHREAD_PROCESS_SHARED);
         if (BOOST_UNLIKELY(err != 0))
-            BOOST_LOG_THROW_DESCR(boost::log::system_error, "Failed to make pthread condition variable process-shared");
+            BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, "Failed to make pthread condition variable process-shared", (err));
 
         err = pthread_cond_init(&this->cond, &attrs.attrs);
         if (BOOST_UNLIKELY(err != 0))
-            BOOST_LOG_THROW_DESCR(boost::log::system_error, "Failed to initialize pthread condition variable");
+            BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, "Failed to initialize pthread condition variable", (err));
     }
 
     ~interprocess_condition_variable()
@@ -176,21 +178,21 @@ struct interprocess_condition_variable
     {
         int err = pthread_cond_signal(&this->cond);
         if (BOOST_UNLIKELY(err != 0))
-            BOOST_LOG_THROW_DESCR(boost::log::system_error, "Failed to notify one thread on a pthread condition variable");
+            BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, "Failed to notify one thread on a pthread condition variable", (err));
     }
 
     void notify_all()
     {
         int err = pthread_cond_broadcast(&this->cond);
         if (BOOST_UNLIKELY(err != 0))
-            BOOST_LOG_THROW_DESCR(boost::log::system_error, "Failed to notify all threads on a pthread condition variable");
+            BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, "Failed to notify all threads on a pthread condition variable", (err));
     }
 
     void wait(interprocess_mutex& mutex)
     {
         int err = pthread_cond_wait(&this->cond, &mutex.mutex);
         if (BOOST_UNLIKELY(err != 0))
-            BOOST_LOG_THROW_DESCR(boost::log::system_error, "Failed to wait on a pthread condition variable");
+            BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, "Failed to wait on a pthread condition variable", (err));
     }
 
     BOOST_DELETED_FUNCTION(interprocess_condition_variable(interprocess_condition_variable const&))
@@ -200,6 +202,8 @@ struct interprocess_condition_variable
 } // namespace
 
 } // namespace aux
+
+} // namespace ipc
 
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 

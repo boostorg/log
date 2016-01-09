@@ -185,11 +185,11 @@ private:
         //! Size of an allocation block, in bytes.
         const uint32_t m_block_size;
         //! Mutex for protecting queue data structures.
-        boost::log::aux::interprocess_mutex m_mutex;
+        boost::log::ipc::aux::interprocess_mutex m_mutex;
         //! Condition variable used to block readers when the queue is empty.
-        boost::log::aux::interprocess_condition_variable m_nonempty_queue;
+        boost::log::ipc::aux::interprocess_condition_variable m_nonempty_queue;
         //! Condition variable used to block writers when the queue is full.
-        boost::log::aux::interprocess_condition_variable m_nonfull_queue;
+        boost::log::ipc::aux::interprocess_condition_variable m_nonfull_queue;
         //! The current number of allocated blocks in the queue.
         uint32_t m_size;
         //! The current writing position (allocation block index).
@@ -235,7 +235,7 @@ private:
             BOOST_LOG_MIX_HEADER_MEMBER(m_mutex);
             BOOST_LOG_MIX_HEADER_MEMBER(m_nonempty_queue);
             BOOST_LOG_MIX_HEADER_MEMBER(m_nonfull_queue);
-            BOOST_LOG_MIX_HEADER_MEMBER(m_queue_size);
+            BOOST_LOG_MIX_HEADER_MEMBER(m_size);
             BOOST_LOG_MIX_HEADER_MEMBER(m_put_pos);
             BOOST_LOG_MIX_HEADER_MEMBER(m_get_pos);
 
@@ -260,6 +260,7 @@ private:
 private:
     boost::interprocess::shared_memory_object m_shared_memory;
     boost::interprocess::mapped_region m_region;
+    const overflow_policy m_overflow_policy;
     uint32_t m_block_size_mask;
     uint32_t m_block_size_log2;
     bool m_stop;
@@ -272,10 +273,12 @@ public:
         char const* name,
         uint32_t capacity,
         uint32_t block_size,
-        permissions const& perms
+        permissions const& perms,
+        overflow_policy oflow_policy
     ) :
         m_shared_memory(boost::interprocess::create_only, name, boost::interprocess::read_write, boost::interprocess::permissions(perms.get_native())),
         m_region(),
+        m_overflow_policy(oflow_policy),
         m_block_size_mask(0u),
         m_block_size_log2(0u),
         m_stop(false)
@@ -290,10 +293,14 @@ public:
         char const* name,
         uint32_t capacity,
         uint32_t block_size,
-        permissions const& perms
+        permissions const& perms,
+        overflow_policy oflow_policy
     ) :
         m_shared_memory(boost::interprocess::open_or_create, name, boost::interprocess::read_write, boost::interprocess::permissions(perms.get_native())),
         m_region(),
+        m_overflow_policy(oflow_policy),
+        m_block_size_mask(0u),
+        m_block_size_log2(0u),
         m_stop(false)
     {
         boost::interprocess::offset_t shmem_size = 0;
@@ -307,10 +314,14 @@ public:
     implementation
     (
         open_mode::open_only_tag,
-        char const* name
+        char const* name,
+        overflow_policy oflow_policy
     ) :
         m_shared_memory(boost::interprocess::open_only, name, boost::interprocess::read_write),
         m_region(),
+        m_overflow_policy(oflow_policy),
+        m_block_size_mask(0u),
+        m_block_size_log2(0u),
         m_stop(false)
     {
         boost::interprocess::offset_t shmem_size = 0;
@@ -358,7 +369,7 @@ public:
             return aborted;
 
         lock_queue();
-        interprocess_mutex::auto_unlock unlock(hdr->m_mutex);
+        boost::log::ipc::aux::interprocess_mutex::auto_unlock unlock(hdr->m_mutex);
 
         while (true)
         {
@@ -367,6 +378,9 @@ public:
 
             if ((hdr->m_capacity - hdr->m_size) >= block_count)
                 break;
+
+            if (BOOST_UNLIKELY(m_overflow_policy == throw_on_overflow))
+                BOOST_THROW_EXCEPTION(capacity_limit_reached("Interprocess queue is full"));
 
             hdr->m_nonfull_queue.wait(hdr->m_mutex);
         }
@@ -389,7 +403,7 @@ public:
             return false;
 
         lock_queue();
-        interprocess_mutex::auto_unlock unlock(hdr->m_mutex);
+        boost::log::ipc::aux::interprocess_mutex::auto_unlock unlock(hdr->m_mutex);
 
         if (m_stop)
             return false;
@@ -409,7 +423,7 @@ public:
 
         lock_queue();
         header* const hdr = get_header();
-        interprocess_mutex::auto_unlock unlock(hdr->m_mutex);
+        boost::log::ipc::aux::interprocess_mutex::auto_unlock unlock(hdr->m_mutex);
 
         while (true)
         {
@@ -434,7 +448,7 @@ public:
 
         lock_queue();
         header* const hdr = get_header();
-        interprocess_mutex::auto_unlock unlock(hdr->m_mutex);
+        boost::log::ipc::aux::interprocess_mutex::auto_unlock unlock(hdr->m_mutex);
 
         if (hdr->m_size == 0u)
             return false;
@@ -451,7 +465,7 @@ public:
 
         lock_queue();
         header* const hdr = get_header();
-        interprocess_mutex::auto_unlock unlock(hdr->m_mutex);
+        boost::log::ipc::aux::interprocess_mutex::auto_unlock unlock(hdr->m_mutex);
 
         m_stop = true;
 
@@ -463,7 +477,7 @@ public:
     {
         lock_queue();
         header* const hdr = get_header();
-        interprocess_mutex::auto_unlock unlock(hdr->m_mutex);
+        boost::log::ipc::aux::interprocess_mutex::auto_unlock unlock(hdr->m_mutex);
         clear_queue();
     }
 
@@ -614,7 +628,7 @@ private:
             hdr->m_mutex.lock();
 #if defined(BOOST_LOG_HAS_PTHREAD_MUTEX_ROBUST)
         }
-        catch (boost::log::aux::lock_owner_dead&)
+        catch (boost::log::ipc::aux::lock_owner_dead&)
         {
             // The mutex is locked by the current thread, but the previous owner terminated without releasing the lock
             try
@@ -667,7 +681,7 @@ private:
         {
             // Write the rest of the message at the beginning of the queue
             pos -= capacity;
-            message_data += write_size;
+            message_data = static_cast< const uint8_t* >(message_data) + write_size;
             write_size = message_size - write_size;
             if (write_size > 0u)
                 std::memcpy(hdr->get_block(0u), message_data, write_size);
@@ -694,7 +708,7 @@ private:
         uint32_t message_size = block->m_size;
         uint32_t block_count = estimate_block_count(message_size);
 
-        BOOST_ASSERT(block_count < hdr->m_size)
+        BOOST_ASSERT(block_count < hdr->m_size);
 
         uint32_t read_size = (std::min)((capacity - pos) * block_size - block_header::get_header_overhead(), message_size);
         handler(state, block->get_data(), read_size);
@@ -716,14 +730,14 @@ private:
     }
 };
 
-BOOST_LOG_API void reliable_message_queue::create(char const* name, uint32_t capacity, uint32_t block_size, permissions const& perms)
+BOOST_LOG_API void reliable_message_queue::create(char const* name, uint32_t capacity, uint32_t block_size, permissions const& perms, overflow_policy oflow_policy)
 {
     BOOST_ASSERT(m_impl == NULL);
     if (!boost::log::aux::is_power_of_2(block_size))
         BOOST_THROW_EXCEPTION(std::invalid_argument("Interprocess message queue block size is not a power of 2"));
     try
     {
-        m_impl = new implementation(open_mode::create_only, name, capacity, boost::log::aux::align_size(block_size, BOOST_LOG_CPU_CACHE_LINE_SIZE), perms);
+        m_impl = new implementation(open_mode::create_only, name, capacity, boost::log::aux::align_size(block_size, BOOST_LOG_CPU_CACHE_LINE_SIZE), perms, oflow_policy);
     }
     catch (boost::exception& e)
     {
@@ -732,18 +746,18 @@ BOOST_LOG_API void reliable_message_queue::create(char const* name, uint32_t cap
     }
     catch (boost::interprocess::interprocess_exception& e)
     {
-        BOOST_THROW_EXCEPTION(boost::enable_error_info(system_error(e.what())) << boost::log::resource_name_info(name));
+        BOOST_THROW_EXCEPTION(boost::enable_error_info(system_error(boost::system::error_code(e.get_native_error(), boost::system::system_category()), e.what())) << boost::log::resource_name_info(name));
     }
 }
 
-BOOST_LOG_API void reliable_message_queue::open_or_create(char const* name, uint32_t capacity, uint32_t block_size, permissions const& perms)
+BOOST_LOG_API void reliable_message_queue::open_or_create(char const* name, uint32_t capacity, uint32_t block_size, permissions const& perms, overflow_policy oflow_policy)
 {
     BOOST_ASSERT(m_impl == NULL);
     if (!boost::log::aux::is_power_of_2(block_size))
         BOOST_THROW_EXCEPTION(std::invalid_argument("Interprocess message queue block size is not a power of 2"));
     try
     {
-        m_impl = new implementation(open_mode::open_or_create, name, capacity, boost::log::aux::align_size(block_size, BOOST_LOG_CPU_CACHE_LINE_SIZE), perms);
+        m_impl = new implementation(open_mode::open_or_create, name, capacity, boost::log::aux::align_size(block_size, BOOST_LOG_CPU_CACHE_LINE_SIZE), perms, oflow_policy);
     }
     catch (boost::exception& e)
     {
@@ -752,16 +766,16 @@ BOOST_LOG_API void reliable_message_queue::open_or_create(char const* name, uint
     }
     catch (boost::interprocess::interprocess_exception& e)
     {
-        BOOST_THROW_EXCEPTION(boost::enable_error_info(system_error(e.what())) << boost::log::resource_name_info(name));
+        BOOST_THROW_EXCEPTION(boost::enable_error_info(system_error(boost::system::error_code(e.get_native_error(), boost::system::system_category()), e.what())) << boost::log::resource_name_info(name));
     }
 }
 
-BOOST_LOG_API void reliable_message_queue::open(char const* name)
+BOOST_LOG_API void reliable_message_queue::open(char const* name, overflow_policy oflow_policy)
 {
     BOOST_ASSERT(m_impl == NULL);
     try
     {
-        m_impl = new implementation(open_mode::open_only, name);
+        m_impl = new implementation(open_mode::open_only, name, oflow_policy);
     }
     catch (boost::exception& e)
     {
@@ -770,7 +784,7 @@ BOOST_LOG_API void reliable_message_queue::open(char const* name)
     }
     catch (boost::interprocess::interprocess_exception& e)
     {
-        BOOST_THROW_EXCEPTION(boost::enable_error_info(system_error(e.what())) << boost::log::resource_name_info(name));
+        BOOST_THROW_EXCEPTION(boost::enable_error_info(system_error(boost::system::error_code(e.get_native_error(), boost::system::system_category()), e.what())) << boost::log::resource_name_info(name));
     }
 }
 
@@ -901,7 +915,7 @@ BOOST_LOG_API void reliable_message_queue::fixed_buffer_receive_handler(void* st
 {
     fixed_buffer_state* p = static_cast< fixed_buffer_state* >(state);
     if (BOOST_UNLIKELY(size > p->size))
-        BOOST_THROW_EXCEPTION(std::runtime_error("Buffer too small to receive the message"));
+        BOOST_THROW_EXCEPTION(bad_alloc("Buffer too small to receive the message"));
 
     std::memcpy(p->data, data, size);
     p->data += size;

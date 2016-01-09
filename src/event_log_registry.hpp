@@ -397,7 +397,7 @@ namespace aux {
             &hkey,
             &disposition);
         if (res != ERROR_SUCCESS)
-            BOOST_LOG_THROW_DESCR(system_error, "Could not create registry key for the event log");
+            BOOST_LOG_THROW_DESCR_PARAMS(system_error, "Could not create registry key for the event log", (res));
 
         auto_hkey_close hkey_guard(hkey);
 

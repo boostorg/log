@@ -21,6 +21,7 @@
 #include <ostream>
 #include <stdexcept>
 #include <boost/scoped_array.hpp>
+#include <boost/system/windows_error.hpp>
 #include <boost/log/exceptions.hpp>
 #include <boost/log/sinks/event_log_backend.hpp>
 #include <boost/log/sinks/event_log_constants.hpp>
@@ -155,7 +156,10 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
             module_count /= sizeof(HMODULE);
 
             if (!res)
-                BOOST_LOG_THROW_DESCR(system_error, "Could not enumerate process modules");
+            {
+                DWORD err = GetLastError();
+                BOOST_LOG_THROW_DESCR_PARAMS(system_error, "Could not enumerate process modules", (err));
+            }
         }
         while (module_count > modules.size());
         modules.resize(module_count, HMODULE(0));
@@ -166,7 +170,10 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         {
             MODULEINFO info;
             if (!GetModuleInformation(hProcess, modules[i], &info, sizeof(info)))
-                BOOST_LOG_THROW_DESCR(system_error, "Could not acquire module information");
+            {
+                DWORD err = GetLastError();
+                BOOST_LOG_THROW_DESCR_PARAMS(system_error, "Could not acquire module information", (err));
+            }
 
             if (info.lpBaseOfDll <= p && (static_cast< unsigned char* >(info.lpBaseOfDll) + info.SizeOfImage) > p)
             {
@@ -177,7 +184,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         }
 
         if (!handle)
-            BOOST_LOG_THROW_DESCR(system_error, "Could not find self module information");
+            BOOST_LOG_THROW_DESCR_PARAMS(system_error, "Could not find self module information", (boost::system::windows_error::invalid_handle));
     }
 
     //! Retrieves the full name of the current module (be that dll or exe)
@@ -195,7 +202,10 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         CharT buf[MAX_PATH];
         DWORD size = get_module_file_name(hSelfModule, buf, sizeof(buf) / sizeof(*buf));
         if (size == 0)
-            BOOST_LOG_THROW_DESCR(system_error, "Could not get module file name");
+        {
+            DWORD err = GetLastError();
+            BOOST_LOG_THROW_DESCR_PARAMS(system_error, "Could not get module file name", (err));
+        }
 
         return std::basic_string< CharT >(buf, buf + size);
     }

@@ -43,6 +43,29 @@ BOOST_LOG_API void attach_attribute_name_info(exception& e, attribute_name const
 
 } // namespace aux
 
+bad_alloc::bad_alloc(std::string const& descr) :
+    m_message(descr)
+{
+}
+
+bad_alloc::~bad_alloc() throw()
+{
+}
+
+const char* bad_alloc::what() const throw()
+{
+    return m_message.c_str();
+}
+
+capacity_limit_reached::capacity_limit_reached(std::string const& descr) :
+    bad_alloc(descr)
+{
+}
+
+capacity_limit_reached::~capacity_limit_reached() throw()
+{
+}
+
 runtime_error::runtime_error(std::string const& descr) :
     std::runtime_error(descr)
 {
@@ -257,13 +280,8 @@ void conversion_error::throw_(const char* file, std::size_t line, std::string co
     );
 }
 
-system_error::system_error() :
-    runtime_error("Underlying API operation failed")
-{
-}
-
-system_error::system_error(std::string const& descr) :
-    runtime_error(descr)
+system_error::system_error(boost::system::error_code code, std::string const& descr) :
+    boost::system::system_error(code, descr)
 {
 }
 
@@ -271,17 +289,17 @@ system_error::~system_error() throw()
 {
 }
 
-void system_error::throw_(const char* file, std::size_t line)
+void system_error::throw_(const char* file, std::size_t line, std::string const& descr, int system_error_code)
 {
-    boost::throw_exception(boost::enable_error_info(system_error())
+    boost::throw_exception(boost::enable_error_info(system_error(boost::system::error_code(system_error_code, boost::system::system_category()), descr))
         << boost::throw_file(file)
         << boost::throw_line(line)
     );
 }
 
-void system_error::throw_(const char* file, std::size_t line, std::string const& descr)
+void system_error::throw_(const char* file, std::size_t line, std::string const& descr, boost::system::error_code code)
 {
-    boost::throw_exception(boost::enable_error_info(system_error(descr))
+    boost::throw_exception(boost::enable_error_info(system_error(code, descr))
         << boost::throw_file(file)
         << boost::throw_line(line)
     );

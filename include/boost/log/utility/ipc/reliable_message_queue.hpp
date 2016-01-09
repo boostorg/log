@@ -63,6 +63,15 @@ public:
         aborted       //!< The operation has been aborted because the queue method <tt>stop()</tt> has been called
     };
 
+    //! Interprocess queue overflow policies
+    enum overflow_policy
+    {
+        //! Block the send operation when the queue is full
+        block_on_overflow,
+        //! Throw an exception when the queue is full
+        throw_on_overflow
+    };
+
 #if !defined(BOOST_LOG_DOXYGEN_PASS)
 
     BOOST_MOVABLE_BUT_NOT_COPYABLE(reliable_message_queue)
@@ -106,6 +115,7 @@ public:
      * \param capacity Maximum number of allocation blocks the queue can hold.
      * \param block_size Size in bytes of allocation block. Must be a power of 2.
      * \param perms Access permissions for the associated message queue.
+     * \param oflow_policy Queue behavior policy in case of overflow.
      */
     reliable_message_queue
     (
@@ -113,11 +123,12 @@ public:
         char const* name,
         uint32_t capacity,
         uint32_t block_size,
-        permissions const& perms = permissions()
+        permissions const& perms = permissions(),
+        overflow_policy oflow_policy = block_on_overflow
     ) :
         m_impl(NULL)
     {
-        this->create(name, capacity, block_size, perms);
+        this->create(name, capacity, block_size, perms, oflow_policy);
     }
 
     /*!
@@ -136,6 +147,7 @@ public:
      * \param capacity Maximum number of allocation blocks the queue can hold.
      * \param block_size Size in bytes of allocation block. Must be a power of 2.
      * \param perms Access permissions for the associated message queue.
+     * \param oflow_policy Queue behavior policy in case of overflow.
      */
     reliable_message_queue
     (
@@ -143,11 +155,12 @@ public:
         char const* name,
         uint32_t capacity,
         uint32_t block_size,
-        permissions const& perms = permissions()
+        permissions const& perms = permissions(),
+        overflow_policy oflow_policy = block_on_overflow
     ) :
         m_impl(NULL)
     {
-        this->open_or_create(name, capacity, block_size, perms);
+        this->open_or_create(name, capacity, block_size, perms, oflow_policy);
     }
 
     /*!
@@ -158,11 +171,12 @@ public:
      * \post <tt>is_open() == true</tt>
      *
      * \param name Name of the message queue to be associated with.
+     * \param oflow_policy Queue behavior policy in case of overflow.
      */
-    reliable_message_queue(open_mode::open_only_tag, char const* name) :
+    reliable_message_queue(open_mode::open_only_tag, char const* name, overflow_policy oflow_policy = block_on_overflow) :
         m_impl(NULL)
     {
-        this->open(name);
+        this->open(name, oflow_policy);
     }
 
     /*!
@@ -235,13 +249,15 @@ public:
      * \param capacity Maximum number of allocation blocks the queue can hold.
      * \param block_size Size in bytes of allocation block. Must be a power of 2.
      * \param perms Access permissions for the associated message queue.
+     * \param oflow_policy Queue behavior policy in case of overflow.
      */
     BOOST_LOG_API void create
     (
         char const* name,
         uint32_t capacity,
         uint32_t block_size,
-        permissions const& perms = permissions()
+        permissions const& perms = permissions(),
+        overflow_policy oflow_policy = block_on_overflow
     );
 
     /*!
@@ -261,13 +277,15 @@ public:
      * \param capacity Maximum number of allocation blocks the queue can hold.
      * \param block_size Size in bytes of allocation block. Must be a power of 2.
      * \param perms Access permissions for the associated message queue.
+     * \param oflow_policy Queue behavior policy in case of overflow.
      */
     BOOST_LOG_API void open_or_create
     (
         char const* name,
         uint32_t capacity,
         uint32_t block_size,
-        permissions const& perms = permissions()
+        permissions const& perms = permissions(),
+        overflow_policy oflow_policy = block_on_overflow
     );
 
     /*!
@@ -279,8 +297,9 @@ public:
      * \post <tt>is_open() == true</tt>
      *
      * \param name Name of the message queue to be associated with.
+     * \param oflow_policy Queue behavior policy in case of overflow.
      */
-    BOOST_LOG_API void open(char const* name);
+    BOOST_LOG_API void open(char const* name, overflow_policy oflow_policy = block_on_overflow);
 
     /*!
      * Tests whether the object is associated with any message queue.
@@ -382,10 +401,12 @@ public:
 
     /*!
      * The method sends a message to the associated message queue. When the object is in
-     * running state and the queue has no free space for the message, the method blocks.
-     * The blocking is interrupted when <tt>stop()</tt> is called, in which case the method
-     * returns \c operation_result::aborted. When the object is already in the stopped state,
-     * the method does not block but returns immediately with return value \c operation_result::aborted.
+     * running state and the queue has no free space for the message, the method either blocks
+     * or throws an exception, depending on the overflow policy that was specified on the queue
+     * opening/creation. If blocking policy is in effect, the blocking can be interrupted by
+     * calling <tt>stop()</tt>, in which case the method returns \c operation_result::aborted.
+     * When the object is already in the stopped state, the method does not block but returns
+     * immediately with return value \c operation_result::aborted.
      *
      * It is possible to send an empty message by passing \c 0 to the parameter \c message_size.
      *

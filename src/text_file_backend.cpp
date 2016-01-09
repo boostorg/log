@@ -1220,11 +1220,10 @@ BOOST_LOG_API void text_file_backend::consume(record_view const& rec, string_typ
         m_pImpl->m_File.open(m_pImpl->m_FileName, m_pImpl->m_FileOpenMode);
         if (!m_pImpl->m_File.is_open())
         {
-            filesystem_error err(
+            BOOST_THROW_EXCEPTION(filesystem_error(
                 "Failed to open file for writing",
                 m_pImpl->m_FileName,
-                system::error_code(system::errc::io_error, system::generic_category()));
-            BOOST_THROW_EXCEPTION(err);
+                system::error_code(system::errc::io_error, system::generic_category())));
         }
 
         if (!m_pImpl->m_OpenHandler.empty())

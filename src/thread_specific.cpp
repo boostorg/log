@@ -24,6 +24,7 @@
 #if defined(BOOST_THREAD_PLATFORM_WIN32)
 
 #include <windows.h>
+#include <boost/system/error_code.hpp>
 #include <boost/log/detail/header.hpp>
 
 namespace boost {
@@ -37,7 +38,7 @@ thread_specific_base::thread_specific_base()
     m_Key = TlsAlloc();
     if (BOOST_UNLIKELY(m_Key == TLS_OUT_OF_INDEXES))
     {
-        BOOST_LOG_THROW_DESCR(system_error, "TLS capacity depleted");
+        BOOST_LOG_THROW_DESCR_PARAMS(system_error, "TLS capacity depleted", (boost::system::errc::not_enough_memory));
     }
 }
 
@@ -89,7 +90,7 @@ struct pthread_key_traits
         if (BOOST_UNLIKELY(res != 0))
         {
             delete pkey;
-            BOOST_LOG_THROW_DESCR(system_error, "TLS capacity depleted");
+            BOOST_LOG_THROW_DESCR_PARAMS(system_error, "TLS capacity depleted", (res));
         }
         stg = pkey;
     }
@@ -129,7 +130,7 @@ struct pthread_key_traits< KeyT, true >
         const int res = pthread_key_create(&caster.as_key, NULL);
         if (BOOST_UNLIKELY(res != 0))
         {
-            BOOST_LOG_THROW_DESCR(system_error, "TLS capacity depleted");
+            BOOST_LOG_THROW_DESCR_PARAMS(system_error, "TLS capacity depleted", (res));
         }
         stg = caster.as_storage;
     }
@@ -167,7 +168,7 @@ struct pthread_key_traits< KeyT*, true >
         const int res = pthread_key_create(&key, NULL);
         if (BOOST_UNLIKELY(res != 0))
         {
-            BOOST_LOG_THROW_DESCR(system_error, "TLS capacity depleted");
+            BOOST_LOG_THROW_DESCR_PARAMS(system_error, "TLS capacity depleted", (res));
         }
         stg = static_cast< void* >(key);
     }
