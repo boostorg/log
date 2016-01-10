@@ -69,7 +69,9 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 #include <cstring>
 #include <pthread.h>
 #include <boost/cstdint.hpp>
+#include <boost/mpl/if.hpp>
 #include <boost/type_traits/is_integral.hpp>
+#include <boost/type_traits/is_signed.hpp>
 #include <boost/log/detail/header.hpp>
 
 namespace boost {
@@ -126,9 +128,17 @@ struct pthread_key_traits< KeyT, true, true >
     typedef KeyT pthread_key_type;
 
 #if defined(BOOST_HAS_INTPTR_T)
-    typedef uintptr_t uint_type;
+    typedef typename mpl::if_c<
+        boost::is_signed< pthread_key_type >::value,
+        intptr_t,
+        uintptr_t
+    >::type intptr_type;
 #else
-    typedef std::size_t uint_type;
+    typedef typename mpl::if_c<
+        boost::is_signed< pthread_key_type >::value,
+        std::ptrdiff_t,
+        std::size_t
+    >::type intptr_type;
 #endif
 
     static void allocate(void*& stg)
@@ -139,17 +149,17 @@ struct pthread_key_traits< KeyT, true, true >
         {
             BOOST_LOG_THROW_DESCR_PARAMS(system_error, "TLS capacity depleted", (res));
         }
-        stg = (void*)(uint_type)key;
+        stg = (void*)(intptr_type)key;
     }
 
     static void deallocate(void* stg)
     {
-        pthread_key_delete((pthread_key_type)(uint_type)stg);
+        pthread_key_delete((pthread_key_type)(intptr_type)stg);
     }
 
     static void set_value(void* stg, void* value)
     {
-        const int res = pthread_setspecific((pthread_key_type)(uint_type)stg, value);
+        const int res = pthread_setspecific((pthread_key_type)(intptr_type)stg, value);
         if (BOOST_UNLIKELY(res != 0))
         {
             BOOST_LOG_THROW_DESCR_PARAMS(system_error, "Failed to set TLS value", (res));
@@ -158,7 +168,7 @@ struct pthread_key_traits< KeyT, true, true >
 
     static void* get_value(void* stg)
     {
-        return pthread_getspecific((pthread_key_type)(uint_type)stg);
+        return pthread_getspecific((pthread_key_type)(intptr_type)stg);
     }
 };
 
