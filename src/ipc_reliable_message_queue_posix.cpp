@@ -134,6 +134,12 @@ inline BOOST_CONSTEXPR std::size_t align_size(std::size_t size, std::size_t alig
     return (size + alignment - 1u) & ~(alignment - 1u);
 }
 
+//! Returns an integer comprising the four characters
+inline BOOST_CONSTEXPR uint32_t make_fourcc(char c1, char c2, char c3, char c4) BOOST_NOEXCEPT
+{
+    return (static_cast< uint32_t >(c1) << 24) | (static_cast< uint32_t >(c2) << 16) | (static_cast< uint32_t >(c3) << 8) | static_cast< uint32_t >(c4);
+}
+
 } // namespace
 
 } // namespace aux
@@ -177,7 +183,7 @@ private:
         //! A tag value to ensure the correct binary layout of the message queue data structures. Must be placed first and always have a fixed size and alignment.
         uint32_t m_abi_tag;
         //! Padding to protect against alignment changes in Boost.Atomic. Don't use BOOST_ALIGNMENT to ensure portability.
-        uint8_t m_padding[BOOST_LOG_CPU_CACHE_LINE_SIZE - sizeof(uint32_t)];
+        unsigned char m_padding[BOOST_LOG_CPU_CACHE_LINE_SIZE - sizeof(uint32_t)];
         //! Reference counter. Also acts as a flag indicating that the queue is constructed (i.e. the queue is constructed when the counter is not 0).
         boost::atomic< uint32_t > m_ref_count;
         //! Number of allocation blocks in the queue.
@@ -212,19 +218,20 @@ private:
         //! Returns the header structure ABI tag
         static uint32_t get_abi_tag() BOOST_NOEXCEPT
         {
-            // The members in this sequence must be enumerated in the same order as they are declared in the header structure.
-            // The ABI tag is supposed change whenever a member changes size or alignment (we rely on the fact that pthread
-            // structures are already ABI-stable, so we don't check their internals).
+            // This FOURCC identifies the queue type
+            boost::log::aux::murmur3 hash(boost::log::aux::make_fourcc('r', 'e', 'l', 'q'));
 
-            header* p = NULL;
-            boost::log::aux::murmur3 hash(abi_version);
+            hash.mix(abi_version);
 
             // We will use these constants to align pointers
             hash.mix(BOOST_LOG_CPU_CACHE_LINE_SIZE);
             hash.mix(block_header::data_alignment);
 
+            // The members in the sequence below must be enumerated in the same order as they are declared in the header structure.
+            // The ABI tag is supposed change whenever a member changes size or offset from the beginning of the header.
+
 #define BOOST_LOG_MIX_HEADER_MEMBER(name)\
-            hash.mix(static_cast< uint32_t >(sizeof(p->name)));\
+            hash.mix(static_cast< uint32_t >(sizeof(((header*)NULL)->name)));\
             hash.mix(static_cast< uint32_t >(offsetof(header, name)))
 
             BOOST_LOG_MIX_HEADER_MEMBER(m_abi_tag);
@@ -681,7 +688,7 @@ private:
         {
             // Write the rest of the message at the beginning of the queue
             pos -= capacity;
-            message_data = static_cast< const uint8_t* >(message_data) + write_size;
+            message_data = static_cast< const unsigned char* >(message_data) + write_size;
             write_size = message_size - write_size;
             if (write_size > 0u)
                 std::memcpy(hdr->get_block(0u), message_data, write_size);
