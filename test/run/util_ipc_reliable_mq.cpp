@@ -14,7 +14,7 @@
  * \brief  The test verifies that \c ipc::reliable_message_queue works.
  */
 
-#define BOOST_CHECK_MODULE util_ipc_reliable_mq
+#define BOOST_TEST_MODULE util_ipc_reliable_mq
 
 #include <boost/log/utility/ipc/reliable_message_queue.hpp>
 #include <boost/log/utility/open_mode.hpp>
@@ -28,13 +28,12 @@
 #include "char_definitions.hpp"
 
 const char ipc_queue_name[] = "boost_log_test_ipc_reliable_mq";
+const unsigned int capacity = 2048;
+const unsigned int block_size = 1024;
 
 BOOST_AUTO_TEST_CASE(message_queue)
 {
     typedef boost::log::ipc::reliable_message_queue queue_t;
-
-    const unsigned int capacity = 2048;
-    const unsigned int block_size = 1024;
 
     // Default constructor.
     {
