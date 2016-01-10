@@ -922,6 +922,11 @@ BOOST_LOG_API void reliable_message_queue::fixed_buffer_receive_handler(void* st
     p->size -= size;
 }
 
+BOOST_LOG_API bool reliable_message_queue::remove(char const* name)
+{
+    return boost::interprocess::shared_memory_object::remove(name);
+}
+
 } // namespace ipc
 
 BOOST_LOG_CLOSE_NAMESPACE // namespace log

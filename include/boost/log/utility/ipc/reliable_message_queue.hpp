@@ -558,6 +558,26 @@ public:
         return do_try_receive(&reliable_message_queue::container_receive_handler< ContainerT >, &container);
     }
 
+    /*!
+     * The method removes system-wide resources, associated with the interprocess queue with the supplied name.
+     * After this call succeeds a new queue with the specified name can be created.
+     *
+     * This call can be useful to recover from an earlier process misbehavior (e.g. a crash without properly
+     * closing the message queue). In this case resources allocated for the interprocess queue may remain
+     * allocated after the last process closed the queue, which in turn may prevent creating a new queue with
+     * the same name. By calling this method before creating a queue the application can attempt to ensure
+     * it starts with a clean slate.
+     *
+     * \param name Name of the message queue to be associated with. A valid name is one
+     *             that can be used as a C++ identifier or is a keyword.
+     *             On Windows platforms, the name is used to compose kernel object names,
+     *             and you may need to add the "Global\" prefix to the name in certain cases.
+     *
+     * \return \c true if the queue resources were released, and \c false otherwise (e.g.,
+     *         when no resources were allocated).
+     */
+    static BOOST_LOG_API bool remove(char const* name);
+
 #if !defined(BOOST_LOG_DOXYGEN_PASS)
 private:
     //! Closes the message queue, if it's open
