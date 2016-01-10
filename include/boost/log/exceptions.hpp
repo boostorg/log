@@ -75,6 +75,10 @@ public:
     /*!
      * Initializing constructor. Creates an exception with the specified error message.
      */
+    explicit bad_alloc(const char* descr);
+    /*!
+     * Initializing constructor. Creates an exception with the specified error message.
+     */
     explicit bad_alloc(std::string const& descr);
     /*!
      * Destructor
@@ -94,6 +98,10 @@ class BOOST_LOG_API capacity_limit_reached :
     public bad_alloc
 {
 public:
+    /*!
+     * Initializing constructor. Creates an exception with the specified error message.
+     */
+    explicit capacity_limit_reached(const char* descr);
     /*!
      * Initializing constructor. Creates an exception with the specified error message.
      */
@@ -147,7 +155,9 @@ public:
 
 #ifndef BOOST_LOG_DOXYGEN_PASS
     static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line);
+    static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, const char* descr);
     static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, std::string const& descr);
+    static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, const char* descr, attribute_name const& name);
     static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, std::string const& descr, attribute_name const& name);
 #endif
 };
@@ -174,9 +184,13 @@ public:
 
 #ifndef BOOST_LOG_DOXYGEN_PASS
     static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line);
+    static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, const char* descr);
     static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, std::string const& descr);
+    static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, const char* descr, attribute_name const& name);
     static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, std::string const& descr, attribute_name const& name);
+    static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, const char* descr, typeindex::type_index const& type);
     static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, std::string const& descr, typeindex::type_index const& type);
+    static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, const char* descr, attribute_name const& name, typeindex::type_index const& type);
     static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, std::string const& descr, attribute_name const& name, typeindex::type_index const& type);
 #endif
 };
@@ -203,6 +217,7 @@ public:
 
 #ifndef BOOST_LOG_DOXYGEN_PASS
     static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line);
+    static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, const char* descr);
     static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, std::string const& descr);
 #endif
 };
@@ -229,8 +244,11 @@ public:
 
 #ifndef BOOST_LOG_DOXYGEN_PASS
     static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line);
+    static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, const char* descr);
     static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, std::string const& descr);
+    static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, const char* descr, std::size_t content_line);
     static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, std::string const& descr, std::size_t content_line);
+    static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, const char* descr, attribute_name const& name);
     static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, std::string const& descr, attribute_name const& name);
 #endif
 };
@@ -257,6 +275,7 @@ public:
 
 #ifndef BOOST_LOG_DOXYGEN_PASS
     static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line);
+    static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, const char* descr);
     static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, std::string const& descr);
 #endif
 };
@@ -278,7 +297,9 @@ public:
     ~system_error() throw();
 
 #ifndef BOOST_LOG_DOXYGEN_PASS
+    static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, const char* descr, int system_error_code);
     static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, std::string const& descr, int system_error_code);
+    static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, const char* descr, boost::system::error_code code);
     static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, std::string const& descr, boost::system::error_code code);
 #endif
 };
@@ -325,6 +346,7 @@ public:
 
 #ifndef BOOST_LOG_DOXYGEN_PASS
     static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line);
+    static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, const char* descr);
     static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, std::string const& descr);
 #endif
 };
@@ -351,6 +373,7 @@ public:
 
 #ifndef BOOST_LOG_DOXYGEN_PASS
     static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line);
+    static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, const char* descr);
     static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, std::string const& descr);
 #endif
 };
@@ -377,6 +400,7 @@ public:
 
 #ifndef BOOST_LOG_DOXYGEN_PASS
     static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line);
+    static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, const char* descr);
     static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, std::string const& descr);
 #endif
 };
@@ -403,6 +427,7 @@ public:
 
 #ifndef BOOST_LOG_DOXYGEN_PASS
     static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line);
+    static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, const char* descr);
     static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, std::string const& descr);
 #endif
 };

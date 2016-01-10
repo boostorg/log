@@ -43,6 +43,11 @@ BOOST_LOG_API void attach_attribute_name_info(exception& e, attribute_name const
 
 } // namespace aux
 
+bad_alloc::bad_alloc(const char* descr) :
+    m_message(descr)
+{
+}
+
 bad_alloc::bad_alloc(std::string const& descr) :
     m_message(descr)
 {
@@ -55,6 +60,11 @@ bad_alloc::~bad_alloc() throw()
 const char* bad_alloc::what() const throw()
 {
     return m_message.c_str();
+}
+
+capacity_limit_reached::capacity_limit_reached(const char* descr) :
+    bad_alloc(descr)
+{
 }
 
 capacity_limit_reached::capacity_limit_reached(std::string const& descr) :
@@ -97,11 +107,28 @@ void missing_value::throw_(const char* file, std::size_t line)
     );
 }
 
+void missing_value::throw_(const char* file, std::size_t line, const char* descr)
+{
+    boost::throw_exception(boost::enable_error_info(missing_value(descr))
+        << boost::throw_file(file)
+        << boost::throw_line(line)
+    );
+}
+
 void missing_value::throw_(const char* file, std::size_t line, std::string const& descr)
 {
     boost::throw_exception(boost::enable_error_info(missing_value(descr))
         << boost::throw_file(file)
         << boost::throw_line(line)
+    );
+}
+
+void missing_value::throw_(const char* file, std::size_t line, const char* descr, attribute_name const& name)
+{
+    boost::throw_exception(boost::enable_error_info(missing_value(descr))
+        << boost::throw_file(file)
+        << boost::throw_line(line)
+        << attribute_name_info(name)
     );
 }
 
@@ -136,11 +163,28 @@ void invalid_type::throw_(const char* file, std::size_t line)
     );
 }
 
+void invalid_type::throw_(const char* file, std::size_t line, const char* descr)
+{
+    boost::throw_exception(boost::enable_error_info(invalid_type(descr))
+        << boost::throw_file(file)
+        << boost::throw_line(line)
+    );
+}
+
 void invalid_type::throw_(const char* file, std::size_t line, std::string const& descr)
 {
     boost::throw_exception(boost::enable_error_info(invalid_type(descr))
         << boost::throw_file(file)
         << boost::throw_line(line)
+    );
+}
+
+void invalid_type::throw_(const char* file, std::size_t line, const char* descr, attribute_name const& name)
+{
+    boost::throw_exception(boost::enable_error_info(invalid_type(descr))
+        << boost::throw_file(file)
+        << boost::throw_line(line)
+        << attribute_name_info(name)
     );
 }
 
@@ -153,11 +197,30 @@ void invalid_type::throw_(const char* file, std::size_t line, std::string const&
     );
 }
 
+void invalid_type::throw_(const char* file, std::size_t line, const char* descr, typeindex::type_index const& type)
+{
+    boost::throw_exception(boost::enable_error_info(invalid_type(descr))
+        << boost::throw_file(file)
+        << boost::throw_line(line)
+        << type_info_info(type)
+    );
+}
+
 void invalid_type::throw_(const char* file, std::size_t line, std::string const& descr, typeindex::type_index const& type)
 {
     boost::throw_exception(boost::enable_error_info(invalid_type(descr))
         << boost::throw_file(file)
         << boost::throw_line(line)
+        << type_info_info(type)
+    );
+}
+
+void invalid_type::throw_(const char* file, std::size_t line, const char* descr, attribute_name const& name, typeindex::type_index const& type)
+{
+    boost::throw_exception(boost::enable_error_info(invalid_type(descr))
+        << boost::throw_file(file)
+        << boost::throw_line(line)
+        << attribute_name_info(name)
         << type_info_info(type)
     );
 }
@@ -194,6 +257,14 @@ void invalid_value::throw_(const char* file, std::size_t line)
     );
 }
 
+void invalid_value::throw_(const char* file, std::size_t line, const char* descr)
+{
+    boost::throw_exception(boost::enable_error_info(invalid_value(descr))
+        << boost::throw_file(file)
+        << boost::throw_line(line)
+    );
+}
+
 void invalid_value::throw_(const char* file, std::size_t line, std::string const& descr)
 {
     boost::throw_exception(boost::enable_error_info(invalid_value(descr))
@@ -224,11 +295,28 @@ void parse_error::throw_(const char* file, std::size_t line)
     );
 }
 
+void parse_error::throw_(const char* file, std::size_t line, const char* descr)
+{
+    boost::throw_exception(boost::enable_error_info(parse_error(descr))
+        << boost::throw_file(file)
+        << boost::throw_line(line)
+    );
+}
+
 void parse_error::throw_(const char* file, std::size_t line, std::string const& descr)
 {
     boost::throw_exception(boost::enable_error_info(parse_error(descr))
         << boost::throw_file(file)
         << boost::throw_line(line)
+    );
+}
+
+void parse_error::throw_(const char* file, std::size_t line, const char* descr, std::size_t content_line)
+{
+    boost::throw_exception(boost::enable_error_info(parse_error(descr))
+        << boost::throw_file(file)
+        << boost::throw_line(line)
+        << boost::errinfo_at_line(content_line)
     );
 }
 
@@ -238,6 +326,15 @@ void parse_error::throw_(const char* file, std::size_t line, std::string const& 
         << boost::throw_file(file)
         << boost::throw_line(line)
         << boost::errinfo_at_line(content_line)
+    );
+}
+
+void parse_error::throw_(const char* file, std::size_t line, const char* descr, attribute_name const& name)
+{
+    boost::throw_exception(boost::enable_error_info(parse_error(descr))
+        << boost::throw_file(file)
+        << boost::throw_line(line)
+        << attribute_name_info(name)
     );
 }
 
@@ -272,6 +369,14 @@ void conversion_error::throw_(const char* file, std::size_t line)
     );
 }
 
+void conversion_error::throw_(const char* file, std::size_t line, const char* descr)
+{
+    boost::throw_exception(boost::enable_error_info(conversion_error(descr))
+        << boost::throw_file(file)
+        << boost::throw_line(line)
+    );
+}
+
 void conversion_error::throw_(const char* file, std::size_t line, std::string const& descr)
 {
     boost::throw_exception(boost::enable_error_info(conversion_error(descr))
@@ -289,9 +394,25 @@ system_error::~system_error() throw()
 {
 }
 
+void system_error::throw_(const char* file, std::size_t line, const char* descr, int system_error_code)
+{
+    boost::throw_exception(boost::enable_error_info(system_error(boost::system::error_code(system_error_code, boost::system::system_category()), descr))
+        << boost::throw_file(file)
+        << boost::throw_line(line)
+    );
+}
+
 void system_error::throw_(const char* file, std::size_t line, std::string const& descr, int system_error_code)
 {
     boost::throw_exception(boost::enable_error_info(system_error(boost::system::error_code(system_error_code, boost::system::system_category()), descr))
+        << boost::throw_file(file)
+        << boost::throw_line(line)
+    );
+}
+
+void system_error::throw_(const char* file, std::size_t line, const char* descr, boost::system::error_code code)
+{
+    boost::throw_exception(boost::enable_error_info(system_error(code, descr))
         << boost::throw_file(file)
         << boost::throw_line(line)
     );
@@ -336,6 +457,14 @@ void odr_violation::throw_(const char* file, std::size_t line)
     );
 }
 
+void odr_violation::throw_(const char* file, std::size_t line, const char* descr)
+{
+    boost::throw_exception(boost::enable_error_info(odr_violation(descr))
+        << boost::throw_file(file)
+        << boost::throw_line(line)
+    );
+}
+
 void odr_violation::throw_(const char* file, std::size_t line, std::string const& descr)
 {
     boost::throw_exception(boost::enable_error_info(odr_violation(descr))
@@ -361,6 +490,14 @@ unexpected_call::~unexpected_call() throw()
 void unexpected_call::throw_(const char* file, std::size_t line)
 {
     boost::throw_exception(boost::enable_error_info(unexpected_call())
+        << boost::throw_file(file)
+        << boost::throw_line(line)
+    );
+}
+
+void unexpected_call::throw_(const char* file, std::size_t line, const char* descr)
+{
+    boost::throw_exception(boost::enable_error_info(unexpected_call(descr))
         << boost::throw_file(file)
         << boost::throw_line(line)
     );
@@ -396,6 +533,14 @@ void setup_error::throw_(const char* file, std::size_t line)
     );
 }
 
+void setup_error::throw_(const char* file, std::size_t line, const char* descr)
+{
+    boost::throw_exception(boost::enable_error_info(setup_error(descr))
+        << boost::throw_file(file)
+        << boost::throw_line(line)
+    );
+}
+
 void setup_error::throw_(const char* file, std::size_t line, std::string const& descr)
 {
     boost::throw_exception(boost::enable_error_info(setup_error(descr))
@@ -421,6 +566,14 @@ limitation_error::~limitation_error() throw()
 void limitation_error::throw_(const char* file, std::size_t line)
 {
     boost::throw_exception(boost::enable_error_info(limitation_error())
+        << boost::throw_file(file)
+        << boost::throw_line(line)
+    );
+}
+
+void limitation_error::throw_(const char* file, std::size_t line, const char* descr)
+{
+    boost::throw_exception(boost::enable_error_info(limitation_error(descr))
         << boost::throw_file(file)
         << boost::throw_line(line)
     );
