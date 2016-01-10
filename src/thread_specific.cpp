@@ -68,6 +68,8 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 #include <cstddef>
 #include <cstring>
 #include <pthread.h>
+#include <boost/cstdint.hpp>
+#include <boost/type_traits/is_integral.hpp>
 #include <boost/log/detail/header.hpp>
 
 namespace boost {
@@ -79,7 +81,7 @@ namespace aux {
 BOOST_LOG_ANONYMOUS_NAMESPACE {
 
 //! Some portability magic to detect how to store the TLS key
-template< typename KeyT, bool IsStoreableV = sizeof(KeyT) <= sizeof(void*) >
+template< typename KeyT, bool IsStoreableV = sizeof(KeyT) <= sizeof(void*), bool IsIntegralV = boost::is_integral< KeyT >::value >
 struct pthread_key_traits
 {
     typedef KeyT pthread_key_type;
@@ -119,7 +121,49 @@ struct pthread_key_traits
 };
 
 template< typename KeyT >
-struct pthread_key_traits< KeyT, true >
+struct pthread_key_traits< KeyT, true, true >
+{
+    typedef KeyT pthread_key_type;
+
+#if defined(BOOST_HAS_INTPTR_T)
+    typedef uintptr_t uint_type;
+#else
+    typedef std::size_t uint_type;
+#endif
+
+    static void allocate(void*& stg)
+    {
+        pthread_key_type key;
+        const int res = pthread_key_create(&key, NULL);
+        if (BOOST_UNLIKELY(res != 0))
+        {
+            BOOST_LOG_THROW_DESCR_PARAMS(system_error, "TLS capacity depleted", (res));
+        }
+        stg = (void*)(uint_type)key;
+    }
+
+    static void deallocate(void* stg)
+    {
+        pthread_key_delete((pthread_key_type)(uint_type)stg);
+    }
+
+    static void set_value(void* stg, void* value)
+    {
+        const int res = pthread_setspecific((pthread_key_type)(uint_type)stg, value);
+        if (BOOST_UNLIKELY(res != 0))
+        {
+            BOOST_LOG_THROW_DESCR_PARAMS(system_error, "Failed to set TLS value", (res));
+        }
+    }
+
+    static void* get_value(void* stg)
+    {
+        return pthread_getspecific((pthread_key_type)(uint_type)stg);
+    }
+};
+
+template< typename KeyT >
+struct pthread_key_traits< KeyT, true, false >
 {
     typedef KeyT pthread_key_type;
 
@@ -162,7 +206,7 @@ struct pthread_key_traits< KeyT, true >
 };
 
 template< typename KeyT >
-struct pthread_key_traits< KeyT*, true >
+struct pthread_key_traits< KeyT*, true, false >
 {
     typedef KeyT* pthread_key_type;
 
