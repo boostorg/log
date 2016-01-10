@@ -66,6 +66,7 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 #elif defined(BOOST_THREAD_PLATFORM_PTHREAD)
 
 #include <cstddef>
+#include <cstring>
 #include <pthread.h>
 #include <boost/log/detail/header.hpp>
 
@@ -104,7 +105,11 @@ struct pthread_key_traits
 
     static void set_value(void* stg, void* value)
     {
-        pthread_setspecific(*static_cast< pthread_key_type* >(stg), value);
+        const int res = pthread_setspecific(*static_cast< pthread_key_type* >(stg), value);
+        if (BOOST_UNLIKELY(res != 0))
+        {
+            BOOST_LOG_THROW_DESCR_PARAMS(system_error, "Failed to set TLS value", (res));
+        }
     }
 
     static void* get_value(void* stg)
@@ -118,42 +123,41 @@ struct pthread_key_traits< KeyT, true >
 {
     typedef KeyT pthread_key_type;
 
-    union pthread_key_caster
-    {
-        void* as_storage;
-        pthread_key_type as_key;
-    };
-
     static void allocate(void*& stg)
     {
-        pthread_key_caster caster = {};
-        const int res = pthread_key_create(&caster.as_key, NULL);
+        pthread_key_type key;
+        const int res = pthread_key_create(&key, NULL);
         if (BOOST_UNLIKELY(res != 0))
         {
             BOOST_LOG_THROW_DESCR_PARAMS(system_error, "TLS capacity depleted", (res));
         }
-        stg = caster.as_storage;
+        std::memset(&stg, 0, sizeof(stg));
+        std::memcpy(&stg, &key, sizeof(pthread_key_type));
     }
 
     static void deallocate(void* stg)
     {
-        pthread_key_caster caster;
-        caster.as_storage = stg;
-        pthread_key_delete(caster.as_key);
+        pthread_key_type key;
+        std::memcpy(&key, &stg, sizeof(pthread_key_type));
+        pthread_key_delete(key);
     }
 
     static void set_value(void* stg, void* value)
     {
-        pthread_key_caster caster;
-        caster.as_storage = stg;
-        pthread_setspecific(caster.as_key, value);
+        pthread_key_type key;
+        std::memcpy(&key, &stg, sizeof(pthread_key_type));
+        const int res = pthread_setspecific(key, value);
+        if (BOOST_UNLIKELY(res != 0))
+        {
+            BOOST_LOG_THROW_DESCR_PARAMS(system_error, "Failed to set TLS value", (res));
+        }
     }
 
     static void* get_value(void* stg)
     {
-        pthread_key_caster caster;
-        caster.as_storage = stg;
-        return pthread_getspecific(caster.as_key);
+        pthread_key_type key;
+        std::memcpy(&key, &stg, sizeof(pthread_key_type));
+        return pthread_getspecific(key);
     }
 };
 
@@ -180,7 +184,11 @@ struct pthread_key_traits< KeyT*, true >
 
     static void set_value(void* stg, void* value)
     {
-        pthread_setspecific(static_cast< pthread_key_type >(stg), value);
+        const int res = pthread_setspecific(static_cast< pthread_key_type >(stg), value);
+        if (BOOST_UNLIKELY(res != 0))
+        {
+            BOOST_LOG_THROW_DESCR_PARAMS(system_error, "Failed to set TLS value", (res));
+        }
     }
 
     static void* get_value(void* stg)
