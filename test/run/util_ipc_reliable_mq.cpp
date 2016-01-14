@@ -22,19 +22,30 @@
 #include <cstddef>
 #include <cstring>
 #include <string>
+#include <vector>
 #include <iostream>
 #include <stdexcept>
+#include <boost/cstdint.hpp>
 #include <boost/move/utility.hpp>
+#if !defined(BOOST_LOG_NO_THREADS)
+#include <algorithm>
+#include <boost/ref.hpp>
+#include <boost/atomic/fences.hpp>
+#include <boost/thread/thread.hpp>
+#include <boost/chrono/duration.hpp>
+#endif
 #include "char_definitions.hpp"
 
 const char ipc_queue_name[] = "boost_log_test_ipc_reliable_mq";
-const unsigned int capacity = 2048;
+const unsigned int capacity = 512;
 const unsigned int block_size = 1024;
+const char message1[] = "Hello, world!";
+const char message2[] = "Hello, the brand new world!";
 
-BOOST_AUTO_TEST_CASE(message_queue)
+typedef boost::log::ipc::reliable_message_queue queue_t;
+
+BOOST_AUTO_TEST_CASE(basic_functionality)
 {
-    typedef boost::log::ipc::reliable_message_queue queue_t;
-
     // Default constructor.
     {
         queue_t queue;
@@ -63,6 +74,46 @@ BOOST_AUTO_TEST_CASE(message_queue)
         BOOST_CHECK(queue.capacity() == capacity);
         BOOST_CHECK(queue.block_size() == block_size);
     }
+
+    // Creating a duplicate queue
+    try
+    {
+        queue_t queue_a(boost::log::open_mode::create_only, ipc_queue_name, capacity, block_size);
+        queue_t queue_b(boost::log::open_mode::create_only, ipc_queue_name, capacity, block_size);
+        BOOST_FAIL("Creating a duplicate queue succeeded, although it shouldn't have");
+    }
+    catch (std::exception&)
+    {
+        BOOST_TEST_PASSPOINT();
+    }
+
+    // Opening an existing queue
+    {
+        queue_t queue_a(boost::log::open_mode::create_only, ipc_queue_name, capacity, block_size);
+        BOOST_CHECK(queue_a.is_open());
+
+        queue_t queue_b(boost::log::open_mode::open_or_create, ipc_queue_name, capacity * 2u, block_size * 2u); // queue geometry differs from the existing queue
+        BOOST_CHECK(queue_b.is_open());
+        BOOST_CHECK(equal_strings(queue_b.name(), ipc_queue_name));
+        BOOST_CHECK(queue_b.capacity() == capacity);
+        BOOST_CHECK(queue_b.block_size() == block_size);
+
+        queue_t queue_c(boost::log::open_mode::open_only, ipc_queue_name);
+        BOOST_CHECK(queue_c.is_open());
+        BOOST_CHECK(equal_strings(queue_c.name(), ipc_queue_name));
+        BOOST_CHECK(queue_c.capacity() == capacity);
+        BOOST_CHECK(queue_c.block_size() == block_size);
+    }
+    // Closing a queue
+    {
+        queue_t queue_a(boost::log::open_mode::create_only, ipc_queue_name, capacity, block_size);
+        BOOST_CHECK(queue_a.is_open());
+        queue_a.close();
+        BOOST_CHECK(!queue_a.is_open());
+        // Duplicate close()
+        queue_a.close();
+        BOOST_CHECK(!queue_a.is_open());
+    }
     // Move constructor.
     {
         queue_t queue_a(boost::log::open_mode::create_only, ipc_queue_name, capacity, block_size);
@@ -86,137 +137,246 @@ BOOST_AUTO_TEST_CASE(message_queue)
     }
     // Member and non-member swaps.
     {
-        queue_t queue_a(ipc_queue_name), queue_b;
+        queue_t queue_a(boost::log::open_mode::create_only, ipc_queue_name, capacity, block_size);
         queue_a.swap(queue_a);
-        BOOST_CHECK(queue_a.name() == ipc_queue_name);
         BOOST_CHECK(queue_a.is_open());
-        BOOST_CHECK(queue_a.max_queue_size() == 10);
-        BOOST_CHECK(queue_a.max_message_size() == 1000);
-        swap(queue_a, queue_b);
-        BOOST_CHECK(queue_a.name().empty());
-        BOOST_CHECK(!queue_a.is_open());
-        BOOST_CHECK(queue_b.name() == ipc_queue_name);
-        BOOST_CHECK(queue_b.is_open());
-        BOOST_CHECK(queue_b.max_queue_size() == 10);
-        BOOST_CHECK(queue_b.max_message_size() == 1000);
-    }
-    // open().
-    {
-        // open() performs close() first if a message queue is currently associated.
-        queue_t queue_d(ipc_queue_name);
-        BOOST_CHECK(!queue_d.open(ipc_queue_name, queue_d.open_only));
-        BOOST_CHECK(queue_d.name().empty());
-        BOOST_CHECK(!queue_d.is_open());
-        BOOST_CHECK(errno == ENOENT);
-        // Trivial case.
-        queue_t queue(ipc_queue_name);
-        BOOST_CHECK(queue.open(ipc_queue_name));
-        BOOST_CHECK(queue.name() == ipc_queue_name);
-        BOOST_CHECK(queue.is_open());
-        BOOST_CHECK(queue.max_queue_size() == 10);
-        BOOST_CHECK(queue.max_message_size() == 1000);
-        BOOST_CHECK(errno == ENOENT);
-        // Close semantics.
-        BOOST_CHECK(queue.open(""));
-        BOOST_CHECK(queue.name().empty());
-        BOOST_CHECK(!queue.is_open());
-        BOOST_CHECK(errno == 0);
-        // create_only
-        BOOST_CHECK(queue.open(ipc_queue_name, queue.create_only, 1, 2));
-        BOOST_CHECK(queue.name() == ipc_queue_name);
-        BOOST_CHECK(queue.is_open());
-        BOOST_CHECK(queue.max_queue_size() == 1);
-        BOOST_CHECK(queue.max_message_size() == 2);
-        BOOST_CHECK(errno == ENOENT);
-        // open_or_create
+        BOOST_CHECK(equal_strings(queue_a.name(), ipc_queue_name));
+        BOOST_CHECK(queue_a.capacity() == capacity);
+        BOOST_CHECK(queue_a.block_size() == block_size);
+
         queue_t queue_b;
-        BOOST_CHECK(queue_b.open(ipc_queue_name));
-        BOOST_CHECK(queue_b.name() == ipc_queue_name);
+        swap(queue_a, queue_b);
+        BOOST_CHECK(!queue_a.is_open());
         BOOST_CHECK(queue_b.is_open());
-        BOOST_CHECK(queue_b.max_queue_size() == 1);
-        BOOST_CHECK(queue_b.max_message_size() == 2);
-        BOOST_CHECK(errno == EEXIST);
-        // open_only
-        queue_t queue_c;
-        BOOST_CHECK(queue_c.open(ipc_queue_name, queue_c.open_only));
-        BOOST_CHECK(queue_c.name() == ipc_queue_name);
-        BOOST_CHECK(queue_c.is_open());
-        BOOST_CHECK(queue_c.max_queue_size() == 1);
-        BOOST_CHECK(queue_c.max_message_size() == 2);
-        BOOST_CHECK(errno == EEXIST);
-        // Failure case.
-        BOOST_CHECK(!queue_c.open("x_queue", queue_c.open_only));
-        BOOST_CHECK(queue_c.name().empty());
-        BOOST_CHECK(!queue_c.is_open());
-        BOOST_CHECK(errno == ENOENT);
-    }
-    // is_open(). Done already.
-    // clear()
-    {
-        queue_t queue(ipc_queue_name, queue_t::create_only, 1, 1);
-        BOOST_CHECK(queue.is_open());
-        queue_t queue2(ipc_queue_name, queue_t::open_only);
-        BOOST_CHECK(queue2.is_open());
-        BOOST_CHECK(queue.try_send("x", 1));
-        char c = '\0';
-        unsigned message_size = 0;
-        BOOST_CHECK(queue2.try_receive(&c, 1, message_size));
-        BOOST_CHECK(c == 'x');
-        BOOST_CHECK(queue.try_send("x", 1));
-        queue2.clear();
-        BOOST_CHECK(!queue2.try_receive(&c, 1, message_size));
-    }
-    // name(). Done already.
-    // max_queue_size(). Done already.
-    // max_message_size(). Done already.
-    // stop() & reset()
-    {
-        queue_t queue(ipc_queue_name, queue_t::open_or_create, 1, 5);
-        queue.reset();
-        queue.stop();
-        // The object now never blocks.
-        BOOST_CHECK(queue.send("msg1", 4));
-        BOOST_CHECK(!queue.try_send("msg2", 4));
-        BOOST_CHECK(!queue.send("msg2", 4));
-        BOOST_CHECK(errno == EINTR);
-        char buffer[5] = {};
-        unsigned int message_size = 0;
-        BOOST_CHECK(queue.receive(buffer, 5, message_size));
-        BOOST_CHECK(!queue.try_receive(buffer, 5, message_size));
-        BOOST_CHECK(!queue.receive(buffer, 5, message_size));
-        BOOST_CHECK(errno == EINTR);
-    }
-    // close().
-    {
-        queue_t queue(ipc_queue_name);
-        queue.close();
-        BOOST_CHECK(queue.name().empty());
-        BOOST_CHECK(!queue.is_open());
-        queue.close();
-        BOOST_CHECK(queue.name().empty());
-        BOOST_CHECK(!queue.is_open());
-    }
-    // send() and receive().
-    {
-        queue_t queue(ipc_queue_name, queue_t::create_only, 1, 3);
-        BOOST_CHECK(errno == ENOENT);
-        BOOST_CHECK(queue.send("123", 3));
-        char buffer[4] = {};
-        unsigned int message_size = 0;
-        BOOST_CHECK(queue.receive(buffer, 3, message_size));
-        BOOST_CHECK(std::strcmp(buffer, "123") == 0);
-        BOOST_CHECK(message_size == 3);
-    }
-    // try_send() and try_receive()
-    {
-        queue_t queue(ipc_queue_name, queue_t::create_only, 1, 3);
-        BOOST_CHECK(queue.try_send("123", 3));
-        BOOST_CHECK(!queue.try_send("456", 3));
-        char buffer[4] = {};
-        unsigned int message_size = 0;
-        BOOST_CHECK(queue.try_receive(buffer, 3, message_size));
-        BOOST_CHECK(std::strcmp(buffer, "123") == 0);
-        BOOST_CHECK(message_size == 3);
-        BOOST_CHECK(!queue.try_receive(buffer, 3, message_size));
+        BOOST_CHECK(equal_strings(queue_b.name(), ipc_queue_name));
+        BOOST_CHECK(queue_b.capacity() == capacity);
+        BOOST_CHECK(queue_b.block_size() == block_size);
     }
 }
+
+BOOST_AUTO_TEST_CASE(message_passing)
+{
+    // try_send() and try_receive()
+    {
+        queue_t queue_a(boost::log::open_mode::create_only, ipc_queue_name, 1u, block_size);
+        queue_t queue_b(boost::log::open_mode::open_only, ipc_queue_name);
+        BOOST_CHECK(queue_a.try_send(message1, sizeof(message1) - 1u));
+        BOOST_CHECK(!queue_a.try_send(message2, sizeof(message2) - 1u));
+        char buffer[block_size] = {};
+        boost::uint32_t message_size = 0u;
+        BOOST_CHECK(queue_b.try_receive(buffer, sizeof(buffer), message_size));
+        BOOST_CHECK(message_size == sizeof(message1) - 1u);
+        BOOST_CHECK(std::memcmp(buffer, message1, message_size) == 0);
+        BOOST_CHECK(!queue_b.try_receive(buffer, sizeof(buffer), message_size));
+
+        BOOST_CHECK(queue_a.try_send(message2, sizeof(message2) - 1u));
+        std::string msg;
+        BOOST_CHECK(queue_b.try_receive(msg));
+        BOOST_CHECK(msg.size() == sizeof(message2) - 1u);
+        BOOST_CHECK(msg == message2);
+
+        BOOST_CHECK(queue_a.try_send(message2, sizeof(message2) - 1u));
+        std::vector< unsigned char > buf;
+        BOOST_CHECK(queue_b.try_receive(msg));
+        BOOST_CHECK(msg.size() == sizeof(message2) - 1u);
+        BOOST_CHECK(std::memcmp(&buf[0], message2, msg.size()) == 0);
+    }
+
+    // send() and receive() without blocking
+    {
+        queue_t queue_a(boost::log::open_mode::create_only, ipc_queue_name, 1u, block_size);
+        queue_t queue_b(boost::log::open_mode::open_only, ipc_queue_name);
+        BOOST_CHECK(queue_a.send(message1, sizeof(message1) - 1u) == queue_t::succeeded);
+        char buffer[block_size] = {};
+        boost::uint32_t message_size = 0u;
+        BOOST_CHECK(queue_b.receive(buffer, sizeof(buffer), message_size) == queue_t::succeeded);
+        BOOST_CHECK(message_size == sizeof(message1) - 1u);
+        BOOST_CHECK(std::memcmp(buffer, message1, message_size) == 0);
+
+        BOOST_CHECK(queue_a.send(message2, sizeof(message2) - 1u) == queue_t::succeeded);
+        std::string msg;
+        BOOST_CHECK(queue_b.receive(msg) == queue_t::succeeded);
+        BOOST_CHECK(msg.size() == sizeof(message2) - 1u);
+        BOOST_CHECK(msg == message2);
+
+        BOOST_CHECK(queue_a.send(message2, sizeof(message2) - 1u) == queue_t::succeeded);
+        std::vector< unsigned char > buf;
+        BOOST_CHECK(queue_b.receive(msg) == queue_t::succeeded);
+        BOOST_CHECK(msg.size() == sizeof(message2) - 1u);
+        BOOST_CHECK(std::memcmp(&buf[0], message2, msg.size()) == 0);
+    }
+
+    // clear()
+    {
+        queue_t queue_a(boost::log::open_mode::create_only, ipc_queue_name, 1u, block_size);
+        queue_t queue_b(boost::log::open_mode::open_only, ipc_queue_name);
+        BOOST_CHECK(queue_a.try_send(message1, sizeof(message1) - 1u));
+        BOOST_CHECK(!queue_a.try_send(message2, sizeof(message2) - 1u));
+
+        queue_a.clear();
+
+        BOOST_CHECK(queue_a.try_send(message2, sizeof(message2) - 1u));
+        char buffer[block_size] = {};
+        boost::uint32_t message_size = 0u;
+        BOOST_CHECK(queue_b.try_receive(buffer, sizeof(buffer), message_size));
+        BOOST_CHECK(message_size == sizeof(message2) - 1u);
+        BOOST_CHECK(std::memcmp(buffer, message2, message_size) == 0);
+    }
+}
+
+#if !defined(BOOST_LOG_NO_THREADS)
+
+namespace {
+
+const unsigned int message_count = 10000;
+
+void multithreaded_message_passing_feeding_thread(const char* message, unsigned int& failure_count)
+{
+    boost::uint32_t len = std::strlen(message);
+    queue_t queue(boost::log::open_mode::open_or_create, ipc_queue_name, capacity, block_size);
+    for (unsigned int i = 0; i < message_count; ++i)
+    {
+        failure_count += queue.send(message, len) != queue_t::succeeded;
+    }
+
+    boost::atomic_thread_fence(boost::memory_order_release);
+}
+
+} // namespace
+
+BOOST_AUTO_TEST_CASE(multithreaded_message_passing)
+{
+    unsigned int failure_count1 = 0, failure_count2 = 0;
+
+    boost::thread thread1(&multithreaded_message_passing_feeding_thread, "Thread 1", boost::ref(failure_count1));
+    boost::thread thread2(&multithreaded_message_passing_feeding_thread, "Thread 2", boost::ref(failure_count2));
+
+    BOOST_TEST_PASSPOINT();
+
+    queue_t queue(boost::log::open_mode::open_or_create, ipc_queue_name, capacity, block_size);
+    unsigned int receive_failures = 0, receive_corruptions = 0;
+    unsigned int message_count1 = 0, message_count2 = 0;
+    std::string msg;
+
+    BOOST_TEST_PASSPOINT();
+
+    for (unsigned int i = 0; i < message_count * 2u; ++i)
+    {
+        msg.clear();
+        if (queue.receive(msg) == queue_t::succeeded)
+        {
+            if (msg == "Thread 1")
+                ++message_count1;
+            else if (msg == "Thread 2")
+                ++message_count2;
+            else
+                ++receive_corruptions;
+        }
+        else
+            ++receive_failures;
+    }
+
+    BOOST_TEST_PASSPOINT();
+    thread1.join();
+
+    BOOST_TEST_PASSPOINT();
+    thread2.join();
+
+    BOOST_CHECK(failure_count1 == 0u);
+    BOOST_CHECK(message_count1 == message_count);
+    BOOST_CHECK(failure_count2 == 0u);
+    BOOST_CHECK(message_count2 == message_count);
+    BOOST_CHECK(receive_failures == 0u);
+    BOOST_CHECK(receive_corruptions == 0u);
+}
+
+namespace {
+
+void stop_reset_feeding_thread(queue_t& queue, queue_t::operation_result* results, unsigned int count)
+{
+    for (unsigned int i = 0; i < count; ++i)
+    {
+        results[i] = queue.send(message1, sizeof(message1) - 1u);
+        if (results[i] != queue_t::succeeded)
+            break;
+    }
+}
+
+void stop_reset_reading_thread(queue_t& queue, queue_t::operation_result* results, unsigned int count)
+{
+    std::string msg;
+    for (unsigned int i = 0; i < count; ++i)
+    {
+        msg.clear();
+        results[i] = queue.receive(msg);
+        if (results[i] != queue_t::succeeded)
+            break;
+    }
+}
+
+} // namespace
+
+BOOST_AUTO_TEST_CASE(stop_reset)
+{
+    queue_t feeder_queue(boost::log::open_mode::open_or_create, ipc_queue_name, 1u, block_size);
+    queue_t::operation_result feeder_results[2];
+    queue_t reader_queue(boost::log::open_mode::open_only, ipc_queue_name);
+    queue_t::operation_result reader_results[2];
+
+    std::fill_n(feeder_results, sizeof(feeder_results) / sizeof(*feeder_results), queue_t::succeeded);
+    std::fill_n(reader_results, sizeof(reader_results) / sizeof(*reader_results), queue_t::succeeded);
+
+    BOOST_TEST_PASSPOINT();
+
+    // Case 1: Let the feeder block and then we unblock it with stop()
+    boost::thread feeder_thread(&stop_reset_feeding_thread, boost::ref(feeder_queue), feeder_results, 2);
+    boost::thread reader_thread(&stop_reset_reading_thread, boost::ref(reader_queue), reader_results, 1);
+
+    BOOST_TEST_PASSPOINT();
+
+    reader_thread.join();
+    BOOST_TEST_PASSPOINT();
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
+
+    BOOST_TEST_PASSPOINT();
+
+    feeder_queue.stop();
+    BOOST_TEST_PASSPOINT();
+    feeder_thread.join();
+
+    BOOST_CHECK(feeder_results[0] == queue_t::succeeded);
+    BOOST_CHECK(feeder_results[1] == queue_t::aborted);
+    BOOST_CHECK(reader_results[0] == queue_t::succeeded);
+    BOOST_CHECK(reader_results[1] == queue_t::succeeded);
+
+    // Reset the aborted queue
+    feeder_queue.reset();
+
+    std::fill_n(feeder_results, sizeof(feeder_results) / sizeof(*feeder_results), queue_t::succeeded);
+    std::fill_n(reader_results, sizeof(reader_results) / sizeof(*reader_results), queue_t::succeeded);
+
+    BOOST_TEST_PASSPOINT();
+
+    // Case 2: Let the reader block and then we unblock it with stop()
+    boost::thread(&stop_reset_feeding_thread, boost::ref(feeder_queue), feeder_results, 1).swap(feeder_thread);
+    boost::thread(&stop_reset_reading_thread, boost::ref(reader_queue), reader_results, 2).swap(reader_thread);
+
+    BOOST_TEST_PASSPOINT();
+
+    feeder_thread.join();
+    BOOST_TEST_PASSPOINT();
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
+
+    BOOST_TEST_PASSPOINT();
+
+    reader_queue.stop();
+    BOOST_TEST_PASSPOINT();
+    reader_thread.join();
+
+    BOOST_CHECK(feeder_results[0] == queue_t::succeeded);
+    BOOST_CHECK(feeder_results[1] == queue_t::succeeded);
+    BOOST_CHECK(reader_results[0] == queue_t::succeeded);
+    BOOST_CHECK(reader_results[1] == queue_t::aborted);
+}
+
+#endif // !defined(BOOST_LOG_NO_THREADS)
