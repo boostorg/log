@@ -17,7 +17,9 @@
 #define BOOST_TEST_MODULE util_ipc_reliable_mq
 
 #include <boost/log/utility/ipc/reliable_message_queue.hpp>
+#include <boost/log/utility/permissions.hpp>
 #include <boost/log/utility/open_mode.hpp>
+#include <boost/log/exceptions.hpp>
 #include <boost/test/unit_test.hpp>
 #include <cstddef>
 #include <cstring>
@@ -204,6 +206,23 @@ BOOST_AUTO_TEST_CASE(message_passing)
         BOOST_CHECK(queue_b.receive(msg) == queue_t::succeeded);
         BOOST_CHECK(msg.size() == sizeof(message2) - 1u);
         BOOST_CHECK(std::memcmp(&buf[0], message2, msg.size()) == 0);
+    }
+
+    // send() with an exception on overflow
+    {
+        queue_t queue_a(boost::log::open_mode::create_only, ipc_queue_name, 1u, block_size, boost::log::permissions(), queue_t::throw_on_overflow);
+        BOOST_TEST_PASSPOINT();
+        BOOST_CHECK(queue_a.send(message1, sizeof(message1) - 1u) == queue_t::succeeded);
+        BOOST_TEST_PASSPOINT();
+        try
+        {
+            queue_a.send(message1, sizeof(message1) - 1u);
+            BOOST_FAIL("Owerflowing the queue succeeded, although it shouldn't have");
+        }
+        catch (boost::log::capacity_limit_reached&)
+        {
+            BOOST_TEST_PASSPOINT();
+        }
     }
 
     // clear()
