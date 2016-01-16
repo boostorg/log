@@ -73,8 +73,8 @@ BOOST_AUTO_TEST_CASE(basic_functionality)
         queue_t queue(boost::log::open_mode::create_only, ipc_queue_name, capacity, block_size);
         BOOST_CHECK(equal_strings(queue.name(), ipc_queue_name));
         BOOST_CHECK(queue.is_open());
-        BOOST_CHECK(queue.capacity() == capacity);
-        BOOST_CHECK(queue.block_size() == block_size);
+        BOOST_CHECK_EQUAL(queue.capacity(), capacity);
+        BOOST_CHECK_EQUAL(queue.block_size(), block_size);
     }
 
     // Creating a duplicate queue
@@ -97,14 +97,14 @@ BOOST_AUTO_TEST_CASE(basic_functionality)
         queue_t queue_b(boost::log::open_mode::open_or_create, ipc_queue_name, capacity * 2u, block_size * 2u); // queue geometry differs from the existing queue
         BOOST_CHECK(queue_b.is_open());
         BOOST_CHECK(equal_strings(queue_b.name(), ipc_queue_name));
-        BOOST_CHECK(queue_b.capacity() == capacity);
-        BOOST_CHECK(queue_b.block_size() == block_size);
+        BOOST_CHECK_EQUAL(queue_b.capacity(), capacity);
+        BOOST_CHECK_EQUAL(queue_b.block_size(), block_size);
 
         queue_t queue_c(boost::log::open_mode::open_only, ipc_queue_name);
         BOOST_CHECK(queue_c.is_open());
         BOOST_CHECK(equal_strings(queue_c.name(), ipc_queue_name));
-        BOOST_CHECK(queue_c.capacity() == capacity);
-        BOOST_CHECK(queue_c.block_size() == block_size);
+        BOOST_CHECK_EQUAL(queue_c.capacity(), capacity);
+        BOOST_CHECK_EQUAL(queue_c.block_size(), block_size);
     }
     // Closing a queue
     {
@@ -123,8 +123,8 @@ BOOST_AUTO_TEST_CASE(basic_functionality)
         BOOST_CHECK(!queue_a.is_open());
         BOOST_CHECK(equal_strings(queue_b.name(), ipc_queue_name));
         BOOST_CHECK(queue_b.is_open());
-        BOOST_CHECK(queue_b.capacity() == capacity);
-        BOOST_CHECK(queue_b.block_size() == block_size);
+        BOOST_CHECK_EQUAL(queue_b.capacity(), capacity);
+        BOOST_CHECK_EQUAL(queue_b.block_size(), block_size);
     }
     // Move assignment operator.
     {
@@ -134,8 +134,8 @@ BOOST_AUTO_TEST_CASE(basic_functionality)
         BOOST_CHECK(!queue_a.is_open());
         BOOST_CHECK(equal_strings(queue_b.name(), ipc_queue_name));
         BOOST_CHECK(queue_b.is_open());
-        BOOST_CHECK(queue_b.capacity() == capacity);
-        BOOST_CHECK(queue_b.block_size() == block_size);
+        BOOST_CHECK_EQUAL(queue_b.capacity(), capacity);
+        BOOST_CHECK_EQUAL(queue_b.block_size(), block_size);
     }
     // Member and non-member swaps.
     {
@@ -143,16 +143,16 @@ BOOST_AUTO_TEST_CASE(basic_functionality)
         queue_a.swap(queue_a);
         BOOST_CHECK(queue_a.is_open());
         BOOST_CHECK(equal_strings(queue_a.name(), ipc_queue_name));
-        BOOST_CHECK(queue_a.capacity() == capacity);
-        BOOST_CHECK(queue_a.block_size() == block_size);
+        BOOST_CHECK_EQUAL(queue_a.capacity(), capacity);
+        BOOST_CHECK_EQUAL(queue_a.block_size(), block_size);
 
         queue_t queue_b;
         swap(queue_a, queue_b);
         BOOST_CHECK(!queue_a.is_open());
         BOOST_CHECK(queue_b.is_open());
         BOOST_CHECK(equal_strings(queue_b.name(), ipc_queue_name));
-        BOOST_CHECK(queue_b.capacity() == capacity);
-        BOOST_CHECK(queue_b.block_size() == block_size);
+        BOOST_CHECK_EQUAL(queue_b.capacity(), capacity);
+        BOOST_CHECK_EQUAL(queue_b.block_size(), block_size);
     }
 }
 
@@ -167,21 +167,21 @@ BOOST_AUTO_TEST_CASE(message_passing)
         char buffer[block_size] = {};
         boost::uint32_t message_size = 0u;
         BOOST_CHECK(queue_b.try_receive(buffer, sizeof(buffer), message_size));
-        BOOST_CHECK(message_size == sizeof(message1) - 1u);
+        BOOST_CHECK_EQUAL(message_size, sizeof(message1) - 1u);
         BOOST_CHECK(std::memcmp(buffer, message1, message_size) == 0);
         BOOST_CHECK(!queue_b.try_receive(buffer, sizeof(buffer), message_size));
 
         BOOST_CHECK(queue_a.try_send(message2, sizeof(message2) - 1u));
         std::string msg;
         BOOST_CHECK(queue_b.try_receive(msg));
-        BOOST_CHECK(msg.size() == sizeof(message2) - 1u);
-        BOOST_CHECK(msg == message2);
+        BOOST_CHECK_EQUAL(msg.size(), sizeof(message2) - 1u);
+        BOOST_CHECK_EQUAL(msg, message2);
 
         BOOST_CHECK(queue_a.try_send(message2, sizeof(message2) - 1u));
         std::vector< unsigned char > buf;
-        BOOST_CHECK(queue_b.try_receive(msg));
-        BOOST_CHECK(msg.size() == sizeof(message2) - 1u);
-        BOOST_CHECK(std::memcmp(&buf[0], message2, msg.size()) == 0);
+        BOOST_CHECK(queue_b.try_receive(buf));
+        BOOST_CHECK_EQUAL(buf.size(), sizeof(message2) - 1u);
+        BOOST_CHECK(std::memcmp(&buf[0], message2, buf.size()) == 0);
     }
 
     // send() and receive() without blocking
@@ -192,20 +192,20 @@ BOOST_AUTO_TEST_CASE(message_passing)
         char buffer[block_size] = {};
         boost::uint32_t message_size = 0u;
         BOOST_CHECK(queue_b.receive(buffer, sizeof(buffer), message_size) == queue_t::succeeded);
-        BOOST_CHECK(message_size == sizeof(message1) - 1u);
+        BOOST_CHECK_EQUAL(message_size, sizeof(message1) - 1u);
         BOOST_CHECK(std::memcmp(buffer, message1, message_size) == 0);
 
         BOOST_CHECK(queue_a.send(message2, sizeof(message2) - 1u) == queue_t::succeeded);
         std::string msg;
         BOOST_CHECK(queue_b.receive(msg) == queue_t::succeeded);
-        BOOST_CHECK(msg.size() == sizeof(message2) - 1u);
-        BOOST_CHECK(msg == message2);
+        BOOST_CHECK_EQUAL(msg.size(), sizeof(message2) - 1u);
+        BOOST_CHECK_EQUAL(msg, message2);
 
         BOOST_CHECK(queue_a.send(message2, sizeof(message2) - 1u) == queue_t::succeeded);
         std::vector< unsigned char > buf;
-        BOOST_CHECK(queue_b.receive(msg) == queue_t::succeeded);
-        BOOST_CHECK(msg.size() == sizeof(message2) - 1u);
-        BOOST_CHECK(std::memcmp(&buf[0], message2, msg.size()) == 0);
+        BOOST_CHECK(queue_b.receive(buf) == queue_t::succeeded);
+        BOOST_CHECK_EQUAL(buf.size(), sizeof(message2) - 1u);
+        BOOST_CHECK(std::memcmp(&buf[0], message2, buf.size()) == 0);
     }
 
     // send() with an exception on overflow
@@ -225,6 +225,34 @@ BOOST_AUTO_TEST_CASE(message_passing)
         }
     }
 
+    // send() and receive() for messages larger than block_size. The message size and queue capacity below are such
+    // that the last enqueued message is expected to be split in the queue storage.
+    {
+        queue_t queue_a(boost::log::open_mode::create_only, ipc_queue_name, 5u, block_size);
+        queue_t queue_b(boost::log::open_mode::open_only, ipc_queue_name);
+
+        const unsigned int message_size = block_size * 3u / 2u;
+        std::vector< unsigned char > send_data;
+        send_data.resize(message_size);
+        for (unsigned int i = 0; i < message_size; ++i)
+            send_data[i] = static_cast< unsigned char >(i & 0xFF);
+
+        BOOST_CHECK(queue_a.send(&send_data[0], send_data.size()) == queue_t::succeeded);
+
+        for (unsigned int i = 0; i < 3; ++i)
+        {
+            BOOST_CHECK(queue_a.send(&send_data[0], send_data.size()) == queue_t::succeeded);
+
+            std::vector< unsigned char > receive_data;
+            BOOST_CHECK(queue_b.receive(receive_data) == queue_t::succeeded);
+            BOOST_CHECK_EQUAL_COLLECTIONS(send_data.begin(), send_data.end(), receive_data.begin(), receive_data.end());
+        }
+
+        std::vector< unsigned char > receive_data;
+        BOOST_CHECK(queue_b.receive(receive_data) == queue_t::succeeded);
+        BOOST_CHECK_EQUAL_COLLECTIONS(send_data.begin(), send_data.end(), receive_data.begin(), receive_data.end());
+    }
+
     // clear()
     {
         queue_t queue_a(boost::log::open_mode::create_only, ipc_queue_name, 1u, block_size);
@@ -238,7 +266,7 @@ BOOST_AUTO_TEST_CASE(message_passing)
         char buffer[block_size] = {};
         boost::uint32_t message_size = 0u;
         BOOST_CHECK(queue_b.try_receive(buffer, sizeof(buffer), message_size));
-        BOOST_CHECK(message_size == sizeof(message2) - 1u);
+        BOOST_CHECK_EQUAL(message_size, sizeof(message2) - 1u);
         BOOST_CHECK(std::memcmp(buffer, message2, message_size) == 0);
     }
 }
@@ -301,12 +329,12 @@ BOOST_AUTO_TEST_CASE(multithreaded_message_passing)
     BOOST_TEST_PASSPOINT();
     thread2.join();
 
-    BOOST_CHECK(failure_count1 == 0u);
-    BOOST_CHECK(message_count1 == message_count);
-    BOOST_CHECK(failure_count2 == 0u);
-    BOOST_CHECK(message_count2 == message_count);
-    BOOST_CHECK(receive_failures == 0u);
-    BOOST_CHECK(receive_corruptions == 0u);
+    BOOST_CHECK_EQUAL(failure_count1, 0u);
+    BOOST_CHECK_EQUAL(message_count1, message_count);
+    BOOST_CHECK_EQUAL(failure_count2, 0u);
+    BOOST_CHECK_EQUAL(message_count2, message_count);
+    BOOST_CHECK_EQUAL(receive_failures, 0u);
+    BOOST_CHECK_EQUAL(receive_corruptions, 0u);
 }
 
 namespace {
@@ -338,9 +366,9 @@ void stop_reset_reading_thread(queue_t& queue, queue_t::operation_result* result
 BOOST_AUTO_TEST_CASE(stop_reset)
 {
     queue_t feeder_queue(boost::log::open_mode::open_or_create, ipc_queue_name, 1u, block_size);
-    queue_t::operation_result feeder_results[2];
+    queue_t::operation_result feeder_results[3];
     queue_t reader_queue(boost::log::open_mode::open_only, ipc_queue_name);
-    queue_t::operation_result reader_results[2];
+    queue_t::operation_result reader_results[3];
 
     std::fill_n(feeder_results, sizeof(feeder_results) / sizeof(*feeder_results), queue_t::succeeded);
     std::fill_n(reader_results, sizeof(reader_results) / sizeof(*reader_results), queue_t::succeeded);
@@ -348,7 +376,7 @@ BOOST_AUTO_TEST_CASE(stop_reset)
     BOOST_TEST_PASSPOINT();
 
     // Case 1: Let the feeder block and then we unblock it with stop()
-    boost::thread feeder_thread(&stop_reset_feeding_thread, boost::ref(feeder_queue), feeder_results, 2);
+    boost::thread feeder_thread(&stop_reset_feeding_thread, boost::ref(feeder_queue), feeder_results, 3);
     boost::thread reader_thread(&stop_reset_reading_thread, boost::ref(reader_queue), reader_results, 1);
 
     BOOST_TEST_PASSPOINT();
@@ -363,13 +391,14 @@ BOOST_AUTO_TEST_CASE(stop_reset)
     BOOST_TEST_PASSPOINT();
     feeder_thread.join();
 
-    BOOST_CHECK(feeder_results[0] == queue_t::succeeded);
-    BOOST_CHECK(feeder_results[1] == queue_t::aborted);
-    BOOST_CHECK(reader_results[0] == queue_t::succeeded);
-    BOOST_CHECK(reader_results[1] == queue_t::succeeded);
+    BOOST_CHECK_EQUAL(feeder_results[0], queue_t::succeeded);
+    BOOST_CHECK_EQUAL(feeder_results[1], queue_t::succeeded);
+    BOOST_CHECK_EQUAL(feeder_results[2], queue_t::aborted);
+    BOOST_CHECK_EQUAL(reader_results[0], queue_t::succeeded);
 
     // Reset the aborted queue
     feeder_queue.reset();
+    feeder_queue.clear();
 
     std::fill_n(feeder_results, sizeof(feeder_results) / sizeof(*feeder_results), queue_t::succeeded);
     std::fill_n(reader_results, sizeof(reader_results) / sizeof(*reader_results), queue_t::succeeded);
@@ -392,10 +421,10 @@ BOOST_AUTO_TEST_CASE(stop_reset)
     BOOST_TEST_PASSPOINT();
     reader_thread.join();
 
-    BOOST_CHECK(feeder_results[0] == queue_t::succeeded);
-    BOOST_CHECK(feeder_results[1] == queue_t::succeeded);
-    BOOST_CHECK(reader_results[0] == queue_t::succeeded);
-    BOOST_CHECK(reader_results[1] == queue_t::aborted);
+    BOOST_CHECK_EQUAL(feeder_results[0], queue_t::succeeded);
+    BOOST_CHECK_EQUAL(feeder_results[1], queue_t::succeeded);
+    BOOST_CHECK_EQUAL(reader_results[0], queue_t::succeeded);
+    BOOST_CHECK_EQUAL(reader_results[1], queue_t::aborted);
 }
 
 #endif // !defined(BOOST_LOG_NO_THREADS)

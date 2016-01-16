@@ -715,7 +715,7 @@ private:
         uint32_t message_size = block->m_size;
         uint32_t block_count = estimate_block_count(message_size);
 
-        BOOST_ASSERT(block_count < hdr->m_size);
+        BOOST_ASSERT(block_count <= hdr->m_size);
 
         uint32_t read_size = (std::min)((capacity - pos) * block_size - block_header::get_header_overhead(), message_size);
         handler(state, block->get_data(), read_size);
