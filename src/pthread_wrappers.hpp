@@ -101,8 +101,7 @@ struct interprocess_mutex
     interprocess_mutex()
     {
         pthread_mutex_attributes attrs;
-//        int err = pthread_mutexattr_settype(&attrs.attrs, PTHREAD_MUTEX_NORMAL);
-        int err = pthread_mutexattr_settype(&attrs.attrs, PTHREAD_MUTEX_ERRORCHECK);
+        int err = pthread_mutexattr_settype(&attrs.attrs, PTHREAD_MUTEX_NORMAL);
         if (BOOST_UNLIKELY(err != 0))
             BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, "Failed to set pthread mutex type", (err));
         err = pthread_mutexattr_setpshared(&attrs.attrs, PTHREAD_PROCESS_SHARED);
