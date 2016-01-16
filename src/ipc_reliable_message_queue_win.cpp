@@ -1,171 +1,180 @@
 /*
- *                 Copyright Lingxi Li 2015.
+ *                Copyright Lingxi Li 2015.
+ *             Copyright Andrey Semashev 2016.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
  */
 /*!
- * \file   ipc_message_queue_win.hpp
+ * \file   ipc_reliable_message_queue_win.hpp
  * \author Lingxi Li
+ * \author Andrey Semashev
  * \date   28.10.2015
  *
  * \brief  This header is the Boost.Log library implementation, see the library documentation
  *         at http://www.boost.org/doc/libs/release/libs/log/doc/html/index.html.
  *
- * This file provides an IPC message queue implementation on Windows platforms,
- * and is for inclusion into text_ipc_message_queue_backend.cpp.
+ * This file provides an interprocess message queue implementation on POSIX platforms.
  */
 
-#ifndef BOOST_LOG_IPC_MESSAGE_QUEUE_WIN_HPP_INCLUDED_
-#define BOOST_LOG_IPC_MESSAGE_QUEUE_WIN_HPP_INCLUDED_
-
-#include <cerrno>
+#include <boost/log/detail/config.hpp>
 #include <cstddef>
 #include <cstring>
-#include <algorithm>
-#include <exception>
-#include <sstream>
-#include <stdexcept>
+#include <new>
 #include <string>
-#include <boost/log/sinks/text_ipc_message_queue_backend.hpp>
+#include <algorithm>
+#include <stdexcept>
+#include <boost/assert.hpp>
+#include <boost/static_assert.hpp>
+#include <boost/cstdint.hpp>
+#include <boost/atomic/atomic.hpp>
+#include <boost/atomic/capabilities.hpp>
+#include <boost/log/exceptions.hpp>
+#include <boost/log/utility/ipc/reliable_message_queue.hpp>
+#include <boost/log/support/exception.hpp>
+#include <boost/log/detail/pause.hpp>
+#include <boost/exception/info.hpp>
+#include <boost/exception/enable_error_info.hpp>
+#include <boost/interprocess/creation_tags.hpp>
+#include <boost/interprocess/exceptions.hpp>
+#include <boost/interprocess/permissions.hpp>
+#include <boost/interprocess/mapped_region.hpp>
+#include <boost/interprocess/windows_shared_memory.hpp>
 #include "win_wrapper.hpp"
+#include "murmur3.hpp"
+#include "bit_tools.hpp"
+#include <windows.h>
 #include <boost/log/detail/header.hpp>
 
-#if defined(BOOST_WINDOWS)
+#if BOOST_ATOMIC_INT32_LOCK_FREE != 2
+// 32-bit atomic ops are required to be able to place atomic<uint32_t> in the process-shared memory
+#error Boost.Log: Native 32-bit atomic operations are required but not supported by Boost.Atomic on the target platform
+#endif
 
 namespace boost {
 
 BOOST_LOG_OPEN_NAMESPACE
 
-namespace sinks {
+namespace ipc {
 
-namespace {
-
-typedef unsigned char byte;
-
-class mutex_type
-{
-public:
-    explicit mutex_type(HANDLE mutex)
-      : m_hMutex(mutex)
-      , m_fLocked(false)
-    {
-    }
-
-    DWORD lock()
-    {
-        if (m_fLocked) throw std::logic_error("Mutex already locked");
-        DWORD wait_result = aux::wait_for_single_object(m_hMutex, INFINITE);
-        m_fLocked = true;
-        return wait_result;
-    }
-
-    void unlock()
-    {
-        if (!m_fLocked) throw std::logic_error("Mutex not locked");
-        aux::release_mutex(m_hMutex);
-        m_fLocked = false;
-    }
-
-    ~mutex_type()
-    {
-        if (m_fLocked) unlock();
-    }
-
-private:
-    HANDLE m_hMutex;
-    bool m_fLocked;
-};
-
-} // unnamed namespace
-
-////////////////////////////////////////////////////////////////////////////////
-//  Permission implementation
-////////////////////////////////////////////////////////////////////////////////
-//! Permission implementation data
-template < typename CharT >
-struct basic_text_ipc_message_queue_backend< CharT >::message_queue_type::permission::implementation
-{
-    shared_ptr< SECURITY_ATTRIBUTES > m_pSecurityAttr;
-};
-
-template < typename CharT >
-BOOST_LOG_API basic_text_ipc_message_queue_backend< CharT >::message_queue_type::permission::permission()
-  : m_pImpl(new implementation())
-{
-}
-
-template < typename CharT >
-BOOST_LOG_API basic_text_ipc_message_queue_backend< CharT >::message_queue_type::permission::permission(
-  shared_ptr< SECURITY_ATTRIBUTES > p_security_attr)
-  : m_pImpl(new implementation())
-{
-    m_pImpl->m_pSecurityAttr = p_security_attr;
-}
-
-template < typename CharT >
-BOOST_LOG_API basic_text_ipc_message_queue_backend< CharT >::message_queue_type::permission::~permission()
-{
-    delete m_pImpl;
-}
-
-template < typename CharT >
-BOOST_LOG_API basic_text_ipc_message_queue_backend< CharT >::message_queue_type::permission::permission(
-  permission const& other)
-  : m_pImpl(new implementation())
-{
-    m_pImpl->m_pSecurityAttr = other.m_pImpl->m_pSecurityAttr;
-}
-
-template < typename CharT >
-BOOST_LOG_API basic_text_ipc_message_queue_backend< CharT >::message_queue_type::permission::permission(
-  BOOST_RV_REF(permission) other)
-  : m_pImpl(new implementation())
-{
-    swap(other);
-}
-
-template < typename CharT >
-BOOST_LOG_API typename basic_text_ipc_message_queue_backend< CharT >::message_queue_type::permission&
-basic_text_ipc_message_queue_backend< CharT >::message_queue_type::permission::operator =(permission const& other)
-{
-    m_pImpl->m_pSecurityAttr = other.m_pImpl->m_pSecurityAttr;
-    return *this;
-}
-
-template < typename CharT >
-BOOST_LOG_API typename basic_text_ipc_message_queue_backend< CharT >::message_queue_type::permission&
-basic_text_ipc_message_queue_backend< CharT >::message_queue_type::permission::operator =(BOOST_RV_REF(permission) other)
-{
-    if (this != &other)
-    {
-        m_pImpl->m_pSecurityAttr.reset();
-        swap(other);
-    }
-    return *this;
-}
-
-template < typename CharT >
-BOOST_LOG_API void basic_text_ipc_message_queue_backend< CharT >::message_queue_type::permission::swap(permission& other)
-{
-    std::swap(m_pImpl, other.m_pImpl);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//  Interprocess message queue implementation
-////////////////////////////////////////////////////////////////////////////////
 //! Message queue implementation data
-template < typename CharT >
-struct basic_text_ipc_message_queue_backend< CharT >::message_queue_type::implementation
+struct reliable_message_queue::implementation
 {
+private:
+    //! Header of an allocation block within the message queue. Placed at the beginning of the block within the shared memory segment.
+    struct block_header
+    {
+        // Element data alignment, in bytes
+        enum { data_alignment = 32u };
+
+        //! Size of the element data, in bytes
+        uint32_t m_size;
+
+        //! Returns the block header overhead, in bytes
+        static BOOST_CONSTEXPR uint32_t get_header_overhead() BOOST_NOEXCEPT
+        {
+            return boost::log::aux::align_size(sizeof(block_header), data_alignment);
+        }
+
+        //! Returns a pointer to the element data
+        void* get_data() const BOOST_NOEXCEPT
+        {
+            return const_cast< unsigned char* >(reinterpret_cast< const unsigned char* >(this)) + get_header_overhead();
+        }
+    };
+
+    //! Header of the message queue. Placed at the beginning of the shared memory segment.
     struct header
     {
-        unsigned int m_MaxQueueSize;
-        unsigned int m_MaxMessageSize;
-        unsigned int m_QueueSize;
-        unsigned int m_PutPos;
-        unsigned int m_GetPos;
+        // Increment this constant whenever you change the binary layout of the queue (apart from this header structure)
+        enum { abi_version = 0 };
+
+        // !!! Whenever you add/remove members in this structure, also modify get_abi_tag() function accordingly !!!
+
+        //! A tag value to ensure the correct binary layout of the message queue data structures. Must be placed first and always have a fixed size and alignment.
+        uint32_t m_abi_tag;
+        //! Padding to protect against alignment changes in Boost.Atomic. Don't use BOOST_ALIGNMENT to ensure portability.
+        unsigned char m_padding[BOOST_LOG_CPU_CACHE_LINE_SIZE - sizeof(uint32_t)];
+        //! Reference counter. Also acts as a flag indicating that the queue is constructed (i.e. the queue is constructed when the counter is not 0).
+        boost::atomic< uint32_t > m_ref_count;
+        //! Number of allocation blocks in the queue.
+        const uint32_t m_capacity;
+        //! Size of an allocation block, in bytes.
+        const uint32_t m_block_size;
+        //! The current number of allocated blocks in the queue.
+        uint32_t m_size;
+        //! The current writing position (allocation block index).
+        uint32_t m_put_pos;
+        //! The current reading position (allocation block index).
+        uint32_t m_get_pos;
+
+        header(uint32_t capacity, uint32_t block_size) :
+            m_abi_tag(get_abi_tag()),
+            m_capacity(capacity),
+            m_block_size(block_size),
+            m_size(0u),
+            m_put_pos(0u),
+            m_get_pos(0u)
+        {
+            // Must be initialized last. m_ref_count is zero-initialized initially.
+            m_ref_count.fetch_add(1u, boost::memory_order_release);
+        }
+
+        //! Returns the header structure ABI tag
+        static uint32_t get_abi_tag() BOOST_NOEXCEPT
+        {
+            // This FOURCC identifies the queue type
+            boost::log::aux::murmur3_32 hash(boost::log::aux::make_fourcc('r', 'e', 'l', 'q'));
+
+            // This FOURCC identifies the queue implementation
+            hash.mix(boost::log::aux::make_fourcc('w', 'n', 't', '5'));
+            hash.mix(abi_version);
+
+            // We will use these constants to align pointers
+            hash.mix(BOOST_LOG_CPU_CACHE_LINE_SIZE);
+            hash.mix(block_header::data_alignment);
+
+            // The members in the sequence below must be enumerated in the same order as they are declared in the header structure.
+            // The ABI tag is supposed change whenever a member changes size or offset from the beginning of the header.
+
+#define BOOST_LOG_MIX_HEADER_MEMBER(name)\
+            hash.mix(static_cast< uint32_t >(sizeof(((header*)NULL)->name)));\
+            hash.mix(static_cast< uint32_t >(offsetof(header, name)))
+
+            BOOST_LOG_MIX_HEADER_MEMBER(m_abi_tag);
+            BOOST_LOG_MIX_HEADER_MEMBER(m_padding);
+            BOOST_LOG_MIX_HEADER_MEMBER(m_ref_count);
+            BOOST_LOG_MIX_HEADER_MEMBER(m_capacity);
+            BOOST_LOG_MIX_HEADER_MEMBER(m_block_size);
+            BOOST_LOG_MIX_HEADER_MEMBER(m_size);
+            BOOST_LOG_MIX_HEADER_MEMBER(m_put_pos);
+            BOOST_LOG_MIX_HEADER_MEMBER(m_get_pos);
+
+#undef BOOST_LOG_MIX_HEADER_MEMBER
+
+            return hash.finalize();
+        }
+
+        //! Returns an element header at the specified index
+        block_header* get_block(uint32_t index) const BOOST_NOEXCEPT
+        {
+            BOOST_ASSERT(index < m_capacity);
+            unsigned char* p = const_cast< unsigned char* >(reinterpret_cast< const unsigned char* >(this)) + boost::log::aux::align_size(sizeof(header), BOOST_LOG_CPU_CACHE_LINE_SIZE);
+            p += static_cast< std::size_t >(m_block_size) * static_cast< std::size_t >(index);
+            return reinterpret_cast< block_header* >(p);
+        }
+
+        BOOST_DELETED_FUNCTION(header(header const&))
+        BOOST_DELETED_FUNCTION(header& operator=(header const&))
     };
+
+private:
+    boost::interprocess::windows_shared_memory m_shared_memory;
+    boost::interprocess::mapped_region m_region;
+    const overflow_policy m_overflow_policy;
+    uint32_t m_block_size_mask;
+    uint32_t m_block_size_log2;
+    bool m_stop;
 
     HANDLE  m_hStopEvent;
     std::string m_Name;
@@ -174,11 +183,6 @@ struct basic_text_ipc_message_queue_backend< CharT >::message_queue_type::implem
     header* m_pHeader;
     HANDLE  m_hNonEmptyQueueEvent;
     HANDLE  m_hNonFullQueueEvent;
-
-    static SECURITY_ATTRIBUTES* get_psa(permission const& perm)
-    {
-        return perm.m_pImpl->m_pSecurityAttr.get();
-    }
 
     void clear_queue()
     {
@@ -625,14 +629,10 @@ BOOST_LOG_API bool basic_text_ipc_message_queue_backend< CharT >::message_queue_
     return m_pImpl->try_receive(buffer, buffer_size, message_size);
 }
 
-} // namespace sinks
+} // namespace ipc
 
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 
-#endif // BOOST_WINDOWS
-
 #include <boost/log/detail/footer.hpp>
-
-#endif // BOOST_LOG_IPC_MESSAGE_QUEUE_WIN_HPP_INCLUDED_

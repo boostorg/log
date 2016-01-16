@@ -468,7 +468,8 @@ public:
      * \param buffer_size The size of the buffer, in bytes.
      * \param message_size Receives the size of the received message, in bytes.
      *
-     * \return \c true if the operation is successful, and \c false otherwise.
+     * \return \c operation_result::succeeded if the operation is successful, and \c operation_result::aborted
+     *         if the call was interrupted by <tt>stop()</tt>.
      */
     operation_result receive(void* buffer, uint32_t buffer_size, uint32_t& message_size)
     {
@@ -476,6 +477,35 @@ public:
         operation_result result = do_receive(&reliable_message_queue::fixed_buffer_receive_handler, &state);
         message_size = buffer_size - state.size;
         return result;
+    }
+
+    /*!
+     * The method takes a message from the associated message queue. When the object is in
+     * running state and the queue is empty, the method blocks. The blocking is interrupted
+     * when <tt>stop()</tt> is called, in which case the method returns \c operation_result::aborted.
+     * When the object is already in the stopped state and the queue is empty, the method
+     * does not block but returns immediately with return value \c operation_result::aborted.
+     *
+     * Concurrent calls to <tt>send()</tt>, <tt>try_send()</tt>, <tt>receive()</tt>,
+     * <tt>try_receive()</tt>, <tt>stop()</tt>, and <tt>clear()</tt> are allowed.
+     *
+     * \pre <tt>is_open() == true</tt>
+     *
+     * \param buffer The memory buffer to store the received message in.
+     * \param message_size Receives the size of the received message, in bytes.
+     *
+     * \return \c operation_result::succeeded if the operation is successful, and \c operation_result::aborted
+     *         if the call was interrupted by <tt>stop()</tt>.
+     */
+    template< typename ElementT, uint32_t SizeV >
+#if !defined(BOOST_LOG_DOXYGEN_PASS)
+    typename aux::enable_if_byte< ElementT, operation_result >::type
+#else
+    operation_result
+#endif
+    receive(ElementT (&buffer)[SizeV], uint32_t& message_size)
+    {
+        return receive(buffer, SizeV, message_size);
     }
 
     /*!
@@ -540,6 +570,32 @@ public:
      *
      * \pre <tt>is_open() == true</tt>
      *
+     * \param buffer The memory buffer to store the received message in.
+     * \param message_size Receives the size of the received message, in bytes.
+     *
+     * \return \c true if a message is successfully received, and \c false otherwise (e.g.,
+     *         when the queue is empty).
+     */
+    template< typename ElementT, uint32_t SizeV >
+#if !defined(BOOST_LOG_DOXYGEN_PASS)
+    typename aux::enable_if_byte< ElementT, bool >::type
+#else
+    bool
+#endif
+    try_receive(ElementT (&buffer)[SizeV], uint32_t& message_size)
+    {
+        return try_receive(buffer, SizeV, message_size);
+    }
+
+    /*!
+     * The method performs an attempt to take a message from the associated message queue. The
+     * method is non-blocking, and always returns immediately.
+     *
+     * Concurrent calls to <tt>send()</tt>, <tt>try_send()</tt>, <tt>receive()</tt>,
+     * <tt>try_receive()</tt>, <tt>stop()</tt>, and <tt>clear()</tt> are allowed.
+     *
+     * \pre <tt>is_open() == true</tt>
+     *
      * \param container The container to store the received message in. The container should have
      *                  value type of <tt>char</tt>, <tt>signed char</tt> or <tt>unsigned char</tt>
      *                  and support inserting elements at the end.
@@ -559,7 +615,8 @@ public:
     }
 
     /*!
-     * The method removes system-wide resources, associated with the interprocess queue with the supplied name.
+     * The method frees system-wide resources, associated with the interprocess queue with the supplied name.
+     * The queue referred to by the specified name must not be opened in any process at the point of this call.
      * After this call succeeds a new queue with the specified name can be created.
      *
      * This call can be useful to recover from an earlier process misbehavior (e.g. a crash without properly
@@ -568,15 +625,18 @@ public:
      * the same name. By calling this method before creating a queue the application can attempt to ensure
      * it starts with a clean slate.
      *
+     * On some platforms resources associated with the queue are automatically reclaimed by the operating system
+     * when the last process using those resources terminates (even if it terminates abnormally). On these
+     * platforms this call may be a no-op. However, portable code should still call this method at appropriate
+     * places to ensure compatibility with other platforms and future library versions, which may change implementation
+     * of the queue.
+     *
      * \param name Name of the message queue to be associated with. A valid name is one
      *             that can be used as a C++ identifier or is a keyword.
      *             On Windows platforms, the name is used to compose kernel object names,
      *             and you may need to add the "Global\" prefix to the name in certain cases.
-     *
-     * \return \c true if the queue resources were released, and \c false otherwise (e.g.,
-     *         when no resources were allocated).
      */
-    static BOOST_LOG_API bool remove(char const* name);
+    static BOOST_LOG_API void remove(const char* name);
 
 #if !defined(BOOST_LOG_DOXYGEN_PASS)
 private:

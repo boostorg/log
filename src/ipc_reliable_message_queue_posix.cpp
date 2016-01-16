@@ -23,7 +23,6 @@
 #include <cstring>
 #include <new>
 #include <string>
-#include <exception>
 #include <stdexcept>
 #include <algorithm>
 #include <unistd.h>
@@ -51,9 +50,9 @@
 #include <boost/interprocess/permissions.hpp>
 #include <boost/interprocess/mapped_region.hpp>
 #include <boost/interprocess/shared_memory_object.hpp>
-#include <boost/interprocess/sync/scoped_lock.hpp>
-#include <boost/type_traits/declval.hpp>
 #include "pthread_wrappers.hpp"
+#include "murmur3.hpp"
+#include "bit_tools.hpp"
 #include <boost/log/detail/header.hpp>
 
 #if BOOST_ATOMIC_INT32_LOCK_FREE != 2
@@ -64,85 +63,6 @@
 namespace boost {
 
 BOOST_LOG_OPEN_NAMESPACE
-
-namespace aux {
-
-BOOST_LOG_ANONYMOUS_NAMESPACE {
-
-//! 32-bit MurmurHash3 algorithm implementation (https://en.wikipedia.org/wiki/MurmurHash)
-class murmur3
-{
-private:
-    uint32_t m_state;
-    uint32_t m_len;
-
-    static BOOST_CONSTEXPR_OR_CONST uint32_t c1 = 0xcc9e2d51;
-    static BOOST_CONSTEXPR_OR_CONST uint32_t c2 = 0x1b873593;
-    static BOOST_CONSTEXPR_OR_CONST uint32_t r1 = 15;
-    static BOOST_CONSTEXPR_OR_CONST uint32_t r2 = 13;
-    static BOOST_CONSTEXPR_OR_CONST uint32_t m = 5;
-    static BOOST_CONSTEXPR_OR_CONST uint32_t n = 0xe6546b64;
-
-public:
-    explicit BOOST_CONSTEXPR murmur3(uint32_t seed) BOOST_NOEXCEPT : m_state(seed), m_len(0u)
-    {
-    }
-
-    //! Mixing stage of the 32-bit MurmurHash3 algorithm
-    void mix(uint32_t value) BOOST_NOEXCEPT
-    {
-        value *= c1;
-        value = (value << r1) | (value >> (32u - r1));
-        value *= c2;
-
-        uint32_t h = m_state ^ value;
-        m_state = ((h << r2) | (h >> (32u - r2))) * m + n;
-        m_len += 4u;
-    }
-
-    //! Finalization stage of the 32-bit MurmurHash3 algorithm
-    uint32_t finalize() BOOST_NOEXCEPT
-    {
-        uint32_t h = m_state ^ m_len;
-        h ^= h >> 16u;
-        h *= 0x85ebca6bu;
-        h ^= h >> 13u;
-        h *= 0xc2b2ae35u;
-        h ^= h >> 16u;
-        m_state = h;
-        return h;
-    }
-};
-
-BOOST_CONSTEXPR_OR_CONST uint32_t murmur3::c1;
-BOOST_CONSTEXPR_OR_CONST uint32_t murmur3::c2;
-BOOST_CONSTEXPR_OR_CONST uint32_t murmur3::r1;
-BOOST_CONSTEXPR_OR_CONST uint32_t murmur3::r2;
-BOOST_CONSTEXPR_OR_CONST uint32_t murmur3::m;
-BOOST_CONSTEXPR_OR_CONST uint32_t murmur3::n;
-
-//! Checks that the integer is a power of 2.
-template< typename T >
-inline BOOST_CONSTEXPR bool is_power_of_2(T n) BOOST_NOEXCEPT
-{
-    return n != (T)0 && (n & (n - (T)1)) == (T)0;
-}
-
-//! Aligns the \a size argument up to me an integer multiple of \a alignment, which must be a power of 2.
-inline BOOST_CONSTEXPR std::size_t align_size(std::size_t size, std::size_t alignment) BOOST_NOEXCEPT
-{
-    return (size + alignment - 1u) & ~(alignment - 1u);
-}
-
-//! Returns an integer comprising the four characters
-inline BOOST_CONSTEXPR uint32_t make_fourcc(char c1, char c2, char c3, char c4) BOOST_NOEXCEPT
-{
-    return (static_cast< uint32_t >(c1) << 24) | (static_cast< uint32_t >(c2) << 16) | (static_cast< uint32_t >(c3) << 8) | static_cast< uint32_t >(c4);
-}
-
-} // namespace
-
-} // namespace aux
 
 namespace ipc {
 
@@ -219,8 +139,10 @@ private:
         static uint32_t get_abi_tag() BOOST_NOEXCEPT
         {
             // This FOURCC identifies the queue type
-            boost::log::aux::murmur3 hash(boost::log::aux::make_fourcc('r', 'e', 'l', 'q'));
+            boost::log::aux::murmur3_32 hash(boost::log::aux::make_fourcc('r', 'e', 'l', 'q'));
 
+            // This FOURCC identifies the queue implementation
+            hash.mix(boost::log::aux::make_fourcc('p', 't', 'h', 'r'));
             hash.mix(abi_version);
 
             // We will use these constants to align pointers
@@ -929,9 +851,9 @@ BOOST_LOG_API void reliable_message_queue::fixed_buffer_receive_handler(void* st
     p->size -= size;
 }
 
-BOOST_LOG_API bool reliable_message_queue::remove(char const* name)
+BOOST_LOG_API void reliable_message_queue::remove(const char* name)
 {
-    return boost::interprocess::shared_memory_object::remove(name);
+    boost::interprocess::shared_memory_object::remove(name);
 }
 
 } // namespace ipc
