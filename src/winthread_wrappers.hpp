@@ -24,7 +24,7 @@
 #include <boost/detail/winapi/wait.hpp>
 #include <boost/detail/winapi/dll.hpp>
 #include <boost/detail/winapi/time.hpp>
-#include <boost/detail/winapi/GetLastError.hpp>
+#include <boost/detail/winapi/get_last_error.hpp>
 #include <windows.h> // for error codes
 #include <cstddef>
 #include <limits>

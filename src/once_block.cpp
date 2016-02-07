@@ -25,11 +25,11 @@
 #if defined(BOOST_THREAD_PLATFORM_WIN32)
 
 #include <boost/detail/winapi/wait.hpp> // INFINITE
-#include <boost/detail/winapi/srw_lock.hpp>
-#include <boost/detail/winapi/condition_variable.hpp>
 
 #if BOOST_USE_WINAPI_VERSION >= BOOST_WINAPI_VERSION_WIN6
 
+#include <boost/detail/winapi/srw_lock.hpp>
+#include <boost/detail/winapi/condition_variable.hpp>
 #include <boost/log/detail/header.hpp>
 
 namespace boost {
@@ -110,7 +110,6 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 #include <cstdlib> // atexit
 #include <boost/detail/interlocked.hpp>
 #include <boost/detail/winapi/basic_types.hpp>
-#include <boost/detail/winapi/wait.hpp> // INFINITE
 #include <boost/detail/winapi/dll.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/locks.hpp>
