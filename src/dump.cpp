@@ -157,7 +157,7 @@ struct function_pointer_initializer
                             : "c" (0)
                     );
                     mmstate = (eax & 6U) == 6U;
-#elif defined(_MSC_VER)
+#elif defined(BOOST_WINDOWS)
                     // MSVC does not have an intrinsic for xgetbv, we have to query OS
                     boost::detail::winapi::HMODULE_ hKernel32 = boost::detail::winapi::GetModuleHandleW(L"kernel32.dll");
                     if (hKernel32)
@@ -170,8 +170,6 @@ struct function_pointer_initializer
                             mmstate = get_enabled_extended_features(6u) == 6u;
                         }
                     }
-#else
-#error Boost.Log: Unexpected compiler
 #endif
 
                     if (mmstate)
