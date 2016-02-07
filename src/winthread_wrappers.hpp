@@ -29,6 +29,7 @@
 #include <cstddef>
 #include <limits>
 #include <string>
+#include <utility>
 #include <boost/assert.hpp>
 #include <boost/throw_exception.hpp>
 #include <boost/checked_delete.hpp>
@@ -41,11 +42,19 @@
 #include <boost/intrusive/list_hook.hpp>
 #include <boost/log/exceptions.hpp>
 #include <boost/log/utility/permissions.hpp>
+#include "unique_ptr.hpp"
 #include <boost/log/detail/header.hpp>
 
 namespace boost {
 
 BOOST_LOG_OPEN_NAMESPACE
+
+namespace aux {
+
+//! Hex character table, defined in dump.cpp
+extern const char g_hex_char_table[2][16];
+
+} // namespace aux
 
 namespace ipc {
 
@@ -186,6 +195,13 @@ public:
 
     boost::detail::winapi::HANDLE_ get() const BOOST_NOEXCEPT { return m_handle; }
 
+    void swap(auto_handle& that) BOOST_NOEXCEPT
+    {
+        boost::detail::winapi::HANDLE_ h = m_handle;
+        m_handle = that.m_handle;
+        that.m_handle = h;
+    }
+
     BOOST_DELETED_FUNCTION(auto_handle(auto_handle const&))
     BOOST_DELETED_FUNCTION(auto_handle& operator=(auto_handle const&))
 };
@@ -197,7 +213,7 @@ private:
     auto_handle m_event;
 
 public:
-    void init(const wchar_t* name, bool manual_reset, permissions const& perms = permissions())
+    void create_or_open(const wchar_t* name, bool manual_reset, permissions const& perms = permissions())
     {
 #if BOOST_USE_WINAPI_VERSION >= BOOST_WINAPI_VERSION_WIN6
         boost::detail::winapi::HANDLE_ h = boost::detail::winapi::CreateEventExW
@@ -221,17 +237,25 @@ public:
             boost::detail::winapi::DWORD_ err = boost::detail::winapi::GetLastError();
             if (BOOST_LIKELY(err == ERROR_ALREADY_EXISTS))
             {
-                h = boost::detail::winapi::OpenEventW(boost::detail::winapi::SYNCHRONIZE_ | boost::detail::winapi::EVENT_MODIFY_STATE_, false, name);
-                if (BOOST_UNLIKELY(h == NULL))
-                {
-                    err = boost::detail::winapi::GetLastError();
-                    BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, "Failed to open an interprocess event object", (err));
-                }
+                open(name);
+                return;
             }
             else
             {
                 BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, "Failed to create an interprocess event object", (err));
             }
+        }
+
+        m_event.init(h);
+    }
+
+    void open(const wchar_t* name)
+    {
+        boost::detail::winapi::HANDLE_ h = boost::detail::winapi::OpenEventW(boost::detail::winapi::SYNCHRONIZE_ | boost::detail::winapi::EVENT_MODIFY_STATE_, false, name);
+        if (BOOST_UNLIKELY(h == NULL))
+        {
+            err = boost::detail::winapi::GetLastError();
+            BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, "Failed to open an interprocess event object", (err));
         }
 
         m_event.init(h);
@@ -289,6 +313,11 @@ public:
 
         return true;
     }
+
+    void swap(interprocess_event& that) BOOST_NOEXCEPT
+    {
+        m_event.swap(that.m_event);
+    }
 };
 
 //! Interprocess semaphore object
@@ -311,7 +340,7 @@ private:
     static nt_query_semaphore_t nt_query_semaphore;
 
 public:
-    void init(const wchar_t* name, permissions const& perms = permissions())
+    void create_or_open(const wchar_t* name, permissions const& perms = permissions())
     {
 #if BOOST_USE_WINAPI_VERSION >= BOOST_WINAPI_VERSION_WIN6
         boost::detail::winapi::HANDLE_ h = boost::detail::winapi::CreateSemaphoreExW
@@ -337,17 +366,25 @@ public:
             boost::detail::winapi::DWORD_ err = boost::detail::winapi::GetLastError();
             if (BOOST_LIKELY(err == ERROR_ALREADY_EXISTS))
             {
-                h = boost::detail::winapi::OpenSemaphoreW(boost::detail::winapi::SYNCHRONIZE_ | boost::detail::winapi::SEMAPHORE_MODIFY_STATE_, false, name);
-                if (BOOST_UNLIKELY(h == NULL))
-                {
-                    err = boost::detail::winapi::GetLastError();
-                    BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, "Failed to open an interprocess semaphore object", (err));
-                }
+                open(name);
+                return;
             }
             else
             {
                 BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, "Failed to create an interprocess semaphore object", (err));
             }
+        }
+
+        m_sem.init(h);
+    }
+
+    void open(const wchar_t* name)
+    {
+        boost::detail::winapi::HANDLE_ h = boost::detail::winapi::OpenSemaphoreW(boost::detail::winapi::SYNCHRONIZE_ | boost::detail::winapi::SEMAPHORE_MODIFY_STATE_, false, name);
+        if (BOOST_UNLIKELY(h == NULL))
+        {
+            err = boost::detail::winapi::GetLastError();
+            BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, "Failed to open an interprocess semaphore object", (err));
         }
 
         m_sem.init(h);
@@ -397,6 +434,11 @@ public:
         }
 
         return true;
+    }
+
+    void swap(interprocess_semaphore& that) BOOST_NOEXCEPT
+    {
+        m_sem.swap(that.m_sem);
     }
 
 private:
@@ -532,7 +574,7 @@ public:
 
     void init(const wchar_t* name, shared_state* shared, permissions const& perms = permissions())
     {
-        m_event.init(name, false, perms);
+        m_event.create_or_open(name, false, perms);
         m_shared_state = shared;
     }
 
@@ -655,6 +697,25 @@ private:
     }
 };
 
+//! A simple clock that corresponds to GetTickCount/GetTickCount64 timeline
+struct tick_count_clock
+{
+#if BOOST_USE_WINAPI_VERSION >= BOOST_WINAPI_VERSION_WIN6
+    typedef boost::detail::winapi::ULONGLONG_ time_point;
+#else
+    typedef boost::detail::winapi::DWORD_ time_point;
+#endif
+
+    static time_point now() BOOST_NOEXCEPT
+    {
+#if BOOST_USE_WINAPI_VERSION >= BOOST_WINAPI_VERSION_WIN6
+        return boost::detail::winapi::GetTickCount64();
+#else
+        return boost::detail::winapi::GetTickCount();
+#endif
+    }
+};
+
 //! Interprocess condition variable (semaphore-based)
 class interprocess_condition_variable
 {
@@ -695,17 +756,28 @@ private:
 
         //! The semaphore
         interprocess_semaphore m_semaphore;
-        //! Timestamp of the moment when the semaphore was seen with a zero counter last time. Corresponds fo the \c GetTickCount/GetTickCount64 timeline, in milliseconds since epoch.
-#if BOOST_USE_WINAPI_VERSION >= BOOST_WINAPI_VERSION_WIN6
-        boost::detail::winapi::ULONGLONG_ m_last_seen_zero;
-#else
-        boost::detail::winapi::DWORD_ m_last_seen_zero;
-#endif
+        //! Timestamp of the moment when the semaphore was checked for zero count and it was not zero. In milliseconds since epoch.
+        tick_count_clock::time_point m_last_check_for_zero;
+        //! The flag indicates that the semaphore has been checked for zero count and it was not zero
+        bool m_checked_for_zero;
         //! The semaphore id
         const uint32_t m_id;
 
-        explicit semaphore_info(uint32_t id) BOOST_NOEXCEPT : m_last_seen_zero(0u), m_id(id)
+        explicit semaphore_info(uint32_t id) BOOST_NOEXCEPT : m_last_check_for_zero(0u), m_id(id)
         {
+        }
+
+        //! Checks if the semaphore is in 'non-zero' state for too long
+        bool check_non_zero_timeout(tick_count_clock::time_point now) BOOST_NOEXCEPT
+        {
+            if (!m_checked_for_zero)
+            {
+                m_last_check_for_zero = now;
+                m_checked_for_zero = true;
+                return false;
+            }
+
+            return (now - m_last_check_for_zero) >= 2000u;
         }
 
         BOOST_DELETED_FUNCTION(semaphore_info(semaphore_info const&))
@@ -730,11 +802,14 @@ public:
     {
         //! Number of waiters blocked on the semaphore if >0, 0 if no threads are blocked, <0 when the blocked threads were signalled
         int32_t m_waiters;
+        //! The semaphore generation
+        uint32_t m_generation;
         //! Id of the semaphore which is used to block threads on
         uint32_t m_semaphore_id;
 
         shared_state() BOOST_NOEXCEPT :
             m_waiters(0),
+            m_generation(0u),
             m_semaphore_id(0u)
         {
         }
@@ -745,6 +820,7 @@ private:
     semaphore_info_set m_semaphore_info_set;
     semaphore_info* m_current_semaphore;
     std::wstring m_semaphore_name;
+    permissions m_perms;
     shared_state* m_shared_state;
     uint32_t m_next_semaphore_id;
 
@@ -761,8 +837,14 @@ public:
 
     void init(const wchar_t* name, shared_state* shared, permissions const& perms = permissions())
     {
-        m_event.init(name, true, perms);
+        m_perms = perms;
         m_shared_state = shared;
+
+        m_semaphore_name = name;
+        // Reserve space for generate_semaphore_name()
+        m_semaphore_name.append(L".sem00000000");
+
+        m_current_semaphore = get_semaphore(m_shared_state->m_semaphore_id);
     }
 
     void notify_all()
@@ -786,6 +868,7 @@ public:
         {
             // We need to select a new semaphore to block on
             m_current_semaphore = get_unused_semaphore();
+            ++m_shared_state->m_generation;
             m_shared_state->m_semaphore_id = m_current_semaphore->m_id;
             waiters = 0;
         }
@@ -797,6 +880,7 @@ public:
         }
 
         m_shared_state->m_waiters = waiters + 1;
+        const uint32_t generation = m_shared_state->m_generation;
         semaphore_info* const sem_info = m_current_semaphore;
 
         interprocess_mutex* const mutex = lock.disengage();
@@ -808,7 +892,7 @@ public:
         mutex->lock();
         lock.engage(*mutex);
 
-        if (!result && m_shared_state->m_waiters > 0)
+        if (!result && generation == m_shared_state->m_generation && m_shared_state->m_waiters > 0)
             --m_shared_state->m_waiters;
 
         return result;
@@ -821,18 +905,146 @@ private:
     //! Finds or opens a semaphore with the specified id
     semaphore_info* get_semaphore(uint32_t id)
     {
-        semaphore_info_set::iterator it = m_semaphore_info_set.find(id, semaphore_info::order_by_id());
-        if (it == m_semaphore_info_set.end())
+        semaphore_info_set::insert_commit_data insert_state;
+        std::pair< semaphore_info_set::iterator, bool > res = m_semaphore_info_set.insert_check(id, semaphore_info::order_by_id(), insert_state);
+        if (res.second)
         {
-            // We need to open the semaphore
+            // We need to open the semaphore. It is possible that the semaphore does not exist because all processes that had it opened terminated.
+            // Because of this we also attempt to create it.
+            boost::log::aux::unique_ptr< semaphore_info > p(new semaphore_info(id));
+            generate_semaphore_name(id);
+            p->m_semaphore.create_or_open(m_semaphore_name.c_str(), m_perms);
+
+            res.first = m_semaphore_info_set.insert_commit(*p, insert_state);
+            m_semaphore_info_list.push_back(*p);
+            p.release();
+        }
+        else
+        {
+            // Move the semaphore to the end of the list so that the next time we are less likely to use it
+            semaphore_info& info = *res.first;
+            m_semaphore_info_list.erase(m_semaphore_info_list.iterator_to(info));
+            m_semaphore_info_list.push_back(info);
         }
 
-        return &*it;
+        return &*res.first;
     }
 
     //! Finds or creates a semaphore with zero counter
     semaphore_info* get_unused_semaphore()
     {
+        // Be optimistic, check the current semaphore first
+        if (m_current_semaphore && m_current_semaphore->m_semaphore.is_zero_count())
+        {
+            m_current_semaphore->update_last_seen_zero_time();
+            mark_unused(*m_current_semaphore);
+            return m_current_semaphore;
+        }
+
+        const tick_count_clock::time_point now = tick_count_clock::now();
+
+        semaphore_info_list::iterator it = m_semaphore_info_list.begin(), end = m_semaphore_info_list.end();
+        while (it != end)
+        {
+            if (is_overflow_less(m_next_semaphore_id, it->m_semaphore_id) || m_next_semaphore_id == it->m_semaphore_id)
+                m_next_semaphore_id == it->m_semaphore_id + 1u;
+
+            if (it->m_semaphore.is_zero_count())
+            {
+                semaphore_info& info = *it;
+                mark_unused(info);
+                return &info;
+            }
+            else if (it->check_non_zero_timeout(now))
+            {
+                // The semaphore is non-zero for too long. A blocked process must have crashed. Close it.
+                m_semaphore_info_set.erase(m_semaphore_info_set.iterator_to(*it));
+                m_semaphore_info_list.erase_and_dispose(it++, boost::checked_deleter< semaphore_info >());
+            }
+            else
+            {
+                ++it;
+            }
+        }
+
+        // No semaphore found, create a new one
+        for (uint32_t semaphore_id = m_next_semaphore_id, semaphore_id_end = semaphore_id - 1u; semaphore_id != semaphore_id_end; ++semaphore_id)
+        {
+            interprocess_semaphore sem;
+            try
+            {
+                generate_semaphore_name(semaphore_id);
+                sem.create_or_open(m_semaphore_name.c_str(), m_perm);
+                if (!sem.is_zero_count())
+                    continue;
+            }
+            catch (...)
+            {
+                // Ignore errors, try the next one
+                continue;
+            }
+
+            semaphore_info* p = NULL;
+            semaphore_info_set::insert_commit_data insert_state;
+            std::pair< semaphore_info_set::iterator, bool > res = m_semaphore_info_set.insert_check(semaphore_id, semaphore_info::order_by_id(), insert_state);
+            if (res.second)
+            {
+                p = new semaphore_info(semaphore_id);
+                p->m_semaphore.swap(sem);
+
+                res.first = m_semaphore_info_set.insert_commit(*p, insert_state);
+                m_semaphore_info_list.push_back(*p);
+            }
+            else
+            {
+                // Some of our currently open semaphores must have been released by another thread
+                p = &*res.first;
+                mark_unused(*p);
+            }
+
+            m_next_semaphore_id = semaphore_id + 1u;
+
+            return p;
+        }
+
+        BOOST_LOG_THROW_DESCR(limitation_error, "Too many semaphores are actively used for an interprocess condition variable");
+        BOOST_LOG_UNREACHABLE_RETURN(NULL);
+    }
+
+    //! Marks the semaphore info as unused and moves to the end of list
+    void mark_unused(semaphore_info& info) BOOST_NOEXCEPT
+    {
+        // Restart the timeout for non-zero state next time we search for an unused semaphore
+        info.m_checked_for_zero = false;
+        // Move to the end of the list so that we consider this semaphore last
+        m_semaphore_info_list.erase(m_semaphore_info_list.iterator_to(info));
+        m_semaphore_info_list.push_back(info);
+    }
+
+    //! Generates semaphore name according to id
+    void generate_semaphore_name(uint32_t id) BOOST_NOEXCEPT
+    {
+        // Note: avoid anything that involves locale to make semaphore names as stable as possible
+        BOOST_ASSERT(m_semaphore_name.size() >= 8u);
+
+        wchar_t* p = &m_semaphore_name[m_semaphore_name.size() - 8u];
+        *p++ = boost::log::aux::g_hex_char_table[0][id >> 28];
+        *p++ = boost::log::aux::g_hex_char_table[0][(id >> 24) & 0x0000000Fu];
+
+        *p++ = boost::log::aux::g_hex_char_table[0][(id >> 20) & 0x0000000Fu];
+        *p++ = boost::log::aux::g_hex_char_table[0][(id >> 16) & 0x0000000Fu];
+
+        *p++ = boost::log::aux::g_hex_char_table[0][(id >> 12) & 0x0000000Fu];
+        *p++ = boost::log::aux::g_hex_char_table[0][(id >> 8) & 0x0000000Fu];
+
+        *p++ = boost::log::aux::g_hex_char_table[0][(id >> 4) & 0x0000000Fu];
+        *p = boost::log::aux::g_hex_char_table[0][id & 0x0000000Fu];
+    }
+
+    //! Returns \c true if \a left is less than \a right considering possible integer overflow
+    static bool is_overflow_less(uint32_t left, uint32_t right) BOOST_NOEXCEPT
+    {
+        return ((left - right) & 0x80000000u) != 0u;
     }
 };
 

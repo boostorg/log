@@ -40,7 +40,7 @@
 #include <boost/interprocess/permissions.hpp>
 #include <boost/interprocess/mapped_region.hpp>
 #include <boost/interprocess/windows_shared_memory.hpp>
-#include "win_wrapper.hpp"
+#include "winthread_wrappers.hpp"
 #include "murmur3.hpp"
 #include "bit_tools.hpp"
 #include <windows.h>
@@ -95,12 +95,16 @@ private:
         uint32_t m_abi_tag;
         //! Padding to protect against alignment changes in Boost.Atomic. Don't use BOOST_ALIGNMENT to ensure portability.
         unsigned char m_padding[BOOST_LOG_CPU_CACHE_LINE_SIZE - sizeof(uint32_t)];
-        //! Reference counter. Also acts as a flag indicating that the queue is constructed (i.e. the queue is constructed when the counter is not 0).
-        boost::atomic< uint32_t > m_ref_count;
+        //! A flag indicating that the queue is constructed (i.e. the queue is constructed when the value is not 0).
+        boost::atomic< uint32_t > m_initialized;
         //! Number of allocation blocks in the queue.
         const uint32_t m_capacity;
         //! Size of an allocation block, in bytes.
         const uint32_t m_block_size;
+        //! Shared state of the mutex for protecting queue data structures.
+        boost::log::ipc::aux::interprocess_mutex::shared_state m_mutex_state;
+        //! Shared state of the condition variable used to block writers when the queue is full.
+        boost::log::ipc::aux::interprocess_condition_variable::shared_state m_nonfull_queue_state;
         //! The current number of allocated blocks in the queue.
         uint32_t m_size;
         //! The current writing position (allocation block index).
@@ -116,8 +120,8 @@ private:
             m_put_pos(0u),
             m_get_pos(0u)
         {
-            // Must be initialized last. m_ref_count is zero-initialized initially.
-            m_ref_count.fetch_add(1u, boost::memory_order_release);
+            // Must be initialized last. m_initialized is zero-initialized initially.
+            m_initialized.fetch_add(1u, boost::memory_order_release);
         }
 
         //! Returns the header structure ABI tag
@@ -143,9 +147,12 @@ private:
 
             BOOST_LOG_MIX_HEADER_MEMBER(m_abi_tag);
             BOOST_LOG_MIX_HEADER_MEMBER(m_padding);
-            BOOST_LOG_MIX_HEADER_MEMBER(m_ref_count);
+            BOOST_LOG_MIX_HEADER_MEMBER(m_initialized);
             BOOST_LOG_MIX_HEADER_MEMBER(m_capacity);
             BOOST_LOG_MIX_HEADER_MEMBER(m_block_size);
+            BOOST_LOG_MIX_HEADER_MEMBER(m_mutex_state);
+            BOOST_LOG_MIX_HEADER_MEMBER(m_nonempty_queue_state);
+            BOOST_LOG_MIX_HEADER_MEMBER(m_nonfull_queue_state);
             BOOST_LOG_MIX_HEADER_MEMBER(m_size);
             BOOST_LOG_MIX_HEADER_MEMBER(m_put_pos);
             BOOST_LOG_MIX_HEADER_MEMBER(m_get_pos);
@@ -169,29 +176,27 @@ private:
     };
 
 private:
+    //! Shared memory object
     boost::interprocess::windows_shared_memory m_shared_memory;
+    //! Shared memory mapping into the process address space
     boost::interprocess::mapped_region m_region;
+    //! Queue overflow handling policy
     const overflow_policy m_overflow_policy;
+    //! The mask for selecting bits that constitute size values from 0 to (block_size - 1)
     uint32_t m_block_size_mask;
+    //! The number of the bit set in block_size (i.e. log base 2 of block_size)
     uint32_t m_block_size_log2;
-    bool m_stop;
 
-    HANDLE  m_hStopEvent;
-    std::string m_Name;
-    HANDLE  m_hMutex;
-    HANDLE  m_hFileMapping;
-    header* m_pHeader;
-    HANDLE  m_hNonEmptyQueueEvent;
-    HANDLE  m_hNonFullQueueEvent;
+    //! Mutex for protecting queue data structures.
+    boost::log::ipc::aux::interprocess_mutex m_mutex;
+    //! Event used to block readers when the queue is empty.
+    boost::log::ipc::aux::interprocess_event m_nonempty_queue;
+    //! Condition variable used to block writers when the queue is full.
+    boost::log::ipc::aux::interprocess_condition_variable m_nonfull_queue;
+    //! The event indicates that stop has been requested
+    boost::log::ipc::aux::auto_handle m_stop;
 
-    void clear_queue()
-    {
-        m_pHeader->m_QueueSize = 0;
-        m_pHeader->m_PutPos = 0;
-        m_pHeader->m_GetPos = 0;
-        aux::set_event(m_hNonFullQueueEvent);
-    }
-
+public:
     implementation()
       : m_hStopEvent(aux::create_event(NULL, TRUE, TRUE, NULL))
       , m_hMutex(0)
@@ -352,6 +357,14 @@ private:
         mutex_type locker(m_hMutex);
         locker.lock();
         clear_queue();
+    }
+
+    void clear_queue()
+    {
+        m_pHeader->m_QueueSize = 0;
+        m_pHeader->m_PutPos = 0;
+        m_pHeader->m_GetPos = 0;
+        aux::set_event(m_hNonFullQueueEvent);
     }
 
     std::string name() const

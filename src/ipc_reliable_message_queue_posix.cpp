@@ -187,11 +187,17 @@ private:
     };
 
 private:
+    //! Shared memory object
     boost::interprocess::shared_memory_object m_shared_memory;
+    //! Shared memory mapping into the process address space
     boost::interprocess::mapped_region m_region;
+    //! Queue overflow handling policy
     const overflow_policy m_overflow_policy;
+    //! The mask for selecting bits that constitute size values from 0 to (block_size - 1)
     uint32_t m_block_size_mask;
+    //! The number of the bit set in block_size (i.e. log base 2 of block_size)
     uint32_t m_block_size_log2;
+    //! The flag indicates that stop has been requested
     bool m_stop;
 
 public:
