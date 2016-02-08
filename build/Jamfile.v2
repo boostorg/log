@@ -202,7 +202,7 @@ project boost/log
         <target-os>linux:<define>_XOPEN_SOURCE=600
         <target-os>linux:<define>_GNU_SOURCE=1
 
-        <target-os>solaris:<define>_XOPEN_SOURCE=500
+        <target-os>solaris:<define>_XOPEN_SOURCE=600
         <target-os>solaris:<define>__EXTENSIONS__
         <target-os>solaris:<library>socket
         <target-os>solaris:<library>nsl
