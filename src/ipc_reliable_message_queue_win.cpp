@@ -21,6 +21,7 @@
 #include <cstddef>
 #include <cstring>
 #include <new>
+#include <limits>
 #include <string>
 #include <algorithm>
 #include <stdexcept>
@@ -35,12 +36,10 @@
 #include <boost/log/detail/pause.hpp>
 #include <boost/exception/info.hpp>
 #include <boost/exception/enable_error_info.hpp>
-#include <boost/interprocess/creation_tags.hpp>
-#include <boost/interprocess/exceptions.hpp>
-#include <boost/interprocess/permissions.hpp>
-#include <boost/interprocess/mapped_region.hpp>
-#include <boost/interprocess/windows_shared_memory.hpp>
+#include <boost/detail/winapi/thread.hpp> // SwitchToThread
+#include <boost/detail/winapi/character_code_conversion.hpp>
 #include "winthread_wrappers.hpp"
+#include "windows_shared_memory.hpp"
 #include "murmur3.hpp"
 #include "bit_tools.hpp"
 #include <windows.h>
@@ -56,6 +55,36 @@ namespace boost {
 BOOST_LOG_OPEN_NAMESPACE
 
 namespace ipc {
+
+BOOST_LOG_ANONYMOUS_NAMESPACE {
+
+//! Converts UTF-8 to UTF-16
+inline std::wstring utf8_to_utf16(const char* str)
+{
+    std::size_t utf8_len = std::strlen(str);
+    if (utf8_len == 0)
+        return std::wstring();
+    else if (BOOST_UNLIKELY(utf8_len > static_cast< std::size_t >((std::numeric_limits< int >::max)())))
+        BOOST_LOG_THROW_DESCR(bad_alloc, "Multibyte string too long");
+
+    int len = boost::detail::winapi::MultiByteToWideChar(boost::detail::winapi::CP_UTF8_, boost::detail::winapi::MB_ERR_INVALID_CHARS_, str, static_cast< int >(utf8_len), NULL, 0);
+    if (BOOST_LIKELY(len > 0))
+    {
+        std::wstring wstr;
+        wstr.resize(len);
+
+        len = boost::detail::winapi::MultiByteToWideChar(boost::detail::winapi::CP_UTF8_, boost::detail::winapi::MB_ERR_INVALID_CHARS_, str, static_cast< int >(utf8_len), &wstr[0], len);
+        if (BOOST_LIKELY(len > 0))
+        {
+            return wstr;
+        }
+    }
+
+    BOOST_LOG_THROW_DESCR(conversion_error, "Failed to convert UTF-8 to UTF-16");
+    BOOST_LOG_UNREACHABLE_RETURN(std::wstring());
+}
+
+} // namespace
 
 //! Message queue implementation data
 struct reliable_message_queue::implementation
@@ -151,7 +180,6 @@ private:
             BOOST_LOG_MIX_HEADER_MEMBER(m_capacity);
             BOOST_LOG_MIX_HEADER_MEMBER(m_block_size);
             BOOST_LOG_MIX_HEADER_MEMBER(m_mutex_state);
-            BOOST_LOG_MIX_HEADER_MEMBER(m_nonempty_queue_state);
             BOOST_LOG_MIX_HEADER_MEMBER(m_nonfull_queue_state);
             BOOST_LOG_MIX_HEADER_MEMBER(m_size);
             BOOST_LOG_MIX_HEADER_MEMBER(m_put_pos);
@@ -176,10 +204,8 @@ private:
     };
 
 private:
-    //! Shared memory object
-    boost::interprocess::windows_shared_memory m_shared_memory;
-    //! Shared memory mapping into the process address space
-    boost::interprocess::mapped_region m_region;
+    //! Shared memory object and mapping
+    boost::log::ipc::aux::windows_shared_memory m_shared_memory;
     //! Queue overflow handling policy
     const overflow_policy m_overflow_policy;
     //! The mask for selecting bits that constitute size values from 0 to (block_size - 1)
@@ -197,301 +223,454 @@ private:
     boost::log::ipc::aux::auto_handle m_stop;
 
 public:
-    implementation()
-      : m_hStopEvent(aux::create_event(NULL, TRUE, TRUE, NULL))
-      , m_hMutex(0)
-      , m_hFileMapping(0)
-      , m_pHeader(NULL)
-      , m_hNonEmptyQueueEvent(0)
-      , m_hNonFullQueueEvent(0)
+    //! The constructor creates a new shared memory segment
+    implementation
+    (
+        open_mode::create_only_tag,
+        const char* name,
+        uint32_t capacity,
+        uint32_t block_size,
+        permissions const& perms,
+        overflow_policy oflow_policy
+    ) :
+        m_shared_memory(boost::interprocess::create_only, name, boost::interprocess::read_write, boost::interprocess::permissions(perms.get_native())),
+        m_overflow_policy(oflow_policy),
+        m_block_size_mask(0u),
+        m_block_size_log2(0u),
+        m_stop(false)
     {
+        create_region(capacity, block_size);
+    }
+
+    //! The constructor creates a new shared memory segment or opens the existing one
+    implementation
+    (
+        open_mode::open_or_create_tag,
+        char const* name,
+        uint32_t capacity,
+        uint32_t block_size,
+        permissions const& perms,
+        overflow_policy oflow_policy
+    ) :
+        m_shared_memory(boost::interprocess::open_or_create, name, boost::interprocess::read_write, boost::interprocess::permissions(perms.get_native())),
+        m_overflow_policy(oflow_policy),
+        m_block_size_mask(0u),
+        m_block_size_log2(0u),
+        m_stop(false)
+    {
+        boost::interprocess::offset_t shmem_size = 0;
+        if (!m_shared_memory.get_size(shmem_size) || shmem_size == 0)
+            create_region(capacity, block_size);
+        else
+            adopt_region(shmem_size);
+    }
+
+    //! The constructor opens the existing shared memory segment
+    implementation
+    (
+        open_mode::open_only_tag,
+        char const* name,
+        overflow_policy oflow_policy
+    ) :
+        m_shared_memory(boost::interprocess::open_only, name, boost::interprocess::read_write),
+        m_region(),
+        m_overflow_policy(oflow_policy),
+        m_block_size_mask(0u),
+        m_block_size_log2(0u),
+        m_stop(false)
+    {
+        boost::interprocess::offset_t shmem_size = 0;
+        if (!m_shared_memory.get_size(shmem_size))
+            BOOST_LOG_THROW_DESCR(setup_error, "Boost.Log interprocess message queue cannot be opened: shared memory segment not found");
+
+        adopt_region(shmem_size);
     }
 
     ~implementation()
     {
-        try
-        {
-            if (is_open()) close();
-            aux::close_handle(m_hStopEvent);
-        }
-        catch (...)
-        {
-            std::terminate();
-        }
+        close_region();
     }
 
-    void stop()
+    const char* name() const BOOST_NOEXCEPT
     {
-        if (!is_open()) throw std::logic_error("IPC message queue not opened");
-        aux::set_event(m_hStopEvent);
+        return m_shared_memory.get_name();
+    }
+
+    uint32_t capacity() const BOOST_NOEXCEPT
+    {
+        return get_header()->m_capacity;
+    }
+
+    uint32_t block_size() const BOOST_NOEXCEPT
+    {
+        return get_header()->m_block_size;
     }
 
     void reset()
     {
-        aux::reset_event(m_hStopEvent);
+        m_stop = false;
     }
 
-    void close()
+    operation_result send(void const* message_data, uint32_t message_size)
     {
-        aux::safe_close_handle(m_hNonFullQueueEvent);
-        aux::safe_close_handle(m_hNonEmptyQueueEvent);
-        aux::safe_unmap_view_of_file(m_pHeader);
-        aux::safe_close_handle(m_hFileMapping);
-        aux::safe_close_handle(m_hMutex);
-        m_Name.clear();
-    }
+        const uint32_t block_count = estimate_block_count(message_size);
 
-    bool open(char const* name, open_mode mode, unsigned int max_queue_size,
-      unsigned int max_message_size, permission const& permission_value)
-    {
-        if (is_open()) close();
+        header* const hdr = get_header();
 
-        system::system_error sys_err(0, system::system_category());
-        errno = 0;
+        if (BOOST_UNLIKELY(block_count > hdr->m_capacity))
+            BOOST_THROW_EXCEPTION(logic_error("Message size exceeds the interprocess queue capacity"));
 
-        m_Name = name;
-        if (*name)
+        if (m_stop)
+            return aborted;
+
+        lock_queue();
+        boost::log::ipc::aux::interprocess_mutex::auto_unlock unlock(hdr->m_mutex);
+
+        while (true)
         {
-            unsigned int memory_size = sizeof(header) +
-                (sizeof(unsigned int) + max_message_size) * max_queue_size;
+            if (m_stop)
+                return aborted;
 
-            static char const uuid[] = "37394D1EBAC14602BC9492CB1971F756";
-            std::string mutex_name = m_Name + uuid + "Mutex";
-            std::string non_empty_event_name = m_Name + uuid + "NonEmptyQueueEvent";
-            std::string non_full_event_name = m_Name + uuid + "NonFullQueueEvent";
+            if ((hdr->m_capacity - hdr->m_size) >= block_count)
+                break;
 
-            try
-            {
-                if (mode == open_or_create)
-                {
-                    SetLastError(ERROR_SUCCESS);
-                    m_hMutex = aux::create_mutex(get_psa(permission_value), FALSE, mutex_name.c_str());
-                    mode = GetLastError() == ERROR_ALREADY_EXISTS ? open_only : create_only;
-                }
+            if (BOOST_UNLIKELY(m_overflow_policy == throw_on_overflow))
+                BOOST_THROW_EXCEPTION(capacity_limit_reached("Interprocess queue is full"));
 
-                if (mode == create_only)
-                {
-                    if (!m_hMutex)
-                    {
-                        SetLastError(ERROR_SUCCESS);
-                        m_hMutex = aux::create_mutex(get_psa(permission_value), FALSE, mutex_name.c_str());
-                        if (GetLastError() == ERROR_ALREADY_EXISTS)
-                        {
-                            throw aux::make_win_system_error("CreateMutex");
-                        }
-                    }
-
-                    // Mutual exclusion begins.
-                    m_hFileMapping = aux::create_file_mapping(INVALID_HANDLE_VALUE,
-                        get_psa(permission_value), PAGE_READWRITE, 0, memory_size, name);
-                    void* p_memory = aux::map_view_of_file(m_hFileMapping, FILE_MAP_WRITE, 0, 0, 0);
-                    m_pHeader = static_cast< header* >(p_memory);
-
-                    m_pHeader->m_MaxQueueSize = max_queue_size;
-                    m_pHeader->m_MaxMessageSize = max_message_size;
-                    m_pHeader->m_QueueSize = 0;
-                    m_pHeader->m_PutPos = 0;
-                    m_pHeader->m_GetPos = 0;
-
-                    m_hNonEmptyQueueEvent = aux::create_event(get_psa(permission_value),
-                        TRUE, TRUE, non_empty_event_name.c_str());
-                    m_hNonFullQueueEvent = aux::create_event(get_psa(permission_value),
-                        TRUE, TRUE, non_full_event_name.c_str());
-                    // Mutual exclusion ends.
-
-                    errno = ENOENT;
-                }
-                else // mode == open_only
-                {
-                    if (!m_hMutex)
-                    {
-                        m_hMutex = aux::open_mutex(SYNCHRONIZE, FALSE, mutex_name.c_str());
-                    }
-
-                    m_hFileMapping = aux::open_file_mapping(FILE_MAP_WRITE, FALSE, name);
-                    void* p_memory = aux::map_view_of_file(m_hFileMapping, FILE_MAP_WRITE, 0, 0, 0);
-                    m_pHeader = static_cast< header* >(p_memory);
-
-                    m_hNonEmptyQueueEvent = aux::open_event(SYNCHRONIZE | EVENT_MODIFY_STATE,
-                        FALSE, non_empty_event_name.c_str());
-                    m_hNonFullQueueEvent = aux::open_event(SYNCHRONIZE | EVENT_MODIFY_STATE,
-                        FALSE, non_full_event_name.c_str());
-
-                    errno = EEXIST;
-                }
-            }
-            catch (system::system_error const& except)
-            {
-                sys_err = except;
-            }
-            catch (...)
-            {
-                sys_err = system::system_error(ERROR_FUNCTION_FAILED, system::system_category(),
-                    "message_queue_type::open");
-            }
+            hdr->m_nonfull_queue.wait(hdr->m_mutex);
         }
 
-        if (sys_err.code())
-        {
-            close();
-            errno = sys_err.code().value() == ERROR_FILE_NOT_FOUND ? ENOENT :
-                    sys_err.code().value() == ERROR_ALREADY_EXISTS ? EEXIST : 0;
-            if (!errno) throw sys_err;
+        put_message(message_data, message_size, block_count);
+
+        return succeeded;
+    }
+
+    bool try_send(void const* message_data, uint32_t message_size)
+    {
+        const uint32_t block_count = estimate_block_count(message_size);
+
+        header* const hdr = get_header();
+
+        if (BOOST_UNLIKELY(block_count > hdr->m_capacity))
+            BOOST_THROW_EXCEPTION(logic_error("Message size exceeds the interprocess queue capacity"));
+
+        if (m_stop)
             return false;
-        }
-        else
-        {
-            reset();
-            return true;
-        }
+
+        lock_queue();
+        boost::log::ipc::aux::interprocess_mutex::auto_unlock unlock(hdr->m_mutex);
+
+        if (m_stop)
+            return false;
+
+        if ((hdr->m_capacity - hdr->m_size) < block_count)
+            return false;
+
+        put_message(message_data, message_size, block_count);
+
+        return true;
     }
 
-    bool is_open() const
+    operation_result receive(receive_handler handler, void* state)
     {
-        return m_pHeader;
+        if (m_stop)
+            return aborted;
+
+        lock_queue();
+        header* const hdr = get_header();
+        boost::log::ipc::aux::interprocess_mutex::auto_unlock unlock(hdr->m_mutex);
+
+        while (true)
+        {
+            if (m_stop)
+                return aborted;
+
+            if (hdr->m_size > 0u)
+                break;
+
+            hdr->m_nonempty_queue.wait(hdr->m_mutex);
+        }
+
+        get_message(handler, state);
+
+        return succeeded;
+    }
+
+    bool try_receive(receive_handler handler, void* state)
+    {
+        if (m_stop)
+            return false;
+
+        lock_queue();
+        header* const hdr = get_header();
+        boost::log::ipc::aux::interprocess_mutex::auto_unlock unlock(hdr->m_mutex);
+
+        if (hdr->m_size == 0u)
+            return false;
+
+        get_message(handler, state);
+
+        return true;
+    }
+
+    void stop()
+    {
+        if (m_stop)
+            return;
+
+        lock_queue();
+        header* const hdr = get_header();
+        boost::log::ipc::aux::interprocess_mutex::auto_unlock unlock(hdr->m_mutex);
+
+        m_stop = true;
+
+        hdr->m_nonempty_queue.notify_all();
+        hdr->m_nonfull_queue.notify_all();
     }
 
     void clear()
     {
-        if (!is_open()) throw std::logic_error("IPC message queue not opened");
-        mutex_type locker(m_hMutex);
-        locker.lock();
+        lock_queue();
+        header* const hdr = get_header();
+        boost::log::ipc::aux::interprocess_mutex::auto_unlock unlock(hdr->m_mutex);
         clear_queue();
+    }
+
+private:
+    header* get_header() const BOOST_NOEXCEPT
+    {
+        return static_cast< header* >(m_region.get_address());
+    }
+
+    static std::size_t estimate_region_size(uint32_t capacity, uint32_t block_size) BOOST_NOEXCEPT
+    {
+        return boost::log::aux::align_size(sizeof(header), BOOST_LOG_CPU_CACHE_LINE_SIZE) + static_cast< std::size_t >(capacity) * static_cast< std::size_t >(block_size);
+    }
+
+    void create_region(uint32_t capacity, uint32_t block_size)
+    {
+        const std::size_t shmem_size = estimate_region_size(capacity, block_size);
+        m_shared_memory.truncate(shmem_size);
+        boost::interprocess::mapped_region(m_shared_memory, boost::interprocess::read_write, 0u, shmem_size).swap(m_region);
+
+        new (m_region.get_address()) header(capacity, block_size);
+
+        init_block_size(block_size);
+    }
+
+    void adopt_region(std::size_t shmem_size)
+    {
+        if (shmem_size < sizeof(header))
+            BOOST_LOG_THROW_DESCR(setup_error, "Boost.Log interprocess message queue cannot be opened: shared memory segment size too small");
+
+        boost::interprocess::mapped_region(m_shared_memory, boost::interprocess::read_write, 0u, shmem_size).swap(m_region);
+
+        // Wait until the mapped region becomes initialized
+        header* const hdr = get_header();
+        BOOST_CONSTEXPR_OR_CONST unsigned int wait_loops = 200u, spin_loops = 16u, spins = 16u;
+        for (unsigned int i = 0; i < wait_loops; ++i)
+        {
+            uint32_t ref_count = hdr->m_ref_count.load(boost::memory_order_acquire);
+            while (ref_count > 0u)
+            {
+                if (hdr->m_ref_count.compare_exchange_weak(ref_count, ref_count + 1u, boost::memory_order_acq_rel, boost::memory_order_acquire))
+                    goto done;
+            }
+
+            if (i < spin_loops)
+            {
+                for (unsigned int j = 0; j < spins; ++j)
+                {
+                    boost::log::aux::pause();
+                }
+            }
+            else
+            {
+                boost::detail::winapi::SwitchToThread();
+            }
+        }
+
+        BOOST_LOG_THROW_DESCR(setup_error, "Boost.Log interprocess message queue cannot be opened: shared memory segment is not initialized by creator for too long");
+
+    done:
+        try
+        {
+            // Check that the queue layout matches the current process ABI
+            if (hdr->m_abi_tag != header::get_abi_tag())
+                BOOST_LOG_THROW_DESCR(setup_error, "Boost.Log interprocess message queue cannot be opened: the queue ABI is incompatible");
+
+            if (!boost::log::aux::is_power_of_2(hdr->m_block_size))
+                BOOST_LOG_THROW_DESCR(setup_error, "Boost.Log interprocess message queue cannot be opened: the queue block size is not a power of 2");
+
+            init_block_size(hdr->m_block_size);
+        }
+        catch (...)
+        {
+            close_region();
+            throw;
+        }
+    }
+
+    void close_region() BOOST_NOEXCEPT
+    {
+        header* const hdr = get_header();
+
+        if (hdr->m_ref_count.fetch_sub(1u, boost::memory_order_acq_rel) == 1u)
+        {
+            boost::interprocess::shared_memory_object::remove(m_shared_memory.get_name());
+
+            hdr->~header();
+
+            boost::interprocess::mapped_region().swap(m_region);
+            boost::interprocess::shared_memory_object().swap(m_shared_memory);
+
+            m_block_size_mask = 0u;
+            m_block_size_log2 = 0u;
+        }
+    }
+
+    void init_block_size(uint32_t block_size)
+    {
+        m_block_size_mask = block_size - 1u;
+
+        uint32_t block_size_log2 = 0u;
+        if ((block_size & 0x0000ffff) == 0u)
+        {
+            block_size >>= 16u;
+            block_size_log2 += 16u;
+        }
+        if ((block_size & 0x000000ff) == 0u)
+        {
+            block_size >>= 8u;
+            block_size_log2 += 8u;
+        }
+        if ((block_size & 0x0000000f) == 0u)
+        {
+            block_size >>= 4u;
+            block_size_log2 += 4u;
+        }
+        if ((block_size & 0x00000003) == 0u)
+        {
+            block_size >>= 2u;
+            block_size_log2 += 2u;
+        }
+        if ((block_size & 0x00000001) == 0u)
+        {
+            ++block_size_log2;
+        }
+        m_block_size_log2 = block_size_log2;
+    }
+
+    void lock_queue()
+    {
+        header* const hdr = get_header();
+
+#if defined(BOOST_LOG_HAS_PTHREAD_MUTEX_ROBUST)
+        try
+        {
+#endif
+            hdr->m_mutex.lock();
+#if defined(BOOST_LOG_HAS_PTHREAD_MUTEX_ROBUST)
+        }
+        catch (boost::log::ipc::aux::lock_owner_dead&)
+        {
+            // The mutex is locked by the current thread, but the previous owner terminated without releasing the lock
+            try
+            {
+                clear_queue();
+                hdr->m_mutex.recover();
+            }
+            catch (...)
+            {
+                hdr->m_mutex.unlock();
+                throw;
+            }
+        }
+#endif
     }
 
     void clear_queue()
     {
-        m_pHeader->m_QueueSize = 0;
-        m_pHeader->m_PutPos = 0;
-        m_pHeader->m_GetPos = 0;
-        aux::set_event(m_hNonFullQueueEvent);
+        header* const hdr = get_header();
+        hdr->m_size = 0u;
+        hdr->m_put_pos = 0u;
+        hdr->m_get_pos = 0u;
+        hdr->m_nonfull_queue.notify_all();
     }
 
-    std::string name() const
+    //! Returns the number of allocation blocks that are required to store user's payload of the specified size
+    uint32_t estimate_block_count(uint32_t size) const BOOST_NOEXCEPT
     {
-        return m_Name;
+        // ceil((size + get_header_overhead()) / block_size)
+        return (size + block_header::get_header_overhead() + m_block_size_mask) >> m_block_size_log2;
     }
 
-    unsigned int max_queue_size() const
+    //! Puts the message to the back of the queue
+    void put_message(void const* message_data, uint32_t message_size, uint32_t block_count)
     {
-        if (!is_open()) throw std::logic_error("IPC message queue not opened");
-        return m_pHeader->m_MaxQueueSize;
-    }
+        header* const hdr = get_header();
 
-    unsigned int max_message_size() const
-    {
-        if (!is_open()) throw std::logic_error("IPC message queue not opened");
-        return m_pHeader->m_MaxMessageSize;
-    }
+        const uint32_t capacity = hdr->m_capacity;
+        const uint32_t block_size = hdr->m_block_size;
+        uint32_t pos = hdr->m_put_pos;
 
-    // Mutual exclusion should be guaranteed upon calling this function.
-    void put_message(void const* message_data, unsigned int message_size)
-    {
-        byte* p = reinterpret_cast< byte* >(m_pHeader);
-        p += sizeof(header) + (sizeof(unsigned int) + m_pHeader->m_MaxMessageSize) * m_pHeader->m_PutPos;
-        std::memcpy(p, &message_size, sizeof(unsigned int));
-        p += sizeof(unsigned int);
-        std::memcpy(p, message_data, message_size);
-        m_pHeader->m_PutPos = (m_pHeader->m_PutPos + 1) % m_pHeader->m_MaxQueueSize;
-        ++m_pHeader->m_QueueSize;
-        aux::set_event(m_hNonEmptyQueueEvent);
-    }
+        block_header* block = hdr->get_block(pos);
+        block->m_size = message_size;
 
-    // Mutual exclusion should be guaranteed upon calling this function.
-    void get_message(void* buffer, unsigned int, unsigned int& message_size)
-    {
-        byte* p = reinterpret_cast< byte* >(m_pHeader);
-        p += sizeof(header) + (sizeof(unsigned int) + m_pHeader->m_MaxMessageSize) * m_pHeader->m_GetPos;
-        std::memcpy(&message_size, p, sizeof(unsigned int));
-        p += sizeof(unsigned int);
-        std::memcpy(buffer, p, message_size);
-        m_pHeader->m_GetPos = (m_pHeader->m_GetPos + 1) % m_pHeader->m_MaxQueueSize;
-        --m_pHeader->m_QueueSize;
-        aux::set_event(m_hNonFullQueueEvent);
-    }
+        uint32_t write_size = (std::min)((capacity - pos) * block_size - block_header::get_header_overhead(), message_size);
+        std::memcpy(block->get_data(), message_data, write_size);
 
-    bool send(void const* message_data, unsigned int message_size)
-    {
-        if (!is_open()) throw std::logic_error("IPC message queue not opened");
-        if (message_size > m_pHeader->m_MaxMessageSize) throw std::logic_error("Message is too long");
-        errno = 0;
-        mutex_type locker(m_hMutex);
-
-        while (true)
+        pos += block_count;
+        if (BOOST_UNLIKELY(pos >= capacity))
         {
-            if (locker.lock() == WAIT_ABANDONED) clear_queue();
-            if (m_pHeader->m_QueueSize >= m_pHeader->m_MaxQueueSize) // full
-            {
-                aux::reset_event(m_hNonFullQueueEvent);
-                locker.unlock();
-
-                HANDLE handles[2] = { m_hStopEvent, m_hNonFullQueueEvent };
-                DWORD wait_result = aux::wait_for_multiple_objects(2, handles, FALSE, INFINITE);
-                if (wait_result == WAIT_OBJECT_0)
-                {
-                    errno = EINTR;
-                    return false;
-                }
-            }
-            else // not full
-            {
-                put_message(message_data, message_size);
-                return true;
-            }
+            // Write the rest of the message at the beginning of the queue
+            pos -= capacity;
+            message_data = static_cast< const unsigned char* >(message_data) + write_size;
+            write_size = message_size - write_size;
+            if (write_size > 0u)
+                std::memcpy(hdr->get_block(0u), message_data, write_size);
         }
+
+        hdr->m_put_pos = pos;
+
+        const uint32_t old_queue_size = hdr->m_size;
+        hdr->m_size = old_queue_size + block_count;
+        if (old_queue_size == 0u)
+            hdr->m_nonempty_queue.notify_one();
     }
 
-    bool try_send(void const* message_data, unsigned int message_size)
+    //! Retrieves the next message and invokes the handler to store the message contents
+    void get_message(receive_handler handler, void* state)
     {
-        if (!is_open()) throw std::logic_error("IPC message queue not opened");
-        if (message_size > m_pHeader->m_MaxMessageSize) throw std::logic_error("Message is too long");
-        mutex_type locker(m_hMutex);
-        if (locker.lock() == WAIT_ABANDONED) clear_queue();
-        if (m_pHeader->m_QueueSize >= m_pHeader->m_MaxQueueSize) return false;
-        put_message(message_data, message_size);
-        return true;
-    }
+        header* const hdr = get_header();
 
-    bool receive(void* buffer, unsigned int buffer_size, unsigned int& message_size)
-    {
-        if (!is_open()) throw std::logic_error("IPC message queue not opened");
-        if (buffer_size < m_pHeader->m_MaxMessageSize) throw std::logic_error("Insufficient buffer");
-        errno = 0;
-        mutex_type locker(m_hMutex);
+        const uint32_t capacity = hdr->m_capacity;
+        const uint32_t block_size = hdr->m_block_size;
+        uint32_t pos = hdr->m_get_pos;
 
-        while (true)
+        block_header* block = hdr->get_block(pos);
+        uint32_t message_size = block->m_size;
+        uint32_t block_count = estimate_block_count(message_size);
+
+        BOOST_ASSERT(block_count <= hdr->m_size);
+
+        uint32_t read_size = (std::min)((capacity - pos) * block_size - block_header::get_header_overhead(), message_size);
+        handler(state, block->get_data(), read_size);
+
+        pos += block_count;
+        if (BOOST_UNLIKELY(pos >= capacity))
         {
-            if (locker.lock() == WAIT_ABANDONED) clear_queue();
-            if (!m_pHeader->m_QueueSize) // empty
-            {
-                aux::reset_event(m_hNonEmptyQueueEvent);
-                locker.unlock();
-
-                HANDLE handles[2] = { m_hStopEvent, m_hNonEmptyQueueEvent };
-                DWORD wait_result = aux::wait_for_multiple_objects(2, handles, FALSE, INFINITE);
-                if (wait_result == WAIT_OBJECT_0)
-                {
-                    errno = EINTR;
-                    return false;
-                }
-            }
-            else // nonempty
-            {
-                get_message(buffer, buffer_size, message_size);
-                return true;
-            }
+            // Read the tail of the message
+            pos -= capacity;
+            read_size = message_size - read_size;
+            if (read_size > 0u)
+                handler(state, hdr->get_block(0u), read_size);
         }
-    }
 
-    bool try_receive(void* buffer, unsigned int buffer_size, unsigned int& message_size)
-    {
-        if (!is_open()) throw std::logic_error("IPC message queue not opened");
-        if (buffer_size < m_pHeader->m_MaxMessageSize) throw std::logic_error("Insufficient buffer");
-        mutex_type locker(m_hMutex);
-        if (locker.lock() == WAIT_ABANDONED) clear_queue();
-        if (!m_pHeader->m_QueueSize) return false;
-        get_message(buffer, buffer_size, message_size);
-        return true;
+        hdr->m_get_pos = pos;
+        hdr->m_size -= block_count;
+
+        hdr->m_nonfull_queue.notify_all();
     }
 };
 
