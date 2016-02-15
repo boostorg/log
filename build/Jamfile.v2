@@ -338,8 +338,8 @@ rule avx2-targets-cond ( properties * )
 
     if <log-architecture>x86 in [ log-architecture.deduce-architecture $(properties) ]
     {
-        local has_ssse3 = [ configure.builds /boost/log/x86-extensions//avx2 : $(properties) : compiler-supports-avx2 ] ;
-        if $(has_ssse3)
+        local has_avx2 = [ configure.builds /boost/log/x86-extensions//avx2 : $(properties) : compiler-supports-avx2 ] ;
+        if $(has_avx2)
         {
             result = ;
             if <toolset>gcc in $(properties)
@@ -358,7 +358,7 @@ rule avx2-targets-cond ( properties * )
                 }
                 else
                 {
-                    result = <cxxflags>"-march=core-avx2 -fabi-version=0" ;
+                    result = <cxxflags>"-xCORE-AVX2 -fabi-version=0" ;
                 }
             }
             else if <toolset>msvc in $(properties)
