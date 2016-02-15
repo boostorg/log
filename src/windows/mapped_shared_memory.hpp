@@ -5,7 +5,7 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  */
 /*!
- * \file   windows_shared_memory.hpp
+ * \file   windows/mapped_shared_memory.hpp
  * \author Andrey Semashev
  * \date   13.02.2016
  *
@@ -13,8 +13,8 @@
  *         at http://www.boost.org/doc/libs/release/libs/log/doc/html/index.html.
  */
 
-#ifndef BOOST_LOG_WINDOWS_SHARED_MEMORY_HPP_INCLUDED_
-#define BOOST_LOG_WINDOWS_SHARED_MEMORY_HPP_INCLUDED_
+#ifndef BOOST_LOG_WINDOWS_MAPPED_SHARED_MEMORY_HPP_INCLUDED_
+#define BOOST_LOG_WINDOWS_MAPPED_SHARED_MEMORY_HPP_INCLUDED_
 
 #include <boost/log/detail/config.hpp>
 #include <boost/detail/winapi/basic_types.hpp>
@@ -45,11 +45,11 @@ namespace ipc {
 namespace aux {
 
 /*!
- * A replacement for to \c windows_shared_memory and \c mapped_region from Boost.Interprocess.
+ * A replacement for to \c mapped_shared_memory and \c mapped_region from Boost.Interprocess.
  * The significant difference is that the shared memory name is passed as a UTF-16 string and
  * errors are reported as Boost.Log exceptions.
  */
-class windows_shared_memory
+class mapped_shared_memory
 {
 private:
     typedef boost::detail::winapi::DWORD_ NTSTATUS_;
@@ -70,14 +70,14 @@ private:
     static const boost::detail::winapi::DWORD_ SECTION_QUERY_ = 0x00000001;
 
 public:
-    BOOST_CONSTEXPR windows_shared_memory() BOOST_NOEXCEPT :
+    BOOST_CONSTEXPR mapped_shared_memory() BOOST_NOEXCEPT :
         m_handle(NULL)
         m_mapped_address(NULL),
         m_size(0u)
     {
     }
 
-    ~windows_shared_memory()
+    ~mapped_shared_memory()
     {
         if (m_mapped_address)
             unmap();
@@ -194,8 +194,8 @@ public:
     //! Returns the address of the mapped shared memory
     void* address() const BOOST_NOEXCEPT { return m_mapped_address; }
 
-    BOOST_DELETED_FUNCTION(windows_shared_memory(windows_shared_memory const&))
-    BOOST_DELETED_FUNCTION(windows_shared_memory& operator=(windows_shared_memory const&))
+    BOOST_DELETED_FUNCTION(mapped_shared_memory(mapped_shared_memory const&))
+    BOOST_DELETED_FUNCTION(mapped_shared_memory& operator=(mapped_shared_memory const&))
 
 private:
     //! Returns the size of the file mapping identified by the handle
@@ -241,8 +241,8 @@ private:
     }
 };
 
-boost::atomic< windows_shared_memory::nt_query_section_t > windows_shared_memory::nt_query_section(static_cast< windows_shared_memory::nt_query_section_t >(NULL));
-const boost::detail::winapi::DWORD_ windows_shared_memory::SECTION_QUERY_;
+boost::atomic< mapped_shared_memory::nt_query_section_t > mapped_shared_memory::nt_query_section(static_cast< mapped_shared_memory::nt_query_section_t >(NULL));
+const boost::detail::winapi::DWORD_ mapped_shared_memory::SECTION_QUERY_;
 
 } // namespace aux
 
@@ -254,4 +254,4 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 #include <boost/log/detail/footer.hpp>
 
-#endif // BOOST_LOG_WINDOWS_SHARED_MEMORY_HPP_INCLUDED_
+#endif // BOOST_LOG_WINDOWS_MAPPED_SHARED_MEMORY_HPP_INCLUDED_

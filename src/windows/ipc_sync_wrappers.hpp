@@ -5,7 +5,7 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  */
 /*!
- * \file   winthread_wrappers.hpp
+ * \file   windows/ipc_sync_wrappers.hpp
  * \author Andrey Semashev
  * \date   23.01.2016
  *
@@ -13,8 +13,8 @@
  *         at http://www.boost.org/doc/libs/release/libs/log/doc/html/index.html.
  */
 
-#ifndef BOOST_LOG_WINTHREAD_WRAPPERS_HPP_INCLUDED_
-#define BOOST_LOG_WINTHREAD_WRAPPERS_HPP_INCLUDED_
+#ifndef BOOST_LOG_WINDOWS_IPC_SYNC_WRAPPERS_HPP_INCLUDED_
+#define BOOST_LOG_WINDOWS_IPC_SYNC_WRAPPERS_HPP_INCLUDED_
 
 #include <boost/log/detail/config.hpp>
 #include <boost/detail/winapi/access_rights.hpp>
@@ -1183,4 +1183,4 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 #include <boost/log/detail/footer.hpp>
 
-#endif // BOOST_LOG_WINTHREAD_WRAPPERS_HPP_INCLUDED_
+#endif // BOOST_LOG_WINDOWS_IPC_SYNC_WRAPPERS_HPP_INCLUDED_

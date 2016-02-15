@@ -38,8 +38,8 @@
 #include <boost/exception/enable_error_info.hpp>
 #include <boost/detail/winapi/thread.hpp> // SwitchToThread
 #include <boost/detail/winapi/character_code_conversion.hpp>
-#include "winthread_wrappers.hpp"
-#include "windows_shared_memory.hpp"
+#include "windows/ipc_sync_wrappers.hpp"
+#include "windows/mapped_shared_memory.hpp"
 #include "murmur3.hpp"
 #include "bit_tools.hpp"
 #include <windows.h>
@@ -205,7 +205,7 @@ private:
 
 private:
     //! Shared memory object and mapping
-    boost::log::ipc::aux::windows_shared_memory m_shared_memory;
+    boost::log::ipc::aux::mapped_shared_memory m_shared_memory;
     //! Queue overflow handling policy
     const overflow_policy m_overflow_policy;
     //! The mask for selecting bits that constitute size values from 0 to (block_size - 1)

@@ -6,7 +6,7 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  */
 /*!
- * \file   ipc_reliable_message_queue_posix.cpp
+ * \file   posix/ipc_reliable_message_queue.cpp
  * \author Lingxi Li
  * \author Andrey Semashev
  * \date   17.11.2015
@@ -50,7 +50,7 @@
 #include <boost/interprocess/permissions.hpp>
 #include <boost/interprocess/mapped_region.hpp>
 #include <boost/interprocess/shared_memory_object.hpp>
-#include "pthread_wrappers.hpp"
+#include "ipc_sync_wrappers.hpp"
 #include "murmur3.hpp"
 #include "bit_tools.hpp"
 #include <boost/log/detail/header.hpp>

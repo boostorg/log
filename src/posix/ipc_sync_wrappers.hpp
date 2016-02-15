@@ -5,7 +5,7 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  */
 /*!
- * \file   pthread_wrappers.hpp
+ * \file   posix/ipc_sync_wrappers.hpp
  * \author Andrey Semashev
  * \date   05.01.2016
  *
@@ -13,8 +13,8 @@
  *         at http://www.boost.org/doc/libs/release/libs/log/doc/html/index.html.
  */
 
-#ifndef BOOST_LOG_PTHREAD_WRAPPERS_HPP_INCLUDED_
-#define BOOST_LOG_PTHREAD_WRAPPERS_HPP_INCLUDED_
+#ifndef BOOST_LOG_POSIX_IPC_SYNC_WRAPPERS_HPP_INCLUDED_
+#define BOOST_LOG_POSIX_IPC_SYNC_WRAPPERS_HPP_INCLUDED_
 
 #include <boost/log/detail/config.hpp>
 #include <pthread.h>
@@ -36,8 +36,6 @@ namespace aux {
 #if defined(BOOST_LOG_HAS_PTHREAD_MUTEX_ROBUST)
 struct BOOST_SYMBOL_VISIBLE lock_owner_dead {};
 #endif
-
-BOOST_LOG_ANONYMOUS_NAMESPACE {
 
 //! Pthread mutex attributes
 struct pthread_mutex_attributes
@@ -199,8 +197,6 @@ struct interprocess_condition_variable
     BOOST_DELETED_FUNCTION(interprocess_condition_variable& operator=(interprocess_condition_variable const&))
 };
 
-} // namespace
-
 } // namespace aux
 
 } // namespace ipc
@@ -211,4 +207,4 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 #include <boost/log/detail/footer.hpp>
 
-#endif // BOOST_LOG_PTHREAD_WRAPPERS_HPP_INCLUDED_
+#endif // BOOST_LOG_POSIX_IPC_SYNC_WRAPPERS_HPP_INCLUDED_
