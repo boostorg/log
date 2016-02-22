@@ -423,8 +423,8 @@ private:
         boost::detail::winapi::HANDLE_ h = boost::detail::winapi::CreateEventW
         (
             NULL, // permissions
-            manual_reset,
-            false,
+            true, // manual reset
+            false, // initial state
             NULL // name
         );
 #endif

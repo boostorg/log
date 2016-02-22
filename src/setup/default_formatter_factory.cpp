@@ -164,9 +164,9 @@ private:
                 }
                 unsigned long long total_useconds = value.total_microseconds();
                 unsigned long long hours = total_useconds / (3600ull * 1000000ull);
-                unsigned int minutes = total_useconds / (60ull * 1000000ull) % 60ull;
-                unsigned int seconds = total_useconds / 1000000ull % 60ull;
-                unsigned int useconds = total_useconds % 1000000ull;
+                unsigned int minutes = static_cast< unsigned int >(total_useconds / (60ull * 1000000ull) % 60ull);
+                unsigned int seconds = static_cast< unsigned int >(total_useconds / 1000000ull % 60ull);
+                unsigned int useconds = static_cast< unsigned int >(total_useconds % 1000000ull);
                 char buf[64];
                 int len = boost::log::aux::snprintf(buf, sizeof(buf), "%.2llu:%.2u:%.2u.%.6u", hours, minutes, seconds, useconds);
                 if (len > 0)
