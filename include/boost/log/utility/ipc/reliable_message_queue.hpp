@@ -97,7 +97,7 @@ public:
      *
      * \post <tt>is_open() == false</tt>
      */
-    reliable_message_queue() BOOST_NOEXCEPT : m_impl(NULL)
+    BOOST_CONSTEXPR reliable_message_queue() BOOST_NOEXCEPT : m_impl(NULL)
     {
     }
 
@@ -111,24 +111,25 @@ public:
      * \param name Name of the message queue to be associated with. A valid name is one that
      *             can be used as a C++ identifier or is a keyword.
      *             On Windows platforms, the name is used to compose kernel object names, and
-     *             you may need to add the "Global\" prefix to the name in certain cases.
+     *             you may need to add the "Global\" prefix to the name in certain cases. The
+     *             string is assumed to be encoded in UTF-8.
      * \param capacity Maximum number of allocation blocks the queue can hold.
      * \param block_size Size in bytes of allocation block. Must be a power of 2.
-     * \param perms Access permissions for the associated message queue.
      * \param oflow_policy Queue behavior policy in case of overflow.
+     * \param perms Access permissions for the associated message queue.
      */
     reliable_message_queue
     (
         open_mode::create_only_tag,
-        char const* name,
+        const char* name,
         uint32_t capacity,
         uint32_t block_size,
-        permissions const& perms = permissions(),
-        overflow_policy oflow_policy = block_on_overflow
+        overflow_policy oflow_policy = block_on_overflow,
+        permissions const& perms = permissions()
     ) :
         m_impl(NULL)
     {
-        this->create(name, capacity, block_size, perms, oflow_policy);
+        this->create(name, capacity, block_size, oflow_policy, perms);
     }
 
     /*!
@@ -143,24 +144,25 @@ public:
      * \param name Name of the message queue to be associated with. A valid name is one that
      *             can be used as a C++ identifier or is a keyword.
      *             On Windows platforms, the name is used to compose kernel object names, and
-     *             you may need to add the "Global\" prefix to the name in certain cases.
+     *             you may need to add the "Global\" prefix to the name in certain cases. The
+     *             string is assumed to be encoded in UTF-8.
      * \param capacity Maximum number of allocation blocks the queue can hold.
      * \param block_size Size in bytes of allocation block. Must be a power of 2.
-     * \param perms Access permissions for the associated message queue.
      * \param oflow_policy Queue behavior policy in case of overflow.
+     * \param perms Access permissions for the associated message queue.
      */
     reliable_message_queue
     (
         open_mode::open_or_create_tag,
-        char const* name,
+        const char* name,
         uint32_t capacity,
         uint32_t block_size,
-        permissions const& perms = permissions(),
-        overflow_policy oflow_policy = block_on_overflow
+        overflow_policy oflow_policy = block_on_overflow,
+        permissions const& perms = permissions()
     ) :
         m_impl(NULL)
     {
-        this->open_or_create(name, capacity, block_size, perms, oflow_policy);
+        this->open_or_create(name, capacity, block_size, oflow_policy, perms);
     }
 
     /*!
@@ -172,11 +174,20 @@ public:
      *
      * \param name Name of the message queue to be associated with.
      * \param oflow_policy Queue behavior policy in case of overflow.
+     * \param perms Access permissions for the associated message queue. The permissions will only be used
+     *              if the queue implementation has to create system objects while operating.
+     *              This parameter is currently not used on POSIX systems.
      */
-    reliable_message_queue(open_mode::open_only_tag, char const* name, overflow_policy oflow_policy = block_on_overflow) :
+    reliable_message_queue
+    (
+        open_mode::open_only_tag,
+        const char* name,
+        overflow_policy oflow_policy = block_on_overflow,
+        permissions const& perms = permissions()
+    ) :
         m_impl(NULL)
     {
-        this->open(name, oflow_policy);
+        this->open(name, oflow_policy, perms);
     }
 
     /*!
@@ -245,19 +256,20 @@ public:
      * \param name Name of the message queue to be associated with. A valid name is one
      *             that can be used as a C++ identifier or is a keyword.
      *             On Windows platforms, the name is used to compose kernel object names,
-     *             and you may need to add the "Global\" prefix to the name in certain cases.
+     *             and you may need to add the "Global\" prefix to the name in certain cases. The
+     *             string is assumed to be encoded in UTF-8.
      * \param capacity Maximum number of allocation blocks the queue can hold.
      * \param block_size Size in bytes of allocation block. Must be a power of 2.
-     * \param perms Access permissions for the associated message queue.
      * \param oflow_policy Queue behavior policy in case of overflow.
+     * \param perms Access permissions for the associated message queue.
      */
     BOOST_LOG_API void create
     (
-        char const* name,
+        const char* name,
         uint32_t capacity,
         uint32_t block_size,
-        permissions const& perms = permissions(),
-        overflow_policy oflow_policy = block_on_overflow
+        overflow_policy oflow_policy = block_on_overflow,
+        permissions const& perms = permissions()
     );
 
     /*!
@@ -273,19 +285,20 @@ public:
      * \param name Name of the message queue to be associated with. A valid name is one
      *             that can be used as a C++ identifier or is a keyword.
      *             On Windows platforms, the name is used to compose kernel object names,
-     *             and you may need to add the "Global\" prefix to the name in certain cases.
+     *             and you may need to add the "Global\" prefix to the name in certain cases. The
+     *             string is assumed to be encoded in UTF-8.
      * \param capacity Maximum number of allocation blocks the queue can hold.
      * \param block_size Size in bytes of allocation block. Must be a power of 2.
-     * \param perms Access permissions for the associated message queue.
      * \param oflow_policy Queue behavior policy in case of overflow.
+     * \param perms Access permissions for the associated message queue.
      */
     BOOST_LOG_API void open_or_create
     (
-        char const* name,
+        const char* name,
         uint32_t capacity,
         uint32_t block_size,
-        permissions const& perms = permissions(),
-        overflow_policy oflow_policy = block_on_overflow
+        overflow_policy oflow_policy = block_on_overflow,
+        permissions const& perms = permissions()
     );
 
     /*!
@@ -298,8 +311,16 @@ public:
      *
      * \param name Name of the message queue to be associated with.
      * \param oflow_policy Queue behavior policy in case of overflow.
+     * \param perms Access permissions for the associated message queue. The permissions will only be used
+     *              if the queue implementation has to create system objects while operating.
+     *              This parameter is currently not used on POSIX systems.
      */
-    BOOST_LOG_API void open(char const* name, overflow_policy oflow_policy = block_on_overflow);
+    BOOST_LOG_API void open
+    (
+        const char* name,
+        overflow_policy oflow_policy = block_on_overflow,
+        permissions const& perms = permissions()
+    );
 
     /*!
      * Tests whether the object is associated with any message queue.

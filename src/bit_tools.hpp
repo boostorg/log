@@ -34,12 +34,6 @@ inline BOOST_CONSTEXPR bool is_power_of_2(T n) BOOST_NOEXCEPT
     return n != (T)0 && (n & (n - (T)1)) == (T)0;
 }
 
-//! Aligns the \a size argument up to me an integer multiple of \a alignment, which must be a power of 2.
-inline BOOST_CONSTEXPR std::size_t align_size(std::size_t size, std::size_t alignment) BOOST_NOEXCEPT
-{
-    return (size + alignment - 1u) & ~(alignment - 1u);
-}
-
 //! Returns an integer comprising the four characters
 inline BOOST_CONSTEXPR uint32_t make_fourcc(unsigned char c1, unsigned char c2, unsigned char c3, unsigned char c4) BOOST_NOEXCEPT
 {

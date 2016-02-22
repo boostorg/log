@@ -50,6 +50,7 @@
 #include <boost/interprocess/permissions.hpp>
 #include <boost/interprocess/mapped_region.hpp>
 #include <boost/interprocess/shared_memory_object.hpp>
+#include <boost/align/align_up.hpp>
 #include "ipc_sync_wrappers.hpp"
 #include "murmur3.hpp"
 #include "bit_tools.hpp"
@@ -82,7 +83,7 @@ private:
         //! Returns the block header overhead, in bytes
         static BOOST_CONSTEXPR uint32_t get_header_overhead() BOOST_NOEXCEPT
         {
-            return boost::log::aux::align_size(sizeof(block_header), data_alignment);
+            return boost::alignment::align_up(sizeof(block_header), data_alignment);
         }
 
         //! Returns a pointer to the element data
@@ -177,7 +178,7 @@ private:
         block_header* get_block(uint32_t index) const BOOST_NOEXCEPT
         {
             BOOST_ASSERT(index < m_capacity);
-            unsigned char* p = const_cast< unsigned char* >(reinterpret_cast< const unsigned char* >(this)) + boost::log::aux::align_size(sizeof(header), BOOST_LOG_CPU_CACHE_LINE_SIZE);
+            unsigned char* p = const_cast< unsigned char* >(reinterpret_cast< const unsigned char* >(this)) + boost::alignment::align_up(sizeof(header), BOOST_LOG_CPU_CACHE_LINE_SIZE);
             p += static_cast< std::size_t >(m_block_size) * static_cast< std::size_t >(index);
             return reinterpret_cast< block_header* >(p);
         }
@@ -208,8 +209,8 @@ public:
         char const* name,
         uint32_t capacity,
         uint32_t block_size,
-        permissions const& perms,
-        overflow_policy oflow_policy
+        overflow_policy oflow_policy,
+        permissions const& perms
     ) :
         m_shared_memory(boost::interprocess::create_only, name, boost::interprocess::read_write, boost::interprocess::permissions(perms.get_native())),
         m_region(),
@@ -228,8 +229,8 @@ public:
         char const* name,
         uint32_t capacity,
         uint32_t block_size,
-        permissions const& perms,
-        overflow_policy oflow_policy
+        overflow_policy oflow_policy,
+        permissions const& perms
     ) :
         m_shared_memory(boost::interprocess::open_or_create, name, boost::interprocess::read_write, boost::interprocess::permissions(perms.get_native())),
         m_region(),
@@ -424,7 +425,7 @@ private:
 
     static std::size_t estimate_region_size(uint32_t capacity, uint32_t block_size) BOOST_NOEXCEPT
     {
-        return boost::log::aux::align_size(sizeof(header), BOOST_LOG_CPU_CACHE_LINE_SIZE) + static_cast< std::size_t >(capacity) * static_cast< std::size_t >(block_size);
+        return boost::alignment::align_up(sizeof(header), BOOST_LOG_CPU_CACHE_LINE_SIZE) + static_cast< std::size_t >(capacity) * static_cast< std::size_t >(block_size);
     }
 
     void create_region(uint32_t capacity, uint32_t block_size)
@@ -665,14 +666,14 @@ private:
     }
 };
 
-BOOST_LOG_API void reliable_message_queue::create(char const* name, uint32_t capacity, uint32_t block_size, permissions const& perms, overflow_policy oflow_policy)
+BOOST_LOG_API void reliable_message_queue::create(const char* name, uint32_t capacity, uint32_t block_size, overflow_policy oflow_policy, permissions const& perms)
 {
     BOOST_ASSERT(m_impl == NULL);
     if (!boost::log::aux::is_power_of_2(block_size))
         BOOST_THROW_EXCEPTION(std::invalid_argument("Interprocess message queue block size is not a power of 2"));
     try
     {
-        m_impl = new implementation(open_mode::create_only, name, capacity, boost::log::aux::align_size(block_size, BOOST_LOG_CPU_CACHE_LINE_SIZE), perms, oflow_policy);
+        m_impl = new implementation(open_mode::create_only, name, capacity, boost::alignment::align_up(block_size, BOOST_LOG_CPU_CACHE_LINE_SIZE), oflow_policy, perms);
     }
     catch (boost::exception& e)
     {
@@ -685,14 +686,14 @@ BOOST_LOG_API void reliable_message_queue::create(char const* name, uint32_t cap
     }
 }
 
-BOOST_LOG_API void reliable_message_queue::open_or_create(char const* name, uint32_t capacity, uint32_t block_size, permissions const& perms, overflow_policy oflow_policy)
+BOOST_LOG_API void reliable_message_queue::open_or_create(const char* name, uint32_t capacity, uint32_t block_size, overflow_policy oflow_policy, permissions const& perms)
 {
     BOOST_ASSERT(m_impl == NULL);
     if (!boost::log::aux::is_power_of_2(block_size))
         BOOST_THROW_EXCEPTION(std::invalid_argument("Interprocess message queue block size is not a power of 2"));
     try
     {
-        m_impl = new implementation(open_mode::open_or_create, name, capacity, boost::log::aux::align_size(block_size, BOOST_LOG_CPU_CACHE_LINE_SIZE), perms, oflow_policy);
+        m_impl = new implementation(open_mode::open_or_create, name, capacity, boost::alignment::align_up(block_size, BOOST_LOG_CPU_CACHE_LINE_SIZE), oflow_policy, perms);
     }
     catch (boost::exception& e)
     {
@@ -705,7 +706,7 @@ BOOST_LOG_API void reliable_message_queue::open_or_create(char const* name, uint
     }
 }
 
-BOOST_LOG_API void reliable_message_queue::open(char const* name, overflow_policy oflow_policy)
+BOOST_LOG_API void reliable_message_queue::open(char const* name, overflow_policy oflow_policy, permissions const&)
 {
     BOOST_ASSERT(m_impl == NULL);
     try
