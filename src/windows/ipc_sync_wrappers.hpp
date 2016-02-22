@@ -215,7 +215,7 @@ public:
     {
         if (BOOST_UNLIKELY(!boost::detail::winapi::SetEvent(m_event.get())))
         {
-            err = boost::detail::winapi::GetLastError();
+            const boost::detail::winapi::DWORD_ err = boost::detail::winapi::GetLastError();
             BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, "Failed to set an interprocess event object", (err));
         }
     }
@@ -229,7 +229,7 @@ public:
     {
         if (BOOST_UNLIKELY(!boost::detail::winapi::ResetEvent(m_event.get())))
         {
-            err = boost::detail::winapi::GetLastError();
+            const boost::detail::winapi::DWORD_ err = boost::detail::winapi::GetLastError();
             BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, "Failed to reset an interprocess event object", (err));
         }
     }
@@ -295,11 +295,11 @@ public:
 
     void post(uint32_t count)
     {
-        BOOST_ASSERT(count <= (std::numeric_limits< boost::detail::winapi::LONG_ >::max)());
+        BOOST_ASSERT(count <= static_cast< uint32_t >((std::numeric_limits< boost::detail::winapi::LONG_ >::max)()));
 
         if (BOOST_UNLIKELY(!boost::detail::winapi::ReleaseSemaphore(m_sem.get(), static_cast< boost::detail::winapi::LONG_ >(count), NULL)))
         {
-            err = boost::detail::winapi::GetLastError();
+            const boost::detail::winapi::DWORD_ err = boost::detail::winapi::GetLastError();
             BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, "Failed to post on an interprocess semaphore object", (err));
         }
     }

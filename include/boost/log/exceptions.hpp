@@ -89,6 +89,11 @@ public:
      * Error message accessor.
      */
     const char* what() const throw();
+
+#ifndef BOOST_LOG_DOXYGEN_PASS
+    static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, const char* descr);
+    static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, std::string const& descr);
+#endif
 };
 
 /*!
@@ -110,6 +115,11 @@ public:
      * Destructor
      */
     ~capacity_limit_reached() throw();
+
+#ifndef BOOST_LOG_DOXYGEN_PASS
+    static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, const char* descr);
+    static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, std::string const& descr);
+#endif
 };
 
 /*!

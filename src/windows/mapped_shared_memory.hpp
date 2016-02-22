@@ -59,7 +59,7 @@ private:
 
 public:
     BOOST_CONSTEXPR mapped_shared_memory() BOOST_NOEXCEPT :
-        m_handle(NULL)
+        m_handle(NULL),
         m_mapped_address(NULL),
         m_size(0u)
     {

@@ -22,6 +22,7 @@
 #include <boost/detail/winapi/dll.hpp>
 #include <boost/detail/winapi/time.hpp>
 #include <boost/detail/winapi/get_last_error.hpp>
+#include <boost/detail/winapi/character_code_conversion.hpp>
 #include <windows.h> // for error codes
 #include <cstddef>
 #include <limits>
@@ -126,7 +127,7 @@ void interprocess_event::create_or_open(const wchar_t* name, bool manual_reset, 
 #endif
     if (h == NULL)
     {
-        boost::detail::winapi::DWORD_ err = boost::detail::winapi::GetLastError();
+        const boost::detail::winapi::DWORD_ err = boost::detail::winapi::GetLastError();
         if (BOOST_LIKELY(err == ERROR_ALREADY_EXISTS))
         {
             open(name);
@@ -146,7 +147,7 @@ void interprocess_event::open(const wchar_t* name)
     boost::detail::winapi::HANDLE_ h = boost::detail::winapi::OpenEventW(boost::detail::winapi::SYNCHRONIZE_ | boost::detail::winapi::EVENT_MODIFY_STATE_, false, name);
     if (BOOST_UNLIKELY(h == NULL))
     {
-        err = boost::detail::winapi::GetLastError();
+        const boost::detail::winapi::DWORD_ err = boost::detail::winapi::GetLastError();
         BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, "Failed to open an interprocess event object", (err));
     }
 
@@ -199,7 +200,7 @@ void interprocess_semaphore::open(const wchar_t* name)
     boost::detail::winapi::HANDLE_ h = boost::detail::winapi::OpenSemaphoreW(boost::detail::winapi::SYNCHRONIZE_ | boost::detail::winapi::SEMAPHORE_MODIFY_STATE_, false, name);
     if (BOOST_UNLIKELY(h == NULL))
     {
-        err = boost::detail::winapi::GetLastError();
+        const boost::detail::winapi::DWORD_ err = boost::detail::winapi::GetLastError();
         BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, "Failed to open an interprocess semaphore object", (err));
     }
 
@@ -260,7 +261,7 @@ bool interprocess_semaphore::is_semaphore_zero_count_emulated(boost::detail::win
     }
 
     // Restore the decremented counter
-    BOOST_VERIFY(!!boost::detail::winapi::ReleaseSemaphore(h, 1, NULL))
+    BOOST_VERIFY(!!boost::detail::winapi::ReleaseSemaphore(h, 1, NULL));
 
     return false;
 }
@@ -280,7 +281,7 @@ void interprocess_mutex::lock_slow()
     {
         do
         {
-            m_event.wait()
+            m_event.wait();
             clear_waiting_and_try_lock(old_state);
         }
         while ((old_state & lock_flag_value) != 0u);
@@ -355,25 +356,6 @@ inline void interprocess_mutex::clear_waiting_and_try_lock(uint32_t& old_state)
     while (!m_shared_state->m_lock_state.compare_exchange_strong(old_state, new_state, boost::memory_order_acq_rel, boost::memory_order_relaxed));
 }
 
-//! A simple clock that corresponds to GetTickCount/GetTickCount64 timeline
-struct tick_count_clock
-{
-#if BOOST_USE_WINAPI_VERSION >= BOOST_WINAPI_VERSION_WIN6
-    typedef boost::detail::winapi::ULONGLONG_ time_point;
-#else
-    typedef boost::detail::winapi::DWORD_ time_point;
-#endif
-
-    static time_point now() BOOST_NOEXCEPT
-    {
-#if BOOST_USE_WINAPI_VERSION >= BOOST_WINAPI_VERSION_WIN6
-        return boost::detail::winapi::GetTickCount64();
-#else
-        return boost::detail::winapi::GetTickCount();
-#endif
-    }
-};
-
 
 bool interprocess_condition_variable::wait(interprocess_mutex::optional_unlock& lock, boost::detail::winapi::HANDLE_ abort_handle)
 {
@@ -400,7 +382,7 @@ bool interprocess_condition_variable::wait(interprocess_mutex::optional_unlock& 
     interprocess_mutex* const mutex = lock.disengage();
     mutex->unlock();
 
-    result = sem_info->m_semaphore.wait(abort_handle);
+    const bool result = sem_info->m_semaphore.wait(abort_handle);
 
     // Have to unconditionally lock the mutex here
     mutex->lock();
@@ -446,7 +428,6 @@ interprocess_condition_variable::semaphore_info* interprocess_condition_variable
     // Be optimistic, check the current semaphore first
     if (m_current_semaphore && m_current_semaphore->m_semaphore.is_zero_count())
     {
-        m_current_semaphore->update_last_seen_zero_time();
         mark_unused(*m_current_semaphore);
         return m_current_semaphore;
     }
@@ -456,8 +437,8 @@ interprocess_condition_variable::semaphore_info* interprocess_condition_variable
     semaphore_info_list::iterator it = m_semaphore_info_list.begin(), end = m_semaphore_info_list.end();
     while (it != end)
     {
-        if (is_overflow_less(m_next_semaphore_id, it->m_semaphore_id) || m_next_semaphore_id == it->m_semaphore_id)
-            m_next_semaphore_id == it->m_semaphore_id + 1u;
+        if (is_overflow_less(m_next_semaphore_id, it->m_id) || m_next_semaphore_id == it->m_id)
+            m_next_semaphore_id = it->m_id + 1u;
 
         if (it->m_semaphore.is_zero_count())
         {
@@ -484,7 +465,7 @@ interprocess_condition_variable::semaphore_info* interprocess_condition_variable
         try
         {
             generate_semaphore_name(semaphore_id);
-            sem.create_or_open(m_semaphore_name.c_str(), m_perm);
+            sem.create_or_open(m_semaphore_name.c_str(), m_perms);
             if (!sem.is_zero_count())
                 continue;
         }

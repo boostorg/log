@@ -38,7 +38,6 @@
 #include <boost/exception/enable_error_info.hpp>
 #include <boost/align/align_up.hpp>
 #include <boost/detail/winapi/thread.hpp> // SwitchToThread
-#include <boost/detail/winapi/character_code_conversion.hpp>
 #include "windows/ipc_sync_wrappers.hpp"
 #include "windows/mapped_shared_memory.hpp"
 #include "murmur3.hpp"
@@ -77,7 +76,7 @@ private:
         //! Returns the block header overhead, in bytes
         static BOOST_CONSTEXPR uint32_t get_header_overhead() BOOST_NOEXCEPT
         {
-            return boost::alignment::align_up(sizeof(block_header), data_alignment);
+            return static_cast< uint32_t >(boost::alignment::align_up(sizeof(block_header), data_alignment));
         }
 
         //! Returns a pointer to the element data
@@ -628,16 +627,12 @@ BOOST_LOG_API void reliable_message_queue::create(const char* name, uint32_t cap
         BOOST_THROW_EXCEPTION(std::invalid_argument("Interprocess message queue block size is not a power of 2"));
     try
     {
-        m_impl = new implementation(open_mode::create_only, name, capacity, boost::alignment::align_up(block_size, BOOST_LOG_CPU_CACHE_LINE_SIZE), oflow_policy, perms);
+        m_impl = new implementation(open_mode::create_only, name, capacity, static_cast< uint32_t >(boost::alignment::align_up(block_size, BOOST_LOG_CPU_CACHE_LINE_SIZE)), oflow_policy, perms);
     }
     catch (boost::exception& e)
     {
         e << boost::log::resource_name_info(name);
         throw;
-    }
-    catch (boost::interprocess::interprocess_exception& e)
-    {
-        BOOST_THROW_EXCEPTION(boost::enable_error_info(system_error(boost::system::error_code(e.get_native_error(), boost::system::system_category()), e.what())) << boost::log::resource_name_info(name));
     }
 }
 
@@ -648,16 +643,12 @@ BOOST_LOG_API void reliable_message_queue::open_or_create(const char* name, uint
         BOOST_THROW_EXCEPTION(std::invalid_argument("Interprocess message queue block size is not a power of 2"));
     try
     {
-        m_impl = new implementation(open_mode::open_or_create, name, capacity, boost::alignment::align_up(block_size, BOOST_LOG_CPU_CACHE_LINE_SIZE), oflow_policy, perms);
+        m_impl = new implementation(open_mode::open_or_create, name, capacity, static_cast< uint32_t >(boost::alignment::align_up(block_size, BOOST_LOG_CPU_CACHE_LINE_SIZE)), oflow_policy, perms);
     }
     catch (boost::exception& e)
     {
         e << boost::log::resource_name_info(name);
         throw;
-    }
-    catch (boost::interprocess::interprocess_exception& e)
-    {
-        BOOST_THROW_EXCEPTION(boost::enable_error_info(system_error(boost::system::error_code(e.get_native_error(), boost::system::system_category()), e.what())) << boost::log::resource_name_info(name));
     }
 }
 
@@ -672,10 +663,6 @@ BOOST_LOG_API void reliable_message_queue::open(char const* name, overflow_polic
     {
         e << boost::log::resource_name_info(name);
         throw;
-    }
-    catch (boost::interprocess::interprocess_exception& e)
-    {
-        BOOST_THROW_EXCEPTION(boost::enable_error_info(system_error(boost::system::error_code(e.get_native_error(), boost::system::system_category()), e.what())) << boost::log::resource_name_info(name));
     }
 }
 
@@ -696,7 +683,7 @@ BOOST_LOG_API void reliable_message_queue::clear()
 BOOST_LOG_API const char* reliable_message_queue::name() const
 {
     BOOST_ASSERT(m_impl != NULL);
-    return m_impl->name();
+    return m_impl->name().c_str();
 }
 
 BOOST_LOG_API uint32_t reliable_message_queue::capacity() const

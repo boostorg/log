@@ -210,7 +210,7 @@ BOOST_AUTO_TEST_CASE(message_passing)
 
     // send() with an exception on overflow
     {
-        queue_t queue_a(boost::log::open_mode::create_only, ipc_queue_name, 1u, block_size, boost::log::permissions(), queue_t::throw_on_overflow);
+        queue_t queue_a(boost::log::open_mode::create_only, ipc_queue_name, 1u, block_size, queue_t::throw_on_overflow);
         BOOST_TEST_PASSPOINT();
         BOOST_CHECK(queue_a.send(message1, sizeof(message1) - 1u) == queue_t::succeeded);
         BOOST_TEST_PASSPOINT();
@@ -237,11 +237,11 @@ BOOST_AUTO_TEST_CASE(message_passing)
         for (unsigned int i = 0; i < message_size; ++i)
             send_data[i] = static_cast< unsigned char >(i & 0xFF);
 
-        BOOST_CHECK(queue_a.send(&send_data[0], send_data.size()) == queue_t::succeeded);
+        BOOST_CHECK(queue_a.send(&send_data[0], static_cast< boost::uint32_t >(send_data.size())) == queue_t::succeeded);
 
         for (unsigned int i = 0; i < 3; ++i)
         {
-            BOOST_CHECK(queue_a.send(&send_data[0], send_data.size()) == queue_t::succeeded);
+            BOOST_CHECK(queue_a.send(&send_data[0], static_cast< boost::uint32_t >(send_data.size())) == queue_t::succeeded);
 
             std::vector< unsigned char > receive_data;
             BOOST_CHECK(queue_b.receive(receive_data) == queue_t::succeeded);
@@ -279,7 +279,7 @@ const unsigned int message_count = 10000;
 
 void multithreaded_message_passing_feeding_thread(const char* message, unsigned int& failure_count)
 {
-    boost::uint32_t len = std::strlen(message);
+    boost::uint32_t len = static_cast< boost::uint32_t >(std::strlen(message));
     queue_t queue(boost::log::open_mode::open_or_create, ipc_queue_name, capacity, block_size);
     for (unsigned int i = 0; i < message_count; ++i)
     {

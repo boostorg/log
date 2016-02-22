@@ -62,6 +62,22 @@ const char* bad_alloc::what() const throw()
     return m_message.c_str();
 }
 
+void bad_alloc::throw_(const char* file, std::size_t line, const char* descr)
+{
+    boost::throw_exception(boost::enable_error_info(bad_alloc(descr))
+        << boost::throw_file(file)
+        << boost::throw_line(line)
+    );
+}
+
+void bad_alloc::throw_(const char* file, std::size_t line, std::string const& descr)
+{
+    boost::throw_exception(boost::enable_error_info(bad_alloc(descr))
+        << boost::throw_file(file)
+        << boost::throw_line(line)
+    );
+}
+
 capacity_limit_reached::capacity_limit_reached(const char* descr) :
     bad_alloc(descr)
 {
@@ -74,6 +90,22 @@ capacity_limit_reached::capacity_limit_reached(std::string const& descr) :
 
 capacity_limit_reached::~capacity_limit_reached() throw()
 {
+}
+
+void capacity_limit_reached::throw_(const char* file, std::size_t line, const char* descr)
+{
+    boost::throw_exception(boost::enable_error_info(capacity_limit_reached(descr))
+        << boost::throw_file(file)
+        << boost::throw_line(line)
+    );
+}
+
+void capacity_limit_reached::throw_(const char* file, std::size_t line, std::string const& descr)
+{
+    boost::throw_exception(boost::enable_error_info(capacity_limit_reached(descr))
+        << boost::throw_file(file)
+        << boost::throw_line(line)
+    );
 }
 
 runtime_error::runtime_error(std::string const& descr) :

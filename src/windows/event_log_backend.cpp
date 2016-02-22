@@ -30,11 +30,11 @@
 #include <boost/log/detail/attachable_sstream_buf.hpp>
 #include <boost/log/detail/code_conversion.hpp>
 #include <boost/log/utility/formatting_ostream.hpp>
-#include "unique_ptr.hpp"
-#include "event_log_registry.hpp"
 #include <windows.h>
 #include <psapi.h>
-#include "simple_event_log.h"
+#include "unique_ptr.hpp"
+#include "windows/event_log_registry.hpp"
+#include "windows/simple_event_log.h"
 #include <boost/log/detail/header.hpp>
 
 namespace boost {
@@ -269,7 +269,10 @@ BOOST_LOG_API void basic_simple_event_log_backend< CharT >::construct(
 
     HANDLE hSource = register_event_source(target_unc, source_name.c_str());
     if (!hSource)
-        BOOST_LOG_THROW_DESCR(system_error, "Could not register event source");
+    {
+        const DWORD err = GetLastError();
+        BOOST_LOG_THROW_DESCR_PARAMS(system_error, "Could not register event source", (err));
+    }
 
     p->m_SourceHandle = hSource;
 
@@ -522,7 +525,10 @@ BOOST_LOG_API void basic_event_log_backend< CharT >::construct(
 
     HANDLE hSource = register_event_source(target_unc, source_name.c_str());
     if (!hSource)
-        BOOST_LOG_THROW_DESCR(system_error, "Could not register event source");
+    {
+        const DWORD err = GetLastError();
+        BOOST_LOG_THROW_DESCR_PARAMS(system_error, "Could not register event source", (err));
+    }
 
     p->m_SourceHandle = hSource;
 

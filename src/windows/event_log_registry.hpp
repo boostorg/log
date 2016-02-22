@@ -417,8 +417,8 @@ void init_event_log_registry(
                 static_cast< DWORD >((module_name.size() + 1) * sizeof(CharT)));
             if (res != ERROR_SUCCESS)
             {
-                BOOST_LOG_THROW_DESCR(system_error, "Could not create registry value "
-                    + log::aux::to_narrow(string_type(registry::get_event_message_file_param_name())));
+                BOOST_LOG_THROW_DESCR_PARAMS(system_error, "Could not create registry value "
+                    + log::aux::to_narrow(string_type(registry::get_event_message_file_param_name())), (res));
             }
         }
 
@@ -435,8 +435,8 @@ void init_event_log_registry(
                 static_cast< DWORD >((module_name.size() + 1) * sizeof(CharT)));
             if (res != ERROR_SUCCESS)
             {
-                BOOST_LOG_THROW_DESCR(system_error, "Could not create registry value "
-                    + log::aux::to_narrow(string_type(registry::get_category_message_file_param_name())));
+                BOOST_LOG_THROW_DESCR_PARAMS(system_error, "Could not create registry value "
+                    + log::aux::to_narrow(string_type(registry::get_category_message_file_param_name())), (res));
             }
         }
 
@@ -453,8 +453,8 @@ void init_event_log_registry(
                 static_cast< DWORD >(sizeof(category_count)));
             if (res != ERROR_SUCCESS)
             {
-                BOOST_LOG_THROW_DESCR(system_error, "Could not create registry value "
-                    + log::aux::to_narrow(string_type(registry::get_category_count_param_name())));
+                BOOST_LOG_THROW_DESCR_PARAMS(system_error, "Could not create registry value "
+                    + log::aux::to_narrow(string_type(registry::get_category_count_param_name())), (res));
             }
         }
 
@@ -471,8 +471,8 @@ void init_event_log_registry(
                 static_cast< DWORD >(sizeof(event_types)));
             if (res != ERROR_SUCCESS)
             {
-                BOOST_LOG_THROW_DESCR(system_error, "Could not create registry value "
-                    + log::aux::to_narrow(string_type(registry::get_types_supported_param_name())));
+                BOOST_LOG_THROW_DESCR_PARAMS(system_error, "Could not create registry value "
+                    + log::aux::to_narrow(string_type(registry::get_types_supported_param_name())), (res));
             }
         }
     }
