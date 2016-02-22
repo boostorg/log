@@ -181,7 +181,7 @@ void mapped_shared_memory::map()
 //! Unmaps the file mapping
 void mapped_shared_memory::unmap()
 {
-    BOOST_ASSERT(m_mapped_address == NULL);
+    BOOST_ASSERT(m_mapped_address != NULL);
 
     BOOST_VERIFY(boost::detail::winapi::UnmapViewOfFile(m_mapped_address) != 0);
     m_mapped_address = NULL;
