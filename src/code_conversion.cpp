@@ -21,6 +21,11 @@
 #include <algorithm>
 #include <boost/log/exceptions.hpp>
 #include <boost/log/detail/code_conversion.hpp>
+#if defined(BOOST_WINDOWS)
+#include <cstring>
+#include <limits>
+#include <boost/detail/winapi/character_code_conversion.hpp>
+#endif
 #include <boost/log/detail/header.hpp>
 
 namespace boost {
@@ -198,6 +203,36 @@ BOOST_LOG_API void code_convert_impl(const char32_t* str1, std::size_t len, std:
 #endif
 
 #endif // !defined(BOOST_LOG_NO_CXX11_CODECVT_FACETS)
+
+#if defined(BOOST_WINDOWS)
+
+//! Converts UTF-8 to UTF-16
+std::wstring utf8_to_utf16(const char* str)
+{
+    std::size_t utf8_len = std::strlen(str);
+    if (utf8_len == 0)
+        return std::wstring();
+    else if (BOOST_UNLIKELY(utf8_len > static_cast< std::size_t >((std::numeric_limits< int >::max)())))
+        BOOST_LOG_THROW_DESCR(bad_alloc, "Multibyte string too long");
+
+    int len = boost::detail::winapi::MultiByteToWideChar(boost::detail::winapi::CP_UTF8_, boost::detail::winapi::MB_ERR_INVALID_CHARS_, str, static_cast< int >(utf8_len), NULL, 0);
+    if (BOOST_LIKELY(len > 0))
+    {
+        std::wstring wstr;
+        wstr.resize(len);
+
+        len = boost::detail::winapi::MultiByteToWideChar(boost::detail::winapi::CP_UTF8_, boost::detail::winapi::MB_ERR_INVALID_CHARS_, str, static_cast< int >(utf8_len), &wstr[0], len);
+        if (BOOST_LIKELY(len > 0))
+        {
+            return wstr;
+        }
+    }
+
+    BOOST_LOG_THROW_DESCR(conversion_error, "Failed to convert UTF-8 to UTF-16");
+    BOOST_LOG_UNREACHABLE_RETURN(std::wstring());
+}
+
+#endif // defined(BOOST_WINDOWS)
 
 } // namespace aux
 

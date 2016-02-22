@@ -33,6 +33,7 @@
 #include <boost/checked_delete.hpp>
 #include <boost/memory_order.hpp>
 #include <boost/atomic/atomic.hpp>
+#include <boost/log/detail/snprintf.hpp>
 #include "unique_ptr.hpp"
 #include "windows/ipc_sync_wrappers.hpp"
 #include <boost/log/detail/header.hpp>
@@ -51,32 +52,6 @@ extern const char g_hex_char_table[2][16];
 namespace ipc {
 
 namespace aux {
-
-//! Converts UTF-8 to UTF-16
-std::wstring utf8_to_utf16(const char* str)
-{
-    std::size_t utf8_len = std::strlen(str);
-    if (utf8_len == 0)
-        return std::wstring();
-    else if (BOOST_UNLIKELY(utf8_len > static_cast< std::size_t >((std::numeric_limits< int >::max)())))
-        BOOST_LOG_THROW_DESCR(bad_alloc, "Multibyte string too long");
-
-    int len = boost::detail::winapi::MultiByteToWideChar(boost::detail::winapi::CP_UTF8_, boost::detail::winapi::MB_ERR_INVALID_CHARS_, str, static_cast< int >(utf8_len), NULL, 0);
-    if (BOOST_LIKELY(len > 0))
-    {
-        std::wstring wstr;
-        wstr.resize(len);
-
-        len = boost::detail::winapi::MultiByteToWideChar(boost::detail::winapi::CP_UTF8_, boost::detail::winapi::MB_ERR_INVALID_CHARS_, str, static_cast< int >(utf8_len), &wstr[0], len);
-        if (BOOST_LIKELY(len > 0))
-        {
-            return wstr;
-        }
-    }
-
-    BOOST_LOG_THROW_DESCR(conversion_error, "Failed to convert UTF-8 to UTF-16");
-    BOOST_LOG_UNREACHABLE_RETURN(std::wstring());
-}
 
 void interprocess_event::create(const wchar_t* name, bool manual_reset, permissions const& perms)
 {
@@ -167,7 +142,7 @@ void interprocess_semaphore::create_or_open(const wchar_t* name, permissions con
         (std::numeric_limits< boost::detail::winapi::LONG_ >::max)(), // max count
         name,
         0u, // flags
-        boost::detail::winapi::SYNCHRONIZE_ | boost::detail::winapi::SEMAPHORE_MODIFY_STATE_
+        boost::detail::winapi::SYNCHRONIZE_ | boost::detail::winapi::SEMAPHORE_MODIFY_STATE_ | boost::detail::winapi::SEMAPHORE_QUERY_STATE_
     );
 #else
     boost::detail::winapi::HANDLE_ h = boost::detail::winapi::CreateSemaphoreW
@@ -197,7 +172,7 @@ void interprocess_semaphore::create_or_open(const wchar_t* name, permissions con
 
 void interprocess_semaphore::open(const wchar_t* name)
 {
-    boost::detail::winapi::HANDLE_ h = boost::detail::winapi::OpenSemaphoreW(boost::detail::winapi::SYNCHRONIZE_ | boost::detail::winapi::SEMAPHORE_MODIFY_STATE_, false, name);
+    boost::detail::winapi::HANDLE_ h = boost::detail::winapi::OpenSemaphoreW(boost::detail::winapi::SYNCHRONIZE_ | boost::detail::winapi::SEMAPHORE_MODIFY_STATE_ | boost::detail::winapi::SEMAPHORE_QUERY_STATE_, false, name);
     if (BOOST_UNLIKELY(h == NULL))
     {
         const boost::detail::winapi::DWORD_ err = boost::detail::winapi::GetLastError();
@@ -241,7 +216,9 @@ bool interprocess_semaphore::is_semaphore_zero_count_nt_query_semaphore(boost::d
     );
     if (BOOST_UNLIKELY(err != 0u))
     {
-        BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, "Failed to test an interprocess semaphore object for zero count", (ERROR_INVALID_HANDLE));
+        char buf[sizeof(unsigned int) * 2u + 4u];
+        boost::log::aux::snprintf(buf, sizeof(buf), "0x%08x", static_cast< unsigned int >(err));
+        BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, std::string("Failed to test an interprocess semaphore object for zero count, NT status: ") + buf, (ERROR_INVALID_HANDLE));
     }
 
     return info.current_count == 0u;

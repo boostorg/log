@@ -40,6 +40,7 @@
 #include <boost/detail/winapi/thread.hpp> // SwitchToThread
 #include "windows/ipc_sync_wrappers.hpp"
 #include "windows/mapped_shared_memory.hpp"
+#include "windows/utf_code_conversion.hpp"
 #include "murmur3.hpp"
 #include "bit_tools.hpp"
 #include <windows.h>
@@ -215,7 +216,7 @@ public:
         m_block_size_log2(0u),
         m_name(name)
     {
-        const std::wstring wname = boost::log::ipc::aux::utf8_to_utf16(name);
+        const std::wstring wname = boost::log::aux::utf8_to_utf16(name);
         const std::size_t shmem_size = estimate_region_size(capacity, block_size);
         m_shared_memory.create(wname.c_str(), shmem_size, perms);
         m_shared_memory.map();
@@ -238,7 +239,7 @@ public:
         m_block_size_log2(0u),
         m_name(name)
     {
-        const std::wstring wname = boost::log::ipc::aux::utf8_to_utf16(name);
+        const std::wstring wname = boost::log::aux::utf8_to_utf16(name);
         const std::size_t shmem_size = estimate_region_size(capacity, block_size);
         const bool created = m_shared_memory.create_or_open(wname.c_str(), shmem_size, perms);
         m_shared_memory.map();
@@ -262,7 +263,7 @@ public:
         m_block_size_log2(0u),
         m_name(name)
     {
-        const std::wstring wname = boost::log::ipc::aux::utf8_to_utf16(name);
+        const std::wstring wname = boost::log::aux::utf8_to_utf16(name);
         m_shared_memory.open(wname.c_str());
         m_shared_memory.map();
 

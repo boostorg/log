@@ -41,9 +41,6 @@ namespace ipc {
 
 namespace aux {
 
-//! A special permission that is required to be able to read the shared memory segment size
-BOOST_CONSTEXPR_OR_CONST boost::detail::winapi::DWORD_ SECTION_QUERY_ = 0x00000001;
-
 boost::atomic< mapped_shared_memory::nt_query_section_t > mapped_shared_memory::nt_query_section(static_cast< mapped_shared_memory::nt_query_section_t >(NULL));
 
 mapped_shared_memory::~mapped_shared_memory()
@@ -136,7 +133,7 @@ void mapped_shared_memory::open(const wchar_t* name)
     BOOST_ASSERT(m_handle == NULL);
 
     // Note: FILE_MAP_WRITE implies reading permission as well
-    boost::detail::winapi::HANDLE_ h = boost::detail::winapi::OpenFileMappingW(boost::detail::winapi::FILE_MAP_WRITE_ | SECTION_QUERY_, false, name);
+    boost::detail::winapi::HANDLE_ h = boost::detail::winapi::OpenFileMappingW(boost::detail::winapi::FILE_MAP_WRITE_ | boost::detail::winapi::SECTION_QUERY_, false, name);
 
     if (BOOST_UNLIKELY(h == NULL))
     {
@@ -167,7 +164,7 @@ void mapped_shared_memory::map()
     m_mapped_address = boost::detail::winapi::MapViewOfFile
     (
         m_handle,
-        boost::detail::winapi::FILE_MAP_WRITE_ | SECTION_QUERY_,
+        boost::detail::winapi::FILE_MAP_WRITE_ | boost::detail::winapi::SECTION_QUERY_,
         0u,
         0u,
         m_size
