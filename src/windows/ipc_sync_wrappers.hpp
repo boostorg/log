@@ -404,11 +404,23 @@ private:
     interprocess_event m_event;
     shared_state* m_shared_state;
 
+#if !defined(BOOST_MSVC) || _MSC_VER >= 1800
     static BOOST_CONSTEXPR_OR_CONST uint32_t lock_flag_bit = 31u;
     static BOOST_CONSTEXPR_OR_CONST uint32_t event_set_flag_bit = 30u;
     static BOOST_CONSTEXPR_OR_CONST uint32_t lock_flag_value = 1u << lock_flag_bit;
     static BOOST_CONSTEXPR_OR_CONST uint32_t event_set_flag_value = 1u << event_set_flag_bit;
     static BOOST_CONSTEXPR_OR_CONST uint32_t waiter_count_mask = event_set_flag_value - 1u;
+#else
+    // MSVC 8-11, inclusively, fail to link if these constants are declared as static constants instead of an enum
+    enum
+    {
+        lock_flag_bit = 31u,
+        event_set_flag_bit = 30u,
+        lock_flag_value = 1u << lock_flag_bit,
+        event_set_flag_value = 1u << event_set_flag_bit,
+        waiter_count_mask = event_set_flag_value - 1u
+    };
+#endif
 
 public:
     interprocess_mutex() BOOST_NOEXCEPT : m_shared_state(NULL)

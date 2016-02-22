@@ -266,11 +266,13 @@ bool interprocess_semaphore::is_semaphore_zero_count_emulated(boost::detail::win
     return false;
 }
 
+#if !defined(BOOST_MSVC) || _MSC_VER >= 1800
 BOOST_CONSTEXPR_OR_CONST uint32_t interprocess_mutex::lock_flag_bit;
 BOOST_CONSTEXPR_OR_CONST uint32_t interprocess_mutex::event_set_flag_bit;
 BOOST_CONSTEXPR_OR_CONST uint32_t interprocess_mutex::lock_flag_value;
 BOOST_CONSTEXPR_OR_CONST uint32_t interprocess_mutex::event_set_flag_value;
 BOOST_CONSTEXPR_OR_CONST uint32_t interprocess_mutex::waiter_count_mask;
+#endif
 
 void interprocess_mutex::lock_slow()
 {

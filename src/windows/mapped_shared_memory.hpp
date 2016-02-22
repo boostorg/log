@@ -54,8 +54,6 @@ private:
     void* m_mapped_address;
     std::size_t m_size;
     static boost::atomic< nt_query_section_t > nt_query_section;
-    //! A special permission that is required to be able to read the shared memory segment size
-    static const boost::detail::winapi::DWORD_ SECTION_QUERY_ = 0x00000001;
 
 public:
     BOOST_CONSTEXPR mapped_shared_memory() BOOST_NOEXCEPT :

@@ -41,8 +41,10 @@ namespace ipc {
 
 namespace aux {
 
+//! A special permission that is required to be able to read the shared memory segment size
+BOOST_CONSTEXPR_OR_CONST boost::detail::winapi::DWORD_ SECTION_QUERY_ = 0x00000001;
+
 boost::atomic< mapped_shared_memory::nt_query_section_t > mapped_shared_memory::nt_query_section(static_cast< mapped_shared_memory::nt_query_section_t >(NULL));
-const boost::detail::winapi::DWORD_ mapped_shared_memory::SECTION_QUERY_;
 
 mapped_shared_memory::~mapped_shared_memory()
 {
