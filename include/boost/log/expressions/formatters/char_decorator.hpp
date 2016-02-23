@@ -28,7 +28,6 @@
 #include <boost/range/value_type.hpp>
 #include <boost/move/core.hpp>
 #include <boost/move/utility.hpp>
-#include <boost/core/enable_if.hpp>
 #include <boost/utility/addressof.hpp>
 #include <boost/phoenix/core/actor.hpp>
 #include <boost/phoenix/core/meta_grammar.hpp>
@@ -43,6 +42,7 @@
 #include <boost/log/detail/config.hpp>
 #include <boost/log/detail/custom_terminal_spec.hpp>
 #include <boost/log/detail/deduce_char_type.hpp>
+#include <boost/log/detail/sfinae_tools.hpp>
 #include <boost/log/utility/formatting_ostream.hpp>
 #include <boost/log/detail/header.hpp>
 
@@ -113,7 +113,7 @@ public:
     explicit pattern_replacer(RangeT const& decorations
 #ifndef BOOST_LOG_DOXYGEN_PASS
         // This is needed for a workaround against an MSVC-10 and older bug in constructor overload resolution
-        , typename boost::enable_if_has_type< typename range_const_iterator< RangeT >::type, int >::type = 0
+        , typename boost::enable_if_has_type< typename range_const_iterator< RangeT >::type, boost::log::aux::sfinae_dummy >::type = boost::log::aux::sfinae_dummy()
 #endif
     )
     {

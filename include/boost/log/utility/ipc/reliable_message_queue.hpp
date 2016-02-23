@@ -1,6 +1,6 @@
 /*
- *                 Copyright Lingxi Li 2015.
- *              Copyright Andrey Semashev 2016.
+ *                Copyright Lingxi Li 2015.
+ *             Copyright Andrey Semashev 2016.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -21,8 +21,16 @@
 #include <cstddef>
 #include <boost/cstdint.hpp>
 #include <boost/move/core.hpp>
+#include <boost/log/keywords/open_mode.hpp>
+#include <boost/log/keywords/name.hpp>
+#include <boost/log/keywords/capacity.hpp>
+#include <boost/log/keywords/block_size.hpp>
+#include <boost/log/keywords/overflow_policy.hpp>
+#include <boost/log/keywords/permissions.hpp>
 #include <boost/log/utility/open_mode.hpp>
 #include <boost/log/utility/permissions.hpp>
+#include <boost/log/detail/parameter_tools.hpp>
+#include <boost/log/detail/c_str.hpp>
 #include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_HAS_PRAGMA_ONCE
@@ -189,6 +197,34 @@ public:
     {
         this->open(name, oflow_policy, perms);
     }
+
+    /*!
+     * Constructor with named parameters. The method is used to construct an object and create or open
+     * the associated message queue. The constructed object will be in running state if the message queue is
+     * successfully created.
+     *
+     * The following named parameters are accepted:
+     *
+     * * open_mode - One of the open mode tags: \c open_mode::create_only, \c open_mode::open_only or
+     *               \c open_mode::open_or_create.
+     * * name - Name of the message queue to be associated with. A valid name is one that
+     *          can be used as a C++ identifier or is a keyword.
+     *          On Windows platforms, the name is used to compose kernel object names, and
+     *          you may need to add the "Global\" prefix to the name in certain cases. The
+     *          string is assumed to be encoded in UTF-8.
+     * * capacity - Maximum number of allocation blocks the queue can hold. Used only if the queue is created.
+     * * block_size - Size in bytes of allocation block. Must be a power of 2. Used only if the queue is created.
+     * * overflow_policy - Queue behavior policy in case of overflow, see \c overflow_policy.
+     * * permissions - Access permissions for the associated message queue.
+     *
+     * \post <tt>is_open() == true</tt>
+     */
+#if !defined(BOOST_LOG_DOXYGEN_PASS)
+    BOOST_LOG_PARAMETRIZED_CONSTRUCTORS_CALL(reliable_message_queue, construct)
+#else
+    template< typename... Args >
+    explicit reliable_message_queue(Args const&... args);
+#endif
 
     /*!
      * Destructor. Calls <tt>close()</tt>.
@@ -661,6 +697,35 @@ public:
 
 #if !defined(BOOST_LOG_DOXYGEN_PASS)
 private:
+    //! Implementation of the constructor with named arguments
+    template< typename ArgsT >
+    void construct(ArgsT const& args)
+    {
+        m_impl = NULL;
+        construct_dispatch(args[keywords::open_mode], args);
+    }
+
+    //! Implementation of the constructor with named arguments
+    template< typename ArgsT >
+    void construct_dispatch(open_mode::create_only_tag, ArgsT const& args)
+    {
+        this->create(boost::log::aux::c_str(args[keywords::name]), args[keywords::capacity], args[keywords::block_size], args[keywords::overflow_policy | block_on_overflow], args[keywords::permissions | permissions()]);
+    }
+
+    //! Implementation of the constructor with named arguments
+    template< typename ArgsT >
+    void construct_dispatch(open_mode::open_or_create_tag, ArgsT const& args)
+    {
+        this->open_or_create(boost::log::aux::c_str(args[keywords::name]), args[keywords::capacity], args[keywords::block_size], args[keywords::overflow_policy | block_on_overflow], args[keywords::permissions | permissions()]);
+    }
+
+    //! Implementation of the constructor with named arguments
+    template< typename ArgsT >
+    void construct_dispatch(open_mode::open_only_tag, ArgsT const& args)
+    {
+        this->open(boost::log::aux::c_str(args[keywords::name]), args[keywords::overflow_policy | block_on_overflow], args[keywords::permissions | permissions()]);
+    }
+
     //! Closes the message queue, if it's open
     BOOST_LOG_API void do_close() BOOST_NOEXCEPT;
 

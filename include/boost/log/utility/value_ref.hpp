@@ -29,15 +29,15 @@
 #include <boost/mpl/equal_to.hpp>
 #include <boost/mpl/contains.hpp>
 #include <boost/mpl/index_of.hpp>
+#include <boost/core/explicit_operator_bool.hpp>
 #include <boost/utility/addressof.hpp>
-#include <boost/utility/enable_if.hpp>
 #include <boost/optional/optional_fwd.hpp>
 #include <boost/type_traits/is_same.hpp>
 #include <boost/type_traits/is_void.hpp>
 #include <boost/log/detail/config.hpp>
 #include <boost/log/detail/parameter_tools.hpp>
 #include <boost/log/detail/value_ref_visitation.hpp>
-#include <boost/utility/explicit_operator_bool.hpp>
+#include <boost/log/detail/sfinae_tools.hpp>
 #include <boost/log/utility/formatting_ostream_fwd.hpp>
 #include <boost/log/utility/functional/logical.hpp>
 #include <boost/log/utility/functional/bind.hpp>
@@ -132,7 +132,7 @@ public:
 
     //! Returns a pointer to the referred value
     template< typename U >
-    typename enable_if< is_compatible< U >, const U* >::type get_ptr() const BOOST_NOEXCEPT
+    typename boost::enable_if_c< is_compatible< U >::value, const U* >::type get_ptr() const BOOST_NOEXCEPT
     {
         return m_ptr;
     }
@@ -153,7 +153,7 @@ public:
 
     //! Returns a reference to the value
     template< typename U >
-    typename enable_if< is_compatible< U >, U const& >::type get() const BOOST_NOEXCEPT
+    typename boost::enable_if_c< is_compatible< U >::value, U const& >::type get() const BOOST_NOEXCEPT
     {
         BOOST_ASSERT(m_ptr != NULL);
         return *m_ptr;
@@ -190,7 +190,7 @@ public:
 
     //! Applies a visitor function object to the referred value
     template< typename VisitorT >
-    typename enable_if< is_void< typename VisitorT::result_type >, bool >::type apply_visitor_optional(VisitorT visitor) const
+    typename boost::enable_if_c< is_void< typename VisitorT::result_type >::value, bool >::type apply_visitor_optional(VisitorT visitor) const
     {
         if (m_ptr)
         {
@@ -284,7 +284,7 @@ public:
 
     //! Returns a pointer to the referred value
     template< typename U >
-    typename enable_if< is_compatible< U >, const U* >::type get_ptr() const BOOST_NOEXCEPT
+    typename boost::enable_if_c< is_compatible< U >::value, const U* >::type get_ptr() const BOOST_NOEXCEPT
     {
         if (m_type_idx == static_cast< unsigned int >(mpl::index_of< value_type, U >::type::value))
             return static_cast< const U* >(m_ptr);
@@ -294,7 +294,7 @@ public:
 
     //! Returns a reference to the value
     template< typename U >
-    typename enable_if< is_compatible< U >, U const& >::type get() const BOOST_NOEXCEPT
+    typename boost::enable_if_c< is_compatible< U >::value, U const& >::type get() const BOOST_NOEXCEPT
     {
         const U* const p = get_ptr< U >();
         BOOST_ASSERT(p != NULL);
@@ -328,7 +328,7 @@ public:
 
     //! Applies a visitor function object to the referred value
     template< typename VisitorT >
-    typename enable_if< is_void< typename VisitorT::result_type >, bool >::type apply_visitor_optional(VisitorT visitor) const
+    typename boost::enable_if_c< is_void< typename VisitorT::result_type >::value, bool >::type apply_visitor_optional(VisitorT visitor) const
     {
         if (m_ptr)
         {
@@ -439,7 +439,7 @@ public:
      * Initializing constructor. Creates a reference wrapper that refers to the specified value.
      */
     template< typename U >
-    explicit value_ref(U const& val, typename enable_if< typename base_type::BOOST_NESTED_TEMPLATE is_compatible< U >, int >::type = 0) BOOST_NOEXCEPT :
+    explicit value_ref(U const& val, typename boost::enable_if_c< base_type::BOOST_NESTED_TEMPLATE is_compatible< U >::value, boost::log::aux::sfinae_dummy >::type = boost::log::aux::sfinae_dummy()) BOOST_NOEXCEPT :
         base_type(boost::addressof(val))
     {
     }

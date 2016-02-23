@@ -24,9 +24,9 @@
 #include <boost/operators.hpp>
 #include <boost/throw_exception.hpp>
 #include <boost/type_traits/is_same.hpp>
-#include <boost/utility/enable_if.hpp>
 #include <boost/log/detail/config.hpp>
 #include <boost/log/utility/string_literal_fwd.hpp>
+#include <boost/log/detail/sfinae_tools.hpp>
 #include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_HAS_PRAGMA_ONCE
@@ -104,7 +104,7 @@ public:
     template< typename T, size_type LenV >
     basic_string_literal(T(&p)[LenV]
         //! \cond
-        , typename enable_if< is_same< T, const value_type >, int >::type = 0
+        , typename boost::enable_if_c< is_same< T, const value_type >::value, boost::log::aux::sfinae_dummy >::type = boost::log::aux::sfinae_dummy()
         //! \endcond
         ) BOOST_NOEXCEPT
         : m_pStart(p), m_Len(LenV - 1)
@@ -137,8 +137,8 @@ public:
      */
     template< typename T, size_type LenV >
 #ifndef BOOST_LOG_DOXYGEN_PASS
-    typename enable_if<
-        is_same< T, const value_type >,
+    typename boost::enable_if_c<
+        is_same< T, const value_type >::value,
         this_type&
     >::type
 #else
@@ -362,8 +362,8 @@ public:
      */
     template< typename T, size_type LenV >
 #ifndef BOOST_LOG_DOXYGEN_PASS
-    typename enable_if<
-        is_same< T, const value_type >,
+    typename boost::enable_if_c<
+        is_same< T, const value_type >::value,
         this_type&
     >::type
 #else
@@ -579,8 +579,8 @@ inline void swap(basic_string_literal< CharT, TraitsT >& left, basic_string_lite
 template< typename T, std::size_t LenV >
 inline
 #ifndef BOOST_LOG_DOXYGEN_PASS
-typename enable_if<
-    is_same< T, const char >,
+typename boost::enable_if_c<
+    is_same< T, const char >::value,
     string_literal
 >::type
 #else
@@ -596,8 +596,8 @@ str_literal(T(&p)[LenV])
 
 #ifdef BOOST_LOG_USE_WCHAR_T
 template< typename T, std::size_t LenV >
-inline typename enable_if<
-    is_same< T, const wchar_t >,
+inline typename boost::enable_if_c<
+    is_same< T, const wchar_t >::value,
     wstring_literal
 >::type
 str_literal(T(&p)[LenV])
