@@ -35,6 +35,9 @@
 
 namespace boost {
 
+// Duplicate from boost/utility/string_ref_fwd.hpp, which currently does not have this forward declaration
+template<typename charT, typename traits = std::char_traits<charT> > class basic_string_ref;
+
 BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
@@ -545,6 +548,14 @@ public:
         return strm.formatted_write(str.data(), static_cast< std::streamsize >(str.size()));
     }
 
+    // Deprecated overload
+    template< typename OtherCharT, typename OtherTraitsT >
+    friend typename aux::enable_if_streamable_char_type< OtherCharT, basic_formatting_ostream& >::type
+    operator<< (basic_formatting_ostream& strm, basic_string_ref< OtherCharT, OtherTraitsT > const& str)
+    {
+        return strm.formatted_write(str.data(), static_cast< std::streamsize >(str.size()));
+    }
+
     template< typename OtherCharT, typename OtherTraitsT, typename OtherAllocatorT >
     friend typename aux::enable_if_streamable_char_type< OtherCharT, basic_formatting_ostream& >::type
     operator<< (basic_formatting_ostream& strm, std::basic_string< OtherCharT, OtherTraitsT, OtherAllocatorT >& str)
@@ -562,6 +573,14 @@ public:
     template< typename OtherCharT, typename OtherTraitsT >
     friend typename aux::enable_if_streamable_char_type< OtherCharT, basic_formatting_ostream& >::type
     operator<< (basic_formatting_ostream& strm, basic_string_view< OtherCharT, OtherTraitsT >& str)
+    {
+        return strm.formatted_write(str.data(), static_cast< std::streamsize >(str.size()));
+    }
+
+    // Deprecated overload
+    template< typename OtherCharT, typename OtherTraitsT >
+    friend typename aux::enable_if_streamable_char_type< OtherCharT, basic_formatting_ostream& >::type
+    operator<< (basic_formatting_ostream& strm, basic_string_ref< OtherCharT, OtherTraitsT >& str)
     {
         return strm.formatted_write(str.data(), static_cast< std::streamsize >(str.size()));
     }
@@ -588,6 +607,14 @@ public:
         return strm.formatted_write(str.data(), static_cast< std::streamsize >(str.size()));
     }
 
+    // Deprecated overload
+    template< typename OtherCharT, typename OtherTraitsT >
+    friend typename aux::enable_if_streamable_char_type< OtherCharT, basic_formatting_ostream& >::type
+    operator<< (basic_formatting_ostream&& strm, basic_string_ref< OtherCharT, OtherTraitsT > const& str)
+    {
+        return strm.formatted_write(str.data(), static_cast< std::streamsize >(str.size()));
+    }
+
     template< typename OtherCharT, typename OtherTraitsT, typename OtherAllocatorT >
     friend typename aux::enable_if_streamable_char_type< OtherCharT, basic_formatting_ostream& >::type
     operator<< (basic_formatting_ostream&& strm, std::basic_string< OtherCharT, OtherTraitsT, OtherAllocatorT >& str)
@@ -605,6 +632,14 @@ public:
     template< typename OtherCharT, typename OtherTraitsT >
     friend typename aux::enable_if_streamable_char_type< OtherCharT, basic_formatting_ostream& >::type
     operator<< (basic_formatting_ostream&& strm, basic_string_view< OtherCharT, OtherTraitsT >& str)
+    {
+        return strm.formatted_write(str.data(), static_cast< std::streamsize >(str.size()));
+    }
+
+    // Deprecated overload
+    template< typename OtherCharT, typename OtherTraitsT >
+    friend typename aux::enable_if_streamable_char_type< OtherCharT, basic_formatting_ostream& >::type
+    operator<< (basic_formatting_ostream&& strm, basic_string_ref< OtherCharT, OtherTraitsT >& str)
     {
         return strm.formatted_write(str.data(), static_cast< std::streamsize >(str.size()));
     }

@@ -13,7 +13,7 @@
 
 [*General changes:]
 
-* Switched all uses of `boost::basic_string_ref` and its specializations to `boost::basic_string_view`. Users may have to make a similar switch to ensure the successful compilation.
+* The support for `boost::basic_string_ref` and its specializations is deprecated; users are encouraged to switch to `boost::basic_string_view`, which is now supported for output to the formatting streams. The support for `boost::basic_string_ref` will be removed in future releases.
 
 [*Bug fixes:]
 
