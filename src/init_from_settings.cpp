@@ -488,6 +488,7 @@ public:
             if (optional< string_type > min_space_param = params["MinFreeSpace"])
                 space = param_cast_to_int< uintmax_t >("MinFreeSpace", min_space_param.get());
 
+            // Max number of files
             uintmax_t max_files = (std::numeric_limits< uintmax_t >::max)();
             if (optional< string_type > max_files_param = params["MaxFiles"])
                 max_files = param_cast_to_int< uintmax_t >("MaxFiles", max_files_param.get());

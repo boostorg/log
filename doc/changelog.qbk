@@ -14,6 +14,7 @@
 [*General changes:]
 
 * The support for `boost::basic_string_ref` and its specializations is deprecated; users are encouraged to switch to `boost::basic_string_view`, which is now supported for output to the formatting streams. The support for `boost::basic_string_ref` will be removed in future releases.
+* Added support for limiting the number of stored log files in the target directory of the file collector. The limit can be specified in the `max_files` named parameter to the `make_collector` or `add_file_log` calls or as the "MaxFiles" parameter for the sink in the settings file. Thanks to Erich Keane for the patch. ([ticket 8746])
 
 [*Bug fixes:]
 
