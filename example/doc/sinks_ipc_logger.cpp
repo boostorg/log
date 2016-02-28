@@ -1,5 +1,6 @@
 /*
- *                 Copyright Lingxi Li 2015.
+ *                Copyright Lingxi Li 2015.
+ *             Copyright Andrey Semashev 2016.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -7,63 +8,75 @@
 
 #include <iostream>
 #include <sstream>
+#include <exception>
 #include <boost/smart_ptr/shared_ptr.hpp>
-#include <boost/thread.hpp>
+#include <boost/smart_ptr/make_shared_object.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/log/core.hpp>
+#include <boost/log/attributes.hpp>
+#include <boost/log/expressions.hpp>
 #include <boost/log/sources/logger.hpp>
 #include <boost/log/sources/record_ostream.hpp>
 #include <boost/log/sinks/sync_frontend.hpp>
 #include <boost/log/sinks/text_ipc_message_queue_backend.hpp>
+#include <boost/log/utility/ipc/reliable_message_queue.hpp>
+#include <boost/log/utility/open_mode.hpp>
+#include <boost/log/utility/setup/common_attributes.hpp>
 
 namespace logging = boost::log;
+namespace expr = boost::log::expressions;
+namespace attrs = boost::log::attributes;
 namespace src = boost::log::sources;
 namespace sinks = boost::log::sinks;
 namespace keywords = boost::log::keywords;
 
 //[ example_sinks_ipc_logger
+BOOST_LOG_ATTRIBUTE_KEYWORD(a_timestamp, "TimeStamp", attrs::local_clock::value_type)
+BOOST_LOG_ATTRIBUTE_KEYWORD(a_process_id, "ProcessID", attrs::current_process_id::value_type)
+BOOST_LOG_ATTRIBUTE_KEYWORD(a_thread_id, "ThreadID", attrs::current_thread_id::value_type)
+
 int main()
 {
-    typedef sinks::text_ipc_message_queue_backend backend_t;
-    typedef sinks::synchronous_sink<backend_t> sink_t;
-
     try
     {
-        // Create a backend that is associated with the interprocess message queue
+        typedef logging::ipc::reliable_message_queue queue_t;
+        typedef sinks::text_ipc_message_queue_backend< queue_t > backend_t;
+        typedef sinks::synchronous_sink< backend_t > sink_t;
+
+        // Create a sink that is associated with the interprocess message queue
         // named "ipc_message_queue".
-        boost::shared_ptr<backend_t> p_backend(new backend_t(
-            keywords::message_queue_name = "ipc_message_queue",
-            keywords::open_mode = backend_t::open_or_create,
-            keywords::max_queue_size = 5,
-            keywords::max_message_size = 30,
-            keywords::queue_policy = backend_t::drop_when_full,
-            keywords::message_policy = backend_t::truncate_when_too_long));
-        boost::shared_ptr<sink_t> p_sink(new sink_t(p_backend));
-        logging::core::get()->add_sink(p_sink);
+        boost::shared_ptr< sink_t > sink = boost::make_shared< sink_t >
+        (
+            keywords::name = "ipc_message_queue",
+            keywords::open_mode = logging::open_mode::open_or_create,
+            keywords::capacity = 256,
+            keywords::block_size = 1024,
+            keywords::overflow_policy = queue_t::block_on_overflow
+        );
 
-        // Try to synthesize an identifier for the logger.
+        // Set the formatter
+        sink->set_formatter
+        (
+            expr::stream << "[" << a_timestamp << "] [" << a_process_id << ":" << a_thread_id << "] " << expr::smessage
+        );
+
+        logging::core::get()->add_sink(sink);
+
+        // Add the commonly used attributes, including TimeStamp, ProcessID and ThreadID
+        logging::add_common_attributes();
+
+        // Do some logging
         src::logger logger;
-        std::ostringstream stream;
-        stream << boost::this_thread::get_id();
-        std::string id = stream.str();
-        id.resize(5, '0');
-        std::cout << "Logger process " << id << " running..." << std::endl;
-
-        // Keep sending numbered messages to the associated message queue until EOF.
-        for (unsigned i = 1; std::cin.get() != std::istream::traits_type::eof(); ++i)
+        for (unsigned int i = 1; i <= 10; ++i)
         {
-            std::cout << "Send message #" << i << " from " << id << '.' << std::endl;
-            BOOST_LOG(logger) << "Message #" << i << " from " << id << '.';
+            BOOST_LOG(logger) << "Message #" << i;
         }
     }
-    catch (std::exception const& e)
+    catch (std::exception& e)
     {
-        std::cout << e.what() << std::endl;
-    }
-    catch (...)
-    {
-        std::cout << "Unknown exception caught." << std::endl;
+        std::cout << "Failure: " << e.what() << std::endl;
     }
 
-    logging::core::get()->remove_all_sinks();
+    return 0;
 }
 //]

@@ -1,5 +1,6 @@
 /*
- *                 Copyright Lingxi Li 2015.
+ *                Copyright Lingxi Li 2015.
+ *             Copyright Andrey Semashev 2016.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -7,45 +8,48 @@
 
 #include <iostream>
 #include <string>
-#include <boost/log/sinks/text_ipc_message_queue_backend.hpp>
+#include <exception>
+#include <boost/log/utility/ipc/reliable_message_queue.hpp>
+#include <boost/log/utility/open_mode.hpp>
 
-namespace sinks = boost::log::sinks;
+namespace logging = boost::log;
+namespace keywords = boost::log::keywords;
 
 //[ example_sinks_ipc_viewer
 int main()
 {
-    typedef sinks::text_ipc_message_queue_backend::message_queue_type queue_t;
-
     try
     {
+        typedef logging::ipc::reliable_message_queue queue_t;
+
         // Create a message_queue_type object that is associated with the interprocess
         // message queue named "ipc_message_queue".
-        queue_t queue("ipc_message_queue", queue_t::open_or_create, 5, 30);
-        
+        queue_t queue
+        (
+            keywords::name = "ipc_message_queue",
+            keywords::open_mode = logging::open_mode::open_or_create,
+            keywords::capacity = 256,
+            keywords::block_size = 1024,
+            keywords::overflow_policy = queue_t::block_on_overflow
+        );
+
         std::cout << "Viewer process running..." << std::endl;
-        
-        char buffer[30] = {};
-        // Keep reading log messages from the associated message queue until EOF.
-        while (std::cin.get() != std::istream::traits_type::eof())
+
+        // Keep reading log messages from the associated message queue and print them on the console.
+        std::string message;
+        while (queue.receive(message) == queue_t::succeeded)
         {
-            unsigned int message_size = 0;
-            if (queue.try_receive(buffer, 30, message_size))
-            {
-                std::cout << std::string(buffer, buffer + message_size) << std::endl;
-            }
-            else
-            {
-                std::cout << "Message queue is empty. Nothing to receive." << std::endl;
-            }
+            std::cout << message << std::endl;
+
+            // Clear the buffer for the next message
+            message.clear();
         }
     }
-    catch (std::exception const& e)
+    catch (std::exception& e)
     {
-        std::cout << e.what() << std::endl;
+        std::cout << "Failure: " << e.what() << std::endl;
     }
-    catch (...)
-    {
-        std::cout << "Unknown exception caught." << std::endl;
-    }
+
+    return 0;
 }
 //]
