@@ -363,7 +363,7 @@ void stop_reset_reading_thread(queue_t& queue, queue_t::operation_result* result
 
 } // namespace
 
-BOOST_AUTO_TEST_CASE(stop_reset)
+BOOST_AUTO_TEST_CASE(stop_reset_local)
 {
     queue_t feeder_queue(boost::log::open_mode::open_or_create, ipc_queue_name, 1u, block_size);
     queue_t::operation_result feeder_results[3];
@@ -375,7 +375,7 @@ BOOST_AUTO_TEST_CASE(stop_reset)
 
     BOOST_TEST_PASSPOINT();
 
-    // Case 1: Let the feeder block and then we unblock it with stop()
+    // Case 1: Let the feeder block and then we unblock it with stop_local()
     boost::thread feeder_thread(&stop_reset_feeding_thread, boost::ref(feeder_queue), feeder_results, 3);
     boost::thread reader_thread(&stop_reset_reading_thread, boost::ref(reader_queue), reader_results, 1);
 
@@ -387,7 +387,7 @@ BOOST_AUTO_TEST_CASE(stop_reset)
 
     BOOST_TEST_PASSPOINT();
 
-    feeder_queue.stop();
+    feeder_queue.stop_local();
     BOOST_TEST_PASSPOINT();
     feeder_thread.join();
 
@@ -397,7 +397,7 @@ BOOST_AUTO_TEST_CASE(stop_reset)
     BOOST_CHECK_EQUAL(reader_results[0], queue_t::succeeded);
 
     // Reset the aborted queue
-    feeder_queue.reset();
+    feeder_queue.reset_local();
     feeder_queue.clear();
 
     std::fill_n(feeder_results, sizeof(feeder_results) / sizeof(*feeder_results), queue_t::succeeded);
@@ -405,7 +405,7 @@ BOOST_AUTO_TEST_CASE(stop_reset)
 
     BOOST_TEST_PASSPOINT();
 
-    // Case 2: Let the reader block and then we unblock it with stop()
+    // Case 2: Let the reader block and then we unblock it with stop_local()
     boost::thread(&stop_reset_feeding_thread, boost::ref(feeder_queue), feeder_results, 1).swap(feeder_thread);
     boost::thread(&stop_reset_reading_thread, boost::ref(reader_queue), reader_results, 2).swap(reader_thread);
 
@@ -417,7 +417,7 @@ BOOST_AUTO_TEST_CASE(stop_reset)
 
     BOOST_TEST_PASSPOINT();
 
-    reader_queue.stop();
+    reader_queue.stop_local();
     BOOST_TEST_PASSPOINT();
     reader_thread.join();
 

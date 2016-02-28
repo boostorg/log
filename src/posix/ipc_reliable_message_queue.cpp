@@ -287,11 +287,6 @@ public:
         return get_header()->m_block_size;
     }
 
-    void reset()
-    {
-        m_stop = false;
-    }
-
     operation_result send(void const* message_data, uint32_t message_size)
     {
         const uint32_t block_count = estimate_block_count(message_size);
@@ -394,7 +389,7 @@ public:
         return true;
     }
 
-    void stop()
+    void stop_local()
     {
         if (m_stop)
             return;
@@ -407,6 +402,11 @@ public:
 
         hdr->m_nonempty_queue.notify_all();
         hdr->m_nonfull_queue.notify_all();
+    }
+
+    void reset_local()
+    {
+        m_stop = false;
     }
 
     void clear()
@@ -756,12 +756,12 @@ BOOST_LOG_API uint32_t reliable_message_queue::block_size() const
     return m_impl->block_size();
 }
 
-BOOST_LOG_API void reliable_message_queue::stop()
+BOOST_LOG_API void reliable_message_queue::stop_local()
 {
     BOOST_ASSERT(m_impl != NULL);
     try
     {
-        m_impl->stop();
+        m_impl->stop_local();
     }
     catch (boost::exception& e)
     {
@@ -770,12 +770,12 @@ BOOST_LOG_API void reliable_message_queue::stop()
     }
 }
 
-BOOST_LOG_API void reliable_message_queue::reset()
+BOOST_LOG_API void reliable_message_queue::reset_local()
 {
     BOOST_ASSERT(m_impl != NULL);
     try
     {
-        m_impl->reset();
+        m_impl->reset_local();
     }
     catch (boost::exception& e)
     {

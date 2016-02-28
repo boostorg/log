@@ -57,9 +57,45 @@ struct enable_if_byte< unsigned char, R > { typedef R type; };
 } // namespace aux
 
 /*!
- * \brief An implementation of a supporting interprocess message queue used
- *        by \c basic_text_ipc_message_queue_backend. Methods of this class
- *        are not thread-safe, unless otherwise specified.
+ * \brief A reliable interprocess message queue
+ *
+ * The queue implements a reliable one-way channel of passing messages from one or multiple writers to a single reader.
+ * The format of the messages is user-defined and must be consistent across all writers and the reader. The queue does
+ * not enforce any specific format of the messages, other than they should be supplied as a contiguous array of bytes.
+ *
+ * The queue internally uses a process-shared storage identified by a string (the queue name). The contents of the string are
+ * specific to the target OS. For best portability the following guidelines should be followed:
+ *
+ *   \li On POSIX systems the string should start with a forward slash ('/') and contain no other slashes.
+ *   \li On Windows the string must be encoded in UTF-8. In case if the queue is used for communication between processes
+ *       running in different sessions, the string must start with the "Global\" prefix. Other than that prefix, the
+ *       string should not contain slashes.
+ *
+ * The queue storage is organized as a fixed number of blocks of a fixed size. The block size must be an integer power of 2 and
+ * is expressed in bytes. Each written message, together with some metadata added by the queue, consumes an integer number
+ * of blocks. Each read message received by the reader releases the blocks allocated for that message. As such the maximum size
+ * of a message is slightly less than block size times capacity of the queue. For efficiency, it is recommended to choose
+ * block size large enough to accommodate most of the messages to be passed through the queue.
+ *
+ * The queue is considered empty when no messages are enqueued (all blocks are free). The queue is considered full at the point
+ * of enqueueing a message when there is not enough free blocks to accommodate the message.
+ *
+ * The queue is reliable in that it will not drop messages that are not received by the reader, other than the case when a
+ * non-empty queue is destroyed by the last user. If a message cannot be enqueued by the writer because the queue is full,
+ * the queue can either block the writer or throw an exception, depending on the policy specified at the queue creation.
+ * The policy is object local, i.e. different writers and the reader can have different overflow policies.
+ *
+ * If the queue is empty and the reader attempts to dequeue a message, it will block until a message is enqueued by a writer.
+ *
+ * A blocked reader or writer can be unblocked by calling \c stop_local. After this method is called, all threads blocked on
+ * this particular object are released and return \c operation_result::aborted. The other instances of the queue (in the current
+ * or other processes) are unaffected. In order to restore the normal functioning of the queue instance after the \c stop_local
+ * call the user has to invoke \c reset_local.
+ *
+ * The queue does not guarantee any particular order of received messages from different writers. Messages sent by a particular
+ * writer will be received in the order of sending.
+ *
+ * Methods of this class are not thread-safe, unless otherwise specified.
  */
 class reliable_message_queue
 {
@@ -68,7 +104,7 @@ public:
     enum operation_result
     {
         succeeded,    //!< The operation has completed successfully
-        aborted       //!< The operation has been aborted because the queue method <tt>stop()</tt> has been called
+        aborted       //!< The operation has been aborted because the queue method <tt>stop_local()</tt> has been called
     };
 
     //! Interprocess queue overflow policies
@@ -116,11 +152,7 @@ public:
      *
      * \post <tt>is_open() == true</tt>
      *
-     * \param name Name of the message queue to be associated with. A valid name is one that
-     *             can be used as a C++ identifier or is a keyword.
-     *             On Windows platforms, the name is used to compose kernel object names, and
-     *             you may need to add the "Global\" prefix to the name in certain cases. The
-     *             string is assumed to be encoded in UTF-8.
+     * \param name Name of the message queue to be associated with.
      * \param capacity Maximum number of allocation blocks the queue can hold.
      * \param block_size Size in bytes of allocation block. Must be a power of 2.
      * \param oflow_policy Queue behavior policy in case of overflow.
@@ -149,11 +181,7 @@ public:
      *
      * \post <tt>is_open() == true</tt>
      *
-     * \param name Name of the message queue to be associated with. A valid name is one that
-     *             can be used as a C++ identifier or is a keyword.
-     *             On Windows platforms, the name is used to compose kernel object names, and
-     *             you may need to add the "Global\" prefix to the name in certain cases. The
-     *             string is assumed to be encoded in UTF-8.
+     * \param name Name of the message queue to be associated with.
      * \param capacity Maximum number of allocation blocks the queue can hold.
      * \param block_size Size in bytes of allocation block. Must be a power of 2.
      * \param oflow_policy Queue behavior policy in case of overflow.
@@ -207,11 +235,7 @@ public:
      *
      * * open_mode - One of the open mode tags: \c open_mode::create_only, \c open_mode::open_only or
      *               \c open_mode::open_or_create.
-     * * name - Name of the message queue to be associated with. A valid name is one that
-     *          can be used as a C++ identifier or is a keyword.
-     *          On Windows platforms, the name is used to compose kernel object names, and
-     *          you may need to add the "Global\" prefix to the name in certain cases. The
-     *          string is assumed to be encoded in UTF-8.
+     * * name - Name of the message queue to be associated with.
      * * capacity - Maximum number of allocation blocks the queue can hold. Used only if the queue is created.
      * * block_size - Size in bytes of allocation block. Must be a power of 2. Used only if the queue is created.
      * * overflow_policy - Queue behavior policy in case of overflow, see \c overflow_policy.
@@ -265,7 +289,7 @@ public:
     }
 
     /*!
-     * The method swaps the object with \c other.
+     * The method swaps the object with \a that.
      *
      * \param that The other object to swap with.
      */
@@ -289,11 +313,7 @@ public:
      * \pre <tt>is_open() == false</tt>
      * \post <tt>is_open() == true</tt>
      *
-     * \param name Name of the message queue to be associated with. A valid name is one
-     *             that can be used as a C++ identifier or is a keyword.
-     *             On Windows platforms, the name is used to compose kernel object names,
-     *             and you may need to add the "Global\" prefix to the name in certain cases. The
-     *             string is assumed to be encoded in UTF-8.
+     * \param name Name of the message queue to be associated with.
      * \param capacity Maximum number of allocation blocks the queue can hold.
      * \param block_size Size in bytes of allocation block. Must be a power of 2.
      * \param oflow_policy Queue behavior policy in case of overflow.
@@ -318,11 +338,7 @@ public:
      * \pre <tt>is_open() == false</tt>
      * \post <tt>is_open() == true</tt>
      *
-     * \param name Name of the message queue to be associated with. A valid name is one
-     *             that can be used as a C++ identifier or is a keyword.
-     *             On Windows platforms, the name is used to compose kernel object names,
-     *             and you may need to add the "Global\" prefix to the name in certain cases. The
-     *             string is assumed to be encoded in UTF-8.
+     * \param name Name of the message queue to be associated with.
      * \param capacity Maximum number of allocation blocks the queue can hold.
      * \param block_size Size in bytes of allocation block. Must be a power of 2.
      * \param oflow_policy Queue behavior policy in case of overflow.
@@ -369,9 +385,8 @@ public:
     }
 
     /*!
-     * This method empties the associated message queue. Throws <tt>std::logic_error</tt> if there
-     * is no associated message queue. Concurrent calls to this method, <tt>send()</tt>,
-     * <tt>try_send()</tt>, <tt>receive()</tt>, <tt>try_receive()</tt>, and <tt>stop()</tt> are OK.
+     * This method empties the associated message queue. Concurrent calls to this method, <tt>send()</tt>,
+     * <tt>try_send()</tt>, <tt>receive()</tt>, <tt>try_receive()</tt>, and <tt>stop_local()</tt> are allowed.
      *
      * \pre <tt>is_open() == true</tt>
      */
@@ -428,22 +443,22 @@ public:
      *
      * \pre <tt>is_open() == true</tt>
      */
-    BOOST_LOG_API void stop();
+    BOOST_LOG_API void stop_local();
 
     /*!
      * The method puts the object in running state where calls to <tt>send()</tt> or
-     * <tt>receive()</tt> may block. This method is thread-safe.
+     * <tt>receive()</tt> may block. This method is not thread-safe.
      *
      * \pre <tt>is_open() == true</tt>
      */
-    BOOST_LOG_API void reset();
+    BOOST_LOG_API void reset_local();
 
     /*!
      * The method disassociates the associated message queue, if any. No other threads
-     * should be using this object before calling this method. The <tt>stop()</tt> method
+     * should be using this object before calling this method. The <tt>stop_local()</tt> method
      * can be used to have any threads currently blocked in <tt>send()</tt> or
      * <tt>receive()</tt> return, and prevent further calls to them from blocking. Typically,
-     * before calling this method, one would first call <tt>stop()</tt> and then join all
+     * before calling this method, one would first call <tt>stop_local()</tt> and then join all
      * threads that might be blocking on <tt>send()</tt> or <tt>receive()</tt> to ensure that
      * they have returned from the calls. The associated message queue is destroyed if the
      * object represents the last outstanding reference to it.
@@ -461,14 +476,14 @@ public:
      * running state and the queue has no free space for the message, the method either blocks
      * or throws an exception, depending on the overflow policy that was specified on the queue
      * opening/creation. If blocking policy is in effect, the blocking can be interrupted by
-     * calling <tt>stop()</tt>, in which case the method returns \c operation_result::aborted.
+     * calling <tt>stop_local()</tt>, in which case the method returns \c operation_result::aborted.
      * When the object is already in the stopped state, the method does not block but returns
      * immediately with return value \c operation_result::aborted.
      *
      * It is possible to send an empty message by passing \c 0 to the parameter \c message_size.
      *
      * Concurrent calls to <tt>send()</tt>, <tt>try_send()</tt>, <tt>receive()</tt>, <tt>try_receive()</tt>,
-     * <tt>stop()</tt>, and <tt>clear()</tt> are allowed.
+     * <tt>stop_local()</tt>, and <tt>clear()</tt> are allowed.
      *
      * \pre <tt>is_open() == true</tt>
      *
@@ -477,7 +492,7 @@ public:
      *                     the associated message queue capacity, an <tt>std::logic_error</tt> exception is thrown.
      *
      * \return \c operation_result::succeeded if the operation is successful, or
-     *         \c operation_result::aborted if <tt>stop()</tt> was called.
+     *         \c operation_result::aborted if <tt>stop_local()</tt> was called.
      *
      * <b>Throws:</b> <tt>std::logic_error</tt> in case if the message size exceeds the queue
      *                capacity, <tt>system_error</tt> in case if a native OS method fails.
@@ -491,7 +506,7 @@ public:
      * <tt>boost::system::system_error</tt> is thrown for errors resulting from native
      * operating system calls. Note that it is possible to send an empty message by passing
      * \c 0 to the parameter \c message_size. Concurrent calls to <tt>send()</tt>,
-     * <tt>try_send()</tt>, <tt>receive()</tt>, <tt>try_receive()</tt>, <tt>stop()</tt>,
+     * <tt>try_send()</tt>, <tt>receive()</tt>, <tt>try_receive()</tt>, <tt>stop_local()</tt>,
      * and <tt>clear()</tt> are allowed.
      *
      * \pre <tt>is_open() == true</tt>
@@ -512,12 +527,12 @@ public:
     /*!
      * The method takes a message from the associated message queue. When the object is in
      * running state and the queue is empty, the method blocks. The blocking is interrupted
-     * when <tt>stop()</tt> is called, in which case the method returns \c operation_result::aborted.
+     * when <tt>stop_local()</tt> is called, in which case the method returns \c operation_result::aborted.
      * When the object is already in the stopped state and the queue is empty, the method
      * does not block but returns immediately with return value \c operation_result::aborted.
      *
      * Concurrent calls to <tt>send()</tt>, <tt>try_send()</tt>, <tt>receive()</tt>,
-     * <tt>try_receive()</tt>, <tt>stop()</tt>, and <tt>clear()</tt> are allowed.
+     * <tt>try_receive()</tt>, <tt>stop_local()</tt>, and <tt>clear()</tt> are allowed.
      *
      * \pre <tt>is_open() == true</tt>
      *
@@ -526,7 +541,7 @@ public:
      * \param message_size Receives the size of the received message, in bytes.
      *
      * \return \c operation_result::succeeded if the operation is successful, and \c operation_result::aborted
-     *         if the call was interrupted by <tt>stop()</tt>.
+     *         if the call was interrupted by <tt>stop_local()</tt>.
      */
     operation_result receive(void* buffer, uint32_t buffer_size, uint32_t& message_size)
     {
@@ -539,12 +554,12 @@ public:
     /*!
      * The method takes a message from the associated message queue. When the object is in
      * running state and the queue is empty, the method blocks. The blocking is interrupted
-     * when <tt>stop()</tt> is called, in which case the method returns \c operation_result::aborted.
+     * when <tt>stop_local()</tt> is called, in which case the method returns \c operation_result::aborted.
      * When the object is already in the stopped state and the queue is empty, the method
      * does not block but returns immediately with return value \c operation_result::aborted.
      *
      * Concurrent calls to <tt>send()</tt>, <tt>try_send()</tt>, <tt>receive()</tt>,
-     * <tt>try_receive()</tt>, <tt>stop()</tt>, and <tt>clear()</tt> are allowed.
+     * <tt>try_receive()</tt>, <tt>stop_local()</tt>, and <tt>clear()</tt> are allowed.
      *
      * \pre <tt>is_open() == true</tt>
      *
@@ -552,7 +567,7 @@ public:
      * \param message_size Receives the size of the received message, in bytes.
      *
      * \return \c operation_result::succeeded if the operation is successful, and \c operation_result::aborted
-     *         if the call was interrupted by <tt>stop()</tt>.
+     *         if the call was interrupted by <tt>stop_local()</tt>.
      */
     template< typename ElementT, uint32_t SizeV >
 #if !defined(BOOST_LOG_DOXYGEN_PASS)
@@ -568,12 +583,12 @@ public:
     /*!
      * The method takes a message from the associated message queue. When the object is in
      * running state and the queue is empty, the method blocks. The blocking is interrupted
-     * when <tt>stop()</tt> is called, in which case the method returns \c operation_result::aborted.
+     * when <tt>stop_local()</tt> is called, in which case the method returns \c operation_result::aborted.
      * When the object is already in the stopped state and the queue is empty, the method
      * does not block but returns immediately with return value \c operation_result::aborted.
      *
      * Concurrent calls to <tt>send()</tt>, <tt>try_send()</tt>, <tt>receive()</tt>,
-     * <tt>try_receive()</tt>, <tt>stop()</tt>, and <tt>clear()</tt> are allowed.
+     * <tt>try_receive()</tt>, <tt>stop_local()</tt>, and <tt>clear()</tt> are allowed.
      *
      * \pre <tt>is_open() == true</tt>
      *
@@ -599,7 +614,7 @@ public:
      * method is non-blocking, and always returns immediately.
      *
      * Concurrent calls to <tt>send()</tt>, <tt>try_send()</tt>, <tt>receive()</tt>,
-     * <tt>try_receive()</tt>, <tt>stop()</tt>, and <tt>clear()</tt> are allowed.
+     * <tt>try_receive()</tt>, <tt>stop_local()</tt>, and <tt>clear()</tt> are allowed.
      *
      * \pre <tt>is_open() == true</tt>
      *
@@ -623,7 +638,7 @@ public:
      * method is non-blocking, and always returns immediately.
      *
      * Concurrent calls to <tt>send()</tt>, <tt>try_send()</tt>, <tt>receive()</tt>,
-     * <tt>try_receive()</tt>, <tt>stop()</tt>, and <tt>clear()</tt> are allowed.
+     * <tt>try_receive()</tt>, <tt>stop_local()</tt>, and <tt>clear()</tt> are allowed.
      *
      * \pre <tt>is_open() == true</tt>
      *
@@ -649,7 +664,7 @@ public:
      * method is non-blocking, and always returns immediately.
      *
      * Concurrent calls to <tt>send()</tt>, <tt>try_send()</tt>, <tt>receive()</tt>,
-     * <tt>try_receive()</tt>, <tt>stop()</tt>, and <tt>clear()</tt> are allowed.
+     * <tt>try_receive()</tt>, <tt>stop_local()</tt>, and <tt>clear()</tt> are allowed.
      *
      * \pre <tt>is_open() == true</tt>
      *
