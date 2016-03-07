@@ -20,6 +20,7 @@
 #include <boost/log/sinks/sync_frontend.hpp>
 #include <boost/log/sinks/text_ipc_message_queue_backend.hpp>
 #include <boost/log/utility/ipc/reliable_message_queue.hpp>
+#include <boost/log/utility/ipc/object_name.hpp>
 #include <boost/log/utility/open_mode.hpp>
 #include <boost/log/utility/setup/common_attributes.hpp>
 
@@ -47,7 +48,7 @@ int main()
         // named "ipc_message_queue".
         boost::shared_ptr< sink_t > sink = boost::make_shared< sink_t >
         (
-            keywords::name = "ipc_message_queue",
+            keywords::name = logging::ipc::object_name(logging::ipc::object_name::user, "ipc_message_queue"),
             keywords::open_mode = logging::open_mode::open_or_create,
             keywords::capacity = 256,
             keywords::block_size = 1024,

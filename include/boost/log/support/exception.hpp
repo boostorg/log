@@ -64,10 +64,16 @@ inline current_scope_info current_scope()
     return current_scope_info(attributes::named_scope::get_scopes());
 }
 
+namespace ipc {
+
+class object_name;
+
 /*!
  * System resource name
  */
-typedef error_info< struct resource_name_tag, std::string > resource_name_info;
+typedef error_info< struct object_name_tag, object_name > object_name_info;
+
+} // namespace ipc
 
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 

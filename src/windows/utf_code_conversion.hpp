@@ -28,6 +28,8 @@ namespace aux {
 
 //! Converts UTF-8 to UTF-16
 std::wstring utf8_to_utf16(const char* str);
+//! Converts UTF-16 to UTF-8
+std::string utf16_to_utf8(const wchar_t* str);
 
 } // namespace aux
 

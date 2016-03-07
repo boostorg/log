@@ -201,23 +201,27 @@ private:
     //! The flag indicates that stop has been requested
     bool m_stop;
 
+    //! Queue shared memory object name
+    const object_name m_name;
+
 public:
     //! The constructor creates a new shared memory segment
     implementation
     (
         open_mode::create_only_tag,
-        char const* name,
+        object_name const& name,
         uint32_t capacity,
         uint32_t block_size,
         overflow_policy oflow_policy,
         permissions const& perms
     ) :
-        m_shared_memory(boost::interprocess::create_only, name, boost::interprocess::read_write, boost::interprocess::permissions(perms.get_native())),
+        m_shared_memory(boost::interprocess::create_only, name.c_str(), boost::interprocess::read_write, boost::interprocess::permissions(perms.get_native())),
         m_region(),
         m_overflow_policy(oflow_policy),
         m_block_size_mask(0u),
         m_block_size_log2(0u),
-        m_stop(false)
+        m_stop(false),
+        m_name(name)
     {
         create_region(capacity, block_size);
     }
@@ -226,18 +230,19 @@ public:
     implementation
     (
         open_mode::open_or_create_tag,
-        char const* name,
+        object_name const& name,
         uint32_t capacity,
         uint32_t block_size,
         overflow_policy oflow_policy,
         permissions const& perms
     ) :
-        m_shared_memory(boost::interprocess::open_or_create, name, boost::interprocess::read_write, boost::interprocess::permissions(perms.get_native())),
+        m_shared_memory(boost::interprocess::open_or_create, name.c_str(), boost::interprocess::read_write, boost::interprocess::permissions(perms.get_native())),
         m_region(),
         m_overflow_policy(oflow_policy),
         m_block_size_mask(0u),
         m_block_size_log2(0u),
-        m_stop(false)
+        m_stop(false),
+        m_name(name)
     {
         boost::interprocess::offset_t shmem_size = 0;
         if (!m_shared_memory.get_size(shmem_size) || shmem_size == 0)
@@ -250,15 +255,16 @@ public:
     implementation
     (
         open_mode::open_only_tag,
-        char const* name,
+        object_name const& name,
         overflow_policy oflow_policy
     ) :
-        m_shared_memory(boost::interprocess::open_only, name, boost::interprocess::read_write),
+        m_shared_memory(boost::interprocess::open_only, name.c_str(), boost::interprocess::read_write),
         m_region(),
         m_overflow_policy(oflow_policy),
         m_block_size_mask(0u),
         m_block_size_log2(0u),
-        m_stop(false)
+        m_stop(false),
+        m_name(name)
     {
         boost::interprocess::offset_t shmem_size = 0;
         if (!m_shared_memory.get_size(shmem_size))
@@ -272,9 +278,9 @@ public:
         close_region();
     }
 
-    const char* name() const BOOST_NOEXCEPT
+    object_name const& name() const BOOST_NOEXCEPT
     {
-        return m_shared_memory.get_name();
+        return m_name;
     }
 
     uint32_t capacity() const BOOST_NOEXCEPT
@@ -666,7 +672,7 @@ private:
     }
 };
 
-BOOST_LOG_API void reliable_message_queue::create(const char* name, uint32_t capacity, uint32_t block_size, overflow_policy oflow_policy, permissions const& perms)
+BOOST_LOG_API void reliable_message_queue::create(object_name const& name, uint32_t capacity, uint32_t block_size, overflow_policy oflow_policy, permissions const& perms)
 {
     BOOST_ASSERT(m_impl == NULL);
     if (!boost::log::aux::is_power_of_2(block_size))
@@ -677,16 +683,16 @@ BOOST_LOG_API void reliable_message_queue::create(const char* name, uint32_t cap
     }
     catch (boost::exception& e)
     {
-        e << boost::log::resource_name_info(name);
+        e << boost::log::ipc::object_name_info(name);
         throw;
     }
     catch (boost::interprocess::interprocess_exception& e)
     {
-        BOOST_THROW_EXCEPTION(boost::enable_error_info(system_error(boost::system::error_code(e.get_native_error(), boost::system::system_category()), e.what())) << boost::log::resource_name_info(name));
+        BOOST_THROW_EXCEPTION(boost::enable_error_info(system_error(boost::system::error_code(e.get_native_error(), boost::system::system_category()), e.what())) << boost::log::ipc::object_name_info(name));
     }
 }
 
-BOOST_LOG_API void reliable_message_queue::open_or_create(const char* name, uint32_t capacity, uint32_t block_size, overflow_policy oflow_policy, permissions const& perms)
+BOOST_LOG_API void reliable_message_queue::open_or_create(object_name const& name, uint32_t capacity, uint32_t block_size, overflow_policy oflow_policy, permissions const& perms)
 {
     BOOST_ASSERT(m_impl == NULL);
     if (!boost::log::aux::is_power_of_2(block_size))
@@ -697,16 +703,16 @@ BOOST_LOG_API void reliable_message_queue::open_or_create(const char* name, uint
     }
     catch (boost::exception& e)
     {
-        e << boost::log::resource_name_info(name);
+        e << boost::log::ipc::object_name_info(name);
         throw;
     }
     catch (boost::interprocess::interprocess_exception& e)
     {
-        BOOST_THROW_EXCEPTION(boost::enable_error_info(system_error(boost::system::error_code(e.get_native_error(), boost::system::system_category()), e.what())) << boost::log::resource_name_info(name));
+        BOOST_THROW_EXCEPTION(boost::enable_error_info(system_error(boost::system::error_code(e.get_native_error(), boost::system::system_category()), e.what())) << boost::log::ipc::object_name_info(name));
     }
 }
 
-BOOST_LOG_API void reliable_message_queue::open(char const* name, overflow_policy oflow_policy, permissions const&)
+BOOST_LOG_API void reliable_message_queue::open(object_name const& name, overflow_policy oflow_policy, permissions const&)
 {
     BOOST_ASSERT(m_impl == NULL);
     try
@@ -715,12 +721,12 @@ BOOST_LOG_API void reliable_message_queue::open(char const* name, overflow_polic
     }
     catch (boost::exception& e)
     {
-        e << boost::log::resource_name_info(name);
+        e << boost::log::ipc::object_name_info(name);
         throw;
     }
     catch (boost::interprocess::interprocess_exception& e)
     {
-        BOOST_THROW_EXCEPTION(boost::enable_error_info(system_error(boost::system::error_code(e.get_native_error(), boost::system::system_category()), e.what())) << boost::log::resource_name_info(name));
+        BOOST_THROW_EXCEPTION(boost::enable_error_info(system_error(boost::system::error_code(e.get_native_error(), boost::system::system_category()), e.what())) << boost::log::ipc::object_name_info(name));
     }
 }
 
@@ -733,12 +739,12 @@ BOOST_LOG_API void reliable_message_queue::clear()
     }
     catch (boost::exception& e)
     {
-        e << boost::log::resource_name_info(m_impl->name());
+        e << boost::log::ipc::object_name_info(m_impl->name());
         throw;
     }
 }
 
-BOOST_LOG_API const char* reliable_message_queue::name() const
+BOOST_LOG_API object_name const& reliable_message_queue::name() const
 {
     BOOST_ASSERT(m_impl != NULL);
     return m_impl->name();
@@ -765,7 +771,7 @@ BOOST_LOG_API void reliable_message_queue::stop_local()
     }
     catch (boost::exception& e)
     {
-        e << boost::log::resource_name_info(m_impl->name());
+        e << boost::log::ipc::object_name_info(m_impl->name());
         throw;
     }
 }
@@ -779,7 +785,7 @@ BOOST_LOG_API void reliable_message_queue::reset_local()
     }
     catch (boost::exception& e)
     {
-        e << boost::log::resource_name_info(m_impl->name());
+        e << boost::log::ipc::object_name_info(m_impl->name());
         throw;
     }
 }
@@ -799,7 +805,7 @@ BOOST_LOG_API reliable_message_queue::operation_result reliable_message_queue::s
     }
     catch (boost::exception& e)
     {
-        e << boost::log::resource_name_info(m_impl->name());
+        e << boost::log::ipc::object_name_info(m_impl->name());
         throw;
     }
 }
@@ -813,7 +819,7 @@ BOOST_LOG_API bool reliable_message_queue::try_send(void const* message_data, ui
     }
     catch (boost::exception& e)
     {
-        e << boost::log::resource_name_info(m_impl->name());
+        e << boost::log::ipc::object_name_info(m_impl->name());
         throw;
     }
 }
@@ -827,7 +833,7 @@ BOOST_LOG_API reliable_message_queue::operation_result reliable_message_queue::d
     }
     catch (boost::exception& e)
     {
-        e << boost::log::resource_name_info(m_impl->name());
+        e << boost::log::ipc::object_name_info(m_impl->name());
         throw;
     }
 }
@@ -841,7 +847,7 @@ BOOST_LOG_API bool reliable_message_queue::do_try_receive(receive_handler handle
     }
     catch (boost::exception& e)
     {
-        e << boost::log::resource_name_info(m_impl->name());
+        e << boost::log::ipc::object_name_info(m_impl->name());
         throw;
     }
 }
@@ -858,9 +864,9 @@ BOOST_LOG_API void reliable_message_queue::fixed_buffer_receive_handler(void* st
     p->size -= size;
 }
 
-BOOST_LOG_API void reliable_message_queue::remove(const char* name)
+BOOST_LOG_API void reliable_message_queue::remove(object_name const& name)
 {
-    boost::interprocess::shared_memory_object::remove(name);
+    boost::interprocess::shared_memory_object::remove(name.c_str());
 }
 
 } // namespace ipc

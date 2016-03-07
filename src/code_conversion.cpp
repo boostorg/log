@@ -213,7 +213,7 @@ std::wstring utf8_to_utf16(const char* str)
     if (utf8_len == 0)
         return std::wstring();
     else if (BOOST_UNLIKELY(utf8_len > static_cast< std::size_t >((std::numeric_limits< int >::max)())))
-        BOOST_LOG_THROW_DESCR(bad_alloc, "Multibyte string too long");
+        BOOST_LOG_THROW_DESCR(bad_alloc, "UTF-8 string too long");
 
     int len = boost::detail::winapi::MultiByteToWideChar(boost::detail::winapi::CP_UTF8_, boost::detail::winapi::MB_ERR_INVALID_CHARS_, str, static_cast< int >(utf8_len), NULL, 0);
     if (BOOST_LIKELY(len > 0))
@@ -230,6 +230,32 @@ std::wstring utf8_to_utf16(const char* str)
 
     BOOST_LOG_THROW_DESCR(conversion_error, "Failed to convert UTF-8 to UTF-16");
     BOOST_LOG_UNREACHABLE_RETURN(std::wstring());
+}
+
+//! Converts UTF-16 to UTF-8
+std::string utf16_to_utf8(const wchar_t* wstr)
+{
+    std::size_t utf16_len = std::wcslen(wstr);
+    if (utf16_len == 0)
+        return std::string();
+    else if (BOOST_UNLIKELY(utf16_len > static_cast< std::size_t >((std::numeric_limits< int >::max)())))
+        BOOST_LOG_THROW_DESCR(bad_alloc, "UTF-16 string too long");
+
+    int len = boost::detail::winapi::WideCharToMultiByte(boost::detail::winapi::CP_UTF8_, boost::detail::winapi::MB_ERR_INVALID_CHARS_, wstr, static_cast< int >(utf16_len), NULL, 0, NULL, NULL);
+    if (BOOST_LIKELY(len > 0))
+    {
+        std::string str;
+        str.resize(len);
+
+        len = boost::detail::winapi::WideCharToMultiByte(boost::detail::winapi::CP_UTF8_, boost::detail::winapi::MB_ERR_INVALID_CHARS_, wstr, static_cast< int >(utf16_len), &str[0], len, NULL, NULL);
+        if (BOOST_LIKELY(len > 0))
+        {
+            return str;
+        }
+    }
+
+    BOOST_LOG_THROW_DESCR(conversion_error, "Failed to convert UTF-16 to UTF-8");
+    BOOST_LOG_UNREACHABLE_RETURN(std::string());
 }
 
 #endif // defined(BOOST_WINDOWS)

@@ -430,6 +430,7 @@ rule select-platform-specific-sources ( properties * )
 
         if ! [ has-config-flag BOOST_LOG_WITHOUT_IPC : $(properties) ]
         {
+            result += <source>windows/object_name.cpp ;
             result += <source>windows/mapped_shared_memory.cpp ;
             result += <source>windows/ipc_sync_wrappers.cpp ;
             result += <source>windows/ipc_reliable_message_queue.cpp ;
@@ -456,6 +457,7 @@ rule select-platform-specific-sources ( properties * )
 
         if ! [ has-config-flag BOOST_LOG_WITHOUT_IPC : $(properties) ]
         {
+            result += <source>posix/object_name.cpp ;
             result += <source>posix/ipc_reliable_message_queue.cpp ;
         }
     }

@@ -41,6 +41,7 @@
 #include <boost/intrusive/list_hook.hpp>
 #include <boost/log/exceptions.hpp>
 #include <boost/log/utility/permissions.hpp>
+#include "windows/auto_handle.hpp"
 #include <boost/log/detail/header.hpp>
 
 namespace boost {
@@ -158,45 +159,6 @@ BOOST_FORCEINLINE bool bit_test_and_reset(boost::atomic< uint32_t >& x, uint32_t
 }
 
 #endif
-
-//! Converts UTF-8 to UTF-16
-std::wstring utf8_to_utf16(const char* str);
-
-//! A wrapper around a kernel object handle. Automatically closes the handle on destruction.
-class auto_handle
-{
-private:
-    boost::detail::winapi::HANDLE_ m_handle;
-
-public:
-    explicit auto_handle(boost::detail::winapi::HANDLE_ h = NULL) BOOST_NOEXCEPT : m_handle(h)
-    {
-    }
-
-    ~auto_handle() BOOST_NOEXCEPT
-    {
-        if (m_handle)
-            BOOST_VERIFY(boost::detail::winapi::CloseHandle(m_handle) != 0);
-    }
-
-    void init(boost::detail::winapi::HANDLE_ h) BOOST_NOEXCEPT
-    {
-        BOOST_ASSERT(m_handle == NULL);
-        m_handle = h;
-    }
-
-    boost::detail::winapi::HANDLE_ get() const BOOST_NOEXCEPT { return m_handle; }
-
-    void swap(auto_handle& that) BOOST_NOEXCEPT
-    {
-        boost::detail::winapi::HANDLE_ h = m_handle;
-        m_handle = that.m_handle;
-        that.m_handle = h;
-    }
-
-    BOOST_DELETED_FUNCTION(auto_handle(auto_handle const&))
-    BOOST_DELETED_FUNCTION(auto_handle& operator=(auto_handle const&))
-};
 
 //! Interprocess event object
 class interprocess_event

@@ -18,6 +18,7 @@
 
 #include <boost/log/sinks/text_ipc_message_queue_backend.hpp>
 #include <boost/log/utility/ipc/reliable_message_queue.hpp>
+#include <boost/log/utility/ipc/object_name.hpp>
 #include <boost/log/utility/open_mode.hpp>
 #include <boost/log/core/record_view.hpp>
 #include <boost/test/unit_test.hpp>
@@ -25,7 +26,7 @@
 #include "make_record.hpp"
 #include "char_definitions.hpp"
 
-const char ipc_queue_name[] = "boost_log_test_text_ipc_mq_backend";
+const boost::log::ipc::object_name ipc_queue_name(boost::log::ipc::object_name::session, "boost_log_test_text_ipc_mq_backend");
 const unsigned int capacity = 512;
 const unsigned int block_size = 1024;
 const char message[] = "Hello, world!";

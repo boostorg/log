@@ -1,6 +1,6 @@
 /*
  *               Copyright Lingxi Li 2015.
- *            Copyright Andrey Semashev 2015.
+ *            Copyright Andrey Semashev 2016.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -17,6 +17,7 @@
 #define BOOST_TEST_MODULE util_ipc_reliable_mq
 
 #include <boost/log/utility/ipc/reliable_message_queue.hpp>
+#include <boost/log/utility/ipc/object_name.hpp>
 #include <boost/log/utility/permissions.hpp>
 #include <boost/log/utility/open_mode.hpp>
 #include <boost/log/exceptions.hpp>
@@ -38,7 +39,7 @@
 #endif
 #include "char_definitions.hpp"
 
-const char ipc_queue_name[] = "boost_log_test_ipc_reliable_mq";
+const boost::log::ipc::object_name ipc_queue_name(boost::log::ipc::object_name::session, "boost_log_test_ipc_reliable_mq");
 const unsigned int capacity = 512;
 const unsigned int block_size = 1024;
 const char message1[] = "Hello, world!";
@@ -71,7 +72,7 @@ BOOST_AUTO_TEST_CASE(basic_functionality)
     // Create constructor and destructor.
     {
         queue_t queue(boost::log::open_mode::create_only, ipc_queue_name, capacity, block_size);
-        BOOST_CHECK(equal_strings(queue.name(), ipc_queue_name));
+        BOOST_CHECK(equal_strings(queue.name().c_str(), ipc_queue_name.c_str()));
         BOOST_CHECK(queue.is_open());
         BOOST_CHECK_EQUAL(queue.capacity(), capacity);
         BOOST_CHECK_EQUAL(queue.block_size(), block_size);
@@ -96,13 +97,13 @@ BOOST_AUTO_TEST_CASE(basic_functionality)
 
         queue_t queue_b(boost::log::open_mode::open_or_create, ipc_queue_name, capacity * 2u, block_size * 2u); // queue geometry differs from the existing queue
         BOOST_CHECK(queue_b.is_open());
-        BOOST_CHECK(equal_strings(queue_b.name(), ipc_queue_name));
+        BOOST_CHECK(equal_strings(queue_b.name().c_str(), ipc_queue_name.c_str()));
         BOOST_CHECK_EQUAL(queue_b.capacity(), capacity);
         BOOST_CHECK_EQUAL(queue_b.block_size(), block_size);
 
         queue_t queue_c(boost::log::open_mode::open_only, ipc_queue_name);
         BOOST_CHECK(queue_c.is_open());
-        BOOST_CHECK(equal_strings(queue_c.name(), ipc_queue_name));
+        BOOST_CHECK(equal_strings(queue_c.name().c_str(), ipc_queue_name.c_str()));
         BOOST_CHECK_EQUAL(queue_c.capacity(), capacity);
         BOOST_CHECK_EQUAL(queue_c.block_size(), block_size);
     }
@@ -121,7 +122,7 @@ BOOST_AUTO_TEST_CASE(basic_functionality)
         queue_t queue_a(boost::log::open_mode::create_only, ipc_queue_name, capacity, block_size);
         queue_t queue_b(boost::move(queue_a));
         BOOST_CHECK(!queue_a.is_open());
-        BOOST_CHECK(equal_strings(queue_b.name(), ipc_queue_name));
+        BOOST_CHECK(equal_strings(queue_b.name().c_str(), ipc_queue_name.c_str()));
         BOOST_CHECK(queue_b.is_open());
         BOOST_CHECK_EQUAL(queue_b.capacity(), capacity);
         BOOST_CHECK_EQUAL(queue_b.block_size(), block_size);
@@ -132,7 +133,7 @@ BOOST_AUTO_TEST_CASE(basic_functionality)
         queue_t queue_b;
         queue_b = boost::move(queue_a);
         BOOST_CHECK(!queue_a.is_open());
-        BOOST_CHECK(equal_strings(queue_b.name(), ipc_queue_name));
+        BOOST_CHECK(equal_strings(queue_b.name().c_str(), ipc_queue_name.c_str()));
         BOOST_CHECK(queue_b.is_open());
         BOOST_CHECK_EQUAL(queue_b.capacity(), capacity);
         BOOST_CHECK_EQUAL(queue_b.block_size(), block_size);
@@ -142,7 +143,7 @@ BOOST_AUTO_TEST_CASE(basic_functionality)
         queue_t queue_a(boost::log::open_mode::create_only, ipc_queue_name, capacity, block_size);
         queue_a.swap(queue_a);
         BOOST_CHECK(queue_a.is_open());
-        BOOST_CHECK(equal_strings(queue_a.name(), ipc_queue_name));
+        BOOST_CHECK(equal_strings(queue_a.name().c_str(), ipc_queue_name.c_str()));
         BOOST_CHECK_EQUAL(queue_a.capacity(), capacity);
         BOOST_CHECK_EQUAL(queue_a.block_size(), block_size);
 
@@ -150,7 +151,7 @@ BOOST_AUTO_TEST_CASE(basic_functionality)
         swap(queue_a, queue_b);
         BOOST_CHECK(!queue_a.is_open());
         BOOST_CHECK(queue_b.is_open());
-        BOOST_CHECK(equal_strings(queue_b.name(), ipc_queue_name));
+        BOOST_CHECK(equal_strings(queue_b.name().c_str(), ipc_queue_name.c_str()));
         BOOST_CHECK_EQUAL(queue_b.capacity(), capacity);
         BOOST_CHECK_EQUAL(queue_b.block_size(), block_size);
     }

@@ -10,6 +10,7 @@
 #include <string>
 #include <exception>
 #include <boost/log/utility/ipc/reliable_message_queue.hpp>
+#include <boost/log/utility/ipc/object_name.hpp>
 #include <boost/log/utility/open_mode.hpp>
 
 namespace logging = boost::log;
@@ -26,7 +27,7 @@ int main()
         // message queue named "ipc_message_queue".
         queue_t queue
         (
-            keywords::name = "ipc_message_queue",
+            keywords::name = logging::ipc::object_name(logging::ipc::object_name::user, "ipc_message_queue"),
             keywords::open_mode = logging::open_mode::open_or_create,
             keywords::capacity = 256,
             keywords::block_size = 1024,

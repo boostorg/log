@@ -29,8 +29,8 @@
 #include <boost/log/keywords/permissions.hpp>
 #include <boost/log/utility/open_mode.hpp>
 #include <boost/log/utility/permissions.hpp>
+#include <boost/log/utility/ipc/object_name.hpp>
 #include <boost/log/detail/parameter_tools.hpp>
-#include <boost/log/detail/c_str.hpp>
 #include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_HAS_PRAGMA_ONCE
@@ -63,13 +63,8 @@ struct enable_if_byte< unsigned char, R > { typedef R type; };
  * The format of the messages is user-defined and must be consistent across all writers and the reader. The queue does
  * not enforce any specific format of the messages, other than they should be supplied as a contiguous array of bytes.
  *
- * The queue internally uses a process-shared storage identified by a string (the queue name). The contents of the string are
- * specific to the target OS. For best portability the following guidelines should be followed:
- *
- *   \li On POSIX systems the string should start with a forward slash ('/') and contain no other slashes.
- *   \li On Windows the string must be encoded in UTF-8. In case if the queue is used for communication between processes
- *       running in different sessions, the string must start with the "Global\" prefix. Other than that prefix, the
- *       string should not contain slashes.
+ * The queue internally uses a process-shared storage identified by an \c object_name (the queue name). Refer to \c object_name
+ * documentation for details on restrictions imposed on object names.
  *
  * The queue storage is organized as a fixed number of blocks of a fixed size. The block size must be an integer power of 2 and
  * is expressed in bytes. Each written message, together with some metadata added by the queue, consumes an integer number
@@ -161,7 +156,7 @@ public:
     reliable_message_queue
     (
         open_mode::create_only_tag,
-        const char* name,
+        object_name const& name,
         uint32_t capacity,
         uint32_t block_size,
         overflow_policy oflow_policy = block_on_overflow,
@@ -190,7 +185,7 @@ public:
     reliable_message_queue
     (
         open_mode::open_or_create_tag,
-        const char* name,
+        object_name const& name,
         uint32_t capacity,
         uint32_t block_size,
         overflow_policy oflow_policy = block_on_overflow,
@@ -217,7 +212,7 @@ public:
     reliable_message_queue
     (
         open_mode::open_only_tag,
-        const char* name,
+        object_name const& name,
         overflow_policy oflow_policy = block_on_overflow,
         permissions const& perms = permissions()
     ) :
@@ -321,7 +316,7 @@ public:
      */
     BOOST_LOG_API void create
     (
-        const char* name,
+        object_name const& name,
         uint32_t capacity,
         uint32_t block_size,
         overflow_policy oflow_policy = block_on_overflow,
@@ -346,7 +341,7 @@ public:
      */
     BOOST_LOG_API void open_or_create
     (
-        const char* name,
+        object_name const& name,
         uint32_t capacity,
         uint32_t block_size,
         overflow_policy oflow_policy = block_on_overflow,
@@ -369,7 +364,7 @@ public:
      */
     BOOST_LOG_API void open
     (
-        const char* name,
+        object_name const& name,
         overflow_policy oflow_policy = block_on_overflow,
         permissions const& perms = permissions()
     );
@@ -399,7 +394,7 @@ public:
      *
      * \return Name of the associated message queue
      */
-    BOOST_LOG_API const char* name() const;
+    BOOST_LOG_API object_name const& name() const;
 
     /*!
      * The method returns the maximum number of allocation blocks the associated message queue
@@ -703,12 +698,9 @@ public:
      * places to ensure compatibility with other platforms and future library versions, which may change implementation
      * of the queue.
      *
-     * \param name Name of the message queue to be associated with. A valid name is one
-     *             that can be used as a C++ identifier or is a keyword.
-     *             On Windows platforms, the name is used to compose kernel object names,
-     *             and you may need to add the "Global\" prefix to the name in certain cases.
+     * \param name Name of the message queue to be removed.
      */
-    static BOOST_LOG_API void remove(const char* name);
+    static BOOST_LOG_API void remove(object_name const& name);
 
 #if !defined(BOOST_LOG_DOXYGEN_PASS)
 private:
@@ -724,21 +716,21 @@ private:
     template< typename ArgsT >
     void construct_dispatch(open_mode::create_only_tag, ArgsT const& args)
     {
-        this->create(boost::log::aux::c_str(args[keywords::name]), args[keywords::capacity], args[keywords::block_size], args[keywords::overflow_policy | block_on_overflow], args[keywords::permissions | permissions()]);
+        this->create(args[keywords::name], args[keywords::capacity], args[keywords::block_size], args[keywords::overflow_policy | block_on_overflow], args[keywords::permissions | permissions()]);
     }
 
     //! Implementation of the constructor with named arguments
     template< typename ArgsT >
     void construct_dispatch(open_mode::open_or_create_tag, ArgsT const& args)
     {
-        this->open_or_create(boost::log::aux::c_str(args[keywords::name]), args[keywords::capacity], args[keywords::block_size], args[keywords::overflow_policy | block_on_overflow], args[keywords::permissions | permissions()]);
+        this->open_or_create(args[keywords::name], args[keywords::capacity], args[keywords::block_size], args[keywords::overflow_policy | block_on_overflow], args[keywords::permissions | permissions()]);
     }
 
     //! Implementation of the constructor with named arguments
     template< typename ArgsT >
     void construct_dispatch(open_mode::open_only_tag, ArgsT const& args)
     {
-        this->open(boost::log::aux::c_str(args[keywords::name]), args[keywords::overflow_policy | block_on_overflow], args[keywords::permissions | permissions()]);
+        this->open(args[keywords::name], args[keywords::overflow_policy | block_on_overflow], args[keywords::permissions | permissions()]);
     }
 
     //! Closes the message queue, if it's open
