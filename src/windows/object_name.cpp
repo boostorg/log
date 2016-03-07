@@ -115,7 +115,7 @@ bool init_user_namespace()
         if (!token_user.User.Sid)
             return false;
 
-        // Create a boindary descriptor with the user's SID
+        // Create a boundary descriptor with the user's SID
         auto_boundary_descriptor h_boundary(CreateBoundaryDescriptorW(L"User", 0));
         if (!h_boundary.get())
             return false;
