@@ -27,6 +27,7 @@ project.pop-current ;
 # Windows libs
 lib psapi ;
 lib advapi32 ;
+lib secur32 ;
 lib ws2_32 ;
 lib mswsock ;
 
@@ -194,6 +195,7 @@ project boost/log
 
         <target-os>windows:<define>NOMINMAX
         <target-os>windows:<define>WIN32_LEAN_AND_MEAN
+        <target-os>windows:<define>SECURITY_WIN32
         <target-os>windows:<define>BOOST_USE_WINDOWS_H
         <target-os>windows:<library>ws2_32
         <target-os>windows:<library>mswsock
@@ -201,6 +203,7 @@ project boost/log
 
         <target-os>cygwin:<define>NOMINMAX
         <target-os>cygwin:<define>WIN32_LEAN_AND_MEAN
+        <target-os>cygwin:<define>SECURITY_WIN32
         <target-os>cygwin:<define>__USE_W32_SOCKETS
         <target-os>cygwin:<define>BOOST_USE_WINDOWS_H
         <target-os>cygwin:<library>ws2_32
@@ -434,6 +437,7 @@ rule select-platform-specific-sources ( properties * )
             result += <source>windows/mapped_shared_memory.cpp ;
             result += <source>windows/ipc_sync_wrappers.cpp ;
             result += <source>windows/ipc_reliable_message_queue.cpp ;
+            result += <library>secur32 ;
         }
 
         if ! [ has-config-flag BOOST_LOG_WITHOUT_DEBUG_OUTPUT : $(properties) ]

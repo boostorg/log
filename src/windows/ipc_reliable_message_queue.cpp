@@ -704,7 +704,7 @@ BOOST_LOG_API void reliable_message_queue::stop_local()
     BOOST_ASSERT(m_impl != NULL);
     try
     {
-        m_impl->stop();
+        m_impl->stop_local();
     }
     catch (boost::exception& e)
     {
@@ -718,7 +718,7 @@ BOOST_LOG_API void reliable_message_queue::reset_local()
     BOOST_ASSERT(m_impl != NULL);
     try
     {
-        m_impl->reset();
+        m_impl->reset_local();
     }
     catch (boost::exception& e)
     {

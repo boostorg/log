@@ -24,6 +24,7 @@
 #if defined(BOOST_WINDOWS)
 #include <cstring>
 #include <limits>
+#include <boost/detail/winapi/get_last_error.hpp>
 #include <boost/detail/winapi/character_code_conversion.hpp>
 #endif
 #include <boost/log/detail/header.hpp>
@@ -228,7 +229,8 @@ std::wstring utf8_to_utf16(const char* str)
         }
     }
 
-    BOOST_LOG_THROW_DESCR(conversion_error, "Failed to convert UTF-8 to UTF-16");
+    const boost::detail::winapi::DWORD_ err = boost::detail::winapi::GetLastError();
+    BOOST_LOG_THROW_DESCR_PARAMS(system_error, "Failed to convert UTF-8 to UTF-16", (err));
     BOOST_LOG_UNREACHABLE_RETURN(std::wstring());
 }
 
@@ -241,20 +243,27 @@ std::string utf16_to_utf8(const wchar_t* wstr)
     else if (BOOST_UNLIKELY(utf16_len > static_cast< std::size_t >((std::numeric_limits< int >::max)())))
         BOOST_LOG_THROW_DESCR(bad_alloc, "UTF-16 string too long");
 
-    int len = boost::detail::winapi::WideCharToMultiByte(boost::detail::winapi::CP_UTF8_, boost::detail::winapi::MB_ERR_INVALID_CHARS_, wstr, static_cast< int >(utf16_len), NULL, 0, NULL, NULL);
+    const boost::detail::winapi::DWORD_ flags =
+#if BOOST_USE_WINAPI_VERSION >= BOOST_WINAPI_VERSION_WIN6
+        boost::detail::winapi::WC_ERR_INVALID_CHARS_;
+#else
+        0u;
+#endif
+    int len = boost::detail::winapi::WideCharToMultiByte(boost::detail::winapi::CP_UTF8_, flags, wstr, static_cast< int >(utf16_len), NULL, 0, NULL, NULL);
     if (BOOST_LIKELY(len > 0))
     {
         std::string str;
         str.resize(len);
 
-        len = boost::detail::winapi::WideCharToMultiByte(boost::detail::winapi::CP_UTF8_, boost::detail::winapi::MB_ERR_INVALID_CHARS_, wstr, static_cast< int >(utf16_len), &str[0], len, NULL, NULL);
+        len = boost::detail::winapi::WideCharToMultiByte(boost::detail::winapi::CP_UTF8_, flags, wstr, static_cast< int >(utf16_len), &str[0], len, NULL, NULL);
         if (BOOST_LIKELY(len > 0))
         {
             return str;
         }
     }
 
-    BOOST_LOG_THROW_DESCR(conversion_error, "Failed to convert UTF-16 to UTF-8");
+    const boost::detail::winapi::DWORD_ err = boost::detail::winapi::GetLastError();
+    BOOST_LOG_THROW_DESCR_PARAMS(system_error, "Failed to convert UTF-16 to UTF-8", (err));
     BOOST_LOG_UNREACHABLE_RETURN(std::string());
 }
 

@@ -53,7 +53,7 @@ public:
     }
 
     boost::detail::winapi::HANDLE_ get() const BOOST_NOEXCEPT { return m_handle; }
-    boost::detail::winapi::HANDLE_* get_ptr() const BOOST_NOEXCEPT { return &m_handle; }
+    boost::detail::winapi::HANDLE_* get_ptr() BOOST_NOEXCEPT { return &m_handle; }
 
     void swap(auto_handle& that) BOOST_NOEXCEPT
     {

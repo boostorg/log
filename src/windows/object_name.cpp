@@ -15,7 +15,9 @@
 
 #include <boost/log/detail/config.hpp>
 #include <cstddef>
+#include <cstdlib>
 #include <string>
+#include <vector>
 #include <algorithm>
 #include <boost/memory_order.hpp>
 #include <boost/atomic/atomic.hpp>
@@ -25,7 +27,9 @@
 #include <boost/detail/winapi/get_last_error.hpp>
 #include <windows.h>
 #include <lmcons.h>
+#include <security.h>
 #include "windows/auto_handle.hpp"
+#include "windows/utf_code_conversion.hpp"
 #include <boost/log/detail/header.hpp>
 
 namespace boost {
@@ -36,7 +40,7 @@ namespace ipc {
 
 BOOST_LOG_ANONYMOUS_NAMESPACE {
 
-#if BOOST_USE_WINAPI_VERSION >= BOOST_WINAPI_VERSION_VISTA
+#if BOOST_USE_WINAPI_VERSION >= BOOST_WINAPI_VERSION_WIN6
 
 class auto_boundary_descriptor
 {
@@ -61,7 +65,7 @@ public:
     }
 
     HANDLE get() const BOOST_NOEXCEPT { return m_handle; }
-    HANDLE* get_ptr() const BOOST_NOEXCEPT { return &m_handle; }
+    HANDLE* get_ptr() BOOST_NOEXCEPT { return &m_handle; }
 
     void swap(auto_boundary_descriptor& that) BOOST_NOEXCEPT
     {
@@ -77,6 +81,17 @@ public:
 //! Handle for the private namespace for \c user scope
 static boost::atomic< HANDLE > g_user_private_namespace;
 
+//! Closes the private namespace on process exit
+void close_user_namespace()
+{
+    HANDLE h = g_user_private_namespace.load(boost::memory_order_acquire);
+    if (h)
+    {
+        ClosePrivateNamespace(h, 0);
+        g_user_private_namespace.store((HANDLE)NULL, boost::memory_order_release);
+    }
+}
+
 //! Attempts to create or open the private namespace
 bool init_user_namespace()
 {
@@ -84,13 +99,20 @@ bool init_user_namespace()
     if (BOOST_UNLIKELY(!h))
     {
         // Obtain the current user SID
-        auto_handle h_process_token;
+        boost::log::ipc::aux::auto_handle h_process_token;
         if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, h_process_token.get_ptr()))
             return false;
 
-        TOKEN_USER token_user = {};
         DWORD token_user_size = 0;
-        if (!GetTokenInformation(h_process_token.get(), TokenUser, &token_user, sizeof(token_user), &token_user_size) || !token_user.User.Sid)
+        GetTokenInformation(h_process_token.get(), TokenUser, NULL, 0u, &token_user_size);
+        if (GetLastError() != ERROR_INSUFFICIENT_BUFFER || token_user_size < sizeof(TOKEN_USER))
+            return false;
+        std::vector< unsigned char > token_user_storage(static_cast< std::size_t >(token_user_size), static_cast< unsigned char >(0u));
+        if (!GetTokenInformation(h_process_token.get(), TokenUser, &token_user_storage[0], token_user_size, &token_user_size))
+            return false;
+
+        TOKEN_USER const& token_user = *reinterpret_cast< const TOKEN_USER* >(&token_user_storage[0]);
+        if (!token_user.User.Sid)
             return false;
 
         // Create a boindary descriptor with the user's SID
@@ -104,7 +126,7 @@ bool init_user_namespace()
         // Create or open a namespace for kernel objects
         h = CreatePrivateNamespaceW(NULL, h_boundary.get(), L"User");
         if (!h)
-            h = OpenPrivateNamespace(h_boundary.get(), L"User");
+            h = OpenPrivateNamespaceW(h_boundary.get(), L"User");
 
         if (h)
         {
@@ -114,13 +136,17 @@ bool init_user_namespace()
                 ClosePrivateNamespace(h, 0);
                 h = expected;
             }
+            else
+            {
+                std::atexit(&close_user_namespace);
+            }
         }
     }
 
     return !!h;
 }
 
-#endif // BOOST_USE_WINAPI_VERSION >= BOOST_WINAPI_VERSION_VISTA
+#endif // BOOST_USE_WINAPI_VERSION >= BOOST_WINAPI_VERSION_WIN6
 
 //! Returns a prefix string for a shared resource according to the scope
 std::string get_scope_prefix(object_name::scope ns)
@@ -144,17 +170,17 @@ std::string get_scope_prefix(object_name::scope ns)
 
     case object_name::user:
         {
-#if BOOST_USE_WINAPI_VERSION >= BOOST_WINAPI_VERSION_VISTA
+#if BOOST_USE_WINAPI_VERSION >= BOOST_WINAPI_VERSION_WIN6
             if (init_user_namespace())
             {
                 prefix = "User\\boost.log.user";
             }
             else
-#endif // BOOST_USE_WINAPI_VERSION >= BOOST_WINAPI_VERSION_VISTA
+#endif // BOOST_USE_WINAPI_VERSION >= BOOST_WINAPI_VERSION_WIN6
             {
                 wchar_t buf[UNLEN + 1u];
                 ULONG len = sizeof(buf) / sizeof(*buf);
-                if (BOOST_UNLIKELY(!GetUserNameEx(NameSamCompatible, buf, &len)))
+                if (BOOST_UNLIKELY(!GetUserNameExW(NameSamCompatible, buf, &len)))
                 {
                     const boost::detail::winapi::DWORD_ err = boost::detail::winapi::GetLastError();
                     BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, "Failed to obtain the current user name", (err));
@@ -162,7 +188,7 @@ std::string get_scope_prefix(object_name::scope ns)
 
                 std::replace(buf, buf + len, L'\\', L'.');
 
-                prefix = "Local\\boost.log.user." + utf16_to_utf8(buf);
+                prefix = "Local\\boost.log.user." + boost::log::aux::utf16_to_utf8(buf);
             }
         }
         break;

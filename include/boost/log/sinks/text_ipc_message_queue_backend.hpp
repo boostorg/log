@@ -19,6 +19,7 @@
 #define BOOST_LOG_SINKS_TEXT_IPC_MESSAGE_QUEUE_BACKEND_HPP_INCLUDED_
 
 #include <string>
+#include <boost/cstdint.hpp>
 #include <boost/move/core.hpp>
 #include <boost/preprocessor/control/if.hpp>
 #include <boost/preprocessor/comparison/equal.hpp>
@@ -144,7 +145,7 @@ public:
     void consume(record_view const&, string_type const& formatted_message)
     {
         if (m_queue.is_open())
-            m_queue.send(formatted_message.data(), formatted_message.size());
+            m_queue.send(formatted_message.data(), static_cast< uint32_t >(formatted_message.size()));
     }
 };
 
