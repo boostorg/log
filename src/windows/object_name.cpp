@@ -131,14 +131,15 @@ bool init_user_namespace()
         if (h)
         {
             HANDLE expected = NULL;
-            if (!g_user_private_namespace.compare_exchange_strong(expected, h, boost::memory_order_acq_rel, boost::memory_order_acquire))
+            if (g_user_private_namespace.compare_exchange_strong(expected, h, boost::memory_order_acq_rel, boost::memory_order_acquire))
             {
-                ClosePrivateNamespace(h, 0);
-                h = expected;
+                std::atexit(&close_user_namespace);
             }
             else
             {
-                std::atexit(&close_user_namespace);
+                // Another thread must have opened the namespace
+                ClosePrivateNamespace(h, 0);
+                h = expected;
             }
         }
     }
