@@ -276,7 +276,7 @@ BOOST_AUTO_TEST_CASE(message_passing)
 
 namespace {
 
-const unsigned int message_count = 10000;
+const unsigned int message_count = 100000;
 
 void multithreaded_message_passing_feeding_thread(const char* message, unsigned int& failure_count)
 {

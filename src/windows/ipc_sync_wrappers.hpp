@@ -460,7 +460,7 @@ struct tick_count_clock
     }
 };
 
-//! Interprocess condition variable (semaphore-based)
+//! Interprocess condition variable
 class interprocess_condition_variable
 {
 private:
@@ -560,16 +560,26 @@ public:
     };
 
 private:
+    //! The list of semaphores used for blocking. The list is in the order at which the semaphores are considered to be picked for being used.
     semaphore_info_list m_semaphore_info_list;
+    //! The list of semaphores used for blocking. Used for searching for a particular semaphore by id.
     semaphore_info_set m_semaphore_info_set;
+    //! The semaphore that is currently being used for blocking
     semaphore_info* m_current_semaphore;
+    //! A string storage for formatting a semaphore name
     std::wstring m_semaphore_name;
+    //! Permissions used to create new semaphores
     permissions m_perms;
+    //! Process-shared state
     shared_state* m_shared_state;
+    //! The next id for creating a new semaphore
     uint32_t m_next_semaphore_id;
 
 public:
-    interprocess_condition_variable() BOOST_NOEXCEPT : m_current_semaphore(NULL), m_shared_state(NULL), m_next_semaphore_id(0u)
+    interprocess_condition_variable() BOOST_NOEXCEPT :
+        m_current_semaphore(NULL),
+        m_shared_state(NULL),
+        m_next_semaphore_id(0u)
     {
     }
 
@@ -628,129 +638,6 @@ private:
         return ((left - right) & 0x80000000u) != 0u;
     }
 };
-
-/*
-//! Interprocess condition variable (event-based)
-class interprocess_condition_variable
-{
-public:
-    struct shared_state
-    {
-        boost::atomic< uint32_t > m_waiters;
-        uint32_t m_notify_generation;
-        uint32_t m_wait_generation;
-
-        shared_state() BOOST_NOEXCEPT :
-            m_waiters(0u),
-            m_notify_generation(0u),
-            m_wait_generation(0u)
-        {
-        }
-    };
-
-private:
-    interprocess_event m_event;
-    shared_state* m_shared_state;
-
-public:
-    interprocess_condition_variable() BOOST_NOEXCEPT : m_shared_state(NULL)
-    {
-    }
-
-    void init(const wchar_t* name, shared_state* shared, permissions const& perms = permissions())
-    {
-        m_event.init(name, true, perms);
-        m_shared_state = shared;
-    }
-
-    void notify_all()
-    {
-        if (m_shared_state->m_notify_generation == m_shared_state->m_wait_generation && m_shared_state->m_waiters.load(boost::memory_order_relaxed) > 0u)
-        {
-            ++m_shared_state->m_notify_generation;
-            m_event.set();
-        }
-    }
-
-    bool wait(interprocess_mutex::optional_unlock& lock, boost::detail::winapi::HANDLE_ abort_handle)
-    {
-        if (m_shared_state->m_notify_generation != m_shared_state->m_wait_generation)
-        {
-            if (BOOST_UNLIKELY(m_shared_state->m_waiters.load(boost::memory_order_relaxed) > 0u))
-            {
-                // Some threads are being notified by the event. Do a short wait on the abort handle and then return.
-                // The caller will act as if this was a spurious wakeup, which are allowed anyway.
-                return simulate_wait(lock, abort_handle);
-            }
-
-            m_shared_state->m_wait_generation = m_shared_state->m_notify_generation;
-        }
-
-        // Block on the condition variable properly
-        const uint32_t generation = m_shared_state->m_wait_generation;
-
-        // It is essential to increment the counter under the lock so that the checks for zero above are valid.
-        // The mutex lock/unlock ensures memory ordering of the counter modifications, even though they have relaxed ordering.
-        m_shared_state->m_waiters.fetch_add(1u, boost::memory_order_relaxed);
-
-        bool result;
-        try
-        {
-            interprocess_mutex* const mutex = lock.disengage();
-            mutex->unlock();
-
-            result = m_event.wait(abort_handle);
-
-            // Have to unconditionally lock the mutex here
-            mutex->lock();
-            lock.engage(*mutex);
-        }
-        catch (...)
-        {
-            m_shared_state->m_waiters.fetch_sub(1u, boost::memory_order_relaxed);
-            throw;
-        }
-
-        const uint32_t old_waiters = m_shared_state->m_waiters.fetch_sub(1u, boost::memory_order_relaxed);
-
-        if (generation == m_shared_state->m_wait_generation && m_shared_state->m_notify_generation == m_shared_state->m_wait_generation && old_waiters == 1u)
-            m_event.reset();
-
-        return result;
-    }
-
-    BOOST_DELETED_FUNCTION(interprocess_condition_variable(interprocess_condition_variable const&))
-    BOOST_DELETED_FUNCTION(interprocess_condition_variable& operator=(interprocess_condition_variable const&))
-
-private:
-    //! Waits for a short period of time on the abort handle
-    static bool simulate_wait(interprocess_mutex::optional_unlock& lock, boost::detail::winapi::HANDLE_ abort_handle)
-    {
-        interprocess_mutex* const mutex = lock.disengage();
-        mutex->unlock();
-
-        const boost::detail::winapi::DWORD_ retval = boost::detail::winapi::WaitForSingleObject(abort_handle, 20u);
-
-        // Have to unconditionally lock the mutex here
-        mutex->lock();
-        lock.engage(*mutex);
-
-        if (retval == boost::detail::winapi::wait_timeout)
-        {
-            // Simulate spurious wakeup
-            return true;
-        }
-        else if (BOOST_UNLIKELY(retval != boost::detail::winapi::wait_object_0))
-        {
-            const boost::detail::winapi::DWORD_ err = boost::detail::winapi::GetLastError();
-            BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, "Failed to block on an interprocess event object", (err));
-        }
-
-        // Wait aborted
-        return false;
-    }
-};
-*/
 
 } // namespace aux
 

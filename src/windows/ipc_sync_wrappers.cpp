@@ -352,25 +352,46 @@ bool interprocess_condition_variable::wait(interprocess_mutex::optional_unlock& 
         // Avoid integer overflow
         if (BOOST_UNLIKELY(waiters >= ((std::numeric_limits< int32_t >::max)() - 1)))
             BOOST_LOG_THROW_DESCR(limitation_error, "Too many waiters on an interprocess condition variable");
+
+        // Make sure we use the right semaphore to block on
+        const uint32_t id = m_shared_state->m_semaphore_id;
+        if (m_current_semaphore->m_id != id)
+            m_current_semaphore = get_semaphore(id);
     }
 
     m_shared_state->m_waiters = waiters + 1;
     const uint32_t generation = m_shared_state->m_generation;
-    semaphore_info* const sem_info = m_current_semaphore;
+
+    boost::detail::winapi::HANDLE_ handles[2u] = { m_current_semaphore->m_semaphore.get_handle(), abort_handle };
 
     interprocess_mutex* const mutex = lock.disengage();
     mutex->unlock();
 
-    const bool result = sem_info->m_semaphore.wait(abort_handle);
+    boost::detail::winapi::DWORD_ retval = boost::detail::winapi::WaitForMultipleObjects(2u, handles, false, boost::detail::winapi::INFINITE_);
+
+    if (BOOST_UNLIKELY(retval == boost::detail::winapi::WAIT_FAILED_))
+    {
+        const boost::detail::winapi::DWORD_ err = boost::detail::winapi::GetLastError();
+
+        // Although highly unrealistic, it is possible that it took so long for the current thread to enter WaitForMultipleObjects that
+        // another thread has managed to destroy the semaphore. This can happen if the semaphore remains in a non-zero state
+        // for too long, which means that another process died while being blocked on the semaphore, and the semaphore was signalled,
+        // and the non-zero state timeout has passed. In this case the most logical behavior for the wait function is to return as
+        // if because of a wakeup.
+        if (err == ERROR_INVALID_HANDLE)
+            retval = boost::detail::winapi::WAIT_OBJECT_0_;
+        else
+            BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, "Failed to block on an interprocess semaphore object", (err));
+    }
 
     // Have to unconditionally lock the mutex here
     mutex->lock();
     lock.engage(*mutex);
 
-    if (!result && generation == m_shared_state->m_generation && m_shared_state->m_waiters > 0)
+    if (generation == m_shared_state->m_generation && m_shared_state->m_waiters > 0)
         --m_shared_state->m_waiters;
 
-    return result;
+    return retval == boost::detail::winapi::WAIT_OBJECT_0_;
 }
 
 //! Finds or opens a semaphore with the specified id
@@ -388,7 +409,8 @@ interprocess_condition_variable::semaphore_info* interprocess_condition_variable
 
         res.first = m_semaphore_info_set.insert_commit(*p, insert_state);
         m_semaphore_info_list.push_back(*p);
-        p.release();
+
+        return p.release();
     }
     else
     {
@@ -396,9 +418,9 @@ interprocess_condition_variable::semaphore_info* interprocess_condition_variable
         semaphore_info& info = *res.first;
         m_semaphore_info_list.erase(m_semaphore_info_list.iterator_to(info));
         m_semaphore_info_list.push_back(info);
-    }
 
-    return &*res.first;
+        return &info;
+    }
 }
 
 //! Finds or creates a semaphore with zero counter
