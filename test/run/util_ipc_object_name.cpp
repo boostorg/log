@@ -80,6 +80,12 @@ BOOST_AUTO_TEST_CASE(basic_functionality)
     }
 }
 
+BOOST_AUTO_TEST_CASE(from_native)
+{
+    boost::log::ipc::object_name name = boost::log::ipc::object_name::from_native(test_object_name1);
+    BOOST_CHECK(equal_strings(name.c_str(), test_object_name1));
+}
+
 BOOST_AUTO_TEST_CASE(name_equivalence)
 {
     // Test that the same names are equal
