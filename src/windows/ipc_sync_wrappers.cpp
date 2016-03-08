@@ -303,10 +303,10 @@ bool interprocess_mutex::lock_slow(boost::detail::winapi::HANDLE_ abort_handle)
 
 inline void interprocess_mutex::mark_waiting_and_try_lock(uint32_t& old_state)
 {
-    uint32_t was_locked, new_state;
+    uint32_t new_state;
     do
     {
-        was_locked = (old_state & lock_flag_value);
+        uint32_t was_locked = (old_state & lock_flag_value);
         if (was_locked)
         {
             // Avoid integer overflows
