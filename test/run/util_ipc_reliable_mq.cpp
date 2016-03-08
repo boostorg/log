@@ -294,22 +294,23 @@ void multithreaded_message_passing_feeding_thread(const char* message, unsigned 
 
 BOOST_AUTO_TEST_CASE(multithreaded_message_passing)
 {
-    unsigned int failure_count1 = 0, failure_count2 = 0;
+    unsigned int failure_count1 = 0, failure_count2 = 0, failure_count3 = 0;
     boost::atomic_thread_fence(boost::memory_order_release);
 
     boost::thread thread1(&multithreaded_message_passing_feeding_thread, "Thread 1", boost::ref(failure_count1));
     boost::thread thread2(&multithreaded_message_passing_feeding_thread, "Thread 2", boost::ref(failure_count2));
+    boost::thread thread3(&multithreaded_message_passing_feeding_thread, "Thread 3", boost::ref(failure_count3));
 
     BOOST_TEST_PASSPOINT();
 
     queue_t queue(boost::log::open_mode::open_or_create, ipc_queue_name, capacity, block_size);
     unsigned int receive_failures = 0, receive_corruptions = 0;
-    unsigned int message_count1 = 0, message_count2 = 0;
+    unsigned int message_count1 = 0, message_count2 = 0, message_count3 = 0;
     std::string msg;
 
     BOOST_TEST_PASSPOINT();
 
-    for (unsigned int i = 0; i < message_count * 2u; ++i)
+    for (unsigned int i = 0; i < message_count * 3u; ++i)
     {
         msg.clear();
         if (queue.receive(msg) == queue_t::succeeded)
@@ -318,6 +319,8 @@ BOOST_AUTO_TEST_CASE(multithreaded_message_passing)
                 ++message_count1;
             else if (msg == "Thread 2")
                 ++message_count2;
+            else if (msg == "Thread 3")
+                ++message_count3;
             else
                 ++receive_corruptions;
         }
@@ -331,12 +334,17 @@ BOOST_AUTO_TEST_CASE(multithreaded_message_passing)
     BOOST_TEST_PASSPOINT();
     thread2.join();
 
+    BOOST_TEST_PASSPOINT();
+    thread3.join();
+
     boost::atomic_thread_fence(boost::memory_order_acquire);
 
     BOOST_CHECK_EQUAL(failure_count1, 0u);
     BOOST_CHECK_EQUAL(message_count1, message_count);
     BOOST_CHECK_EQUAL(failure_count2, 0u);
     BOOST_CHECK_EQUAL(message_count2, message_count);
+    BOOST_CHECK_EQUAL(failure_count3, 0u);
+    BOOST_CHECK_EQUAL(message_count3, message_count);
     BOOST_CHECK_EQUAL(receive_failures, 0u);
     BOOST_CHECK_EQUAL(receive_corruptions, 0u);
 }
