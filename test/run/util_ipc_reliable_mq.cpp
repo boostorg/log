@@ -295,6 +295,7 @@ void multithreaded_message_passing_feeding_thread(const char* message, unsigned 
 BOOST_AUTO_TEST_CASE(multithreaded_message_passing)
 {
     unsigned int failure_count1 = 0, failure_count2 = 0;
+    boost::atomic_thread_fence(boost::memory_order_release);
 
     boost::thread thread1(&multithreaded_message_passing_feeding_thread, "Thread 1", boost::ref(failure_count1));
     boost::thread thread2(&multithreaded_message_passing_feeding_thread, "Thread 2", boost::ref(failure_count2));
@@ -330,6 +331,8 @@ BOOST_AUTO_TEST_CASE(multithreaded_message_passing)
     BOOST_TEST_PASSPOINT();
     thread2.join();
 
+    boost::atomic_thread_fence(boost::memory_order_acquire);
+
     BOOST_CHECK_EQUAL(failure_count1, 0u);
     BOOST_CHECK_EQUAL(message_count1, message_count);
     BOOST_CHECK_EQUAL(failure_count2, 0u);
@@ -348,6 +351,8 @@ void stop_reset_feeding_thread(queue_t& queue, queue_t::operation_result* result
         if (results[i] != queue_t::succeeded)
             break;
     }
+
+    boost::atomic_thread_fence(boost::memory_order_release);
 }
 
 void stop_reset_reading_thread(queue_t& queue, queue_t::operation_result* results, unsigned int count)
@@ -360,6 +365,8 @@ void stop_reset_reading_thread(queue_t& queue, queue_t::operation_result* result
         if (results[i] != queue_t::succeeded)
             break;
     }
+
+    boost::atomic_thread_fence(boost::memory_order_release);
 }
 
 } // namespace
@@ -373,6 +380,7 @@ BOOST_AUTO_TEST_CASE(stop_reset_local)
 
     std::fill_n(feeder_results, sizeof(feeder_results) / sizeof(*feeder_results), queue_t::succeeded);
     std::fill_n(reader_results, sizeof(reader_results) / sizeof(*reader_results), queue_t::succeeded);
+    boost::atomic_thread_fence(boost::memory_order_release);
 
     BOOST_TEST_PASSPOINT();
 
@@ -392,6 +400,8 @@ BOOST_AUTO_TEST_CASE(stop_reset_local)
     BOOST_TEST_PASSPOINT();
     feeder_thread.join();
 
+    boost::atomic_thread_fence(boost::memory_order_acquire);
+
     BOOST_CHECK_EQUAL(feeder_results[0], queue_t::succeeded);
     BOOST_CHECK_EQUAL(feeder_results[1], queue_t::succeeded);
     BOOST_CHECK_EQUAL(feeder_results[2], queue_t::aborted);
@@ -403,6 +413,7 @@ BOOST_AUTO_TEST_CASE(stop_reset_local)
 
     std::fill_n(feeder_results, sizeof(feeder_results) / sizeof(*feeder_results), queue_t::succeeded);
     std::fill_n(reader_results, sizeof(reader_results) / sizeof(*reader_results), queue_t::succeeded);
+    boost::atomic_thread_fence(boost::memory_order_release);
 
     BOOST_TEST_PASSPOINT();
 
@@ -421,6 +432,8 @@ BOOST_AUTO_TEST_CASE(stop_reset_local)
     reader_queue.stop_local();
     BOOST_TEST_PASSPOINT();
     reader_thread.join();
+
+    boost::atomic_thread_fence(boost::memory_order_acquire);
 
     BOOST_CHECK_EQUAL(feeder_results[0], queue_t::succeeded);
     BOOST_CHECK_EQUAL(feeder_results[1], queue_t::succeeded);
