@@ -75,10 +75,10 @@ struct enable_if_byte< unsigned char, R > { typedef R type; };
  * The queue is considered empty when no messages are enqueued (all blocks are free). The queue is considered full at the point
  * of enqueueing a message when there is not enough free blocks to accommodate the message.
  *
- * The queue is reliable in that it will not drop messages that are not received by the reader, other than the case when a
- * non-empty queue is destroyed by the last user. If a message cannot be enqueued by the writer because the queue is full,
- * the queue can either block the writer or throw an exception, depending on the policy specified at the queue creation.
- * The policy is object local, i.e. different writers and the reader can have different overflow policies.
+ * The queue is reliable in that it will not drop successfully sent messages that are not received by the reader, other than the
+ * case when a non-empty queue is destroyed by the last user. If a message cannot be enqueued by the writer because the queue is
+ * full, the queue can either block the writer or return an error or throw an exception, depending on the policy specified at
+ * the queue creation. The policy is object local, i.e. different writers and the reader can have different overflow policies.
  *
  * If the queue is empty and the reader attempts to dequeue a message, it will block until a message is enqueued by a writer.
  *
@@ -87,8 +87,8 @@ struct enable_if_byte< unsigned char, R > { typedef R type; };
  * or other processes) are unaffected. In order to restore the normal functioning of the queue instance after the \c stop_local
  * call the user has to invoke \c reset_local.
  *
- * The queue does not guarantee any particular order of received messages from different writers. Messages sent by a particular
- * writer will be received in the order of sending.
+ * The queue does not guarantee any particular order of received messages from different writer threads. Messages sent by a
+ * particular writer thread will be received in the order of sending.
  *
  * Methods of this class are not thread-safe, unless otherwise specified.
  */
@@ -99,6 +99,7 @@ public:
     enum operation_result
     {
         succeeded,    //!< The operation has completed successfully
+        no_space,     //!< The message could not be sent because the queue is full
         aborted       //!< The operation has been aborted because the queue method <tt>stop_local()</tt> has been called
     };
 
@@ -107,21 +108,26 @@ public:
     {
         //! Block the send operation when the queue is full
         block_on_overflow,
+        //! Return \c operation_result::no_space when the queue is full
+        fail_on_overflow,
         //! Throw an exception when the queue is full
         throw_on_overflow
     };
+
+    //! Queue message size type
+    typedef uint32_t size_type;
 
 #if !defined(BOOST_LOG_DOXYGEN_PASS)
 
     BOOST_MOVABLE_BUT_NOT_COPYABLE(reliable_message_queue)
 
 private:
-    typedef void (*receive_handler)(void* state, const void* data, uint32_t size);
+    typedef void (*receive_handler)(void* state, const void* data, size_type size);
 
     struct fixed_buffer_state
     {
         uint8_t* data;
-        uint32_t size;
+        size_type size;
     };
 
     struct implementation;
@@ -158,7 +164,7 @@ public:
         open_mode::create_only_tag,
         object_name const& name,
         uint32_t capacity,
-        uint32_t block_size,
+        size_type block_size,
         overflow_policy oflow_policy = block_on_overflow,
         permissions const& perms = permissions()
     ) :
@@ -187,7 +193,7 @@ public:
         open_mode::open_or_create_tag,
         object_name const& name,
         uint32_t capacity,
-        uint32_t block_size,
+        size_type block_size,
         overflow_policy oflow_policy = block_on_overflow,
         permissions const& perms = permissions()
     ) :
@@ -318,7 +324,7 @@ public:
     (
         object_name const& name,
         uint32_t capacity,
-        uint32_t block_size,
+        size_type block_size,
         overflow_policy oflow_policy = block_on_overflow,
         permissions const& perms = permissions()
     );
@@ -343,7 +349,7 @@ public:
     (
         object_name const& name,
         uint32_t capacity,
-        uint32_t block_size,
+        size_type block_size,
         overflow_policy oflow_policy = block_on_overflow,
         permissions const& perms = permissions()
     );
@@ -419,7 +425,7 @@ public:
      *
      * \return Allocation block size, in bytes.
      */
-    BOOST_LOG_API uint32_t block_size() const;
+    BOOST_LOG_API size_type block_size() const;
 
     /*!
      * The method wakes up all threads that are blocked in calls to <tt>send()</tt> or
@@ -486,13 +492,14 @@ public:
      * \param message_size Size of the message data in bytes. If the size is larger than
      *                     the associated message queue capacity, an <tt>std::logic_error</tt> exception is thrown.
      *
-     * \return \c operation_result::succeeded if the operation is successful, or
-     *         \c operation_result::aborted if <tt>stop_local()</tt> was called.
+     * \retval \c operation_result::succeeded if the operation is successful
+     * \retval \c operation_result::no_space if \c overflow_policy::fail_on_overflow is in effect and the queue is full
+     * \retval \c operation_result::aborted if the call was interrupted by <tt>stop_local()</tt>
      *
      * <b>Throws:</b> <tt>std::logic_error</tt> in case if the message size exceeds the queue
      *                capacity, <tt>system_error</tt> in case if a native OS method fails.
      */
-    BOOST_LOG_API operation_result send(void const* message_data, uint32_t message_size);
+    BOOST_LOG_API operation_result send(void const* message_data, size_type message_size);
 
     /*!
      * The method performs an attempt to send a message to the associated message queue.
@@ -517,7 +524,7 @@ public:
      * <b>Throws:</b> <tt>std::logic_error</tt> in case if the message size exceeds the queue
      *                capacity, <tt>system_error</tt> in case if a native OS method fails.
      */
-    BOOST_LOG_API bool try_send(void const* message_data, uint32_t message_size);
+    BOOST_LOG_API bool try_send(void const* message_data, size_type message_size);
 
     /*!
      * The method takes a message from the associated message queue. When the object is in
@@ -535,10 +542,10 @@ public:
      * \param buffer_size The size of the buffer, in bytes.
      * \param message_size Receives the size of the received message, in bytes.
      *
-     * \return \c operation_result::succeeded if the operation is successful, and \c operation_result::aborted
-     *         if the call was interrupted by <tt>stop_local()</tt>.
+     * \retval \c operation_result::succeeded if the operation is successful
+     * \retval \c operation_result::aborted if the call was interrupted by <tt>stop_local()</tt>
      */
-    operation_result receive(void* buffer, uint32_t buffer_size, uint32_t& message_size)
+    operation_result receive(void* buffer, size_type buffer_size, size_type& message_size)
     {
         fixed_buffer_state state = { static_cast< uint8_t* >(buffer), buffer_size };
         operation_result result = do_receive(&reliable_message_queue::fixed_buffer_receive_handler, &state);
@@ -561,16 +568,16 @@ public:
      * \param buffer The memory buffer to store the received message in.
      * \param message_size Receives the size of the received message, in bytes.
      *
-     * \return \c operation_result::succeeded if the operation is successful, and \c operation_result::aborted
-     *         if the call was interrupted by <tt>stop_local()</tt>.
+     * \retval \c operation_result::succeeded if the operation is successful
+     * \retval \c operation_result::aborted if the call was interrupted by <tt>stop_local()</tt>
      */
-    template< typename ElementT, uint32_t SizeV >
+    template< typename ElementT, size_type SizeV >
 #if !defined(BOOST_LOG_DOXYGEN_PASS)
     typename aux::enable_if_byte< ElementT, operation_result >::type
 #else
     operation_result
 #endif
-    receive(ElementT (&buffer)[SizeV], uint32_t& message_size)
+    receive(ElementT (&buffer)[SizeV], size_type& message_size)
     {
         return receive(buffer, SizeV, message_size);
     }
@@ -591,7 +598,8 @@ public:
      *                  value type of <tt>char</tt>, <tt>signed char</tt> or <tt>unsigned char</tt>
      *                  and support inserting elements at the end.
      *
-     * \return \c true if the operation is successful, and \c false otherwise.
+     * \retval \c operation_result::succeeded if the operation is successful
+     * \retval \c operation_result::aborted if the call was interrupted by <tt>stop_local()</tt>
      */
     template< typename ContainerT >
 #if !defined(BOOST_LOG_DOXYGEN_PASS)
@@ -620,7 +628,7 @@ public:
      * \return \c true if a message is successfully received, and \c false otherwise (e.g.,
      *         when the queue is empty).
      */
-    bool try_receive(void* buffer, uint32_t buffer_size, uint32_t& message_size)
+    bool try_receive(void* buffer, size_type buffer_size, size_type& message_size)
     {
         fixed_buffer_state state = { static_cast< uint8_t* >(buffer), buffer_size };
         bool result = do_try_receive(&reliable_message_queue::fixed_buffer_receive_handler, &state);
@@ -643,13 +651,13 @@ public:
      * \return \c true if a message is successfully received, and \c false otherwise (e.g.,
      *         when the queue is empty).
      */
-    template< typename ElementT, uint32_t SizeV >
+    template< typename ElementT, size_type SizeV >
 #if !defined(BOOST_LOG_DOXYGEN_PASS)
     typename aux::enable_if_byte< ElementT, bool >::type
 #else
     bool
 #endif
-    try_receive(ElementT (&buffer)[SizeV], uint32_t& message_size)
+    try_receive(ElementT (&buffer)[SizeV], size_type& message_size)
     {
         return try_receive(buffer, SizeV, message_size);
     }
@@ -742,10 +750,10 @@ private:
     BOOST_LOG_API bool do_try_receive(receive_handler handler, void* state);
 
     //! Fixed buffer receive handler
-    static BOOST_LOG_API void fixed_buffer_receive_handler(void* state, const void* data, uint32_t size);
+    static BOOST_LOG_API void fixed_buffer_receive_handler(void* state, const void* data, size_type size);
     //! Receive handler for a container
     template< typename ContainerT >
-    static void container_receive_handler(void* state, const void* data, uint32_t size)
+    static void container_receive_handler(void* state, const void* data, size_type size)
     {
         ContainerT* const container = static_cast< ContainerT* >(state);
         container->insert

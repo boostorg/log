@@ -18,6 +18,7 @@
 #ifndef BOOST_LOG_SINKS_TEXT_IPC_MESSAGE_QUEUE_BACKEND_HPP_INCLUDED_
 #define BOOST_LOG_SINKS_TEXT_IPC_MESSAGE_QUEUE_BACKEND_HPP_INCLUDED_
 
+#include <limits>
 #include <string>
 #include <boost/cstdint.hpp>
 #include <boost/move/core.hpp>
@@ -28,6 +29,7 @@
 #include <boost/log/core/record_view.hpp>
 #include <boost/log/sinks/basic_sink_backend.hpp>
 #include <boost/log/sinks/frontend_requirements.hpp>
+#include <boost/log/exceptions.hpp>
 #include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_HAS_PRAGMA_ONCE
@@ -145,7 +147,13 @@ public:
     void consume(record_view const&, string_type const& formatted_message)
     {
         if (m_queue.is_open())
-            m_queue.send(formatted_message.data(), static_cast< uint32_t >(formatted_message.size()));
+        {
+            typedef typename queue_type::size_type size_type;
+            const string_type::size_type size = formatted_message.size();
+            if (BOOST_UNLIKELY(size > static_cast< string_type::size_type >((std::numeric_limits< size_type >::max)())))
+                BOOST_LOG_THROW_DESCR(limitation_error, "Message too long to send to an interprocess queue");
+            m_queue.send(formatted_message.data(), static_cast< size_type >(size));
+        }
     }
 };
 

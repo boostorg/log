@@ -467,6 +467,22 @@ logic_error::~logic_error() throw()
 {
 }
 
+void logic_error::throw_(const char* file, std::size_t line, const char* descr)
+{
+    boost::throw_exception(boost::enable_error_info(logic_error(descr))
+        << boost::throw_file(file)
+        << boost::throw_line(line)
+    );
+}
+
+void logic_error::throw_(const char* file, std::size_t line, std::string const& descr)
+{
+    boost::throw_exception(boost::enable_error_info(logic_error(descr))
+        << boost::throw_file(file)
+        << boost::throw_line(line)
+    );
+}
+
 odr_violation::odr_violation() :
     logic_error("ODR violation detected")
 {

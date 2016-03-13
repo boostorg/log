@@ -332,6 +332,11 @@ public:
      * Destructor
      */
     ~logic_error() throw();
+
+#ifndef BOOST_LOG_DOXYGEN_PASS
+    static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, const char* descr);
+    static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, std::string const& descr);
+#endif
 };
 
 /*!

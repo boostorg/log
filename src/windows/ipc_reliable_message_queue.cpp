@@ -72,12 +72,12 @@ private:
         enum { data_alignment = 32u };
 
         //! Size of the element data, in bytes
-        uint32_t m_size;
+        size_type m_size;
 
         //! Returns the block header overhead, in bytes
-        static BOOST_CONSTEXPR uint32_t get_header_overhead() BOOST_NOEXCEPT
+        static BOOST_CONSTEXPR size_type get_header_overhead() BOOST_NOEXCEPT
         {
-            return static_cast< uint32_t >(boost::alignment::align_up(sizeof(block_header), data_alignment));
+            return static_cast< size_type >(boost::alignment::align_up(sizeof(block_header), data_alignment));
         }
 
         //! Returns a pointer to the element data
@@ -104,7 +104,7 @@ private:
         //! Number of allocation blocks in the queue.
         const uint32_t m_capacity;
         //! Size of an allocation block, in bytes.
-        const uint32_t m_block_size;
+        const size_type m_block_size;
         //! Shared state of the mutex for protecting queue data structures.
         boost::log::ipc::aux::interprocess_mutex::shared_state m_mutex_state;
         //! Shared state of the condition variable used to block writers when the queue is full.
@@ -116,7 +116,7 @@ private:
         //! The current reading position (allocation block index).
         uint32_t m_get_pos;
 
-        header(uint32_t capacity, uint32_t block_size) :
+        header(uint32_t capacity, size_type block_size) :
             m_abi_tag(get_abi_tag()),
             m_capacity(capacity),
             m_block_size(block_size),
@@ -184,7 +184,7 @@ private:
     //! Queue overflow handling policy
     const overflow_policy m_overflow_policy;
     //! The mask for selecting bits that constitute size values from 0 to (block_size - 1)
-    uint32_t m_block_size_mask;
+    size_type m_block_size_mask;
     //! The number of the bit set in block_size (i.e. log base 2 of block_size)
     uint32_t m_block_size_log2;
 
@@ -207,7 +207,7 @@ public:
         open_mode::create_only_tag,
         object_name const& name,
         uint32_t capacity,
-        uint32_t block_size,
+        size_type block_size,
         overflow_policy oflow_policy,
         permissions const& perms
     ) :
@@ -230,7 +230,7 @@ public:
         open_mode::open_or_create_tag,
         object_name const& name,
         uint32_t capacity,
-        uint32_t block_size,
+        size_type block_size,
         overflow_policy oflow_policy,
         permissions const& perms
     ) :
@@ -280,19 +280,19 @@ public:
         return get_header()->m_capacity;
     }
 
-    uint32_t block_size() const BOOST_NOEXCEPT
+    size_type block_size() const BOOST_NOEXCEPT
     {
         return get_header()->m_block_size;
     }
 
-    operation_result send(void const* message_data, uint32_t message_size)
+    operation_result send(void const* message_data, size_type message_size)
     {
         const uint32_t block_count = estimate_block_count(message_size);
 
         header* const hdr = get_header();
 
         if (BOOST_UNLIKELY(block_count > hdr->m_capacity))
-            BOOST_THROW_EXCEPTION(logic_error("Message size exceeds the interprocess queue capacity"));
+            BOOST_LOG_THROW_DESCR(logic_error, "Message size exceeds the interprocess queue capacity");
 
         if (!lock_queue())
             return aborted;
@@ -304,26 +304,29 @@ public:
             if ((hdr->m_capacity - hdr->m_size) >= block_count)
                 break;
 
-            if (BOOST_UNLIKELY(m_overflow_policy == throw_on_overflow))
-                BOOST_THROW_EXCEPTION(capacity_limit_reached("Interprocess queue is full"));
+            const overflow_policy oflow_policy = m_overflow_policy;
+            if (oflow_policy == fail_on_overflow)
+                return no_space;
+            else if (BOOST_UNLIKELY(oflow_policy == throw_on_overflow))
+                BOOST_LOG_THROW_DESCR(capacity_limit_reached, "Interprocess queue is full");
 
             if (!m_nonfull_queue.wait(unlock, m_stop.get()))
                 return aborted;
         }
 
-        put_message(message_data, message_size, block_count);
+        enqueue_message(message_data, message_size, block_count);
 
         return succeeded;
     }
 
-    bool try_send(void const* message_data, uint32_t message_size)
+    bool try_send(void const* message_data, size_type message_size)
     {
         const uint32_t block_count = estimate_block_count(message_size);
 
         header* const hdr = get_header();
 
         if (BOOST_UNLIKELY(block_count > hdr->m_capacity))
-            BOOST_THROW_EXCEPTION(logic_error("Message size exceeds the interprocess queue capacity"));
+            BOOST_LOG_THROW_DESCR(logic_error, "Message size exceeds the interprocess queue capacity");
 
         if (!lock_queue())
             return aborted;
@@ -333,7 +336,7 @@ public:
         if ((hdr->m_capacity - hdr->m_size) < block_count)
             return false;
 
-        put_message(message_data, message_size, block_count);
+        enqueue_message(message_data, message_size, block_count);
 
         return true;
     }
@@ -361,7 +364,7 @@ public:
             unlock.engage(m_mutex);
         }
 
-        get_message(handler, state);
+        dequeue_message(handler, state);
 
         return succeeded;
     }
@@ -377,7 +380,7 @@ public:
         if (hdr->m_size == 0u)
             return false;
 
-        get_message(handler, state);
+        dequeue_message(handler, state);
 
         return true;
     }
@@ -405,7 +408,7 @@ private:
         return static_cast< header* >(m_shared_memory.address());
     }
 
-    static std::size_t estimate_region_size(uint32_t capacity, uint32_t block_size) BOOST_NOEXCEPT
+    static std::size_t estimate_region_size(uint32_t capacity, size_type block_size) BOOST_NOEXCEPT
     {
         return boost::alignment::align_up(sizeof(header), BOOST_LOG_CPU_CACHE_LINE_SIZE) + static_cast< std::size_t >(capacity) * static_cast< std::size_t >(block_size);
     }
@@ -438,7 +441,7 @@ private:
         m_stop.init(h);
     }
 
-    void create_queue(std::wstring const& name, uint32_t capacity, uint32_t block_size, permissions const& perms)
+    void create_queue(std::wstring const& name, uint32_t capacity, size_type block_size, permissions const& perms)
     {
         // Initialize synchronization primitives before initializing the header as the openers will wait for it to be initialized
         header* const hdr = get_header();
@@ -499,7 +502,7 @@ private:
         init_block_size(hdr->m_block_size);
     }
 
-    void init_block_size(uint32_t block_size)
+    void init_block_size(size_type block_size)
     {
         m_block_size_mask = block_size - 1u;
 
@@ -546,25 +549,25 @@ private:
     }
 
     //! Returns the number of allocation blocks that are required to store user's payload of the specified size
-    uint32_t estimate_block_count(uint32_t size) const BOOST_NOEXCEPT
+    uint32_t estimate_block_count(size_type size) const BOOST_NOEXCEPT
     {
         // ceil((size + get_header_overhead()) / block_size)
-        return (size + block_header::get_header_overhead() + m_block_size_mask) >> m_block_size_log2;
+        return static_cast< uint32_t >((size + block_header::get_header_overhead() + m_block_size_mask) >> m_block_size_log2);
     }
 
     //! Puts the message to the back of the queue
-    void put_message(void const* message_data, uint32_t message_size, uint32_t block_count)
+    void enqueue_message(void const* message_data, size_type message_size, uint32_t block_count)
     {
         header* const hdr = get_header();
 
         const uint32_t capacity = hdr->m_capacity;
-        const uint32_t block_size = hdr->m_block_size;
+        const size_type block_size = hdr->m_block_size;
         uint32_t pos = hdr->m_put_pos;
 
         block_header* block = hdr->get_block(pos);
         block->m_size = message_size;
 
-        uint32_t write_size = (std::min)((capacity - pos) * block_size - block_header::get_header_overhead(), message_size);
+        size_type write_size = (std::min)(static_cast< size_type >((capacity - pos) * block_size - block_header::get_header_overhead()), message_size);
         std::memcpy(block->get_data(), message_data, write_size);
 
         pos += block_count;
@@ -587,21 +590,21 @@ private:
     }
 
     //! Retrieves the next message and invokes the handler to store the message contents
-    void get_message(receive_handler handler, void* state)
+    void dequeue_message(receive_handler handler, void* state)
     {
         header* const hdr = get_header();
 
         const uint32_t capacity = hdr->m_capacity;
-        const uint32_t block_size = hdr->m_block_size;
+        const size_type block_size = hdr->m_block_size;
         uint32_t pos = hdr->m_get_pos;
 
         block_header* block = hdr->get_block(pos);
-        uint32_t message_size = block->m_size;
+        size_type message_size = block->m_size;
         uint32_t block_count = estimate_block_count(message_size);
 
         BOOST_ASSERT(block_count <= hdr->m_size);
 
-        uint32_t read_size = (std::min)((capacity - pos) * block_size - block_header::get_header_overhead(), message_size);
+        size_type read_size = (std::min)(static_cast< size_type >((capacity - pos) * block_size - block_header::get_header_overhead()), message_size);
         handler(state, block->get_data(), read_size);
 
         pos += block_count;
@@ -621,7 +624,7 @@ private:
     }
 };
 
-BOOST_LOG_API void reliable_message_queue::create(object_name const& name, uint32_t capacity, uint32_t block_size, overflow_policy oflow_policy, permissions const& perms)
+BOOST_LOG_API void reliable_message_queue::create(object_name const& name, uint32_t capacity, size_type block_size, overflow_policy oflow_policy, permissions const& perms)
 {
     BOOST_ASSERT(m_impl == NULL);
     if (!boost::log::aux::is_power_of_2(block_size))
@@ -637,14 +640,14 @@ BOOST_LOG_API void reliable_message_queue::create(object_name const& name, uint3
     }
 }
 
-BOOST_LOG_API void reliable_message_queue::open_or_create(object_name const& name, uint32_t capacity, uint32_t block_size, overflow_policy oflow_policy, permissions const& perms)
+BOOST_LOG_API void reliable_message_queue::open_or_create(object_name const& name, uint32_t capacity, size_type block_size, overflow_policy oflow_policy, permissions const& perms)
 {
     BOOST_ASSERT(m_impl == NULL);
     if (!boost::log::aux::is_power_of_2(block_size))
         BOOST_THROW_EXCEPTION(std::invalid_argument("Interprocess message queue block size is not a power of 2"));
     try
     {
-        m_impl = new implementation(open_mode::open_or_create, name, capacity, static_cast< uint32_t >(boost::alignment::align_up(block_size, BOOST_LOG_CPU_CACHE_LINE_SIZE)), oflow_policy, perms);
+        m_impl = new implementation(open_mode::open_or_create, name, capacity, static_cast< size_type >(boost::alignment::align_up(block_size, BOOST_LOG_CPU_CACHE_LINE_SIZE)), oflow_policy, perms);
     }
     catch (boost::exception& e)
     {
@@ -693,7 +696,7 @@ BOOST_LOG_API uint32_t reliable_message_queue::capacity() const
     return m_impl->capacity();
 }
 
-BOOST_LOG_API uint32_t reliable_message_queue::block_size() const
+BOOST_LOG_API reliable_message_queue::size_type reliable_message_queue::block_size() const
 {
     BOOST_ASSERT(m_impl != NULL);
     return m_impl->block_size();
@@ -733,7 +736,7 @@ BOOST_LOG_API void reliable_message_queue::do_close() BOOST_NOEXCEPT
     m_impl = NULL;
 }
 
-BOOST_LOG_API reliable_message_queue::operation_result reliable_message_queue::send(void const* message_data, uint32_t message_size)
+BOOST_LOG_API reliable_message_queue::operation_result reliable_message_queue::send(void const* message_data, size_type message_size)
 {
     BOOST_ASSERT(m_impl != NULL);
     try
@@ -747,7 +750,7 @@ BOOST_LOG_API reliable_message_queue::operation_result reliable_message_queue::s
     }
 }
 
-BOOST_LOG_API bool reliable_message_queue::try_send(void const* message_data, uint32_t message_size)
+BOOST_LOG_API bool reliable_message_queue::try_send(void const* message_data, size_type message_size)
 {
     BOOST_ASSERT(m_impl != NULL);
     try
@@ -790,7 +793,7 @@ BOOST_LOG_API bool reliable_message_queue::do_try_receive(receive_handler handle
 }
 
 //! Fixed buffer receive handler
-BOOST_LOG_API void reliable_message_queue::fixed_buffer_receive_handler(void* state, const void* data, uint32_t size)
+BOOST_LOG_API void reliable_message_queue::fixed_buffer_receive_handler(void* state, const void* data, size_type size)
 {
     fixed_buffer_state* p = static_cast< fixed_buffer_state* >(state);
     if (BOOST_UNLIKELY(size > p->size))

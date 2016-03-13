@@ -209,6 +209,17 @@ BOOST_AUTO_TEST_CASE(message_passing)
         BOOST_CHECK(std::memcmp(&buf[0], message2, buf.size()) == 0);
     }
 
+    // send() with an error code on overflow
+    {
+        queue_t queue_a(boost::log::open_mode::create_only, ipc_queue_name, 1u, block_size, queue_t::fail_on_overflow);
+        BOOST_TEST_PASSPOINT();
+        BOOST_CHECK(queue_a.send(message1, sizeof(message1) - 1u) == queue_t::succeeded);
+        BOOST_TEST_PASSPOINT();
+
+        queue_t::operation_result res = queue_a.send(message1, sizeof(message1) - 1u);
+        BOOST_CHECK_EQUAL(res, queue_t::no_space);
+    }
+
     // send() with an exception on overflow
     {
         queue_t queue_a(boost::log::open_mode::create_only, ipc_queue_name, 1u, block_size, queue_t::throw_on_overflow);
