@@ -28,7 +28,6 @@
 #include <vector>
 #include <iostream>
 #include <stdexcept>
-#include <boost/cstdint.hpp>
 #include <boost/move/utility.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <algorithm>
@@ -39,13 +38,14 @@
 #endif
 #include "char_definitions.hpp"
 
+typedef boost::log::ipc::reliable_message_queue queue_t;
+typedef queue_t::size_type size_type;
+
 const boost::log::ipc::object_name ipc_queue_name(boost::log::ipc::object_name::session, "boost_log_test_ipc_reliable_mq");
 const unsigned int capacity = 512;
-const unsigned int block_size = 1024;
+const size_type block_size = 1024;
 const char message1[] = "Hello, world!";
 const char message2[] = "Hello, the brand new world!";
-
-typedef boost::log::ipc::reliable_message_queue queue_t;
 
 BOOST_AUTO_TEST_CASE(basic_functionality)
 {
@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_CASE(message_passing)
         BOOST_CHECK(queue_a.try_send(message1, sizeof(message1) - 1u));
         BOOST_CHECK(!queue_a.try_send(message2, sizeof(message2) - 1u));
         char buffer[block_size] = {};
-        boost::uint32_t message_size = 0u;
+        size_type message_size = 0u;
         BOOST_CHECK(queue_b.try_receive(buffer, sizeof(buffer), message_size));
         BOOST_CHECK_EQUAL(message_size, sizeof(message1) - 1u);
         BOOST_CHECK(std::memcmp(buffer, message1, message_size) == 0);
@@ -191,7 +191,7 @@ BOOST_AUTO_TEST_CASE(message_passing)
         queue_t queue_b(boost::log::open_mode::open_only, ipc_queue_name);
         BOOST_CHECK(queue_a.send(message1, sizeof(message1) - 1u) == queue_t::succeeded);
         char buffer[block_size] = {};
-        boost::uint32_t message_size = 0u;
+        size_type message_size = 0u;
         BOOST_CHECK(queue_b.receive(buffer, sizeof(buffer), message_size) == queue_t::succeeded);
         BOOST_CHECK_EQUAL(message_size, sizeof(message1) - 1u);
         BOOST_CHECK(std::memcmp(buffer, message1, message_size) == 0);
@@ -243,17 +243,17 @@ BOOST_AUTO_TEST_CASE(message_passing)
         queue_t queue_a(boost::log::open_mode::create_only, ipc_queue_name, 5u, block_size);
         queue_t queue_b(boost::log::open_mode::open_only, ipc_queue_name);
 
-        const unsigned int message_size = block_size * 3u / 2u;
+        const size_type message_size = block_size * 3u / 2u;
         std::vector< unsigned char > send_data;
         send_data.resize(message_size);
         for (unsigned int i = 0; i < message_size; ++i)
             send_data[i] = static_cast< unsigned char >(i & 0xFF);
 
-        BOOST_CHECK(queue_a.send(&send_data[0], static_cast< boost::uint32_t >(send_data.size())) == queue_t::succeeded);
+        BOOST_CHECK(queue_a.send(&send_data[0], static_cast< size_type >(send_data.size())) == queue_t::succeeded);
 
         for (unsigned int i = 0; i < 3; ++i)
         {
-            BOOST_CHECK(queue_a.send(&send_data[0], static_cast< boost::uint32_t >(send_data.size())) == queue_t::succeeded);
+            BOOST_CHECK(queue_a.send(&send_data[0], static_cast< size_type >(send_data.size())) == queue_t::succeeded);
 
             std::vector< unsigned char > receive_data;
             BOOST_CHECK(queue_b.receive(receive_data) == queue_t::succeeded);
@@ -276,7 +276,7 @@ BOOST_AUTO_TEST_CASE(message_passing)
 
         BOOST_CHECK(queue_a.try_send(message2, sizeof(message2) - 1u));
         char buffer[block_size] = {};
-        boost::uint32_t message_size = 0u;
+        size_type message_size = 0u;
         BOOST_CHECK(queue_b.try_receive(buffer, sizeof(buffer), message_size));
         BOOST_CHECK_EQUAL(message_size, sizeof(message2) - 1u);
         BOOST_CHECK(std::memcmp(buffer, message2, message_size) == 0);
@@ -291,7 +291,7 @@ const unsigned int message_count = 100000;
 
 void multithreaded_message_passing_feeding_thread(const char* message, unsigned int& failure_count)
 {
-    boost::uint32_t len = static_cast< boost::uint32_t >(std::strlen(message));
+    const size_type len = static_cast< size_type >(std::strlen(message));
     queue_t queue(boost::log::open_mode::open_or_create, ipc_queue_name, capacity, block_size);
     for (unsigned int i = 0; i < message_count; ++i)
     {
