@@ -631,7 +631,7 @@ BOOST_LOG_API void reliable_message_queue::create(object_name const& name, uint3
         BOOST_THROW_EXCEPTION(std::invalid_argument("Interprocess message queue block size is not a power of 2"));
     try
     {
-        m_impl = new implementation(open_mode::create_only, name, capacity, static_cast< uint32_t >(boost::alignment::align_up(block_size, BOOST_LOG_CPU_CACHE_LINE_SIZE)), oflow_policy, perms);
+        m_impl = new implementation(open_mode::create_only, name, capacity, static_cast< size_type >(boost::alignment::align_up(block_size, BOOST_LOG_CPU_CACHE_LINE_SIZE)), oflow_policy, perms);
     }
     catch (boost::exception& e)
     {
