@@ -329,7 +329,7 @@ public:
             BOOST_LOG_THROW_DESCR(logic_error, "Message size exceeds the interprocess queue capacity");
 
         if (!lock_queue())
-            return aborted;
+            return false;
 
         boost::log::ipc::aux::interprocess_mutex::auto_unlock unlock(m_mutex);
 
@@ -372,7 +372,7 @@ public:
     bool try_receive(receive_handler handler, void* state)
     {
         if (!lock_queue())
-            return aborted;
+            return false;
 
         boost::log::ipc::aux::interprocess_mutex::auto_unlock unlock(m_mutex);
 
