@@ -128,8 +128,8 @@ public:
         strm << static_cast< T&& >(val);
         return strm;
     }
-#if defined(BOOST_MSVC) && BOOST_MSVC == 1600
-    // MSVC 10 generates broken code for the perfect forwarding version above if T is an array type (e.g. a string literal)
+#if defined(BOOST_MSVC) && BOOST_MSVC < 1800
+    // MSVC 10 and 11 generate broken code for the perfect forwarding version above if T is an array type (e.g. a string literal)
     template< typename T, unsigned int N >
     BOOST_FORCEINLINE StreamT& operator<< (T (&val)[N]) const
     {
