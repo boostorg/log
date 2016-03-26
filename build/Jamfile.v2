@@ -204,6 +204,7 @@ project boost/log
 
         <target-os>solaris:<define>_XOPEN_SOURCE=600
         <target-os>solaris:<define>__EXTENSIONS__
+        <target-os>solaris:<define>_STDC_C99 # Solaris headers are broken and cannot be included in C++ when _XOPEN_SOURCE=600. This is an attempt to work around this problem.
         <target-os>solaris:<library>socket
         <target-os>solaris:<library>nsl
 
