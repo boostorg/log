@@ -198,7 +198,7 @@ Note that the sink backend is templated on the character type. This type defines
 
 [section:event_log Windows event log backends]
 
-    #include <``[boost/log/sinks/event_log_backend.hpp]``>
+    #include <``[boost_log_sinks_event_log_backend_hpp]``>
 
 Windows operating system provides a special API for publishing events related to application execution. A wide range of applications, including Windows components, use this facility to provide the user with all essential information about computer health in a single place - an event log. There can be more than one event log. However, typically all user-space applications use the common Application log. Records from different applications or their parts can be selected from the log by a record source name. Event logs can be read with a standard utility, an Event Viewer, that comes with Windows.
 
