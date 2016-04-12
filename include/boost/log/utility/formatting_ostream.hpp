@@ -36,7 +36,7 @@
 namespace boost {
 
 // Duplicate from boost/utility/string_ref_fwd.hpp, which currently does not have this forward declaration
-template<typename charT, typename traits = std::char_traits<charT> > class basic_string_ref;
+template< typename charT, typename traits > class basic_string_ref;
 
 BOOST_LOG_OPEN_NAMESPACE
 
