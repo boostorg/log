@@ -20,6 +20,7 @@
 #include <memory>
 #include <locale>
 #include <boost/core/explicit_operator_bool.hpp>
+#include <boost/utility/string_ref_fwd.hpp>
 #include <boost/utility/string_view_fwd.hpp>
 #include <boost/type_traits/remove_cv.hpp>
 #include <boost/log/detail/config.hpp>
@@ -34,9 +35,6 @@
 #endif
 
 namespace boost {
-
-// Duplicate from boost/utility/string_ref_fwd.hpp, which currently does not have this forward declaration
-template< typename charT, typename traits > class basic_string_ref;
 
 BOOST_LOG_OPEN_NAMESPACE
 
