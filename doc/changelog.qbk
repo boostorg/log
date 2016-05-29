@@ -9,6 +9,12 @@
 
 [section:changelog Changelog]
 
+[heading 2.9, Boost 1.62]
+
+[*New features:]
+
+* Added new tools for inter-process logging on a local machine. The implementation includes a resource name wrapper, an inter-process message queue and a sink backend. The new functionality is optional and can be disabled by defining [link log.installation.config `BOOST_LOG_WITHOUT_IPC`] macro at library build time. Thanks to Lingxi Li for the initial patch.
+
 [heading 2.8, Boost 1.61]
 
 [*General changes:]
