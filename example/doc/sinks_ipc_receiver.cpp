@@ -16,7 +16,7 @@
 namespace logging = boost::log;
 namespace keywords = boost::log::keywords;
 
-//[ example_sinks_ipc_viewer
+//[ example_sinks_ipc_receiver
 int main()
 {
     try

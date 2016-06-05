@@ -1,5 +1,5 @@
 [/
-              Copyright Andrey Semashev 2007 - 2015.
+              Copyright Andrey Semashev 2007 - 2016.
      Distributed under the Boost Software License, Version 1.0.
         (See accompanying file LICENSE_1_0.txt or copy at
               http://www.boost.org/LICENSE_1_0.txt)
@@ -272,6 +272,50 @@ There is another manipulator called [funcref boost::log::dump_elements `dump_ele
     }
 
 [tip Both these manipulators can also be used with regular output streams, not necessarily loggers.]
+
+[endsect]
+
+[endsect]
+
+[section:ipc Interprocess communication tools]
+
+[section:object_name Resource name wrapper]
+
+    #include <``[boost_log_utility_ipc_object_name_hpp]``>
+
+In modern operating systems process-shared system resources are typically identified with names. Unfortunately, different systems have different requirements on the name syntax and allowed character set. Additionally, some systems offer support for namespaces in order to avoid name clashes. The [class_ipc_object_name] class is intended to hide these differences.
+
+An object name can be constructed from a UTF-8 string identifier and a scope. A portable identifier can contain the following characters:
+
+[teletype]
+
+    A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
+    a b c d e f g h i j k l m n o p q r s t u v w x y z
+    0 1 2 3 4 5 6 7 8 9 . _ -
+
+[c++]
+
+[note The character set corresponds to [@http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap03.html#tag_03_278 POSIX Portable Filename Character Set].]
+
+Use of other characters may result in non-portable system-specific behavior.
+
+The scope is identified with the `object_name::scope` enumeration:
+
+* `global` - The name has global scope; any process in the system has the potential to open the resource identified by the name.
+* `user` - The name is limited to processes running under the current user.
+* `session` - The name is limited to processes running in the current login session.
+* `process_group` - The name is limited to processes running in the current process group. Currently, on Windows all processes running in the current session are considered members of the same process group. This may change in future.
+
+The scopes are not overlapping. For instance, if an object is created in the global scope, the object cannot be opened with the same name but in user's scope. Some of the scopes may require elevated privileges to create or open objects in.
+
+[warning Object name scoping should not be considered a security measure. Objects may still be accessible by processes outside of their name scopes. The main purpose of the scopes is to avoid name clashes between different processes using [class_ipc_object_name]. Use access permissions for security control.]
+
+[endsect]
+
+[section:reliable_message_queue Reliable message queue]
+
+    #include <``[boost_log_utility_ipc_reliable_message_queue_hpp]``>
+
 
 [endsect]
 

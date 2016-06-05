@@ -102,6 +102,8 @@
 [import ../example/doc/sinks_syslog.cpp]
 [import ../example/doc/sinks_debugger.cpp]
 [import ../example/doc/sinks_simple_event_log.cpp]
+[import ../example/doc/sinks_ipc_logger.cpp]
+[import ../example/doc/sinks_ipc_receiver.cpp]
 [import ../example/doc/util_static_type_disp.cpp]
 [import ../example/doc/util_dynamic_type_disp.cpp]
 [import ../example/doc/util_manip_to_log.cpp]

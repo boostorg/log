@@ -124,6 +124,7 @@ local sinks_includes =
 local utility_includes =
     [ glob
         ../../../boost/log/utility/*.hpp
+        ../../../boost/log/utility/ipc/*.hpp
         ../../../boost/log/utility/setup/*.hpp
         ../../../boost/log/utility/type_dispatch/*.hpp
         ../../../boost/log/utility/functional/*.hpp

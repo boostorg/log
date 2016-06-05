@@ -492,9 +492,9 @@ public:
      * \param message_size Size of the message data in bytes. If the size is larger than
      *                     the associated message queue capacity, an <tt>std::logic_error</tt> exception is thrown.
      *
-     * \retval \c operation_result::succeeded if the operation is successful
-     * \retval \c operation_result::no_space if \c overflow_policy::fail_on_overflow is in effect and the queue is full
-     * \retval \c operation_result::aborted if the call was interrupted by <tt>stop_local()</tt>
+     * \retval operation_result::succeeded if the operation is successful
+     * \retval operation_result::no_space if \c overflow_policy::fail_on_overflow is in effect and the queue is full
+     * \retval operation_result::aborted if the call was interrupted by <tt>stop_local()</tt>
      *
      * <b>Throws:</b> <tt>std::logic_error</tt> in case if the message size exceeds the queue
      *                capacity, <tt>system_error</tt> in case if a native OS method fails.
@@ -542,8 +542,8 @@ public:
      * \param buffer_size The size of the buffer, in bytes.
      * \param message_size Receives the size of the received message, in bytes.
      *
-     * \retval \c operation_result::succeeded if the operation is successful
-     * \retval \c operation_result::aborted if the call was interrupted by <tt>stop_local()</tt>
+     * \retval operation_result::succeeded if the operation is successful
+     * \retval operation_result::aborted if the call was interrupted by <tt>stop_local()</tt>
      */
     operation_result receive(void* buffer, size_type buffer_size, size_type& message_size)
     {
@@ -568,8 +568,8 @@ public:
      * \param buffer The memory buffer to store the received message in.
      * \param message_size Receives the size of the received message, in bytes.
      *
-     * \retval \c operation_result::succeeded if the operation is successful
-     * \retval \c operation_result::aborted if the call was interrupted by <tt>stop_local()</tt>
+     * \retval operation_result::succeeded if the operation is successful
+     * \retval operation_result::aborted if the call was interrupted by <tt>stop_local()</tt>
      */
     template< typename ElementT, size_type SizeV >
 #if !defined(BOOST_LOG_DOXYGEN_PASS)
@@ -598,8 +598,8 @@ public:
      *                  value type of <tt>char</tt>, <tt>signed char</tt> or <tt>unsigned char</tt>
      *                  and support inserting elements at the end.
      *
-     * \retval \c operation_result::succeeded if the operation is successful
-     * \retval \c operation_result::aborted if the call was interrupted by <tt>stop_local()</tt>
+     * \retval operation_result::succeeded if the operation is successful
+     * \retval operation_result::aborted if the call was interrupted by <tt>stop_local()</tt>
      */
     template< typename ContainerT >
 #if !defined(BOOST_LOG_DOXYGEN_PASS)
