@@ -121,14 +121,16 @@ rule check-message-compiler ( properties * )
             local has_mc = [ configure.builds /boost/log/message-compiler//test-availability : $(properties) : message-compiler ] ;
             if ! $(has_mc)
             {
-                result += <define>BOOST_LOG_WITHOUT_EVENT_LOG ;
+                result = <define>BOOST_LOG_WITHOUT_EVENT_LOG ;
             }
         }
     }
     else
     {
-        result += <define>BOOST_LOG_WITHOUT_EVENT_LOG ;
+        result = <define>BOOST_LOG_WITHOUT_EVENT_LOG ;
     }
+
+    return $(result) ;
 }
 
 project boost/log
