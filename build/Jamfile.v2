@@ -124,6 +124,11 @@ rule check-message-compiler ( properties * )
                 result = <define>BOOST_LOG_WITHOUT_EVENT_LOG ;
             }
         }
+        else
+        {
+            # This branch is needed to fix building with MinGW
+            result = <define>BOOST_LOG_WITHOUT_EVENT_LOG ;
+        }
     }
     else
     {
