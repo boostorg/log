@@ -36,6 +36,7 @@
 #include <boost/system/error_code.hpp>
 #include <boost/date_time/c_time.hpp>
 #include <boost/log/sinks/syslog_backend.hpp>
+#include <boost/log/sinks/syslog_constants.hpp>
 #include <boost/log/detail/singleton.hpp>
 #include <boost/log/detail/snprintf.hpp>
 #include <boost/log/exceptions.hpp>
