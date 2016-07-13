@@ -32,7 +32,6 @@
 #include <boost/core/explicit_operator_bool.hpp>
 #include <boost/utility/addressof.hpp>
 #include <boost/optional/optional_fwd.hpp>
-#include <boost/type_traits/is_same.hpp>
 #include <boost/type_traits/is_void.hpp>
 #include <boost/log/detail/config.hpp>
 #include <boost/log/detail/parameter_tools.hpp>
@@ -78,6 +77,21 @@ private:
     result_type m_def_val;
 };
 
+//! Traits for testing type compatibility with the reference wrapper
+struct singular_ref_compatibility_traits
+{
+    template< typename T, typename U >
+    struct is_compatible
+    {
+        BOOST_STATIC_CONSTANT(bool, value = false);
+    };
+    template< typename T >
+    struct is_compatible< T, T >
+    {
+        BOOST_STATIC_CONSTANT(bool, value = true);
+    };
+};
+
 //! Attribute value reference implementation for a single type case
 template< typename T, typename TagT >
 class singular_ref
@@ -89,17 +103,8 @@ public:
     typedef TagT tag_type;
 
 protected:
-    //! The metafunction tests if the type is compatible with the reference wrapper
-#if !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
-    template< typename U >
-    using is_compatible = is_same< U, value_type >;
-#else
-    template< typename U >
-    struct is_compatible :
-        public is_same< U, value_type >
-    {
-    };
-#endif
+    //! Traits for testing type compatibility with the reference wrapper
+    typedef singular_ref_compatibility_traits compatibility_traits;
 
 protected:
     //! Pointer to the value
@@ -132,7 +137,7 @@ public:
 
     //! Returns a pointer to the referred value
     template< typename U >
-    typename boost::enable_if_c< is_compatible< U >::value, const U* >::type get_ptr() const BOOST_NOEXCEPT
+    typename boost::enable_if_c< compatibility_traits::is_compatible< value_type, U >::value, const U* >::type get_ptr() const BOOST_NOEXCEPT
     {
         return m_ptr;
     }
@@ -153,7 +158,7 @@ public:
 
     //! Returns a reference to the value
     template< typename U >
-    typename boost::enable_if_c< is_compatible< U >::value, U const& >::type get() const BOOST_NOEXCEPT
+    typename boost::enable_if_c< compatibility_traits::is_compatible< value_type, U >::value, U const& >::type get() const BOOST_NOEXCEPT
     {
         BOOST_ASSERT(m_ptr != NULL);
         return *m_ptr;
@@ -203,7 +208,7 @@ public:
 
     //! Applies a visitor function object to the referred value
     template< typename VisitorT >
-    typename disable_if< is_void< typename VisitorT::result_type >, optional< typename VisitorT::result_type > >::type apply_visitor_optional(VisitorT visitor) const
+    typename boost::disable_if_c< is_void< typename VisitorT::result_type >::value, optional< typename VisitorT::result_type > >::type apply_visitor_optional(VisitorT visitor) const
     {
         typedef optional< typename VisitorT::result_type > result_type;
         if (m_ptr)
@@ -233,6 +238,16 @@ public:
     }
 };
 
+//! Traits for testing type compatibility with the reference wrapper
+struct variant_ref_compatibility_traits
+{
+    template< typename T, typename U >
+    struct is_compatible
+    {
+        BOOST_STATIC_CONSTANT(bool, value = (mpl::contains< T, U >::type::value));
+    };
+};
+
 //! Attribute value reference implementation for multiple types case
 template< typename T, typename TagT >
 class variant_ref
@@ -244,17 +259,8 @@ public:
     typedef TagT tag_type;
 
 protected:
-    //! The metafunction tests if the type is compatible with the reference wrapper
-#if !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
-    template< typename U >
-    using is_compatible = mpl::contains< value_type, U >;
-#else
-    template< typename U >
-    struct is_compatible :
-        public mpl::contains< value_type, U >
-    {
-    };
-#endif
+    //! Traits for testing type compatibility with the reference wrapper
+    typedef variant_ref_compatibility_traits compatibility_traits;
 
 protected:
     //! Pointer to the value
@@ -284,7 +290,7 @@ public:
 
     //! Returns a pointer to the referred value
     template< typename U >
-    typename boost::enable_if_c< is_compatible< U >::value, const U* >::type get_ptr() const BOOST_NOEXCEPT
+    typename boost::enable_if_c< compatibility_traits::is_compatible< value_type, U >::value, const U* >::type get_ptr() const BOOST_NOEXCEPT
     {
         if (m_type_idx == static_cast< unsigned int >(mpl::index_of< value_type, U >::type::value))
             return static_cast< const U* >(m_ptr);
@@ -294,7 +300,7 @@ public:
 
     //! Returns a reference to the value
     template< typename U >
-    typename boost::enable_if_c< is_compatible< U >::value, U const& >::type get() const BOOST_NOEXCEPT
+    typename boost::enable_if_c< compatibility_traits::is_compatible< value_type, U >::value, U const& >::type get() const BOOST_NOEXCEPT
     {
         const U* const p = get_ptr< U >();
         BOOST_ASSERT(p != NULL);
@@ -341,7 +347,7 @@ public:
 
     //! Applies a visitor function object to the referred value
     template< typename VisitorT >
-    typename disable_if< is_void< typename VisitorT::result_type >, optional< typename VisitorT::result_type > >::type apply_visitor_optional(VisitorT visitor) const
+    typename boost::disable_if_c< is_void< typename VisitorT::result_type >::value, optional< typename VisitorT::result_type > >::type apply_visitor_optional(VisitorT visitor) const
     {
         typedef optional< typename VisitorT::result_type > result_type;
         if (m_ptr)
@@ -423,6 +429,19 @@ public:
 private:
     //! Base implementation type
     typedef typename aux::value_ref_base< T, TagT >::type base_type;
+    //! Traits for testing type compatibility with the reference wrapper
+    typedef typename base_type::compatibility_traits compatibility_traits;
+
+public:
+#ifndef BOOST_LOG_DOXYGEN_PASS
+    //! Referenced value type
+    typedef typename base_type::value_type value_type;
+#else
+    //! Referenced value type
+    typedef T value_type;
+    //! Tag type
+    typedef TagT tag_type;
+#endif
 
 public:
     /*!
@@ -439,7 +458,11 @@ public:
      * Initializing constructor. Creates a reference wrapper that refers to the specified value.
      */
     template< typename U >
-    explicit value_ref(U const& val, typename boost::enable_if_c< base_type::BOOST_NESTED_TEMPLATE is_compatible< U >::value, boost::log::aux::sfinae_dummy >::type = boost::log::aux::sfinae_dummy()) BOOST_NOEXCEPT :
+    explicit value_ref(U const& val
+#ifndef BOOST_LOG_DOXYGEN_PASS
+        , typename boost::enable_if_c< compatibility_traits::BOOST_NESTED_TEMPLATE is_compatible< value_type, U >::value, boost::log::aux::sfinae_dummy >::type = boost::log::aux::sfinae_dummy()
+#endif
+    ) BOOST_NOEXCEPT :
         base_type(boost::addressof(val))
     {
     }
