@@ -460,7 +460,10 @@ public:
     template< typename U >
     explicit value_ref(U const& val
 #ifndef BOOST_LOG_DOXYGEN_PASS
+// MSVC-8 can't handle SFINAE in this case properly and often wrongly disables this constructor
+#if !defined(_MSC_VER) || (_MSC_VER + 0) >= 1500
         , typename boost::enable_if_c< compatibility_traits::BOOST_NESTED_TEMPLATE is_compatible< value_type, U >::value, boost::log::aux::sfinae_dummy >::type = boost::log::aux::sfinae_dummy()
+#endif
 #endif
     ) BOOST_NOEXCEPT :
         base_type(boost::addressof(val))
