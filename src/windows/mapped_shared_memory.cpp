@@ -24,6 +24,7 @@
 #include <cstddef>
 #include <limits>
 #include <string>
+#include <sstream>
 #include <boost/assert.hpp>
 #include <boost/memory_order.hpp>
 #include <boost/atomic/atomic.hpp>
@@ -76,7 +77,9 @@ void mapped_shared_memory::create(const wchar_t* name, std::size_t size, permiss
     {
         if (h != NULL)
             boost::detail::winapi::CloseHandle(h);
-        BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, "Failed to create a shared memory segment", (err));
+        std::ostringstream strm;
+        strm << "Failed to create a shared memory segment of " << size << " bytes";
+        BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, strm.str(), (err));
     }
 
     m_handle = h;
@@ -101,7 +104,11 @@ bool mapped_shared_memory::create_or_open(const wchar_t* name, std::size_t size,
 
     boost::detail::winapi::DWORD_ err = boost::detail::winapi::GetLastError();
     if (BOOST_UNLIKELY(h == NULL))
-        BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, "Failed to create or open a shared memory segment", (err));
+    {
+        std::ostringstream strm;
+        strm << "Failed to create or open a shared memory segment of " << size << " bytes";
+        BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, strm.str(), (err));
+    }
 
     const bool created = (err != ERROR_ALREADY_EXISTS);
     try
