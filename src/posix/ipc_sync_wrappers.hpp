@@ -22,6 +22,14 @@
 #include <cstddef>
 #include <boost/assert.hpp>
 #include <boost/throw_exception.hpp>
+// Use Boost.Interprocess to detect if process-shared pthread primitives are supported
+#include <boost/interprocess/detail/workaround.hpp>
+#if !defined(BOOST_INTERPROCESS_POSIX_PROCESS_SHARED)
+#include <boost/core/explicit_operator_bool.hpp>
+#include <boost/interprocess/sync/interprocess_mutex.hpp>
+#include <boost/interprocess/sync/interprocess_condition.hpp>
+#undef BOOST_LOG_HAS_PTHREAD_MUTEX_ROBUST
+#endif
 #include <boost/log/exceptions.hpp>
 #include <boost/log/detail/header.hpp>
 
@@ -32,6 +40,8 @@ BOOST_LOG_OPEN_NAMESPACE
 namespace ipc {
 
 namespace aux {
+
+#if defined(BOOST_INTERPROCESS_POSIX_PROCESS_SHARED)
 
 #if defined(BOOST_LOG_HAS_PTHREAD_MUTEX_ROBUST)
 struct BOOST_SYMBOL_VISIBLE lock_owner_dead {};
@@ -196,6 +206,53 @@ struct interprocess_condition_variable
     BOOST_DELETED_FUNCTION(interprocess_condition_variable(interprocess_condition_variable const&))
     BOOST_DELETED_FUNCTION(interprocess_condition_variable& operator=(interprocess_condition_variable const&))
 };
+
+#else // defined(BOOST_INTERPROCESS_POSIX_PROCESS_SHARED)
+
+// If there are no process-shared pthread primitives, use whatever emulation Boost.Interprocess implements
+struct interprocess_mutex
+{
+    struct auto_unlock
+    {
+        explicit auto_unlock(interprocess_mutex& mutex) BOOST_NOEXCEPT : m_mutex(mutex) {}
+        ~auto_unlock() { m_mutex.unlock(); }
+
+        BOOST_DELETED_FUNCTION(auto_unlock(auto_unlock const&))
+        BOOST_DELETED_FUNCTION(auto_unlock& operator=(auto_unlock const&))
+
+    private:
+        interprocess_mutex& m_mutex;
+    };
+
+    BOOST_DEFAULTED_FUNCTION(interprocess_mutex(), {})
+
+    // Members to emulate a lock interface
+    typedef boost::interprocess::interprocess_mutex mutex_type;
+
+    BOOST_EXPLICIT_OPERATOR_BOOL_NOEXCEPT()
+    bool operator! () const BOOST_NOEXCEPT { return false; }
+    mutex_type* mutex() BOOST_NOEXCEPT { return &m_mutex; }
+
+    void lock()
+    {
+        m_mutex.lock();
+    }
+
+    void unlock() BOOST_NOEXCEPT
+    {
+        m_mutex.unlock();
+    }
+
+    mutex_type m_mutex;
+
+    BOOST_DELETED_FUNCTION(interprocess_mutex(interprocess_mutex const&))
+    BOOST_DELETED_FUNCTION(interprocess_mutex& operator=(interprocess_mutex const&))
+};
+
+
+typedef boost::interprocess::interprocess_condition interprocess_condition_variable;
+
+#endif // defined(BOOST_INTERPROCESS_POSIX_PROCESS_SHARED)
 
 } // namespace aux
 
