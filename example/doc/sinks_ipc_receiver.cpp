@@ -37,6 +37,7 @@ int main()
         std::cout << "Viewer process running..." << std::endl;
 
         // Keep reading log messages from the associated message queue and print them on the console.
+        // queue.receive() will block if the queue is empty.
         std::string message;
         while (queue.receive(message) == queue_t::succeeded)
         {

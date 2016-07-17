@@ -301,7 +301,7 @@ Use of other characters may result in non-portable system-specific behavior.
 
 The scope is identified with the `object_name::scope` enumeration:
 
-* `global` - The name has global scope; any process in the system has the potential to open the resource identified by the name.
+* `global` - The name has global scope; any process in the system has the potential to open the resource identified by the name. On some systems this scope may not be available or require elevated privileges.
 * `user` - The name is limited to processes running under the current user.
 * `session` - The name is limited to processes running in the current login session.
 * `process_group` - The name is limited to processes running in the current process group. Currently, on Windows all processes running in the current session are considered members of the same process group. This may change in future.
@@ -316,6 +316,33 @@ The scopes are not overlapping. For instance, if an object is created in the glo
 
     #include <``[boost_log_utility_ipc_reliable_message_queue_hpp]``>
 
+The [class_ipc_reliable_message_queue] class implements a reliable one-way channel of passing messages from one or multiple writers to a single reader. The format of the messages is user-defined and must be consistent across all writers and the reader. The queue does not enforce any specific format of the messages, other than they should be supplied as a contiguous array of bytes. The queue internally uses a process-shared storage identified by an [link log.detailed.utilities.ipc.object_name object name] (the queue name).
+
+The queue storage is organized as a fixed number of blocks of a fixed size. The block size must be an integer power of 2 and is expressed in bytes. Each written message, together with some metadata added by the queue, consumes an integer number of blocks. Each read message received by the reader releases the blocks allocated for that message. As such the maximum size of a message is slightly less than block size times capacity of the queue. For efficiency, it is recommended to choose block size large enough to accommodate most of the messages to be passed through the queue. The queue is considered empty when no messages are enqueued (all blocks are free). The queue is considered full at the point of enqueueing a message when there is not enough free blocks to accommodate the message.
+
+The queue is reliable in that it will not drop successfully sent messages that are not received by the reader, other than the case when a non-empty queue is destroyed by the last user. If a message cannot be enqueued by the writer because the queue is full, the queue will act depending on the overflow policy specified at the queue creation:
+
+* `block_on_overflow` - Block the thread until there is enough space to enqueue the message or the operation is aborted by calling `stop_local`.
+* `fail_on_overflow` - Return an error code from the send operation. The error code is `operation_result::no_space`.
+* `throw_on_overflow` - Throw an exception from the send operation. The exception is [class_log_capacity_limit_reached].
+
+The policy is object local, i.e. different writers and the reader can have different overflow policies. Here is an example of writing to the message queue:
+
+[example_util_ipc_reliable_mq_writer]
+
+[@boost:/libs/log/example/doc/util_ipc_reliable_mq_writer.cpp See the complete code].
+
+Typically, the queue would be used for sending log records to a different process. As such, instead of using the queue for writing directly, one would use a special sink backend for that. See [link log.detailed.sink_backends.text_ipc_message_queue `text_ipc_message_queue_backend`] documentation.
+
+Receiving messages from the queue is similar. Here is an example of a log viewer that receives messages from the queue and displays them on the console.
+
+[example_sinks_ipc_receiver]
+
+[@boost:/libs/log/example/doc/sinks_ipc_receiver.cpp See the complete code].
+
+[note The queue does not guarantee any particular order of received messages from different writer threads. Messages sent by a particular writer thread will be received in the order of sending.]
+
+A blocked reader or writer can be unblocked by calling \c stop_local. After this method is called, all threads blocked on this particular object are released and return \c operation_result::aborted. The other instances of the queue (in the current or other processes) are unaffected. In order to restore the normal functioning of the queue instance after the \c stop_local call the user has to invoke \c reset_local.
 
 [endsect]
 

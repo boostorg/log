@@ -110,7 +110,7 @@ public:
         block_on_overflow,
         //! Return \c operation_result::no_space when the queue is full
         fail_on_overflow,
-        //! Throw an exception when the queue is full
+        //! Throw \c capacity_limit_reached exception when the queue is full
         throw_on_overflow
     };
 
@@ -503,8 +503,7 @@ public:
 
     /*!
      * The method performs an attempt to send a message to the associated message queue.
-     * The method is non-blocking, and always returns immediately. If the object is not
-     * associated with any message queue, an <tt>std::logic_error</tt> exception is thrown.
+     * The method is non-blocking, and always returns immediately.
      * <tt>boost::system::system_error</tt> is thrown for errors resulting from native
      * operating system calls. Note that it is possible to send an empty message by passing
      * \c 0 to the parameter \c message_size. Concurrent calls to <tt>send()</tt>,

@@ -13,7 +13,7 @@
 
 [*New features:]
 
-* Added new tools for inter-process logging on a local machine. The implementation includes a resource name wrapper, an inter-process message queue and a sink backend. The new functionality is optional and can be disabled by defining [link log.installation.config `BOOST_LOG_WITHOUT_IPC`] macro at library build time. Thanks to Lingxi Li for the initial patch.
+* Added new tools for inter-process logging on a local machine. The implementation includes a [link log.detailed.utilities.ipc.object_name resource name wrapper], an [link log.detailed.utilities.ipc.reliable_message_queue inter-process message queue] and a [link log.detailed.sink_backends.text_ipc_message_queue sink backend]. The new functionality is optional and can be disabled by defining [link log.installation.config `BOOST_LOG_WITHOUT_IPC`] macro at library build time. Thanks to Lingxi Li for the initial patch.
 
 [heading 2.8, Boost 1.61]
 
