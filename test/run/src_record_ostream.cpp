@@ -143,6 +143,41 @@ struct test_impl
         BOOST_CHECK(equal_strings(rec_message, strm_correct.str()));
     }
 #endif
+
+    static void formatting_params_restoring()
+    {
+        record_ostream_type strm_fmt;
+        {
+            logging::record rec = make_record();
+            BOOST_REQUIRE(!!rec);
+            strm_fmt.attach_record(rec);
+            strm_fmt << std::setw(8) << std::setfill(static_cast< char_type >('x')) << std::hex << 15;
+            strm_fmt.flush();
+            string_type rec_message = logging::extract_or_throw< string_type >(expr::message.get_name(), rec);
+            strm_fmt.detach_from_record();
+
+            ostream_type strm_correct;
+            strm_correct << std::setw(8) << std::setfill(static_cast< char_type >('x')) << std::hex << 15;
+
+            BOOST_CHECK(equal_strings(rec_message, strm_correct.str()));
+        }
+
+        // Check that the formatting flags are reset for the next record
+        {
+            logging::record rec = make_record();
+            BOOST_REQUIRE(!!rec);
+            strm_fmt.attach_record(rec);
+            strm_fmt << 15;
+            strm_fmt.flush();
+            string_type rec_message = logging::extract_or_throw< string_type >(expr::message.get_name(), rec);
+            strm_fmt.detach_from_record();
+
+            ostream_type strm_correct;
+            strm_correct << 15;
+
+            BOOST_CHECK(equal_strings(rec_message, strm_correct.str()));
+        }
+    }
 };
 
 } // namespace
@@ -184,6 +219,13 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(rvalue_stream, CharT, char_types)
     test::BOOST_NESTED_TEMPLATE rvalue_stream< boost::basic_string_view< CharT > >();
 }
 #endif
+
+// Test that formatting settings are reset for new log records
+BOOST_AUTO_TEST_CASE_TEMPLATE(formatting_params_restoring, CharT, char_types)
+{
+    typedef test_impl< CharT > test;
+    test::formatting_params_restoring();
+}
 
 namespace my_namespace {
 

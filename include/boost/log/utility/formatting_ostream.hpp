@@ -643,9 +643,10 @@ public:
     }
 #endif
 
-private:
+protected:
     void init_stream()
     {
+        m_stream.exceptions(ostream_type::goodbit);
         m_stream.clear(m_streambuf.storage() ? ostream_type::goodbit : ostream_type::badbit);
         m_stream.flags
         (
@@ -658,6 +659,7 @@ private:
         m_stream.fill(static_cast< char_type >(' '));
     }
 
+private:
     basic_formatting_ostream& formatted_write(const char_type* p, std::streamsize size)
     {
         sentry guard(*this);
