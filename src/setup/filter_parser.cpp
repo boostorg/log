@@ -492,7 +492,6 @@ template< typename CharT >
 BOOST_LOG_SETUP_API filter parse_filter(const CharT* begin, const CharT* end)
 {
     typedef CharT char_type;
-    typedef log::aux::encoding_specific< typename log::aux::encoding< char_type >::type > encoding_specific;
 
     filter_parser< char_type > parser;
     const char_type* p = begin;
