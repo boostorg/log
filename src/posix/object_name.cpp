@@ -117,7 +117,7 @@ std::string get_scope_prefix(object_name::scope ns)
 
     prefix.push_back('.');
 
-    return boost::move(prefix);
+    return BOOST_LOG_NRVO_RESULT(prefix);
 }
 
 } // namespace

@@ -127,7 +127,7 @@ BOOST_LOG_API format_description< CharT > parse_format(const CharT* begin, const
     if (literal_start_pos < literal_chars_size)
         descr.format_elements.push_back(format_element::literal(literal_start_pos, literal_chars_size - literal_start_pos));
 
-    return boost::move(descr);
+    return BOOST_LOG_NRVO_RESULT(descr);
 }
 
 

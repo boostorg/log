@@ -199,7 +199,7 @@ public:
         stream_type strm(str);
         m_fun(fusion::at_c< 0 >(phoenix::env(ctx).args()), strm);
         strm.flush();
-        return boost::move(str);
+        return BOOST_LOG_NRVO_RESULT(str);
     }
 
     //! Invokation operator
@@ -210,7 +210,7 @@ public:
         stream_type strm(str);
         m_fun(fusion::at_c< 0 >(phoenix::env(ctx).args()), strm);
         strm.flush();
-        return boost::move(str);
+        return BOOST_LOG_NRVO_RESULT(str);
     }
 };
 

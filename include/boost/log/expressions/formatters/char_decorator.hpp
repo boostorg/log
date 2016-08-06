@@ -439,7 +439,7 @@ public:
         strm.flush();
         m_impl(*strm.rdbuf()->storage());
 
-        return boost::move(str);
+        return BOOST_LOG_NRVO_RESULT(str);
     }
 
     /*!
@@ -471,7 +471,7 @@ public:
         strm.flush();
         m_impl(*strm.rdbuf()->storage());
 
-        return boost::move(str);
+        return BOOST_LOG_NRVO_RESULT(str);
     }
 
     BOOST_DELETED_FUNCTION(char_decorator_terminal())

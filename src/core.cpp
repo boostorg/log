@@ -97,7 +97,7 @@ private:
 
 private:
     //! Initializing constructor
-    private_data(BOOST_RV_REF(attribute_value_set) values, uint32_t capacity) :
+    private_data(BOOST_RV_REF(attribute_value_set) values, uint32_t capacity) BOOST_NOEXCEPT :
         public_data(boost::move(values)),
         m_accepting_sink_count(0),
         m_accepting_sink_capacity(capacity),
@@ -334,7 +334,9 @@ public:
     template< typename SourceAttributesT >
     BOOST_FORCEINLINE record open_record(BOOST_FWD_REF(SourceAttributesT) source_attributes)
     {
-        // Try a quick win first
+		record rec;
+
+		// Try a quick win first
         if (m_enabled) try
         {
             thread_data* tsd = get_thread_data();
@@ -349,7 +351,6 @@ public:
                 if (m_filter(attr_values))
                 {
                     // The global filter passed, trying the sinks
-                    record rec;
                     attribute_value_set* values = &attr_values;
 
                     if (!m_sinks.empty())
@@ -371,13 +372,12 @@ public:
                     if (rec_impl && rec_impl->accepting_sink_count() == 0)
                     {
                         // No sinks accepted the record
-                        return record();
+						rec.reset();
+                        goto done;
                     }
 
                     // Some sinks have accepted the record
                     values->freeze();
-
-                    return boost::move(rec);
                 }
             }
         }
@@ -395,9 +395,11 @@ public:
                 throw;
 
             m_exception_handler();
+			rec.reset();
         }
 
-        return record();
+	done:
+		return BOOST_LOG_NRVO_RESULT(rec);
     }
 
     //! The method returns the current thread-specific data

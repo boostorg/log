@@ -168,6 +168,14 @@
 #   define BOOST_LOG_UNREACHABLE_RETURN(r) BOOST_LOG_UNREACHABLE()
 #endif
 
+// The macro efficiently returns a local lvalue from a function.
+// It employs NRVO, if supported by compiler, or uses a move constructor otherwise.
+#if defined(BOOST_HAS_NRVO)
+#define BOOST_LOG_NRVO_RESULT(x) x
+#else
+#define BOOST_LOG_NRVO_RESULT(x) boost::move(x)
+#endif
+
 // Some compilers support a special attribute that shows that a function won't return
 #if defined(__GNUC__) || (defined(__SUNPRO_CC) && __SUNPRO_CC >= 0x590)
     // GCC and Sun Studio 12 support attribute syntax

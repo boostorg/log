@@ -240,7 +240,7 @@ BOOST_LOG_SETUP_API basic_settings< CharT > parse_settings(std::basic_istream< C
         ++line_number;
     }
 
-    return boost::move(settings);
+    return BOOST_LOG_NRVO_RESULT(settings);
 }
 
 

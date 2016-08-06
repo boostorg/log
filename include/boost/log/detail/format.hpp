@@ -218,7 +218,7 @@ public:
     {
         string_type result;
         compose(result);
-        return boost::move(result);
+        return BOOST_LOG_NRVO_RESULT(result);
     }
 
 private:

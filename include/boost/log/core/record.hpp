@@ -63,7 +63,7 @@ public:
      *
      * \post <tt>!*this == true</tt>
      */
-    record() : m_impl(NULL) {}
+    BOOST_CONSTEXPR record() BOOST_NOEXCEPT : m_impl(NULL) {}
 
     /*!
      * Move constructor. Source record contents unspecified after the operation.
