@@ -128,7 +128,7 @@ BOOST_FORCEINLINE aux::scoped_logger_attribute< LoggerT > add_scoped_logger_attr
     return aux::scoped_logger_attribute< LoggerT >(l, name, attr);
 #else
     aux::scoped_logger_attribute< LoggerT > guard(l, name, attr);
-    return BOOST_LOG_NRVO_RESULT(guard);
+    return boost::move(guard);
 #endif
 }
 
@@ -221,7 +221,7 @@ BOOST_FORCEINLINE aux::scoped_thread_attribute add_scoped_thread_attribute(attri
     return aux::scoped_thread_attribute(name, attr);
 #else
     aux::scoped_thread_attribute guard(name, attr);
-    return BOOST_LOG_NRVO_RESULT(guard);
+    return boost::move(guard);
 #endif
 }
 
