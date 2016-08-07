@@ -334,9 +334,9 @@ public:
     template< typename SourceAttributesT >
     BOOST_FORCEINLINE record open_record(BOOST_FWD_REF(SourceAttributesT) source_attributes)
     {
-		record rec;
+        record rec;
 
-		// Try a quick win first
+        // Try a quick win first
         if (m_enabled) try
         {
             thread_data* tsd = get_thread_data();
@@ -372,7 +372,7 @@ public:
                     if (rec_impl && rec_impl->accepting_sink_count() == 0)
                     {
                         // No sinks accepted the record
-						rec.reset();
+                        rec.reset();
                         goto done;
                     }
 
@@ -395,11 +395,11 @@ public:
                 throw;
 
             m_exception_handler();
-			rec.reset();
+            rec.reset();
         }
 
-	done:
-		return BOOST_LOG_NRVO_RESULT(rec);
+    done:
+        return BOOST_LOG_NRVO_RESULT(rec);
     }
 
     //! The method returns the current thread-specific data

@@ -30,7 +30,7 @@
 #include <boost/mpl/contains.hpp>
 #include <boost/mpl/index_of.hpp>
 #include <boost/core/explicit_operator_bool.hpp>
-#include <boost/utility/addressof.hpp>
+#include <boost/core/addressof.hpp>
 #include <boost/optional/optional_fwd.hpp>
 #include <boost/type_traits/is_void.hpp>
 #include <boost/log/detail/config.hpp>

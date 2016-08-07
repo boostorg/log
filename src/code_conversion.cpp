@@ -37,42 +37,44 @@ namespace aux {
 
 BOOST_LOG_ANONYMOUS_NAMESPACE {
 
-    //! The function performs character conversion with the specified facet
-    template< typename LocalCharT >
-    inline std::codecvt_base::result convert(
-        std::codecvt< LocalCharT, char, std::mbstate_t > const& fac,
-        std::mbstate_t& state,
-        const char*& pSrcBegin,
-        const char* pSrcEnd,
-        LocalCharT*& pDstBegin,
-        LocalCharT* pDstEnd)
-    {
-        return fac.in(state, pSrcBegin, pSrcEnd, pSrcBegin, pDstBegin, pDstEnd, pDstBegin);
-    }
+//! The function performs character conversion with the specified facet
+template< typename LocalCharT >
+inline std::codecvt_base::result convert(
+    std::codecvt< LocalCharT, char, std::mbstate_t > const& fac,
+    std::mbstate_t& state,
+    const char*& pSrcBegin,
+    const char* pSrcEnd,
+    LocalCharT*& pDstBegin,
+    LocalCharT* pDstEnd)
+{
+    return fac.in(state, pSrcBegin, pSrcEnd, pSrcBegin, pDstBegin, pDstEnd, pDstBegin);
+}
 
-    //! The function performs character conversion with the specified facet
-    template< typename LocalCharT >
-    inline std::codecvt_base::result convert(
-        std::codecvt< LocalCharT, char, std::mbstate_t > const& fac,
-        std::mbstate_t& state,
-        const LocalCharT*& pSrcBegin,
-        const LocalCharT* pSrcEnd,
-        char*& pDstBegin,
-        char* pDstEnd)
-    {
-        return fac.out(state, pSrcBegin, pSrcEnd, pSrcBegin, pDstBegin, pDstEnd, pDstBegin);
-    }
+//! The function performs character conversion with the specified facet
+template< typename LocalCharT >
+inline std::codecvt_base::result convert(
+    std::codecvt< LocalCharT, char, std::mbstate_t > const& fac,
+    std::mbstate_t& state,
+    const LocalCharT*& pSrcBegin,
+    const LocalCharT* pSrcEnd,
+    char*& pDstBegin,
+    char* pDstEnd)
+{
+    return fac.out(state, pSrcBegin, pSrcEnd, pSrcBegin, pDstBegin, pDstEnd, pDstBegin);
+}
 
 } // namespace
 
 template< typename SourceCharT, typename TargetCharT, typename FacetT >
-inline void code_convert(const SourceCharT* begin, const SourceCharT* end, std::basic_string< TargetCharT >& converted, FacetT const& fac)
+inline std::size_t code_convert(const SourceCharT* begin, const SourceCharT* end, std::basic_string< TargetCharT >& converted, std::size_t max_size, FacetT const& fac)
 {
     typedef typename FacetT::state_type state_type;
     TargetCharT converted_buffer[256];
 
+    const SourceCharT* const original_begin = begin;
     state_type state = state_type();
-    while (begin != end)
+    std::size_t buf_size = std::min(max_size, sizeof(converted_buffer) / sizeof(*converted_buffer));
+    while (begin != end && buf_size > 0u)
     {
         TargetCharT* dest = converted_buffer;
         std::codecvt_base::result res = convert(
@@ -81,7 +83,7 @@ inline void code_convert(const SourceCharT* begin, const SourceCharT* end, std::
             begin,
             end,
             dest,
-            dest + sizeof(converted_buffer) / sizeof(*converted_buffer));
+            dest + buf_size);
 
         switch (res)
         {
@@ -89,7 +91,18 @@ inline void code_convert(const SourceCharT* begin, const SourceCharT* end, std::
             // All characters were successfully converted
             // NOTE: MSVC 11 also returns ok when the source buffer was only partially consumed, so we also check that the begin pointer has reached the end.
             converted.append(converted_buffer, dest);
+            max_size -= dest - converted_buffer;
             break;
+
+        case std::codecvt_base::noconv:
+            {
+                // Not possible, unless both character types are actually equivalent
+                const std::size_t size = std::min(max_size, static_cast< std::size_t >(end - begin));
+                converted.append(begin, begin + size);
+                begin += size;
+                max_size -= size;
+            }
+            goto done;
 
         case std::codecvt_base::partial:
             // Some characters were converted, some were not
@@ -98,39 +111,42 @@ inline void code_convert(const SourceCharT* begin, const SourceCharT* end, std::
                 // Some conversion took place, so it seems like
                 // the destination buffer might not have been long enough
                 converted.append(converted_buffer, dest);
+                max_size -= dest - converted_buffer;
 
                 // ...and go on for the next part
                 break;
             }
             else
             {
-                // Nothing was converted, looks like the tail of the
-                // source buffer contains only part of the last character.
-                // Leave it as it is.
-                return;
-            }
+                // Nothing was converted
+                if (begin == end)
+                    goto done;
 
-        case std::codecvt_base::noconv:
-            // Not possible, unless both character types are actually equivalent
-            converted.append(reinterpret_cast< const TargetCharT* >(begin), reinterpret_cast< const TargetCharT* >(end));
-            return;
+                // Looks like the tail of the source buffer contains only part of the last character.
+                // In this case we intentionally fall through to throw an exception.
+            }
 
         default: // std::codecvt_base::error
             BOOST_LOG_THROW_DESCR(conversion_error, "Could not convert character encoding");
         }
+
+        buf_size = std::min(max_size, sizeof(converted_buffer) / sizeof(*converted_buffer));
     }
+
+done:
+    return static_cast< std::size_t >(begin - original_begin);
 }
 
 //! The function converts one string to the character type of another
-BOOST_LOG_API void code_convert_impl(const wchar_t* str1, std::size_t len, std::string& str2, std::locale const& loc)
+BOOST_LOG_API bool code_convert_impl(const wchar_t* str1, std::size_t len, std::string& str2, std::size_t max_size, std::locale const& loc)
 {
-    code_convert(str1, str1 + len, str2, std::use_facet< std::codecvt< wchar_t, char, std::mbstate_t > >(loc));
+    return code_convert(str1, str1 + len, str2, max_size, std::use_facet< std::codecvt< wchar_t, char, std::mbstate_t > >(loc)) == len;
 }
 
 //! The function converts one string to the character type of another
-BOOST_LOG_API void code_convert_impl(const char* str1, std::size_t len, std::wstring& str2, std::locale const& loc)
+BOOST_LOG_API bool code_convert_impl(const char* str1, std::size_t len, std::wstring& str2, std::size_t max_size, std::locale const& loc)
 {
-    code_convert(str1, str1 + len, str2, std::use_facet< std::codecvt< wchar_t, char, std::mbstate_t > >(loc));
+    return code_convert(str1, str1 + len, str2, max_size, std::use_facet< std::codecvt< wchar_t, char, std::mbstate_t > >(loc)) == len;
 }
 
 #if !defined(BOOST_LOG_NO_CXX11_CODECVT_FACETS)
@@ -138,23 +154,24 @@ BOOST_LOG_API void code_convert_impl(const char* str1, std::size_t len, std::wst
 #if !defined(BOOST_NO_CXX11_CHAR16_T)
 
 //! The function converts one string to the character type of another
-BOOST_LOG_API void code_convert_impl(const char16_t* str1, std::size_t len, std::string& str2, std::locale const& loc)
+BOOST_LOG_API bool code_convert_impl(const char16_t* str1, std::size_t len, std::string& str2, std::size_t max_size, std::locale const& loc)
 {
-    code_convert(str1, str1 + len, str2, std::use_facet< std::codecvt< char16_t, char, std::mbstate_t > >(loc));
+    return code_convert(str1, str1 + len, str2, max_size, std::use_facet< std::codecvt< char16_t, char, std::mbstate_t > >(loc)) == len;
 }
 
 //! The function converts one string to the character type of another
-BOOST_LOG_API void code_convert_impl(const char* str1, std::size_t len, std::u16string& str2, std::locale const& loc)
+BOOST_LOG_API bool code_convert_impl(const char* str1, std::size_t len, std::u16string& str2, std::size_t max_size, std::locale const& loc)
 {
-    code_convert(str1, str1 + len, str2, std::use_facet< std::codecvt< char16_t, char, std::mbstate_t > >(loc));
+    return code_convert(str1, str1 + len, str2, max_size, std::use_facet< std::codecvt< char16_t, char, std::mbstate_t > >(loc)) == len;
 }
 
 //! The function converts one string to the character type of another
-BOOST_LOG_API void code_convert_impl(const char16_t* str1, std::size_t len, std::wstring& str2, std::locale const& loc)
+BOOST_LOG_API bool code_convert_impl(const char16_t* str1, std::size_t len, std::wstring& str2, std::size_t max_size, std::locale const& loc)
 {
     std::string temp_str;
-    code_convert(str1, str1 + len, temp_str, std::use_facet< std::codecvt< char16_t, char, std::mbstate_t > >(loc));
-    code_convert(temp_str.c_str(), temp_str.c_str() + temp_str.size(), str2, std::use_facet< std::codecvt< wchar_t, char, std::mbstate_t > >(loc));
+    code_convert(str1, str1 + len, temp_str, temp_str.max_size(), std::use_facet< std::codecvt< char16_t, char, std::mbstate_t > >(loc));
+    const std::size_t temp_size = temp_str.size();
+    return code_convert(temp_str.c_str(), temp_str.c_str() + temp_size, str2, max_size, std::use_facet< std::codecvt< wchar_t, char, std::mbstate_t > >(loc)) == temp_size;
 }
 
 #endif
@@ -162,23 +179,24 @@ BOOST_LOG_API void code_convert_impl(const char16_t* str1, std::size_t len, std:
 #if !defined(BOOST_NO_CXX11_CHAR32_T)
 
 //! The function converts one string to the character type of another
-BOOST_LOG_API void code_convert_impl(const char32_t* str1, std::size_t len, std::string& str2, std::locale const& loc)
+BOOST_LOG_API bool code_convert_impl(const char32_t* str1, std::size_t len, std::string& str2, std::size_t max_size, std::locale const& loc)
 {
-    code_convert(str1, str1 + len, str2, std::use_facet< std::codecvt< char32_t, char, std::mbstate_t > >(loc));
+    return code_convert(str1, str1 + len, str2, max_size, std::use_facet< std::codecvt< char32_t, char, std::mbstate_t > >(loc)) == len;
 }
 
 //! The function converts one string to the character type of another
-BOOST_LOG_API void code_convert_impl(const char* str1, std::size_t len, std::u32string& str2, std::locale const& loc)
+BOOST_LOG_API bool code_convert_impl(const char* str1, std::size_t len, std::u32string& str2, std::size_t max_size, std::locale const& loc)
 {
-    code_convert(str1, str1 + len, str2, std::use_facet< std::codecvt< char32_t, char, std::mbstate_t > >(loc));
+    return code_convert(str1, str1 + len, str2, max_size, std::use_facet< std::codecvt< char32_t, char, std::mbstate_t > >(loc)) == len;
 }
 
 //! The function converts one string to the character type of another
-BOOST_LOG_API void code_convert_impl(const char32_t* str1, std::size_t len, std::wstring& str2, std::locale const& loc)
+BOOST_LOG_API bool code_convert_impl(const char32_t* str1, std::size_t len, std::wstring& str2, std::size_t max_size, std::locale const& loc)
 {
     std::string temp_str;
-    code_convert(str1, str1 + len, temp_str, std::use_facet< std::codecvt< char32_t, char, std::mbstate_t > >(loc));
-    code_convert(temp_str.c_str(), temp_str.c_str() + temp_str.size(), str2, std::use_facet< std::codecvt< wchar_t, char, std::mbstate_t > >(loc));
+    code_convert(str1, str1 + len, temp_str, temp_str.max_size(), std::use_facet< std::codecvt< char32_t, char, std::mbstate_t > >(loc));
+    const std::size_t temp_size = temp_str.size();
+    return code_convert(temp_str.c_str(), temp_str.c_str() + temp_size, str2, max_size, std::use_facet< std::codecvt< wchar_t, char, std::mbstate_t > >(loc)) == temp_size;
 }
 
 #endif
@@ -186,19 +204,21 @@ BOOST_LOG_API void code_convert_impl(const char32_t* str1, std::size_t len, std:
 #if !defined(BOOST_NO_CXX11_CHAR16_T) && !defined(BOOST_NO_CXX11_CHAR32_T)
 
 //! The function converts one string to the character type of another
-BOOST_LOG_API void code_convert_impl(const char16_t* str1, std::size_t len, std::u32string& str2, std::locale const& loc)
+BOOST_LOG_API bool code_convert_impl(const char16_t* str1, std::size_t len, std::u32string& str2, std::size_t max_size, std::locale const& loc)
 {
     std::string temp_str;
-    code_convert(str1, str1 + len, temp_str, std::use_facet< std::codecvt< char16_t, char, std::mbstate_t > >(loc));
-    code_convert(temp_str.c_str(), temp_str.c_str() + temp_str.size(), str2, std::use_facet< std::codecvt< char32_t, char, std::mbstate_t > >(loc));
+    code_convert(str1, str1 + len, temp_str, temp_str.max_size(), std::use_facet< std::codecvt< char16_t, char, std::mbstate_t > >(loc));
+    const std::size_t temp_size = temp_str.size();
+    return code_convert(temp_str.c_str(), temp_str.c_str() + temp_size, str2, max_size, std::use_facet< std::codecvt< char32_t, char, std::mbstate_t > >(loc)) == temp_size;
 }
 
 //! The function converts one string to the character type of another
-BOOST_LOG_API void code_convert_impl(const char32_t* str1, std::size_t len, std::u16string& str2, std::locale const& loc)
+BOOST_LOG_API bool code_convert_impl(const char32_t* str1, std::size_t len, std::u16string& str2, std::size_t max_size, std::locale const& loc)
 {
     std::string temp_str;
-    code_convert(str1, str1 + len, temp_str, std::use_facet< std::codecvt< char32_t, char, std::mbstate_t > >(loc));
-    code_convert(temp_str.c_str(), temp_str.c_str() + temp_str.size(), str2, std::use_facet< std::codecvt< char16_t, char, std::mbstate_t > >(loc));
+    code_convert(str1, str1 + len, temp_str, temp_str.max_size(), std::use_facet< std::codecvt< char32_t, char, std::mbstate_t > >(loc));
+    const std::size_t temp_size = temp_str.size();
+    return code_convert(temp_str.c_str(), temp_str.c_str() + temp_size, str2, max_size, std::use_facet< std::codecvt< char16_t, char, std::mbstate_t > >(loc)) == temp_size;
 }
 
 #endif

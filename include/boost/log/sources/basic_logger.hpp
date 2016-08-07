@@ -22,7 +22,7 @@
 #include <boost/assert.hpp>
 #include <boost/move/core.hpp>
 #include <boost/move/utility.hpp>
-#include <boost/utility/addressof.hpp>
+#include <boost/core/addressof.hpp>
 #include <boost/preprocessor/facilities/empty.hpp>
 #include <boost/preprocessor/facilities/identity.hpp>
 #include <boost/preprocessor/repetition/enum_params.hpp>

@@ -28,7 +28,7 @@
 #include <boost/range/value_type.hpp>
 #include <boost/move/core.hpp>
 #include <boost/move/utility.hpp>
-#include <boost/utility/addressof.hpp>
+#include <boost/core/addressof.hpp>
 #include <boost/phoenix/core/actor.hpp>
 #include <boost/phoenix/core/meta_grammar.hpp>
 #include <boost/phoenix/core/terminal_fwd.hpp>
@@ -300,12 +300,12 @@ public:
         typename string_type::size_type const start_pos = strm.rdbuf()->storage()->size();
 
         // Invoke the adopted formatter
-        typedef typename result< this_type(ContextT const&) >::type result_type;
         phoenix::eval(m_subactor, ctx);
 
         // Flush the buffered characters and apply decorations
         strm.flush();
         m_impl(*strm.rdbuf()->storage(), start_pos);
+        strm.rdbuf()->ensure_max_size();
 
         return strm;
     }
@@ -323,12 +323,12 @@ public:
         typename string_type::size_type const start_pos = strm.rdbuf()->storage()->size();
 
         // Invoke the adopted formatter
-        typedef typename result< const this_type(ContextT const&) >::type result_type;
         phoenix::eval(m_subactor, ctx);
 
         // Flush the buffered characters and apply decorations
         strm.flush();
         m_impl(*strm.rdbuf()->storage(), start_pos);
+        strm.rdbuf()->ensure_max_size();
 
         return strm;
     }

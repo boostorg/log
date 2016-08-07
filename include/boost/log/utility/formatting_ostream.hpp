@@ -245,7 +245,7 @@ public:
      */
     string_type const& str() const
     {
-        string_type* storage = m_streambuf.storage();
+        string_type* const storage = m_streambuf.storage();
         BOOST_ASSERT(storage != NULL);
 
         m_streambuf.pubsync();
@@ -372,8 +372,12 @@ public:
         {
             m_stream.flush();
 
-            string_type* storage = m_streambuf.storage();
-            aux::code_convert(p, static_cast< std::size_t >(size), *storage, m_stream.getloc());
+            if (!m_streambuf.storage_overflow())
+            {
+                string_type* storage = m_streambuf.storage();
+                if (!aux::code_convert(p, static_cast< std::size_t >(size), *storage, m_streambuf.max_size(), m_stream.getloc()))
+                    m_streambuf.storage_overflow(true);
+            }
         }
 
         return *this;
@@ -668,7 +672,7 @@ private:
             m_stream.flush();
 
             if (m_stream.width() <= size)
-                m_streambuf.storage()->append(p, static_cast< std::size_t >(size));
+                m_streambuf.append(p, static_cast< std::size_t >(size));
             else
                 this->aligned_write(p, size);
 
@@ -687,7 +691,13 @@ private:
             m_stream.flush();
 
             if (m_stream.width() <= size)
-                aux::code_convert(p, static_cast< std::size_t >(size), *m_streambuf.storage(), m_stream.getloc());
+            {
+                if (!m_streambuf.storage_overflow())
+                {
+                    if (!aux::code_convert(p, static_cast< std::size_t >(size), *m_streambuf.storage(), m_streambuf.max_size(), m_stream.getloc()))
+                        m_streambuf.storage_overflow(true);
+                }
+            }
             else
                 this->aligned_write(p, size);
 
@@ -782,19 +792,18 @@ BOOST_CONSTEXPR_OR_CONST typename basic_formatting_ostream< CharT, TraitsT, Allo
 template< typename CharT, typename TraitsT, typename AllocatorT >
 void basic_formatting_ostream< CharT, TraitsT, AllocatorT >::aligned_write(const char_type* p, std::streamsize size)
 {
-    string_type* const storage = m_streambuf.storage();
     typename string_type::size_type const alignment_size =
         static_cast< typename string_type::size_type >(m_stream.width() - size);
     const bool align_left = (m_stream.flags() & ostream_type::adjustfield) == ostream_type::left;
     if (align_left)
     {
-        storage->append(p, static_cast< std::size_t >(size));
-        storage->append(alignment_size, m_stream.fill());
+        m_streambuf.append(p, static_cast< std::size_t >(size));
+        m_streambuf.append(alignment_size, m_stream.fill());
     }
     else
     {
-        storage->append(alignment_size, m_stream.fill());
-        storage->append(p, static_cast< std::size_t >(size));
+        m_streambuf.append(alignment_size, m_stream.fill());
+        m_streambuf.append(p, static_cast< std::size_t >(size));
     }
 }
 
@@ -808,13 +817,21 @@ void basic_formatting_ostream< CharT, TraitsT, AllocatorT >::aligned_write(const
     const bool align_left = (m_stream.flags() & ostream_type::adjustfield) == ostream_type::left;
     if (align_left)
     {
-        aux::code_convert(p, static_cast< std::size_t >(size), *storage, m_stream.getloc());
-        storage->append(alignment_size, m_stream.fill());
+        if (!m_streambuf.storage_overflow())
+        {
+            if (!aux::code_convert(p, static_cast< std::size_t >(size), *storage, m_streambuf.max_size(), m_stream.getloc()))
+                m_streambuf.storage_overflow(true);
+        }
+        m_streambuf.append(alignment_size, m_stream.fill());
     }
     else
     {
-        storage->append(alignment_size, m_stream.fill());
-        aux::code_convert(p, static_cast< std::size_t >(size), *storage, m_stream.getloc());
+        m_streambuf.append(alignment_size, m_stream.fill());
+        if (!m_streambuf.storage_overflow())
+        {
+            if (!aux::code_convert(p, static_cast< std::size_t >(size), *storage, m_streambuf.max_size(), m_stream.getloc()))
+                m_streambuf.storage_overflow(true);
+        }
     }
 }
 
