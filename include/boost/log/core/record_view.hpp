@@ -109,7 +109,7 @@ public:
      *
      * \post <tt>!*this == true</tt>
      */
-    BOOST_CONSTEXPR record_view() BOOST_NOEXCEPT {}
+    BOOST_DEFAULTED_FUNCTION(BOOST_CONSTEXPR record_view() BOOST_NOEXCEPT, {})
 
     /*!
      * Copy constructor
