@@ -99,7 +99,7 @@ private:
 
 private:
     //  A private constructor, accessible from record
-    explicit record_view(public_data* impl) : m_impl(impl, false) {}
+    explicit record_view(public_data* impl) BOOST_NOEXCEPT : m_impl(impl, false) {}
 
 #endif // BOOST_LOG_DOXYGEN_PASS
 
