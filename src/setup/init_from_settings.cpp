@@ -172,7 +172,6 @@ sinks::file::rotation_at_time_point param_cast_to_rotation_time_point(const char
     typedef CharT char_type;
     typedef boost::log::aux::char_constants< char_type > constants;
     typedef typename boost::log::aux::encoding< char_type >::type encoding;
-    typedef boost::log::basic_string_literal< char_type > literal_type;
     typedef qi::extract_uint< unsigned short, 10, 1, 2 > day_extract;
     typedef qi::extract_uint< unsigned char, 10, 2, 2 > time_component_extract;
 
