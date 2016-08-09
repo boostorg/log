@@ -27,7 +27,7 @@
 #include <boost/exception/errinfo_at_line.hpp>
 #include <boost/io/ios_state.hpp>
 #include <boost/move/core.hpp>
-#include <boost/move/utility.hpp>
+#include <boost/move/utility_core.hpp>
 #include <boost/log/detail/code_conversion.hpp>
 #include <boost/log/utility/setup/settings_parser.hpp>
 #include <boost/log/exceptions.hpp>

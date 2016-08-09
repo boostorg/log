@@ -29,7 +29,7 @@
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 #include <boost/random/taus88.hpp>
 #include <boost/move/core.hpp>
-#include <boost/move/utility.hpp>
+#include <boost/move/utility_core.hpp>
 #include <boost/log/core/core.hpp>
 #include <boost/log/core/record.hpp>
 #include <boost/log/core/record_view.hpp>

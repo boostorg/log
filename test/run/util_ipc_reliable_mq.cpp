@@ -28,7 +28,7 @@
 #include <vector>
 #include <iostream>
 #include <stdexcept>
-#include <boost/move/utility.hpp>
+#include <boost/move/utility_core.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <algorithm>
 #include <boost/ref.hpp>

@@ -22,7 +22,7 @@
 #include <algorithm>
 #include <boost/cstdint.hpp>
 #include <boost/move/core.hpp>
-#include <boost/move/utility.hpp>
+#include <boost/move/utility_core.hpp>
 #include <boost/spirit/include/karma_uint.hpp>
 #include <boost/spirit/include/karma_generate.hpp>
 #include <boost/log/attributes/named_scope.hpp>

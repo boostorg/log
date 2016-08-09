@@ -18,7 +18,7 @@
 #include <boost/test/unit_test.hpp>
 #include <string>
 #include <iostream>
-#include <boost/move/utility.hpp>
+#include <boost/move/utility_core.hpp>
 #include "char_definitions.hpp"
 
 const char test_object_name1[] = "boost_log_test_object_name1";

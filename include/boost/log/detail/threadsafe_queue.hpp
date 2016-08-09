@@ -29,7 +29,7 @@
 #include <cstddef>
 #include <boost/aligned_storage.hpp>
 #include <boost/move/core.hpp>
-#include <boost/move/utility.hpp>
+#include <boost/move/utility_core.hpp>
 #include <boost/type_traits/alignment_of.hpp>
 #include <boost/type_traits/type_with_alignment.hpp>
 #include <boost/log/detail/header.hpp>

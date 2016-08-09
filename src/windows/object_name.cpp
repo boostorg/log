@@ -21,7 +21,7 @@
 #include <algorithm>
 #include <boost/memory_order.hpp>
 #include <boost/atomic/atomic.hpp>
-#include <boost/move/utility.hpp>
+#include <boost/move/utility_core.hpp>
 #include <boost/log/exceptions.hpp>
 #include <boost/log/utility/ipc/object_name.hpp>
 #include <boost/detail/winapi/get_last_error.hpp>

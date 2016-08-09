@@ -150,7 +150,8 @@ public:
     {
         if (m_storage_state.storage && m_storage_state.storage->size() > m_storage_state.max_size)
         {
-            m_storage_state.storage->resize(m_storage_state.max_size);
+            const size_type len = length_until_boundary(m_storage_state.storage->c_str(), m_storage_state.storage->size(), m_storage_state.max_size);
+            m_storage_state.storage->resize(len);
             m_storage_state.overflow = true;
         }
     }
@@ -186,7 +187,7 @@ public:
             else
             {
                 // We have to find out where the last character that fits before the limit ends
-                left = length_until_boundary(s, n, left, mpl::bool_< sizeof(char_type) == 1u >());
+                left = length_until_boundary(s, n, left);
                 m_storage_state.storage->append(s, left);
                 m_storage_state.overflow = true;
                 return left;
@@ -274,10 +275,16 @@ protected:
     }
 
     //! Finds the string length so that it includes only complete characters, and does not exceed \a max_size
+    size_type length_until_boundary(const char_type* s, size_type n, size_type max_size) const
+    {
+        return length_until_boundary(s, n, max_size, mpl::bool_< sizeof(char_type) == 1u >());;
+    }
+
+    //! Finds the string length so that it includes only complete characters, and does not exceed \a max_size
     size_type length_until_boundary(const char_type* s, size_type n, size_type max_size, mpl::true_) const
     {
         std::locale loc = this->getloc();
-        std::codecvt< char_type, char, std::mbstate_t > const& fac = std::use_facet< std::codecvt< char_type, char, std::mbstate_t > >(loc);
+        std::codecvt< wchar_t, char, std::mbstate_t > const& fac = std::use_facet< std::codecvt< wchar_t, char, std::mbstate_t > >(loc);
         std::mbstate_t mbs = std::mbstate_t();
         return static_cast< size_type >(fac.length(mbs, s, s + max_size, ~static_cast< std::size_t >(0u)));
     }

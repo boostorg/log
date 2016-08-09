@@ -16,7 +16,7 @@
 #define BOOST_LOG_EXPRESSIONS_FILTER_HPP_INCLUDED_
 
 #include <boost/move/core.hpp>
-#include <boost/move/utility.hpp>
+#include <boost/move/utility_core.hpp>
 #if defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
 #include <boost/type_traits/is_same.hpp>
 #include <boost/type_traits/remove_cv.hpp>

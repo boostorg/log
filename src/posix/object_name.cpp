@@ -21,7 +21,7 @@
 #include <limits>
 #include <string>
 #include <vector>
-#include <boost/move/utility.hpp>
+#include <boost/move/utility_core.hpp>
 #include <boost/type_traits/make_unsigned.hpp>
 #include <boost/spirit/include/karma_uint.hpp>
 #include <boost/spirit/include/karma_generate.hpp>

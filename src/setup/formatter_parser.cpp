@@ -23,7 +23,7 @@
 #include <boost/assert.hpp>
 #include <boost/bind.hpp>
 #include <boost/move/core.hpp>
-#include <boost/move/utility.hpp>
+#include <boost/move/utility_core.hpp>
 #include <boost/optional/optional.hpp>
 #include <boost/utility/in_place_factory.hpp>
 #include <boost/log/expressions/formatter.hpp>

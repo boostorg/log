@@ -17,7 +17,7 @@
 
 #include <string>
 #include <boost/move/core.hpp>
-#include <boost/move/utility.hpp>
+#include <boost/move/utility_core.hpp>
 #include <boost/mpl/has_xxx.hpp>
 #include <boost/phoenix/core/actor.hpp>
 #include <boost/phoenix/core/terminal_fwd.hpp>
