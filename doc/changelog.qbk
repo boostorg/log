@@ -14,6 +14,7 @@
 [*New features:]
 
 * Added new tools for inter-process logging on a local machine. The implementation includes a [link log.detailed.utilities.ipc.object_name resource name wrapper], an [link log.detailed.utilities.ipc.reliable_message_queue inter-process message queue] and a [link log.detailed.sink_backends.text_ipc_message_queue sink backend]. The new functionality is optional and can be disabled by defining [link log.installation.config `BOOST_LOG_WITHOUT_IPC`] macro at library build time. Thanks to Lingxi Li for the initial patch.
+* Added a new character decorator called [link log.detailed.expressions.formatters.decorators.max_size `max_size_decor`]. The new decorator allows to limit the output of its adopted formatter up to the specified length. This can be useful with the new inter-process sink backend.
 
 [*Bug fixes:]
 
@@ -86,7 +87,7 @@
 
 [*Bug fixes:]
 
-* [link log.detailed.expressions.formatters.decorators XML character decorator] now escapes quote (\") characters.
+* [link log.detailed.expressions.formatters.decorators.xml XML character decorator] now escapes quote (\") characters.
 * The exceptions thrown by asynchronous sinks created as a result of [link log.detailed.utilities.setup.settings initialization from settings] are now silently suppressed instead of terminating the application. If special error handling is needed, it is recommended to [link log.extension.settings.adding_support_for_user_defined_sinks register a user-defined sink factory]. ([ticket 10638])
 * Corrected syslog message composition on MSVC, if message length exceeds 1025 bytes. ([ticket 10700])
 
