@@ -235,8 +235,10 @@ private:
     typedef char_decorator_output_terminal< LeftT, SubactorT, ImplT > this_type;
 
 public:
+#ifndef BOOST_LOG_DOXYGEN_PASS
     //! Internal typedef for type categorization
     typedef void _is_boost_log_terminal;
+#endif
 
     //! Implementation type
     typedef ImplT impl_type;
@@ -357,8 +359,10 @@ private:
     typedef char_decorator_terminal< SubactorT, ImplT > this_type;
 
 public:
+#ifndef BOOST_LOG_DOXYGEN_PASS
     //! Internal typedef for type categorization
     typedef void _is_boost_log_terminal;
+#endif
 
     //! Implementation type
     typedef ImplT impl_type;

@@ -53,8 +53,10 @@ private:
     typedef wrapped_formatter_output_terminal< LeftT, FunT > this_type;
 
 public:
+#ifndef BOOST_LOG_DOXYGEN_PASS
     //! Internal typedef for type categorization
     typedef void _is_boost_log_terminal;
+#endif
 
     //! Wrapped function type
     typedef FunT function_type;
@@ -156,8 +158,10 @@ template< typename FunT, typename CharT >
 class wrapped_formatter_terminal
 {
 public:
+#ifndef BOOST_LOG_DOXYGEN_PASS
     //! Internal typedef for type categorization
     typedef void _is_boost_log_terminal;
+#endif
 
     //! Character type
     typedef CharT char_type;

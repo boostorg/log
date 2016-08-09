@@ -57,8 +57,10 @@ private:
     typedef max_size_decorator_output_terminal< LeftT, SubactorT, CharT > this_type;
 
 public:
+#ifndef BOOST_LOG_DOXYGEN_PASS
     //! Internal typedef for type categorization
     typedef void _is_boost_log_terminal;
+#endif
 
     //! Character type
     typedef CharT char_type;
@@ -248,8 +250,10 @@ private:
     typedef max_size_decorator_terminal< SubactorT, CharT > this_type;
 
 public:
+#ifndef BOOST_LOG_DOXYGEN_PASS
     //! Internal typedef for type categorization
     typedef void _is_boost_log_terminal;
+#endif
 
     //! Character type
     typedef CharT char_type;

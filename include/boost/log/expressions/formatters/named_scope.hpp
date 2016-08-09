@@ -257,8 +257,10 @@ template< typename FallbackPolicyT, typename CharT >
 class format_named_scope_terminal
 {
 public:
+#ifndef BOOST_LOG_DOXYGEN_PASS
     //! Internal typedef for type categorization
     typedef void _is_boost_log_terminal;
+#endif
 
     //! Attribute value type
     typedef attributes::named_scope::value_type value_type;
