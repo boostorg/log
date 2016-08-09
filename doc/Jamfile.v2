@@ -53,6 +53,7 @@ local doxygen_params =
                         BOOST_RV_REF(x)=\"x&&\" \\
                         BOOST_NESTED_TEMPLATE=template \\
                         BOOST_CONSTEXPR=constexpr \\
+                        BOOST_CXX14_CONSTEXPR=constexpr \\
                         BOOST_CONSTEXPR_OR_CONST=constexpr \\
                         BOOST_NOEXCEPT=noexcept \\
                         BOOST_NOEXCEPT_IF(x)=noexcept(x) \\
