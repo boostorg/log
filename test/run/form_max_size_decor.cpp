@@ -129,15 +129,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(decorator_formatting, CharT, char_types)
 
 namespace {
 
-const char narrow_chars[] =
-{
-    static_cast< char >(0xd0), static_cast< char >(0x9f), static_cast< char >(0xd1), static_cast< char >(0x80),
-    static_cast< char >(0xd0), static_cast< char >(0xb8), static_cast< char >(0xd0), static_cast< char >(0xb2),
-    static_cast< char >(0xd0), static_cast< char >(0xb5), static_cast< char >(0xd1), static_cast< char >(0x82),
-    ',', ' ',
-    static_cast< char >(0xd0), static_cast< char >(0xbc), static_cast< char >(0xd0), static_cast< char >(0xb8),
-    static_cast< char >(0xd1), static_cast< char >(0x80), '!', 0
-};
+const char narrow_chars[] = "\xd0\x9f\xd1\x80\xd0\xb8\xd0\xb2\xd0\xb5\xd1\x82, \xd0\xbc\xd0\xb8\xd1\x80!";
 
 } // namespace
 
