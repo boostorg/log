@@ -320,7 +320,6 @@ template< typename CharT, typename ParserT, typename CallbackT >
 inline void parse_format(const CharT* begin, const CharT* end, ParserT& parser, CallbackT& callback)
 {
     typedef CharT char_type;
-    typedef CallbackT callback_type;
 
     while (begin != end)
     {
