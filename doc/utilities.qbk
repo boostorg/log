@@ -342,7 +342,7 @@ Receiving messages from the queue is similar. Here is an example of a log viewer
 
 [note The queue does not guarantee any particular order of received messages from different writer threads. Messages sent by a particular writer thread will be received in the order of sending.]
 
-A blocked reader or writer can be unblocked by calling \c stop_local. After this method is called, all threads blocked on this particular object are released and return \c operation_result::aborted. The other instances of the queue (in the current or other processes) are unaffected. In order to restore the normal functioning of the queue instance after the \c stop_local call the user has to invoke \c reset_local.
+A blocked reader or writer can be unblocked by calling `stop_local`. After this method is called, all threads blocked on this particular object are released and return `operation_result::aborted`. The other instances of the queue (in the current or other processes) are unaffected. In order to restore the normal functioning of the queue instance after the `stop_local` call the user has to invoke `reset_local`.
 
 [endsect]
 
