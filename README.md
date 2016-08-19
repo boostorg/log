@@ -1,4 +1,4 @@
-#![Boost.Log](doc/logo.png)
+# ![Boost.Log](doc/logo.png)
 
 Boost.Log, part of collection of the [Boost C++ Libraries](http://github.com/boostorg), provides tools for adding logging to libraries and applications.
 
