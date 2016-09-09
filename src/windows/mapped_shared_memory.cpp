@@ -26,6 +26,7 @@
 #include <string>
 #include <sstream>
 #include <boost/assert.hpp>
+#include <boost/cstdint.hpp>
 #include <boost/memory_order.hpp>
 #include <boost/atomic/atomic.hpp>
 #include <boost/throw_exception.hpp>
@@ -61,14 +62,16 @@ void mapped_shared_memory::create(const wchar_t* name, std::size_t size, permiss
 {
     BOOST_ASSERT(m_handle == NULL);
 
+    const uint64_t size64 = static_cast< uint64_t >(size);
+
     // Unlike other create functions, this function opens the existing mapping, if one already exists
     boost::detail::winapi::HANDLE_ h = boost::detail::winapi::CreateFileMappingW
     (
         boost::detail::winapi::INVALID_HANDLE_VALUE_,
         reinterpret_cast< boost::detail::winapi::SECURITY_ATTRIBUTES_* >(perms.get_native()),
         boost::detail::winapi::PAGE_READWRITE_ | boost::detail::winapi::SEC_COMMIT_,
-        static_cast< boost::detail::winapi::DWORD_ >(size >> 32u),
-        static_cast< boost::detail::winapi::DWORD_ >(size),
+        static_cast< boost::detail::winapi::DWORD_ >(size64 >> 32u),
+        static_cast< boost::detail::winapi::DWORD_ >(size64),
         name
     );
 
@@ -91,14 +94,16 @@ bool mapped_shared_memory::create_or_open(const wchar_t* name, std::size_t size,
 {
     BOOST_ASSERT(m_handle == NULL);
 
+    const uint64_t size64 = static_cast< uint64_t >(size);
+
     // Unlike other create functions, this function opens the existing mapping, if one already exists
     boost::detail::winapi::HANDLE_ h = boost::detail::winapi::CreateFileMappingW
     (
         boost::detail::winapi::INVALID_HANDLE_VALUE_,
         reinterpret_cast< boost::detail::winapi::SECURITY_ATTRIBUTES_* >(perms.get_native()),
         boost::detail::winapi::PAGE_READWRITE_ | boost::detail::winapi::SEC_COMMIT_,
-        static_cast< boost::detail::winapi::DWORD_ >(size >> 32u),
-        static_cast< boost::detail::winapi::DWORD_ >(size),
+        static_cast< boost::detail::winapi::DWORD_ >(size64 >> 32u),
+        static_cast< boost::detail::winapi::DWORD_ >(size64),
         name
     );
 
