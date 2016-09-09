@@ -74,7 +74,7 @@ private:
     size_type m_Len;
 
     //! Empty string literal to support \c clear
-#if !defined(BOOST_NO_CXX11_CONSTEXPR)
+#if !defined(BOOST_LOG_NO_CXX11_CONSTEXPR_DATA_MEMBER_BRACE_INITIALIZERS)
     static constexpr value_type g_EmptyString[1] = { 0 };
 #else
     static const value_type g_EmptyString[1];
@@ -596,7 +596,7 @@ private:
 #endif // BOOST_LOG_DOXYGEN_PASS
 };
 
-#if !defined(BOOST_NO_CXX11_CONSTEXPR)
+#if !defined(BOOST_LOG_NO_CXX11_CONSTEXPR_DATA_MEMBER_BRACE_INITIALIZERS)
 template< typename CharT, typename TraitsT >
 constexpr typename basic_string_literal< CharT, TraitsT >::value_type
 basic_string_literal< CharT, TraitsT >::g_EmptyString[1];

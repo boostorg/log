@@ -109,7 +109,12 @@ public:
      *
      * \post <tt>!*this == true</tt>
      */
-    BOOST_DEFAULTED_FUNCTION(BOOST_CONSTEXPR record_view() BOOST_NOEXCEPT, {})
+    BOOST_CONSTEXPR record_view() BOOST_NOEXCEPT
+#if !defined(BOOST_LOG_NO_CXX11_DEFAULTED_NOEXCEPT_FUNCTIONS)
+        = default;
+#else
+    {}
+#endif
 
     /*!
      * Copy constructor
