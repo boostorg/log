@@ -52,7 +52,7 @@
 #endif
 
 //! A suffix used in names of interprocess objects created by the queue.
-//! Used as a protection against clashing with user-supplied names of interprocess queues and also to resolve conflicts between queues if different types.
+//! Used as a protection against clashing with user-supplied names of interprocess queues and also to resolve conflicts between queues of different types.
 #define BOOST_LOG_IPC_NAMES_AUX_SUFFIX L".3010b9950926463398eee00b35b44651"
 
 namespace boost {
