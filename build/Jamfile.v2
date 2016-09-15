@@ -22,6 +22,7 @@ project.load [ path.join [ path.make $(here:D) ] ../config/message-compiler ] ;
 project.load [ path.join [ path.make $(here:D) ] ../config/x86-ext ] ;
 project.load [ path.join [ path.make $(here:D) ] ../config/visibility ] ;
 project.load [ path.join [ path.make $(here:D) ] ../config/pthread-mutex-robust ] ;
+project.load [ path.join [ path.make $(here:D) ] ../config/atomic-int32 ] ;
 project.pop-current ;
 
 # Windows libs
@@ -110,6 +111,19 @@ rule check-pthread-mutex-robust ( properties * )
     return $(result) ;
 }
 
+rule check-atomic-int32 ( properties * )
+{
+    local result = ;
+
+    local has_atomic_int32 = [ configure.builds /boost/log/atomic-int32//atomic_int32 : $(properties) : native-atomic-int32-supported ] ;
+    if ! $(has_atomic_int32)
+    {
+        result = <define>BOOST_LOG_WITHOUT_IPC ;
+    }
+
+    return $(result) ;
+}
+
 rule check-message-compiler ( properties * )
 {
     local result ;
@@ -142,6 +156,7 @@ project boost/log
     : source-location ../src
     : requirements
         <conditional>@check-instruction-set
+        <conditional>@check-atomic-int32
         <conditional>@select-regex-backend
         <conditional>@check-visibility
         <conditional>@check-pthread-mutex-robust
