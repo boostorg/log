@@ -16,6 +16,9 @@
 #include <boost/log/detail/config.hpp>
 #include <pwd.h>
 #include <unistd.h>
+#if defined(__ANDROID__) && (__ANDROID_API__+0) < 21
+#include <sys/syscall.h>
+#endif
 #include <cstddef>
 #include <cstring>
 #include <limits>
@@ -37,6 +40,14 @@ BOOST_LOG_OPEN_NAMESPACE
 namespace ipc {
 
 BOOST_LOG_ANONYMOUS_NAMESPACE {
+
+#if defined(__ANDROID__) && (__ANDROID_API__+0) < 21
+// Until Android API version 21 NDK does not define getsid wrapper in libc, although there is the corresponding syscall
+inline pid_t getsid(pid_t pid) BOOST_NOEXCEPT
+{
+    return static_cast< pid_t >(::syscall(__NR_getsid, pid));
+}
+#endif
 
 //! Formats an integer identifier into the string
 template< typename Identifier >
