@@ -14,10 +14,15 @@
  */
 
 #include <boost/log/detail/config.hpp>
-#include <pwd.h>
 #include <unistd.h>
+#include <sys/types.h>
 #if defined(__ANDROID__) && (__ANDROID_API__+0) < 21
 #include <sys/syscall.h>
+// Until Android API version 21 there is no getpwuid_r
+#define BOOST_LOG_NO_GETPWUID_R
+#endif
+#if !defined(BOOST_LOG_NO_GETPWUID_R)
+#include <pwd.h>
 #endif
 #include <cstddef>
 #include <cstring>
@@ -87,6 +92,7 @@ std::string get_scope_prefix(object_name::scope ns)
         {
             const uid_t uid = getuid();
 
+#if !defined(BOOST_LOG_NO_GETPWUID_R)
             long limit = sysconf(_SC_GETPW_R_SIZE_MAX);
             if (limit <= 0)
                 limit = 65536;
@@ -118,6 +124,10 @@ std::string get_scope_prefix(object_name::scope ns)
                 std::memset(&string_storage[0], 0, string_storage.size());
                 throw;
             }
+#else
+            prefix += "uid.";
+            format_id(uid, prefix);
+#endif
         }
         break;
 
