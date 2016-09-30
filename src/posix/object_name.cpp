@@ -18,8 +18,10 @@
 #include <sys/types.h>
 #if defined(__ANDROID__) && (__ANDROID_API__+0) < 21
 #include <sys/syscall.h>
-// Until Android API version 21 there is no getpwuid_r
+#if !defined(__CRYSTAX__)
+// Until Android API version 21 Google NDK does not provide getpwuid_r
 #define BOOST_LOG_NO_GETPWUID_R
+#endif
 #endif
 #if !defined(BOOST_LOG_NO_GETPWUID_R)
 #include <pwd.h>
