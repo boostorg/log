@@ -266,5 +266,8 @@ boostbook log
 
 install html/images/log : [ glob *.png ] ;
 
-alias boostdoc : log
-    : : : <implicit-dependency>log ;
+###############################################################################
+alias boostdoc ;
+explicit boostdoc ;
+alias boostrelease : log ;
+explicit boostrelease ;
