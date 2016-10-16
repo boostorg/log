@@ -21,31 +21,6 @@ String literals support interface similar to STL strings, except for string modi
 
 [endsect]
 
-[section:type_info_wrapper Type information wrapper]
-
-[note This component is deprecated and will be removed in future releases. __boost_type_index__ is recommended as a replacement.]
-
-    #include <``[boost_log_utility_type_info_wrapper_hpp]``>
-
-The language support for run time type information is essential for the library. But partially because of limitations that the C++ Standard imposes on this feature, partially because of differences of implementation of different compilers, there was a need for a lightweight wrapper around the `std::type_info` class to fill the gaps. The table below briefly shows the differences between the `std::type_info` and [class_log_type_info_wrapper] classes.
-
-[table Type information classes comparison
-    [[Feature]                                  [`std::type_info`]              [`type_info_wrapper`]]
-    [[Is default-constructable]                 [No]                            [Yes. The default-constructed wrapper is in an empty state.]]
-    [[Is copy-constructable]                    [No]                            [Yes]]
-    [[Is assignable]                            [No]                            [Yes]]
-    [[Is swappable]                             [No]                            [Yes]]
-    [[Life time duration]                       [Static, until the application terminates] [Dynamic]]
-    [[Has an empty state]                       [No]                            [Yes. In empty state the type info wrapper is never equal to other non-empty type info wrappers. It is equal to other empty type info wrappers and can be ordered with them.]]
-    [[Supports equality comparison]             [Yes]                           [Yes]]
-    [[Supports ordering]                        [Yes, partial ordering with the `before` method.] [Yes, partial ordering with the complete set of comparison operators. The semantics of ordering is similar to the `std::type_info::before` method.]]
-    [[Supports printable representation of type] [Yes, with the `name` function.] [Yes, with `pretty_name` function. The function does its best to print the type name in a human-readable form. On some platforms it does better than `std::type_info::name`.]]
-]
-
-Given the distinctions above, using type information objects becomes much easier. For example, the ability to copy and order with regular operators allows using [class_log_type_info_wrapper] with containers. The ability to default-construct and assign allows using type information as a regular object and not to resort to pointers which may be unsafe.
-
-[endsect]
-
 [section:type_dispatch Type dispatchers]
 
     #include <``[boost_log_utility_type_dispatch_type_dispatcher_hpp]``>

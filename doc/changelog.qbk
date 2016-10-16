@@ -11,6 +11,10 @@
 
 [heading 2.10, Boost 1.63]
 
+[*General changes:]
+
+* Removed the previously deprecated `type_info_wrapper`. As previously suggested, __boost_type_index__ is recommended as a replacement.
+
 [*New features:]
 
 * Added a way to access the current file name from the [link log.detailed.sink_backends.text_file text file sink backend]. The file name can be obtained with the `get_current_file_name` method.
