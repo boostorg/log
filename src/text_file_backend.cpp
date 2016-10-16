@@ -1176,26 +1176,28 @@ BOOST_LOG_API void text_file_backend::consume(record_view const& rec, string_typ
 {
     typedef file_char_traits< string_type::value_type > traits_t;
 
-    bool no_new_filename = false;
-    if (!m_pImpl->m_File.good())
+    filesystem::path prev_file_name;
+    bool use_prev_file_name = false;
+    if (BOOST_UNLIKELY(!m_pImpl->m_File.good()))
     {
         // The file stream is not operational. One possible reason is that there is no more free space
         // on the file system. In this case it is possible that this log record will fail to be written as well,
         // leaving the newly creted file empty. Eventually this results in lots of empty log files.
         // We should take precautions to avoid this. https://svn.boost.org/trac/boost/ticket/11016
+        prev_file_name = m_pImpl->m_FileName;
         close_file();
 
         system::error_code ec;
-        uintmax_t size = filesystem::file_size(m_pImpl->m_FileName, ec);
+        uintmax_t size = filesystem::file_size(prev_file_name, ec);
         if (!!ec || size == 0)
         {
             // To reuse the empty file avoid re-generating the new file name later
-            no_new_filename = true;
+            use_prev_file_name = true;
         }
         else if (!!m_pImpl->m_pFileCollector)
         {
             // Complete file rotation
-            m_pImpl->m_pFileCollector->store_file(m_pImpl->m_FileName);
+            m_pImpl->m_pFileCollector->store_file(prev_file_name);
         }
     }
     else if
@@ -1212,19 +1214,23 @@ BOOST_LOG_API void text_file_backend::consume(record_view const& rec, string_typ
 
     if (!m_pImpl->m_File.is_open())
     {
-        if (!no_new_filename)
-            m_pImpl->m_FileName = m_pImpl->m_StorageDir / m_pImpl->m_FileNameGenerator(m_pImpl->m_FileCounter++);
+        filesystem::path new_file_name;
+        if (!use_prev_file_name)
+            new_file_name = m_pImpl->m_StorageDir / m_pImpl->m_FileNameGenerator(m_pImpl->m_FileCounter++);
+        else
+            prev_file_name.swap(new_file_name);
 
-        filesystem::create_directories(m_pImpl->m_FileName.parent_path());
+        filesystem::create_directories(new_file_name.parent_path());
 
-        m_pImpl->m_File.open(m_pImpl->m_FileName, m_pImpl->m_FileOpenMode);
-        if (!m_pImpl->m_File.is_open())
+        m_pImpl->m_File.open(new_file_name, m_pImpl->m_FileOpenMode);
+        if (BOOST_UNLIKELY(!m_pImpl->m_File.is_open()))
         {
             BOOST_THROW_EXCEPTION(filesystem_error(
                 "Failed to open file for writing",
-                m_pImpl->m_FileName,
+                new_file_name,
                 system::error_code(system::errc::io_error, system::generic_category())));
         }
+        m_pImpl->m_FileName.swap(new_file_name);
 
         if (!m_pImpl->m_OpenHandler.empty())
             m_pImpl->m_OpenHandler(m_pImpl->m_File);
@@ -1337,29 +1343,36 @@ BOOST_LOG_API void text_file_backend::set_file_name_pattern_internal(filesystem:
 //! Closes the currently open file
 void text_file_backend::close_file()
 {
-    if (!m_pImpl->m_CloseHandler.empty())
+    if (m_pImpl->m_File.is_open())
     {
-        // Rationale: We should call the close handler even if the stream is !good() because
-        // writing the footer may not be the only thing the handler does. However, there is
-        // a chance that the file had become writable since the last failure (e.g. there was
-        // no space left to write the last record, but it got freed since then), so if the handler
-        // attempts to write a footer it may succeed now. For this reason we clear the stream state
-        // and let the handler have a try.
-        m_pImpl->m_File.clear();
-        m_pImpl->m_CloseHandler(m_pImpl->m_File);
+        if (!m_pImpl->m_CloseHandler.empty())
+        {
+            // Rationale: We should call the close handler even if the stream is !good() because
+            // writing the footer may not be the only thing the handler does. However, there is
+            // a chance that the file had become writable since the last failure (e.g. there was
+            // no space left to write the last record, but it got freed since then), so if the handler
+            // attempts to write a footer it may succeed now. For this reason we clear the stream state
+            // and let the handler have a try.
+            m_pImpl->m_File.clear();
+            m_pImpl->m_CloseHandler(m_pImpl->m_File);
+        }
+
+        m_pImpl->m_File.close();
     }
-    m_pImpl->m_File.close();
+
     m_pImpl->m_File.clear();
     m_pImpl->m_CharactersWritten = 0;
+    m_pImpl->m_FileName.clear();
 }
 
 //! The method rotates the file
 BOOST_LOG_API void text_file_backend::rotate_file()
 {
+    filesystem::path prev_file_name = m_pImpl->m_FileName;
     close_file();
 
     if (!!m_pImpl->m_pFileCollector)
-        m_pImpl->m_pFileCollector->store_file(m_pImpl->m_FileName);
+        m_pImpl->m_pFileCollector->store_file(prev_file_name);
 }
 
 //! The method sets the file open mode
@@ -1388,6 +1401,12 @@ BOOST_LOG_API void text_file_backend::set_open_handler(open_handler_type const& 
 BOOST_LOG_API void text_file_backend::set_close_handler(close_handler_type const& handler)
 {
     m_pImpl->m_CloseHandler = handler;
+}
+
+//! The method returns name of the currently open log file. If no file is open, returns an empty path.
+BOOST_LOG_API filesystem::path text_file_backend::get_current_file_name() const
+{
+    return m_pImpl->m_FileName;
 }
 
 //! Performs scanning of the target directory for log files

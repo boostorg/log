@@ -477,6 +477,11 @@ public:
     BOOST_LOG_API void auto_flush(bool f = true);
 
     /*!
+     * \return The name of the currently open log file. If no file is open, returns an empty path.
+     */
+    BOOST_LOG_API filesystem::path get_current_file_name() const;
+
+    /*!
      * Performs scanning of the target directory for log files that may have been left from
      * previous runs of the application. The found files are considered by the file collector
      * as if they were rotated.
