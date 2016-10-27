@@ -377,7 +377,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         (
             packet,
             sizeof(packet),
-            "<%d>%s % 2d %02d:%02d:%02d %s %s",
+            "<%d>%s %2d %02d:%02d:%02d %s %s",
             pri,
             months[time_stamp->tm_mon],
             time_stamp->tm_mday,
