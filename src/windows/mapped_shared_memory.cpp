@@ -237,7 +237,7 @@ std::size_t mapped_shared_memory::obtain_size(boost::detail::winapi::HANDLE_ h)
         BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, "Failed to test obtain size of the shared memory segment", (ERROR_INVALID_HANDLE));
     }
 
-    return info.section_size.QuadPart;
+    return static_cast< std::size_t >(info.section_size.QuadPart);
 }
 
 } // namespace aux
