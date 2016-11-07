@@ -57,7 +57,7 @@ namespace aux {
 
 BOOST_LOG_ANONYMOUS_NAMESPACE {
 
-//! Sequence shuffling algorithm. Very similar to std::random_shuffle, used for forward portability with compilers that removed it from STL.
+//! Sequence shuffling algorithm. Very similar to std::random_shuffle, used for forward portability with compilers that removed it from the standard library (C++17).
 template< typename Iterator, typename RandomNumberGenerator >
 void random_shuffle(Iterator begin, Iterator end, RandomNumberGenerator& rng)
 {
