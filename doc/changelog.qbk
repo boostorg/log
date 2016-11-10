@@ -23,6 +23,7 @@
 
 * Fixed compilation errors for Android API prior to version 21.
 * Streaming operators now take scalar types and enums by value. This allows to output static constants and bitfields directly into formatting stream and record stream. ([ticket 11998])
+* Fixed auto-detection of native syslog API. ([ticket 12600])
 * In UDP socket based syslog backend implementation, changed the syslog message format for better compliance with RFC3164.
 * File close handler installed in [link log.detailed.sink_backends.text_file text file sink backend] is no longer called if the file is not open yet.
 

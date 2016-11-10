@@ -22,6 +22,7 @@ project.load [ path.join [ path.make $(here:D) ] ../config/message-compiler ] ;
 project.load [ path.join [ path.make $(here:D) ] ../config/x86-ext ] ;
 project.load [ path.join [ path.make $(here:D) ] ../config/visibility ] ;
 project.load [ path.join [ path.make $(here:D) ] ../config/pthread-mutex-robust ] ;
+project.load [ path.join [ path.make $(here:D) ] ../config/native-syslog ] ;
 project.load [ path.join [ path.make $(here:D) ] ../config/atomic-int32 ] ;
 project.pop-current ;
 
@@ -124,6 +125,22 @@ rule check-atomic-int32 ( properties * )
     return $(result) ;
 }
 
+rule check-native-syslog ( properties * )
+{
+    local result = ;
+
+    if ! [ has-config-flag BOOST_LOG_WITHOUT_SYSLOG : $(properties) ]
+    {
+        local has_native_syslog = [ configure.builds /boost/log/native-syslog//native_syslog : $(properties) : native-syslog-supported ] ;
+        if $(has_native_syslog)
+        {
+            result = <define>BOOST_LOG_USE_NATIVE_SYSLOG ;
+        }
+    }
+
+    return $(result) ;
+}
+
 rule check-message-compiler ( properties * )
 {
     local result ;
@@ -160,6 +177,7 @@ project boost/log
         <conditional>@select-regex-backend
         <conditional>@check-visibility
         <conditional>@check-pthread-mutex-robust
+        <conditional>@check-native-syslog
         <conditional>@check-message-compiler
 
         <include>../src
