@@ -28,7 +28,7 @@ BOOST_LOG_OPEN_NAMESPACE
 
 namespace keywords {
 
-//! The keyword for passing auto flush flag to a sink backend initialization
+//! The keyword for enabling/disabling final log file rotation on sink backend destruction
 BOOST_PARAMETER_KEYWORD(tag, enable_final_rotation)
 
 } // namespace keywords
