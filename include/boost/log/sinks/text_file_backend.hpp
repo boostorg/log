@@ -485,9 +485,11 @@ public:
     BOOST_LOG_API void enable_final_rotation(bool enable);
 
     /*!
-     * Sets the flag to automatically flush buffers of all attached streams after each log record
+     * Sets the flag to automatically flush write buffers of the file being written after each log record.
+     *
+     * \param enable The flag indicates whether the automatic buffer flush should be performed.
      */
-    BOOST_LOG_API void auto_flush(bool f = true);
+    BOOST_LOG_API void auto_flush(bool enable = true);
 
     /*!
      * \return The name of the currently open log file. If no file is open, returns an empty path.

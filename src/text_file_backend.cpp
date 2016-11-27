@@ -1175,10 +1175,10 @@ BOOST_LOG_API void text_file_backend::enable_final_rotation(bool enable)
     m_pImpl->m_FinalRotationEnabled = enable;
 }
 
-//! Sets the flag to automatically flush buffers of all attached streams after each log record
-BOOST_LOG_API void text_file_backend::auto_flush(bool f)
+//! Sets the flag to automatically flush write buffers of the file being written after each log record.
+BOOST_LOG_API void text_file_backend::auto_flush(bool enable)
 {
-    m_pImpl->m_AutoFlush = f;
+    m_pImpl->m_AutoFlush = enable;
 }
 
 //! The method writes the message to the sink
