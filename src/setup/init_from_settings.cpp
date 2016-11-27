@@ -457,6 +457,12 @@ public:
             backend->set_time_based_rotation(param_cast_to_rotation_time_point("RotationTimePoint", rotation_time_point_param.get()));
         }
 
+        // Final rotation
+        if (optional< string_type > enable_final_rotation_param = params["EnableFinalRotation"])
+        {
+            backend->enable_final_rotation(param_cast_to_bool("EnableFinalRotation", enable_final_rotation_param.get()));
+        }
+
         // Auto flush
         if (optional< string_type > auto_flush_param = params["AutoFlush"])
         {

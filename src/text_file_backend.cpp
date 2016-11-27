@@ -1106,13 +1106,16 @@ struct text_file_backend::implementation
     time_based_rotation_predicate m_TimeBasedRotation;
     //! The flag shows if every written record should be flushed
     bool m_AutoFlush;
+    //! The flag indicates whether the final rotation should be performed
+    bool m_FinalRotationEnabled;
 
-    implementation(uintmax_t rotation_size, bool auto_flush) :
+    implementation(uintmax_t rotation_size, bool auto_flush, bool enable_final_rotation) :
         m_FileOpenMode(std::ios_base::trunc | std::ios_base::out),
         m_FileCounter(0),
         m_CharactersWritten(0),
         m_FileRotationSize(rotation_size),
-        m_AutoFlush(auto_flush)
+        m_AutoFlush(auto_flush),
+        m_FinalRotationEnabled(enable_final_rotation)
     {
     }
 };
@@ -1129,7 +1132,7 @@ BOOST_LOG_API text_file_backend::~text_file_backend()
     try
     {
         // Attempt to put the temporary file into storage
-        if (m_pImpl->m_File.is_open() && m_pImpl->m_CharactersWritten > 0)
+        if (m_pImpl->m_FinalRotationEnabled && m_pImpl->m_File.is_open() && m_pImpl->m_CharactersWritten > 0)
             rotate_file();
     }
     catch (...)
@@ -1145,9 +1148,10 @@ BOOST_LOG_API void text_file_backend::construct(
     std::ios_base::openmode mode,
     uintmax_t rotation_size,
     time_based_rotation_predicate const& time_based_rotation,
-    bool auto_flush)
+    bool auto_flush,
+    bool enable_final_rotation)
 {
-    m_pImpl = new implementation(rotation_size, auto_flush);
+    m_pImpl = new implementation(rotation_size, auto_flush, enable_final_rotation);
     set_file_name_pattern_internal(pattern);
     set_time_based_rotation(time_based_rotation);
     set_open_mode(mode);
@@ -1163,6 +1167,12 @@ BOOST_LOG_API void text_file_backend::set_rotation_size(uintmax_t size)
 BOOST_LOG_API void text_file_backend::set_time_based_rotation(time_based_rotation_predicate const& predicate)
 {
     m_pImpl->m_TimeBasedRotation = predicate;
+}
+
+//! The method allows to enable or disable log file rotation on sink destruction.
+BOOST_LOG_API void text_file_backend::enable_final_rotation(bool enable)
+{
+    m_pImpl->m_FinalRotationEnabled = enable;
 }
 
 //! Sets the flag to automatically flush buffers of all attached streams after each log record

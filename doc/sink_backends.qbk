@@ -42,7 +42,7 @@ File rotation is implemented by the sink backend itself. The file name pattern a
 
 [example_sinks_file]
 
-[note The file size at rotation can be imprecise. The implementation counts the number of characters written to the file, but the underlying API can introduce additional auxiliary data, which would increase the log file's actual size on disk. For instance, it is well known that Windows and DOS operating systems have a special treatment with regard to new-line characters. Each new-line character is written as a two byte sequence 0x0D 0x0A instead of a single 0x0A. Other platform-specific character translations are also known.]
+[note The file size at rotation can be imprecise. The implementation counts the number of characters written to the file, but the underlying API can introduce additional auxiliary data, which would increase the log file's actual size on disk. For instance, it is well known that Windows and DOS operating systems have a special treatment with regard to new-line characters. Each new-line character is written as a two byte sequence 0x0D 0x0A instead of a single 0x0A. Other platform-specific character translations are also known. The actual size on disk can also be less than the number of written characters on compressed filesystems.]
 
 The time-based rotation is not limited by only time points. There are following options available out of the box:
 
@@ -94,6 +94,21 @@ If none of the above applies, one can specify his own predicate for time-based r
     }
 
 [note The log file rotation takes place on an attempt to write a new log record to the file. Thus the time-based rotation is not a strict threshold, either. The rotation will take place as soon as the library detects that the rotation should have happened.]
+
+In addition to time and size-based file rotation the backend also performs rotation on its destruction by default. This is done in order to maintain all log files collected in the target directory after program termination and ensure that temporary log files don't pile up in the directory the sink backend writes to. This behavior can be disabled with the `enable_final_rotation` parameter of the backend constructor or the similarly named method of the backend:
+
+    void init_logging()
+    {
+        // ...
+
+        boost::shared_ptr< sinks::text_file_backend > backend =
+            boost::make_shared< sinks::text_file_backend >(
+                keywords::file_name = "file_%5N.log",
+                keywords::enable_final_rotation = false
+            );
+
+        // ...
+    }
 
 The file name pattern may contain a number of wildcards, like the one you can see in the example above. Supported placeholders are:
 

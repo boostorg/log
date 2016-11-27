@@ -18,6 +18,7 @@
 [*New features:]
 
 * Added a way to access the current file name from the [link log.detailed.sink_backends.text_file text file sink backend]. The file name can be obtained with the `get_current_file_name` method.
+* Added a way to disable log file rotation on [link log.detailed.sink_backends.text_file text file sink backend] destruction, which typically happens on program termination. This can be done via `enable_final_rotation` backend constructor parameter or similarly named method, or with the `EnableFinalRotation` parameter in the settings.
 
 [*Bug fixes:]
 
