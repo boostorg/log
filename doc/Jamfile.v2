@@ -253,6 +253,7 @@ boostbook log
     :
         log_doc
     :
+        <dependency>html/images/log
         <xsl:param>boost.root=../../../..
         <xsl:param>boost.libraries=../../../libs/libraries.htm
         <xsl:param>nav.layout=none
