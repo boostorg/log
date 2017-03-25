@@ -32,7 +32,7 @@ int main()
 
     // Send a message through the queue
     std::string message = "Hello, Viewer!";
-    queue_t::operation_result result = queue.send(message.data(), message.size());
+    queue_t::operation_result result = queue.send(message.data(), static_cast< queue_t::size_type >(message.size()));
 
     // See if the message was sent
     switch (result)
