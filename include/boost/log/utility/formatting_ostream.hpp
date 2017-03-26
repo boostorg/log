@@ -416,7 +416,14 @@ public:
     }
     basic_formatting_ostream& operator<< (const char* p)
     {
-        return this->formatted_write(p, static_cast< std::streamsize >(std::char_traits< char >::length(p)));
+        if (p)
+        {
+            return this->formatted_write(p, static_cast< std::streamsize >(std::char_traits< char >::length(p)));
+        }
+        else
+        {
+            return *this;
+        }
     }
 
     // When no native character type is supported, the following overloads are disabled as they have ambiguous meaning.
@@ -428,7 +435,14 @@ public:
     }
     basic_formatting_ostream& operator<< (const wchar_t* p)
     {
-        return this->formatted_write(p, static_cast< std::streamsize >(std::char_traits< wchar_t >::length(p)));
+        if (p)
+        {
+            return this->formatted_write(p, static_cast< std::streamsize >(std::char_traits< wchar_t >::length(p)));
+        }
+        else
+        {
+            return *this;
+        }
     }
 #endif
 #if !defined(BOOST_LOG_NO_CXX11_CODECVT_FACETS)
@@ -439,7 +453,14 @@ public:
     }
     basic_formatting_ostream& operator<< (const char16_t* p)
     {
-        return this->formatted_write(p, static_cast< std::streamsize >(std::char_traits< char16_t >::length(p)));
+        if (p)
+        {
+            return this->formatted_write(p, static_cast< std::streamsize >(std::char_traits< char16_t >::length(p)));
+        }
+        else
+        {
+            return *this;
+        }
     }
 #endif
 #if !defined(BOOST_NO_CXX11_CHAR32_T)
@@ -449,7 +470,14 @@ public:
     }
     basic_formatting_ostream& operator<< (const char32_t* p)
     {
-        return this->formatted_write(p, static_cast< std::streamsize >(std::char_traits< char32_t >::length(p)));
+        if (p)
+        {
+            return this->formatted_write(p, static_cast< std::streamsize >(std::char_traits< char32_t >::length(p)));
+        }
+        else
+        {
+            return *this;
+        }
     }
 #endif
 #endif
