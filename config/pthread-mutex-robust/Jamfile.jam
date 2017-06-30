@@ -6,18 +6,12 @@
 #
 
 import project ;
+import log-platform-config ;
 
 project /boost/log/pthread-mutex-robust
     : source-location .
     : requirements
-        # Reproduce the same system macros here as are used during the library compilation. See build/Jamfile.v2.
-        <target-os>linux:<define>_XOPEN_SOURCE=600
-        <target-os>linux:<define>_GNU_SOURCE=1
-
-        <target-os>solaris:<define>_XOPEN_SOURCE=500
-        <target-os>solaris:<define>__EXTENSIONS__
-
-        <target-os>hpux,<toolset>gcc:<define>_XOPEN_SOURCE_EXTENDED
+        <conditional>@log-platform-config.set-platform-defines
 
         <pch>off
     ;

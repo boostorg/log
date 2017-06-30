@@ -6,11 +6,13 @@
 #
 
 import project ;
+import log-platform-config ;
 using mc ;
 
 project /boost/log/message-compiler
     : source-location ../../src
     : requirements
+        <conditional>@log-platform-config.set-platform-defines
         <pch>off
     ;
 

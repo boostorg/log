@@ -13,6 +13,7 @@ import project ;
 import feature ;
 import configure ;
 import log-architecture ;
+import log-platform-config ;
 using mc ;
 
 local here = [ modules.binding $(__name__) ] ;
@@ -179,6 +180,7 @@ project boost/log
         <conditional>@check-pthread-mutex-robust
         <conditional>@check-native-syslog
         <conditional>@check-message-compiler
+        <conditional>@log-platform-config.set-platform-defines
 
         <include>../src
 
@@ -233,32 +235,19 @@ project boost/log
         <threading>multi:<library>/boost/atomic//boost_atomic
         <threading>multi:<library>/boost/thread//boost_thread
 
-        <target-os>windows:<define>NOMINMAX
-        <target-os>windows:<define>WIN32_LEAN_AND_MEAN
-        <target-os>windows:<define>SECURITY_WIN32
-        <target-os>windows:<define>BOOST_USE_WINDOWS_H
         <target-os>windows:<library>ws2_32
         <target-os>windows:<library>mswsock
         <target-os>windows:<library>advapi32
 
-        <target-os>cygwin:<define>NOMINMAX
-        <target-os>cygwin:<define>WIN32_LEAN_AND_MEAN
-        <target-os>cygwin:<define>SECURITY_WIN32
-        <target-os>cygwin:<define>__USE_W32_SOCKETS
-        <target-os>cygwin:<define>BOOST_USE_WINDOWS_H
         <target-os>cygwin:<library>ws2_32
         <target-os>cygwin:<library>mswsock
         <target-os>cygwin:<library>advapi32
 
-        <target-os>linux:<define>_XOPEN_SOURCE=600
         <target-os>linux:<library>rt
 
-        <target-os>solaris:<define>_XOPEN_SOURCE=500 # Solaris headers are broken and cannot be included in C++ when _XOPEN_SOURCE=600
-        <target-os>solaris:<define>__EXTENSIONS__
         <target-os>solaris:<library>socket
         <target-os>solaris:<library>nsl
 
-        <target-os>hpux:<define>_XOPEN_SOURCE=600
         <target-os>hpux:<library>ipv6
 
         <target-os>freebsd:<library>rt
