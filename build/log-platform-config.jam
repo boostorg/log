@@ -49,7 +49,7 @@ rule set-platform-defines ( properties * )
 
         result += <define>__EXTENSIONS__ ;
     }
-    else
+    else if ( <target-os>linux in $(properties) ) || ( <target-os>hpux in $(properties) )
     {
         result += <define>_XOPEN_SOURCE=600 ;
     }
