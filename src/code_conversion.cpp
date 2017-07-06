@@ -73,7 +73,7 @@ inline std::size_t code_convert(const SourceCharT* begin, const SourceCharT* end
 
     const SourceCharT* const original_begin = begin;
     state_type state = state_type();
-    std::size_t buf_size = std::min(max_size, sizeof(converted_buffer) / sizeof(*converted_buffer));
+    std::size_t buf_size = (std::min)(max_size, sizeof(converted_buffer) / sizeof(*converted_buffer));
     while (begin != end && buf_size > 0u)
     {
         TargetCharT* dest = converted_buffer;
@@ -97,7 +97,7 @@ inline std::size_t code_convert(const SourceCharT* begin, const SourceCharT* end
         case std::codecvt_base::noconv:
             {
                 // Not possible, unless both character types are actually equivalent
-                const std::size_t size = std::min(max_size, static_cast< std::size_t >(end - begin));
+                const std::size_t size = (std::min)(max_size, static_cast< std::size_t >(end - begin));
                 converted.append(begin, begin + size);
                 begin += size;
                 max_size -= size;
@@ -130,7 +130,7 @@ inline std::size_t code_convert(const SourceCharT* begin, const SourceCharT* end
             BOOST_LOG_THROW_DESCR(conversion_error, "Could not convert character encoding");
         }
 
-        buf_size = std::min(max_size, sizeof(converted_buffer) / sizeof(*converted_buffer));
+        buf_size = (std::min)(max_size, sizeof(converted_buffer) / sizeof(*converted_buffer));
     }
 
 done:
