@@ -9,6 +9,12 @@
 
 [section:changelog Changelog]
 
+[heading 2.12, Boost 1.66]
+
+[*Bug fixes:]
+
+* Fixed a bug in `file_collector::scan_for_files` that caused zero file counter to be returned if the target directory contained a file with the maximum counter value in the name. This used to cause incorrectly named log files in the target directory after the user's application restart.
+
 [heading 2.11, Boost 1.65]
 
 [*General changes:]

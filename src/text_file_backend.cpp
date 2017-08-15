@@ -378,7 +378,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
     }
 
     //! The function matches the file name and the pattern
-    bool match_pattern(path_string_type const& file_name, path_string_type const& pattern, unsigned int& file_counter)
+    bool match_pattern(path_string_type const& file_name, path_string_type const& pattern, unsigned int& file_counter, bool& file_counter_parsed)
     {
         typedef qi::extract_uint< unsigned int, 10, 1, -1 > file_counter_extract;
         typedef file_char_traits< path_char_type > traits_t;
@@ -481,6 +481,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
                         if (!file_counter_extract::call(f_it, f, file_counter))
                             return false;
 
+                        file_counter_parsed = true;
                         p_it = p;
                     }
                     break;
@@ -809,8 +810,9 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
                         {
                             // Check that the file name matches the pattern
                             unsigned int file_number = 0;
+                            bool file_number_parsed = false;
                             if (method != file::scan_matching ||
-                                match_pattern(filename_string(info.m_Path), mask, file_number))
+                                match_pattern(filename_string(info.m_Path), mask, file_number, file_number_parsed))
                             {
                                 info.m_Size = filesystem::file_size(info.m_Path);
                                 total_size += info.m_Size;
@@ -818,8 +820,9 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
                                 files.push_back(info);
                                 ++file_count;
 
-                                if (counter && file_number >= *counter)
-                                    *counter = file_number + 1;
+                                // Test that the file_number >= *counter accounting for the integer overflow
+                                if (file_number_parsed && counter != NULL && (file_number - *counter) < ((~0u) ^ ((~0u) >> 1)))
+                                    *counter = file_number + 1u;
                             }
                         }
                     }
