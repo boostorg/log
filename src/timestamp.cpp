@@ -57,9 +57,9 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
 
 // Zero-initialized initially
 #if !defined(BOOST_LOG_NO_THREADS)
-static BOOST_ALIGNMENT(BOOST_LOG_CPU_CACHE_LINE_SIZE) boost::atomic< uint64_t > g_ticks;
+BOOST_ALIGNMENT(BOOST_LOG_CPU_CACHE_LINE_SIZE) static boost::atomic< uint64_t > g_ticks;
 #else
-static BOOST_ALIGNMENT(BOOST_LOG_CPU_CACHE_LINE_SIZE) uint64_t g_ticks;
+BOOST_ALIGNMENT(BOOST_LOG_CPU_CACHE_LINE_SIZE) static uint64_t g_ticks;
 #endif
 
 //! Artifical implementation of GetTickCount64
