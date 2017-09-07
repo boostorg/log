@@ -252,6 +252,9 @@ project boost/log
 
         <target-os>freebsd:<library>rt
         <target-os>qnxnto:<library>socket
+        <target-os>vxworks:<define>BOOST_LOG_WITHOUT_IPC 
+        <target-os>vxworks:<define>BOOST_LOG_WITHOUT_DEFAULT_FACTORIES 
+    
         <toolset>pgi:<library>rt
     : usage-requirements
         <toolset>clang:<cxxflags>-Wno-bind-to-temporary-copy
