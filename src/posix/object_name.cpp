@@ -76,20 +76,23 @@ std::string get_scope_prefix(object_name::scope ns)
     std::string prefix = "/boost.log.";
     switch (ns)
     {
+#if !defined(BOOST_LOG_NO_GETPGRP)
     case object_name::process_group:
         {
             prefix.append("pgid.");
             format_id(getpgrp(), prefix);
         }
         break;
+#endif
 
+#if !defined(BOOST_LOG_NO_GETSID)
     case object_name::session:
         {
             prefix.append("sid.");
             format_id(getsid(0), prefix);
         }
         break;
-
+#endif
     case object_name::user:
         {
             const uid_t uid = getuid();

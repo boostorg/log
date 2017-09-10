@@ -24,6 +24,10 @@
 #include <boost/log/sources/logger.hpp>
 #include <boost/log/support/date_time.hpp>
 
+#if defined(__VXWORKS__) && !defined(BOOST_LOCALE_WITH_ICU)
+#define BOOST_LOG_NO_LOCALE
+#endif
+
 namespace logging = boost::log;
 namespace sinks = boost::log::sinks;
 namespace attrs = boost::log::attributes;
@@ -77,12 +81,14 @@ void init_logging()
             << "> " << expr::message
     );
 
+#if !defined(BOOST_LOG_NO_LOCALE)      
     // The sink will perform character code conversion as needed, according to the locale set with imbue()
     std::locale loc = boost::locale::generator()("en_US.UTF-8");
     sink->imbue(loc);
 
     // Let's add some commonly used attributes, like timestamp and record counter.
     logging::add_common_attributes();
+#endif    
 }
 //]
 
