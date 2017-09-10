@@ -192,7 +192,8 @@ private:
     static void cpuid(uint32_t& eax, uint32_t& ebx, uint32_t& ecx, uint32_t& edx)
     {
 #if defined(__GNUC__)
-#if defined(__i386__) && defined(__PIC__) && __PIC__ != 0
+#if (defined(__i386__) && defined(__PIC__) && __PIC__ != 0 ) || \
+	( defined(__VXWORKS__) && defined(__PIC__))
         // We have to backup ebx in 32 bit PIC code because it is reserved by the ABI
         uint32_t ebx_backup;
         __asm__ __volatile__
