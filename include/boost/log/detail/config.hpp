@@ -116,6 +116,12 @@
 #   define BOOST_LOG_NO_ASIO
 #endif
 
+#if defined(__VXWORKS__)
+#   define BOOST_LOG_NO_GETPGRP 
+#   define BOOST_LOG_NO_GETSID 
+#   define BOOST_LOG_NO_GETPWUID_R 
+#endif
+
 #if !defined(BOOST_LOG_USE_NATIVE_SYSLOG) && defined(BOOST_LOG_NO_ASIO)
 #   ifndef BOOST_LOG_WITHOUT_SYSLOG
 #       define BOOST_LOG_WITHOUT_SYSLOG

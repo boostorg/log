@@ -138,16 +138,21 @@ BOOST_AUTO_TEST_CASE(name_equivalence)
         boost::log::ipc::object_name name2(boost::log::ipc::object_name::user, test_object_name1);
         BOOST_CHECK_NE(name1, name2);
     }
+#if !defined(BOOST_LOG_NO_GETSID)    
     {
         boost::log::ipc::object_name name1(boost::log::ipc::object_name::global, test_object_name1);
         boost::log::ipc::object_name name2(boost::log::ipc::object_name::session, test_object_name1);
         BOOST_CHECK_NE(name1, name2);
     }
+#endif
+
+#if !defined(BOOST_LOG_NO_GETPGRP)
     {
         boost::log::ipc::object_name name1(boost::log::ipc::object_name::global, test_object_name1);
         boost::log::ipc::object_name name2(boost::log::ipc::object_name::process_group, test_object_name1);
         BOOST_CHECK_NE(name1, name2);
     }
+#endif    
     {
         boost::log::ipc::object_name name1(boost::log::ipc::object_name::user, test_object_name1);
         boost::log::ipc::object_name name2(boost::log::ipc::object_name::session, test_object_name1);
@@ -158,9 +163,11 @@ BOOST_AUTO_TEST_CASE(name_equivalence)
         boost::log::ipc::object_name name2(boost::log::ipc::object_name::process_group, test_object_name1);
         BOOST_CHECK_NE(name1, name2);
     }
+#if !(defined(BOOST_LOG_NO_GETPGRP) || defined(BOOST_LOG_NO_GETSID))
     {
         boost::log::ipc::object_name name1(boost::log::ipc::object_name::session, test_object_name1);
         boost::log::ipc::object_name name2(boost::log::ipc::object_name::process_group, test_object_name1);
         BOOST_CHECK_NE(name1, name2);
     }
+#endif    
 }
