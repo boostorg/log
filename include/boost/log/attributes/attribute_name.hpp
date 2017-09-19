@@ -19,8 +19,8 @@
 #include <string>
 #include <boost/assert.hpp>
 #include <boost/cstdint.hpp>
-#include <boost/log/detail/config.hpp>
 #include <boost/core/explicit_operator_bool.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_HAS_PRAGMA_ONCE

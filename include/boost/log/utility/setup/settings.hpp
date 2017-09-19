@@ -24,9 +24,9 @@
 #include <boost/iterator/iterator_adaptor.hpp>
 #include <boost/optional/optional.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include <boost/core/explicit_operator_bool.hpp>
 #include <boost/log/detail/setup_config.hpp>
 #include <boost/log/detail/native_typeof.hpp>
-#include <boost/utility/explicit_operator_bool.hpp>
 #if !defined(BOOST_LOG_TYPEOF)
 #include <boost/core/enable_if.hpp>
 #endif
