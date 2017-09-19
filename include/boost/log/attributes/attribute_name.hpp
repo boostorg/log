@@ -53,7 +53,7 @@ public:
     typedef uint32_t id_type;
 
 private:
-    enum { uninitialized = 0xFFFFFFFFu };
+    BOOST_STATIC_CONSTANT(unsigned, uninitialized = 0xFFFFFFFFu);
 
     class repository;
     friend class repository;
