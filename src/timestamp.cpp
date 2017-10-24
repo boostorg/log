@@ -21,8 +21,8 @@
 #include <boost/memory_order.hpp>
 #include <boost/atomic/atomic.hpp>
 #endif
-#include <boost/detail/winapi/dll.hpp>
-#include <boost/detail/winapi/time.hpp>
+#include <boost/winapi/dll.hpp>
+#include <boost/winapi/time.hpp>
 #else
 #include <unistd.h> // for config macros
 #if defined(macintosh) || defined(__APPLE__) || defined(__APPLE_CC__)
@@ -49,7 +49,7 @@ namespace aux {
 #if BOOST_USE_WINAPI_VERSION >= BOOST_WINAPI_VERSION_WIN6
 
 // Directly use API from Vista and later
-BOOST_LOG_API get_tick_count_t get_tick_count = &boost::detail::winapi::GetTickCount64;
+BOOST_LOG_API get_tick_count_t get_tick_count = &boost::winapi::GetTickCount64;
 
 #else // BOOST_USE_WINAPI_VERSION >= BOOST_WINAPI_VERSION_WIN6
 
@@ -71,7 +71,7 @@ uint64_t WINAPI get_tick_count64()
     uint64_t old_state = g_ticks;
 #endif
 
-    uint32_t new_ticks = boost::detail::winapi::GetTickCount();
+    uint32_t new_ticks = boost::winapi::GetTickCount();
 
     uint32_t old_ticks = static_cast< uint32_t >(old_state & UINT64_C(0x00000000ffffffff));
     uint64_t new_state = ((old_state & UINT64_C(0xffffffff00000000)) + (static_cast< uint64_t >(new_ticks < old_ticks) << 32)) | static_cast< uint64_t >(new_ticks);
@@ -87,10 +87,10 @@ uint64_t WINAPI get_tick_count64()
 
 uint64_t WINAPI get_tick_count_init()
 {
-    boost::detail::winapi::HMODULE_ hKernel32 = boost::detail::winapi::GetModuleHandleW(L"kernel32.dll");
+    boost::winapi::HMODULE_ hKernel32 = boost::winapi::GetModuleHandleW(L"kernel32.dll");
     if (hKernel32)
     {
-        get_tick_count_t p = (get_tick_count_t)boost::detail::winapi::get_proc_address(hKernel32, "GetTickCount64");
+        get_tick_count_t p = (get_tick_count_t)boost::winapi::get_proc_address(hKernel32, "GetTickCount64");
         if (p)
         {
             // Use native API

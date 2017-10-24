@@ -18,7 +18,7 @@
 
 #include <boost/log/detail/config.hpp>
 #include <boost/assert.hpp>
-#include <boost/detail/winapi/handles.hpp>
+#include <boost/winapi/handles.hpp>
 #include <boost/log/detail/header.hpp>
 
 namespace boost {
@@ -33,31 +33,31 @@ namespace aux {
 class auto_handle
 {
 private:
-    boost::detail::winapi::HANDLE_ m_handle;
+    boost::winapi::HANDLE_ m_handle;
 
 public:
-    explicit auto_handle(boost::detail::winapi::HANDLE_ h = NULL) BOOST_NOEXCEPT : m_handle(h)
+    explicit auto_handle(boost::winapi::HANDLE_ h = NULL) BOOST_NOEXCEPT : m_handle(h)
     {
     }
 
     ~auto_handle() BOOST_NOEXCEPT
     {
         if (m_handle)
-            BOOST_VERIFY(boost::detail::winapi::CloseHandle(m_handle) != 0);
+            BOOST_VERIFY(boost::winapi::CloseHandle(m_handle) != 0);
     }
 
-    void init(boost::detail::winapi::HANDLE_ h) BOOST_NOEXCEPT
+    void init(boost::winapi::HANDLE_ h) BOOST_NOEXCEPT
     {
         BOOST_ASSERT(m_handle == NULL);
         m_handle = h;
     }
 
-    boost::detail::winapi::HANDLE_ get() const BOOST_NOEXCEPT { return m_handle; }
-    boost::detail::winapi::HANDLE_* get_ptr() BOOST_NOEXCEPT { return &m_handle; }
+    boost::winapi::HANDLE_ get() const BOOST_NOEXCEPT { return m_handle; }
+    boost::winapi::HANDLE_* get_ptr() BOOST_NOEXCEPT { return &m_handle; }
 
     void swap(auto_handle& that) BOOST_NOEXCEPT
     {
-        boost::detail::winapi::HANDLE_ h = m_handle;
+        boost::winapi::HANDLE_ h = m_handle;
         m_handle = that.m_handle;
         that.m_handle = h;
     }

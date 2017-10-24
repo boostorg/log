@@ -27,7 +27,7 @@
 
 // Try including WinAPI config as soon as possible so that any other headers don't include Windows SDK headers
 #if defined(BOOST_OS_WINDOWS_AVAILABLE)
-#include <boost/detail/winapi/config.hpp>
+#include <boost/winapi/config.hpp>
 #endif
 
 #include <limits.h> // To bring in libc macros

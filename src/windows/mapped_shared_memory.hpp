@@ -17,7 +17,7 @@
 #define BOOST_LOG_WINDOWS_MAPPED_SHARED_MEMORY_HPP_INCLUDED_
 
 #include <boost/log/detail/config.hpp>
-#include <boost/detail/winapi/basic_types.hpp>
+#include <boost/winapi/basic_types.hpp>
 #include <cstddef>
 #include <boost/assert.hpp>
 #include <boost/atomic/atomic.hpp>
@@ -40,17 +40,16 @@ namespace aux {
 class mapped_shared_memory
 {
 private:
-    typedef boost::detail::winapi::DWORD_ NTSTATUS_;
     struct section_basic_information
     {
         void* base_address;
-        boost::detail::winapi::ULONG_ section_attributes;
-        boost::detail::winapi::LARGE_INTEGER_ section_size;
+        boost::winapi::ULONG_ section_attributes;
+        boost::winapi::LARGE_INTEGER_ section_size;
     };
-    typedef NTSTATUS_ (__stdcall *nt_query_section_t)(boost::detail::winapi::HANDLE_ h, unsigned int info_class, section_basic_information* pinfo, boost::detail::winapi::ULONG_ info_size, boost::detail::winapi::ULONG_* ret_len);
+    typedef boost::winapi::NTSTATUS_ (__stdcall *nt_query_section_t)(boost::winapi::HANDLE_ h, unsigned int info_class, section_basic_information* pinfo, boost::winapi::ULONG_ info_size, boost::winapi::ULONG_* ret_len);
 
 private:
-    boost::detail::winapi::HANDLE_ m_handle;
+    boost::winapi::HANDLE_ m_handle;
     void* m_mapped_address;
     std::size_t m_size;
     static boost::atomic< nt_query_section_t > nt_query_section;
@@ -87,7 +86,7 @@ public:
 
 private:
     //! Returns the size of the file mapping identified by the handle
-    static std::size_t obtain_size(boost::detail::winapi::HANDLE_ h);
+    static std::size_t obtain_size(boost::winapi::HANDLE_ h);
 };
 
 } // namespace aux

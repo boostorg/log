@@ -27,8 +27,8 @@
 #include <boost/thread/shared_mutex.hpp>
 #include <boost/log/utility/once_block.hpp>
 
-#include <boost/detail/winapi/basic_types.hpp>
-#include <boost/detail/winapi/dll.hpp>
+#include <boost/winapi/basic_types.hpp>
+#include <boost/winapi/dll.hpp>
 
 #include <boost/log/detail/header.hpp>
 
@@ -111,27 +111,27 @@ unlock_shared_fun_t g_pUnlockSharedLWRWMutex = NULL;
 //! The function dynamically initializes the implementation pointers
 void init_light_rw_mutex_impl()
 {
-    boost::detail::winapi::HMODULE_ hKernel32 = boost::detail::winapi::GetModuleHandleW(L"kernel32.dll");
+    boost::winapi::HMODULE_ hKernel32 = boost::winapi::GetModuleHandleW(L"kernel32.dll");
     if (hKernel32)
     {
         g_pInitializeLWRWMutex =
-            (init_fun_t)boost::detail::winapi::get_proc_address(hKernel32, "InitializeSRWLock");
+            (init_fun_t)boost::winapi::get_proc_address(hKernel32, "InitializeSRWLock");
         if (g_pInitializeLWRWMutex)
         {
             g_pLockExclusiveLWRWMutex =
-                (lock_exclusive_fun_t)boost::detail::winapi::get_proc_address(hKernel32, "AcquireSRWLockExclusive");
+                (lock_exclusive_fun_t)boost::winapi::get_proc_address(hKernel32, "AcquireSRWLockExclusive");
             if (g_pLockExclusiveLWRWMutex)
             {
                 g_pUnlockExclusiveLWRWMutex =
-                    (unlock_exclusive_fun_t)boost::detail::winapi::get_proc_address(hKernel32, "ReleaseSRWLockExclusive");
+                    (unlock_exclusive_fun_t)boost::winapi::get_proc_address(hKernel32, "ReleaseSRWLockExclusive");
                 if (g_pUnlockExclusiveLWRWMutex)
                 {
                     g_pLockSharedLWRWMutex =
-                        (lock_shared_fun_t)boost::detail::winapi::get_proc_address(hKernel32, "AcquireSRWLockShared");
+                        (lock_shared_fun_t)boost::winapi::get_proc_address(hKernel32, "AcquireSRWLockShared");
                     if (g_pLockSharedLWRWMutex)
                     {
                         g_pUnlockSharedLWRWMutex =
-                            (unlock_shared_fun_t)boost::detail::winapi::get_proc_address(hKernel32, "ReleaseSRWLockShared");
+                            (unlock_shared_fun_t)boost::winapi::get_proc_address(hKernel32, "ReleaseSRWLockShared");
                         if (g_pUnlockSharedLWRWMutex)
                         {
                             g_pDestroyLWRWMutex = &DeinitializeSRWLock;
