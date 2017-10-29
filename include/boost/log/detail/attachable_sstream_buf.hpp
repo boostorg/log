@@ -277,7 +277,7 @@ protected:
     //! Finds the string length so that it includes only complete characters, and does not exceed \a max_size
     size_type length_until_boundary(const char_type* s, size_type n, size_type max_size) const
     {
-        return length_until_boundary(s, n, max_size, mpl::bool_< sizeof(char_type) == 1u >());;
+        return length_until_boundary(s, n, max_size, mpl::bool_< sizeof(char_type) == 1u >());
     }
 
     //! Finds the string length so that it includes only complete characters, and does not exceed \a max_size
@@ -295,7 +295,7 @@ protected:
         // Note: Although it's not required to be true for wchar_t, here we assume that the string has Unicode encoding.
         // Compilers use some version of Unicode for wchar_t on all tested platforms, and std::locale doesn't offer a way
         // to find the character boundary for character types other than char anyway.
-        typedef boost::locale::utf::utf_traits< CharT > utf_traits;
+        typedef boost::locale::utf::utf_traits< char_type > utf_traits;
 
         size_type pos = max_size;
         while (pos > 0u)
