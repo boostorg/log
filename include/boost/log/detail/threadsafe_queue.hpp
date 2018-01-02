@@ -85,8 +85,16 @@ struct threadsafe_queue_types
         void destroy() { static_cast< T* >(storage.address())->~T(); }
     };
 
+#ifdef BOOST_NO_CXX11_ALLOCATOR
     typedef typename AllocatorT::BOOST_NESTED_TEMPLATE rebind< node >::other allocator_type;
+#else
+    typedef typename std::allocator_traits<AllocatorT>::template rebind_alloc< node > allocator_type;
+#endif
 };
+
+namespace detail {
+    struct none {};
+}
 
 /*!
  * \brief An unbounded thread-safe queue
@@ -106,13 +114,16 @@ struct threadsafe_queue_types
  *
  * The last requirement is not mandatory but is crucial for decent performance.
  */
-template< typename T, typename AllocatorT = std::allocator< void > >
+template< typename T, typename AllocatorT = std::allocator< detail::none > >
 class threadsafe_queue :
     private threadsafe_queue_types< T, AllocatorT >::allocator_type
 {
 private:
     typedef typename threadsafe_queue_types< T, AllocatorT >::allocator_type base_type;
     typedef typename threadsafe_queue_types< T, AllocatorT >::node node;
+#ifndef BOOST_NO_CXX11_ALLOCATOR
+    typedef std::allocator_traits<base_type> base_allocator_traits;
+#endif
 
     //! A simple scope guard to automate memory reclaiming
     struct auto_deallocate;
@@ -127,7 +138,11 @@ private:
         }
         ~auto_deallocate()
         {
+#ifdef BOOST_NO_CXX11_ALLOCATOR
             m_pAllocator->deallocate(m_pDeallocate, 1);
+#else
+            base_allocator_traits::deallocate(*m_pAllocator, m_pDeallocate, 1);
+#endif
             m_pDestroy->destroy();
         }
 
@@ -157,7 +172,12 @@ public:
     threadsafe_queue(base_type const& alloc = base_type()) :
         base_type(alloc)
     {
+#ifdef BOOST_NO_CXX11_ALLOCATOR
         node* p = base_type::allocate(1);
+#else
+        base_type& allocator = *this;
+        node* p = base_allocator_traits::allocate(allocator, 1);
+#endif
         if (p)
         {
             try
@@ -175,7 +195,11 @@ public:
             }
             catch (...)
             {
+#ifdef BOOST_NO_CXX11_ALLOCATOR
                 base_type::deallocate(p, 1);
+#else
+                base_allocator_traits::deallocate(allocator, p, 1);
+#endif
                 throw;
             }
         }
@@ -197,7 +221,12 @@ public:
         // Remove the last dummy node
         node* p = static_cast< node* >(m_pImpl->reset_last_node());
         p->~node();
+#ifdef BOOST_NO_CXX11_ALLOCATOR
         base_type::deallocate(p, 1);
+#else
+        base_type& allocator = *this;
+        base_allocator_traits::deallocate(allocator, p, 1);
+#endif
 
         delete m_pImpl;
     }
@@ -213,7 +242,12 @@ public:
      */
     void push(const_reference value)
     {
+#ifdef BOOST_NO_CXX11_ALLOCATOR
         node* p = base_type::allocate(1);
+#else
+        base_type& allocator = *this;
+        node* p = base_allocator_traits::allocate(allocator, 1);
+#endif
         if (p)
         {
             try
@@ -222,7 +256,11 @@ public:
             }
             catch (...)
             {
+#ifdef BOOST_NO_CXX11_ALLOCATOR
                 base_type::deallocate(p, 1);
+#else
+                base_allocator_traits::deallocate(allocator, p, 1);
+#endif
                 throw;
             }
             m_pImpl->push(p);
