@@ -344,20 +344,21 @@ namespace log {
 #   if !defined(BOOST_NO_CXX11_INLINE_NAMESPACES)
 
 inline namespace BOOST_LOG_VERSION_NAMESPACE {}
-}
 
 #       define BOOST_LOG_OPEN_NAMESPACE namespace log { inline namespace BOOST_LOG_VERSION_NAMESPACE {
+#       define BOOST_LOG_CLOSE_NAMESPACE }}
+
+#   elif defined(BOOST_GCC) && (BOOST_GCC+0) >= 40400
+
+// GCC 7 deprecated strong using directives but allows inline namespaces in C++03 mode since GCC 4.4.
+__extension__ inline namespace BOOST_LOG_VERSION_NAMESPACE {}
+
+#       define BOOST_LOG_OPEN_NAMESPACE namespace log { __extension__ inline namespace BOOST_LOG_VERSION_NAMESPACE {
 #       define BOOST_LOG_CLOSE_NAMESPACE }}
 
 #   else
 
 namespace BOOST_LOG_VERSION_NAMESPACE {}
-
-#       if defined(BOOST_GCC) && (BOOST_GCC+0) >= 70000
-#           pragma GCC diagnostic push
-            // strong using is deprecated; use inline namespaces instead
-#           pragma GCC diagnostic ignored "-Wdeprecated"
-#       endif
 
 using namespace BOOST_LOG_VERSION_NAMESPACE
 #       if defined(__GNUC__) && (__GNUC__ >= 4 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4)) && !defined(__clang__)
@@ -365,15 +366,11 @@ __attribute__((__strong__))
 #       endif
 ;
 
-#       if defined(BOOST_GCC) && (BOOST_GCC+0) >= 70000
-#           pragma GCC diagnostic pop
-#       endif
-
-}
-
 #       define BOOST_LOG_OPEN_NAMESPACE namespace log { namespace BOOST_LOG_VERSION_NAMESPACE {
 #       define BOOST_LOG_CLOSE_NAMESPACE }}
 #   endif
+
+} // namespace log
 
 #else // !defined(BOOST_LOG_DOXYGEN_PASS)
 
