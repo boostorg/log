@@ -252,7 +252,6 @@ project boost/log
 
         <target-os>freebsd:<library>rt
         <target-os>qnxnto:<library>socket
-     
         <toolset>pgi:<library>rt
     : usage-requirements
         <toolset>clang:<cxxflags>-Wno-bind-to-temporary-copy
