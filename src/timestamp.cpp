@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2015.
+ *          Copyright Andrey Semashev 2007 - 2018.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -17,12 +17,15 @@
 #include <boost/log/detail/timestamp.hpp>
 
 #if defined(BOOST_WINDOWS) && !defined(__CYGWIN__)
-#if !defined(BOOST_LOG_NO_THREADS)
+#include <cstddef>
+#include <cstdlib>
 #include <boost/memory_order.hpp>
 #include <boost/atomic/atomic.hpp>
-#endif
 #include <boost/winapi/dll.hpp>
 #include <boost/winapi/time.hpp>
+#include <boost/winapi/event.hpp>
+#include <boost/winapi/handles.hpp>
+#include <boost/winapi/thread_pool.hpp>
 #else
 #include <unistd.h> // for config macros
 #if defined(macintosh) || defined(__APPLE__) || defined(__APPLE_CC__)
@@ -55,34 +58,61 @@ BOOST_LOG_API get_tick_count_t get_tick_count = &boost::winapi::GetTickCount64;
 
 BOOST_LOG_ANONYMOUS_NAMESPACE {
 
+enum init_state
+{
+    uninitialized = 0,
+    in_progress,
+    initialized
+};
+
+struct get_tick_count64_state
+{
+    boost::atomic< uint64_t > ticks;
+    boost::atomic< init_state > init;
+    boost::winapi::HANDLE_ wait_event;
+    boost::winapi::HANDLE_ wait_handle;
+};
+
 // Zero-initialized initially
-#if !defined(BOOST_LOG_NO_THREADS)
-BOOST_ALIGNMENT(BOOST_LOG_CPU_CACHE_LINE_SIZE) static boost::atomic< uint64_t > g_ticks;
-#else
-BOOST_ALIGNMENT(BOOST_LOG_CPU_CACHE_LINE_SIZE) static uint64_t g_ticks;
-#endif
+BOOST_ALIGNMENT(BOOST_LOG_CPU_CACHE_LINE_SIZE) static get_tick_count64_state g_state;
 
 //! Artifical implementation of GetTickCount64
 uint64_t WINAPI get_tick_count64()
 {
-#if !defined(BOOST_LOG_NO_THREADS)
-    uint64_t old_state = g_ticks.load(boost::memory_order_acquire);
-#else
-    uint64_t old_state = g_ticks;
-#endif
+    // Note: Even in single-threaded builds we have to implement get_tick_count64 in a thread-safe way because
+    //       it can be called in the system thread pool during refreshes concurrently with user's calls.
+    uint64_t old_state = g_state.ticks.load(boost::memory_order_acquire);
 
     uint32_t new_ticks = boost::winapi::GetTickCount();
 
     uint32_t old_ticks = static_cast< uint32_t >(old_state & UINT64_C(0x00000000ffffffff));
     uint64_t new_state = ((old_state & UINT64_C(0xffffffff00000000)) + (static_cast< uint64_t >(new_ticks < old_ticks) << 32)) | static_cast< uint64_t >(new_ticks);
 
-#if !defined(BOOST_LOG_NO_THREADS)
-    g_ticks.store(new_state, boost::memory_order_release);
-#else
-    g_ticks = new_state;
-#endif
+    g_state.ticks.store(new_state, boost::memory_order_release);
 
     return new_state;
+}
+
+//! The function is called periodically in the system thread pool to make sure g_state.ticks is timely updated
+void NTAPI refresh_get_tick_count64(boost::winapi::PVOID_, boost::winapi::BOOLEAN_)
+{
+    get_tick_count64();
+}
+
+//! Cleanup function to stop get_tick_count64 refreshes
+void cleanup_get_tick_count64()
+{
+    if (g_state.wait_handle)
+    {
+        boost::winapi::UnregisterWait(g_state.wait_handle);
+        g_state.wait_handle = NULL;
+    }
+
+    if (g_state.wait_event)
+    {
+        boost::winapi::CloseHandle(g_state.wait_event);
+        g_state.wait_event = NULL;
+    }
 }
 
 uint64_t WINAPI get_tick_count_init()
@@ -94,13 +124,34 @@ uint64_t WINAPI get_tick_count_init()
         if (p)
         {
             // Use native API
-            get_tick_count = p;
+            const_cast< get_tick_count_t volatile& >(get_tick_count) = p;
             return p();
         }
     }
 
-    // No native API available
-    get_tick_count = &get_tick_count64;
+    // No native API available. Use emulation with periodic refreshes to make sure the GetTickCount wrap arounds are properly counted.
+    init_state old_init = uninitialized;
+    if (g_state.init.compare_exchange_strong(old_init, in_progress, boost::memory_order_acq_rel, boost::memory_order_relaxed))
+    {
+        if (!g_state.wait_event)
+            g_state.wait_event = boost::winapi::create_anonymous_event(NULL, false, false);
+        if (g_state.wait_event)
+        {
+            boost::winapi::BOOL_ res = boost::winapi::RegisterWaitForSingleObject(&g_state.wait_handle, g_state.wait_event, &refresh_get_tick_count64, NULL, 0x7fffffff, boost::winapi::WT_EXECUTEINWAITTHREAD_);
+            if (res)
+            {
+                std::atexit(&cleanup_get_tick_count64);
+
+                const_cast< get_tick_count_t volatile& >(get_tick_count) = &get_tick_count64;
+                g_state.init.store(initialized, boost::memory_order_release);
+                goto finish;
+            }
+        }
+
+        g_state.init.store(uninitialized, boost::memory_order_release);
+    }
+
+finish:
     return get_tick_count64();
 }
 
