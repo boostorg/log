@@ -42,7 +42,7 @@ lib ipv6 ;
 
 rule has-config-flag ( flag : properties * )
 {
-    if ( <define>$(flag) in $(properties) || <define>$(flag)=1 in $(properties) )
+    if ( "<define>$(flag)" in $(properties) || "<define>$(flag)=1" in $(properties) )
     {
         return 1 ;
     }
