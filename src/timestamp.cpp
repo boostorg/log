@@ -94,7 +94,7 @@ uint64_t BOOST_WINAPI_WINAPI_CC get_tick_count64()
 }
 
 //! The function is called periodically in the system thread pool to make sure g_state.ticks is timely updated
-void NTAPI refresh_get_tick_count64(boost::winapi::PVOID_, boost::winapi::BOOLEAN_)
+void BOOST_WINAPI_NTAPI_CC refresh_get_tick_count64(boost::winapi::PVOID_, boost::winapi::BOOLEAN_)
 {
     get_tick_count64();
 }
