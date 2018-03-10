@@ -139,12 +139,12 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         struct winapi_srwlock { void* p; };
         struct winapi_condition_variable { void* p; };
 
-        typedef void (WINAPI *InitializeSRWLock_t)(winapi_srwlock*);
-        typedef void (WINAPI *AcquireSRWLockExclusive_t)(winapi_srwlock*);
-        typedef void (WINAPI *ReleaseSRWLockExclusive_t)(winapi_srwlock*);
-        typedef void (WINAPI *InitializeConditionVariable_t)(winapi_condition_variable*);
-        typedef boost::winapi::BOOL_ (WINAPI *SleepConditionVariableSRW_t)(winapi_condition_variable*, winapi_srwlock*, boost::winapi::DWORD_, boost::winapi::ULONG_);
-        typedef void (WINAPI *WakeAllConditionVariable_t)(winapi_condition_variable*);
+        typedef void (BOOST_WINAPI_WINAPI_CC *InitializeSRWLock_t)(winapi_srwlock*);
+        typedef void (BOOST_WINAPI_WINAPI_CC *AcquireSRWLockExclusive_t)(winapi_srwlock*);
+        typedef void (BOOST_WINAPI_WINAPI_CC *ReleaseSRWLockExclusive_t)(winapi_srwlock*);
+        typedef void (BOOST_WINAPI_WINAPI_CC *InitializeConditionVariable_t)(winapi_condition_variable*);
+        typedef boost::winapi::BOOL_ (BOOST_WINAPI_WINAPI_CC *SleepConditionVariableSRW_t)(winapi_condition_variable*, winapi_srwlock*, boost::winapi::DWORD_, boost::winapi::ULONG_);
+        typedef void (BOOST_WINAPI_WINAPI_CC *WakeAllConditionVariable_t)(winapi_condition_variable*);
 
     private:
         winapi_srwlock m_Mutex;

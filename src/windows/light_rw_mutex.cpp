@@ -42,20 +42,20 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
 
 struct BOOST_LOG_MAY_ALIAS mutex_impl { void* p; }; // has the same layout as SRWLOCK and light_rw_mutex::m_Mutex
 
-typedef void (WINAPI *init_fun_t)(mutex_impl*);
-typedef void (WINAPI *destroy_fun_t)(mutex_impl*);
-typedef void (WINAPI *lock_exclusive_fun_t)(mutex_impl*);
-typedef void (WINAPI *lock_shared_fun_t)(mutex_impl*);
-typedef void (WINAPI *unlock_exclusive_fun_t)(mutex_impl*);
-typedef void (WINAPI *unlock_shared_fun_t)(mutex_impl*);
+typedef void (BOOST_WINAPI_WINAPI_CC *init_fun_t)(mutex_impl*);
+typedef void (BOOST_WINAPI_WINAPI_CC *destroy_fun_t)(mutex_impl*);
+typedef void (BOOST_WINAPI_WINAPI_CC *lock_exclusive_fun_t)(mutex_impl*);
+typedef void (BOOST_WINAPI_WINAPI_CC *lock_shared_fun_t)(mutex_impl*);
+typedef void (BOOST_WINAPI_WINAPI_CC *unlock_exclusive_fun_t)(mutex_impl*);
+typedef void (BOOST_WINAPI_WINAPI_CC *unlock_shared_fun_t)(mutex_impl*);
 
 //! A complement stub function for InitializeSRWLock
-void WINAPI DeinitializeSRWLock(mutex_impl*)
+void BOOST_WINAPI_WINAPI_CC DeinitializeSRWLock(mutex_impl*)
 {
 }
 
 // The Boost.Thread-based implementation
-void WINAPI InitializeSharedMutex(mutex_impl* mtx)
+void BOOST_WINAPI_WINAPI_CC InitializeSharedMutex(mutex_impl* mtx)
 {
     // To avoid cache line aliasing we do aligned memory allocation here
     enum
@@ -73,29 +73,29 @@ void WINAPI InitializeSharedMutex(mutex_impl* mtx)
     new (mtx->p) shared_mutex();
 }
 
-void WINAPI DeinitializeSharedMutex(mutex_impl* mtx)
+void BOOST_WINAPI_WINAPI_CC DeinitializeSharedMutex(mutex_impl* mtx)
 {
     static_cast< shared_mutex* >(mtx->p)->~shared_mutex();
     alignment::aligned_free(mtx->p);
     mtx->p = NULL;
 }
 
-void WINAPI ExclusiveLockSharedMutex(mutex_impl* mtx)
+void BOOST_WINAPI_WINAPI_CC ExclusiveLockSharedMutex(mutex_impl* mtx)
 {
     static_cast< shared_mutex* >(mtx->p)->lock();
 }
 
-void WINAPI SharedLockSharedMutex(mutex_impl* mtx)
+void BOOST_WINAPI_WINAPI_CC SharedLockSharedMutex(mutex_impl* mtx)
 {
     static_cast< shared_mutex* >(mtx->p)->lock_shared();
 }
 
-void WINAPI ExclusiveUnlockSharedMutex(mutex_impl* mtx)
+void BOOST_WINAPI_WINAPI_CC ExclusiveUnlockSharedMutex(mutex_impl* mtx)
 {
     static_cast< shared_mutex* >(mtx->p)->unlock();
 }
 
-void WINAPI SharedUnlockSharedMutex(mutex_impl* mtx)
+void BOOST_WINAPI_WINAPI_CC SharedUnlockSharedMutex(mutex_impl* mtx)
 {
     static_cast< shared_mutex* >(mtx->p)->unlock_shared();
 }

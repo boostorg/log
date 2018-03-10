@@ -162,7 +162,7 @@ struct function_pointer_initializer
                     boost::winapi::HMODULE_ hKernel32 = boost::winapi::GetModuleHandleW(L"kernel32.dll");
                     if (hKernel32)
                     {
-                        typedef uint64_t (WINAPI* get_enabled_extended_features_t)(uint64_t);
+                        typedef uint64_t (BOOST_WINAPI_WINAPI_CC* get_enabled_extended_features_t)(uint64_t);
                         get_enabled_extended_features_t get_enabled_extended_features = (get_enabled_extended_features_t)boost::winapi::get_proc_address(hKernel32, "GetEnabledExtendedFeatures");
                         if (get_enabled_extended_features)
                         {

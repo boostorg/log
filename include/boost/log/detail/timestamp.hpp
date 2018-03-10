@@ -76,7 +76,7 @@ public:
  */
 #if defined(BOOST_WINDOWS) && !defined(__CYGWIN__)
 
-typedef uint64_t (WINAPI* get_tick_count_t)();
+typedef uint64_t (BOOST_WINAPI_WINAPI_CC* get_tick_count_t)();
 extern BOOST_LOG_API get_tick_count_t get_tick_count;
 
 inline timestamp get_timestamp()
