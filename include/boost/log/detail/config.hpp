@@ -297,7 +297,13 @@
 
 #ifndef BOOST_LOG_CPU_CACHE_LINE_SIZE
 //! The macro defines the CPU cache line size for the target architecture. This is mostly used for optimization.
+#if defined(__s390__) || defined(__s390x__)
+#define BOOST_LOG_CPU_CACHE_LINE_SIZE 256
+#elif defined(powerpc) || defined(__powerpc__) || defined(__ppc__)
+#define BOOST_LOG_CPU_CACHE_LINE_SIZE 128
+#else
 #define BOOST_LOG_CPU_CACHE_LINE_SIZE 64
+#endif
 #endif
 
 namespace boost {

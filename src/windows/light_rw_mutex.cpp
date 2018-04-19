@@ -63,8 +63,7 @@ void BOOST_WINAPI_WINAPI_CC InitializeSharedMutex(mutex_impl* mtx)
         // Allocation size is the minimum number of cache lines to accommodate shared_mutex
         size =
             (
-                sizeof(shared_mutex) / BOOST_LOG_CPU_CACHE_LINE_SIZE
-                + ((sizeof(shared_mutex) % BOOST_LOG_CPU_CACHE_LINE_SIZE) != 0)
+                (sizeof(shared_mutex) + BOOST_LOG_CPU_CACHE_LINE_SIZE - 1u) / BOOST_LOG_CPU_CACHE_LINE_SIZE
             )
             * BOOST_LOG_CPU_CACHE_LINE_SIZE
     };
