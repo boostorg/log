@@ -34,6 +34,9 @@ int main()
     std::string message = "Hello, Viewer!";
     queue_t::operation_result result = queue.send(message.data(), static_cast< queue_t::size_type >(message.size()));
 
+//<-
+#if !defined(BOOST_NO_CXX11_SCOPED_ENUMS)
+//->
     // See if the message was sent
     switch (result)
     {
@@ -50,6 +53,28 @@ int main()
         std::cout << "Message sending operation has been interrupted" << std::endl;
         break;
     }
+//<-
+#else // !defined(BOOST_NO_CXX11_SCOPED_ENUMS)
+
+    // Strict C++03 compilers do not allow to use enum type as a scope for its values. Otherwise, the code is the same as above.
+    switch (result)
+    {
+    case queue_t::succeeded:
+        std::cout << "Message sent successfully" << std::endl;
+        break;
+
+    case queue_t::no_space:
+        std::cout << "Message could not be sent because the queue is full" << std::endl;
+        break;
+
+    case queue_t::aborted:
+        // This can happen is overflow_policy is block_on_overflow
+        std::cout << "Message sending operation has been interrupted" << std::endl;
+        break;
+    }
+
+#endif // !defined(BOOST_NO_CXX11_SCOPED_ENUMS)
+//->
 
     return 0;
 }

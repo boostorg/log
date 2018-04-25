@@ -18,7 +18,7 @@
 #include <boost/cstdint.hpp>
 #include <boost/log/utility/manipulators/dump.hpp>
 #if defined(_MSC_VER) && (defined(BOOST_LOG_USE_SSSE3) || defined(BOOST_LOG_USE_AVX2))
-#include <boost/detail/winapi/dll.hpp>
+#include <boost/winapi/dll.hpp>
 #include <intrin.h> // __cpuid
 #endif
 #include <boost/log/detail/header.hpp>
@@ -159,11 +159,11 @@ struct function_pointer_initializer
                     mmstate = (eax & 6U) == 6U;
 #elif defined(BOOST_WINDOWS)
                     // MSVC does not have an intrinsic for xgetbv, we have to query OS
-                    boost::detail::winapi::HMODULE_ hKernel32 = boost::detail::winapi::GetModuleHandleW(L"kernel32.dll");
+                    boost::winapi::HMODULE_ hKernel32 = boost::winapi::GetModuleHandleW(L"kernel32.dll");
                     if (hKernel32)
                     {
-                        typedef uint64_t (WINAPI* get_enabled_extended_features_t)(uint64_t);
-                        get_enabled_extended_features_t get_enabled_extended_features = (get_enabled_extended_features_t)boost::detail::winapi::get_proc_address(hKernel32, "GetEnabledExtendedFeatures");
+                        typedef uint64_t (BOOST_WINAPI_WINAPI_CC* get_enabled_extended_features_t)(uint64_t);
+                        get_enabled_extended_features_t get_enabled_extended_features = (get_enabled_extended_features_t)boost::winapi::get_proc_address(hKernel32, "GetEnabledExtendedFeatures");
                         if (get_enabled_extended_features)
                         {
                             // XSTATE_MASK_LEGACY_SSE | XSTATE_MASK_GSSE == 6
@@ -192,18 +192,15 @@ private:
     static void cpuid(uint32_t& eax, uint32_t& ebx, uint32_t& ecx, uint32_t& edx)
     {
 #if defined(__GNUC__)
-#if (defined(__i386__) && defined(__PIC__) && __PIC__ != 0 ) || \
-	( defined(__VXWORKS__) && defined(__PIC__))
-        // We have to backup ebx in 32 bit PIC code because it is reserved by the ABI
-        uint32_t ebx_backup;
+#if defined(__i386__) && (defined(__PIC__) || defined(__PIE__)) && !(defined(__clang__) || (defined(BOOST_GCC) && BOOST_GCC >= 50100)) \
+	||( defined(__VXWORKS__) && defined(__PIC__))
+        // Unless the compiler can do it automatically, we have to backup ebx in 32-bit PIC/PIE code because it is reserved by the ABI
         __asm__ __volatile__
         (
-            "movl %%ebx, %0\n\t"
-            "movl %1, %%ebx\n\t"
+            "xchgl %%ebx, %0\n\t"
             "cpuid\n\t"
-            "movl %%ebx, %1\n\t"
-            "movl %0, %%ebx\n\t"
-                : "=m" (ebx_backup), "+m" (ebx), "+a" (eax), "+c" (ecx), "+d" (edx)
+            "xchgl %%ebx, %0\n\t"
+                : "+DS" (ebx), "+a" (eax), "+c" (ecx), "+d" (edx)
         );
 #else
         __asm__ __volatile__

@@ -544,14 +544,14 @@ public:
     friend typename aux::enable_if_streamable_char_type< OtherCharT, basic_formatting_ostream& >::type
     operator<< (basic_formatting_ostream& strm, std::basic_string< OtherCharT, OtherTraitsT, OtherAllocatorT > const& str)
     {
-        return strm.formatted_write(str.c_str(), static_cast< std::streamsize >(str.size()));
+        return strm.formatted_write(str.data(), static_cast< std::streamsize >(str.size()));
     }
 
     template< typename OtherCharT, typename OtherTraitsT >
     friend typename aux::enable_if_streamable_char_type< OtherCharT, basic_formatting_ostream& >::type
     operator<< (basic_formatting_ostream& strm, basic_string_literal< OtherCharT, OtherTraitsT > const& str)
     {
-        return strm.formatted_write(str.c_str(), static_cast< std::streamsize >(str.size()));
+        return strm.formatted_write(str.data(), static_cast< std::streamsize >(str.size()));
     }
 
     template< typename OtherCharT, typename OtherTraitsT >
@@ -573,14 +573,14 @@ public:
     friend typename aux::enable_if_streamable_char_type< OtherCharT, basic_formatting_ostream& >::type
     operator<< (basic_formatting_ostream& strm, std::basic_string< OtherCharT, OtherTraitsT, OtherAllocatorT >& str)
     {
-        return strm.formatted_write(str.c_str(), static_cast< std::streamsize >(str.size()));
+        return strm.formatted_write(str.data(), static_cast< std::streamsize >(str.size()));
     }
 
     template< typename OtherCharT, typename OtherTraitsT >
     friend typename aux::enable_if_streamable_char_type< OtherCharT, basic_formatting_ostream& >::type
     operator<< (basic_formatting_ostream& strm, basic_string_literal< OtherCharT, OtherTraitsT >& str)
     {
-        return strm.formatted_write(str.c_str(), static_cast< std::streamsize >(str.size()));
+        return strm.formatted_write(str.data(), static_cast< std::streamsize >(str.size()));
     }
 
     template< typename OtherCharT, typename OtherTraitsT >
@@ -603,14 +603,14 @@ public:
     friend typename aux::enable_if_streamable_char_type< OtherCharT, basic_formatting_ostream& >::type
     operator<< (basic_formatting_ostream&& strm, std::basic_string< OtherCharT, OtherTraitsT, OtherAllocatorT > const& str)
     {
-        return strm.formatted_write(str.c_str(), static_cast< std::streamsize >(str.size()));
+        return strm.formatted_write(str.data(), static_cast< std::streamsize >(str.size()));
     }
 
     template< typename OtherCharT, typename OtherTraitsT >
     friend typename aux::enable_if_streamable_char_type< OtherCharT, basic_formatting_ostream& >::type
     operator<< (basic_formatting_ostream&& strm, basic_string_literal< OtherCharT, OtherTraitsT > const& str)
     {
-        return strm.formatted_write(str.c_str(), static_cast< std::streamsize >(str.size()));
+        return strm.formatted_write(str.data(), static_cast< std::streamsize >(str.size()));
     }
 
     template< typename OtherCharT, typename OtherTraitsT >
@@ -632,14 +632,14 @@ public:
     friend typename aux::enable_if_streamable_char_type< OtherCharT, basic_formatting_ostream& >::type
     operator<< (basic_formatting_ostream&& strm, std::basic_string< OtherCharT, OtherTraitsT, OtherAllocatorT >& str)
     {
-        return strm.formatted_write(str.c_str(), static_cast< std::streamsize >(str.size()));
+        return strm.formatted_write(str.data(), static_cast< std::streamsize >(str.size()));
     }
 
     template< typename OtherCharT, typename OtherTraitsT >
     friend typename aux::enable_if_streamable_char_type< OtherCharT, basic_formatting_ostream& >::type
     operator<< (basic_formatting_ostream&& strm, basic_string_literal< OtherCharT, OtherTraitsT >& str)
     {
-        return strm.formatted_write(str.c_str(), static_cast< std::streamsize >(str.size()));
+        return strm.formatted_write(str.data(), static_cast< std::streamsize >(str.size()));
     }
 
     template< typename OtherCharT, typename OtherTraitsT >

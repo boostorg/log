@@ -1,5 +1,5 @@
 [/
-              Copyright Andrey Semashev 2007 - 2017.
+              Copyright Andrey Semashev 2007 - 2018.
      Distributed under the Boost Software License, Version 1.0.
         (See accompanying file LICENSE_1_0.txt or copy at
               http://www.boost.org/LICENSE_1_0.txt)
@@ -8,6 +8,13 @@
 /]
 
 [section:changelog Changelog]
+
+[heading 2.13, Boost 1.67]
+
+[*General changes:]
+
+* Updated library to use `std::allocator_traits` where possible to work with allocators. This should improve compatibility with C++ post C++17.
+* Added documentation for the "Append" [link log.detailed.utilities.setup.settings config file] parameter for "TextFile" sinks. The parameter was supported previously, only the documentation was missing.
 
 [heading 2.12, Boost 1.66]
 
@@ -119,7 +126,7 @@
 [*Bug fixes:]
 
 * [link log.detailed.expressions.formatters.decorators.xml XML character decorator] now escapes quote (\") characters.
-* The exceptions thrown by asynchronous sinks created as a result of [link log.detailed.utilities.setup.settings initialization from settings] are now silently suppressed instead of terminating the application. If special error handling is needed, it is recommended to [link log.extension.settings.adding_support_for_user_defined_sinks register a user-defined sink factory]. ([ticket 10638])
+* The exceptions thrown by asynchronous sinks created as a result of [link log.detailed.utilities.setup.settings initialization from settings] are now silently suppressed instead of terminating the application. If special error handling is needed, it is recommended to [link log.extension.settings.sinks register a user-defined sink factory]. ([ticket 10638])
 * Corrected syslog message composition on MSVC, if message length exceeds 1025 bytes. ([ticket 10700])
 
 [heading 2.3, Boost 1.56]

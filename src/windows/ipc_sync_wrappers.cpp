@@ -14,15 +14,15 @@
  */
 
 #include <boost/log/detail/config.hpp>
-#include <boost/detail/winapi/access_rights.hpp>
-#include <boost/detail/winapi/handles.hpp>
-#include <boost/detail/winapi/event.hpp>
-#include <boost/detail/winapi/semaphore.hpp>
-#include <boost/detail/winapi/wait.hpp>
-#include <boost/detail/winapi/dll.hpp>
-#include <boost/detail/winapi/time.hpp>
-#include <boost/detail/winapi/get_last_error.hpp>
-#include <boost/detail/winapi/character_code_conversion.hpp>
+#include <boost/winapi/access_rights.hpp>
+#include <boost/winapi/handles.hpp>
+#include <boost/winapi/event.hpp>
+#include <boost/winapi/semaphore.hpp>
+#include <boost/winapi/wait.hpp>
+#include <boost/winapi/dll.hpp>
+#include <boost/winapi/time.hpp>
+#include <boost/winapi/get_last_error.hpp>
+#include <boost/winapi/character_code_conversion.hpp>
 #include <windows.h> // for error codes
 #include <cstddef>
 #include <limits>
@@ -56,17 +56,17 @@ namespace aux {
 void interprocess_event::create(const wchar_t* name, bool manual_reset, permissions const& perms)
 {
 #if BOOST_USE_WINAPI_VERSION >= BOOST_WINAPI_VERSION_WIN6
-    boost::detail::winapi::HANDLE_ h = boost::detail::winapi::CreateEventExW
+    boost::winapi::HANDLE_ h = boost::winapi::CreateEventExW
     (
-        reinterpret_cast< boost::detail::winapi::SECURITY_ATTRIBUTES_* >(perms.get_native()),
+        reinterpret_cast< boost::winapi::SECURITY_ATTRIBUTES_* >(perms.get_native()),
         name,
-        boost::detail::winapi::CREATE_EVENT_MANUAL_RESET_ * manual_reset,
-        boost::detail::winapi::SYNCHRONIZE_ | boost::detail::winapi::EVENT_MODIFY_STATE_
+        boost::winapi::CREATE_EVENT_MANUAL_RESET_ * manual_reset,
+        boost::winapi::SYNCHRONIZE_ | boost::winapi::EVENT_MODIFY_STATE_
     );
 #else
-    boost::detail::winapi::HANDLE_ h = boost::detail::winapi::CreateEventW
+    boost::winapi::HANDLE_ h = boost::winapi::CreateEventW
     (
-        reinterpret_cast< boost::detail::winapi::SECURITY_ATTRIBUTES_* >(perms.get_native()),
+        reinterpret_cast< boost::winapi::SECURITY_ATTRIBUTES_* >(perms.get_native()),
         manual_reset,
         false,
         name
@@ -74,7 +74,7 @@ void interprocess_event::create(const wchar_t* name, bool manual_reset, permissi
 #endif
     if (BOOST_UNLIKELY(h == NULL))
     {
-        boost::detail::winapi::DWORD_ err = boost::detail::winapi::GetLastError();
+        boost::winapi::DWORD_ err = boost::winapi::GetLastError();
         BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, "Failed to create an interprocess event object", (err));
     }
 
@@ -84,17 +84,17 @@ void interprocess_event::create(const wchar_t* name, bool manual_reset, permissi
 void interprocess_event::create_or_open(const wchar_t* name, bool manual_reset, permissions const& perms)
 {
 #if BOOST_USE_WINAPI_VERSION >= BOOST_WINAPI_VERSION_WIN6
-    boost::detail::winapi::HANDLE_ h = boost::detail::winapi::CreateEventExW
+    boost::winapi::HANDLE_ h = boost::winapi::CreateEventExW
     (
-        reinterpret_cast< boost::detail::winapi::SECURITY_ATTRIBUTES_* >(perms.get_native()),
+        reinterpret_cast< boost::winapi::SECURITY_ATTRIBUTES_* >(perms.get_native()),
         name,
-        boost::detail::winapi::CREATE_EVENT_MANUAL_RESET_ * manual_reset,
-        boost::detail::winapi::SYNCHRONIZE_ | boost::detail::winapi::EVENT_MODIFY_STATE_
+        boost::winapi::CREATE_EVENT_MANUAL_RESET_ * manual_reset,
+        boost::winapi::SYNCHRONIZE_ | boost::winapi::EVENT_MODIFY_STATE_
     );
 #else
-    boost::detail::winapi::HANDLE_ h = boost::detail::winapi::CreateEventW
+    boost::winapi::HANDLE_ h = boost::winapi::CreateEventW
     (
-        reinterpret_cast< boost::detail::winapi::SECURITY_ATTRIBUTES_* >(perms.get_native()),
+        reinterpret_cast< boost::winapi::SECURITY_ATTRIBUTES_* >(perms.get_native()),
         manual_reset,
         false,
         name
@@ -102,7 +102,7 @@ void interprocess_event::create_or_open(const wchar_t* name, bool manual_reset, 
 #endif
     if (h == NULL)
     {
-        const boost::detail::winapi::DWORD_ err = boost::detail::winapi::GetLastError();
+        const boost::winapi::DWORD_ err = boost::winapi::GetLastError();
         if (BOOST_LIKELY(err == ERROR_ALREADY_EXISTS))
         {
             open(name);
@@ -119,10 +119,10 @@ void interprocess_event::create_or_open(const wchar_t* name, bool manual_reset, 
 
 void interprocess_event::open(const wchar_t* name)
 {
-    boost::detail::winapi::HANDLE_ h = boost::detail::winapi::OpenEventW(boost::detail::winapi::SYNCHRONIZE_ | boost::detail::winapi::EVENT_MODIFY_STATE_, false, name);
+    boost::winapi::HANDLE_ h = boost::winapi::OpenEventW(boost::winapi::SYNCHRONIZE_ | boost::winapi::EVENT_MODIFY_STATE_, false, name);
     if (BOOST_UNLIKELY(h == NULL))
     {
-        const boost::detail::winapi::DWORD_ err = boost::detail::winapi::GetLastError();
+        const boost::winapi::DWORD_ err = boost::winapi::GetLastError();
         BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, "Failed to open an interprocess event object", (err));
     }
 
@@ -135,27 +135,27 @@ interprocess_semaphore::nt_query_semaphore_t interprocess_semaphore::nt_query_se
 void interprocess_semaphore::create_or_open(const wchar_t* name, permissions const& perms)
 {
 #if BOOST_USE_WINAPI_VERSION >= BOOST_WINAPI_VERSION_WIN6
-    boost::detail::winapi::HANDLE_ h = boost::detail::winapi::CreateSemaphoreExW
+    boost::winapi::HANDLE_ h = boost::winapi::CreateSemaphoreExW
     (
-        reinterpret_cast< boost::detail::winapi::SECURITY_ATTRIBUTES_* >(perms.get_native()),
+        reinterpret_cast< boost::winapi::SECURITY_ATTRIBUTES_* >(perms.get_native()),
         0, // initial count
-        (std::numeric_limits< boost::detail::winapi::LONG_ >::max)(), // max count
+        (std::numeric_limits< boost::winapi::LONG_ >::max)(), // max count
         name,
         0u, // flags
-        boost::detail::winapi::SYNCHRONIZE_ | boost::detail::winapi::SEMAPHORE_MODIFY_STATE_ | boost::detail::winapi::SEMAPHORE_QUERY_STATE_
+        boost::winapi::SYNCHRONIZE_ | boost::winapi::SEMAPHORE_MODIFY_STATE_ | boost::winapi::SEMAPHORE_QUERY_STATE_
     );
 #else
-    boost::detail::winapi::HANDLE_ h = boost::detail::winapi::CreateSemaphoreW
+    boost::winapi::HANDLE_ h = boost::winapi::CreateSemaphoreW
     (
-        reinterpret_cast< boost::detail::winapi::SECURITY_ATTRIBUTES_* >(perms.get_native()),
+        reinterpret_cast< boost::winapi::SECURITY_ATTRIBUTES_* >(perms.get_native()),
         0, // initial count
-        (std::numeric_limits< boost::detail::winapi::LONG_ >::max)(), // max count
+        (std::numeric_limits< boost::winapi::LONG_ >::max)(), // max count
         name
     );
 #endif
     if (h == NULL)
     {
-        boost::detail::winapi::DWORD_ err = boost::detail::winapi::GetLastError();
+        boost::winapi::DWORD_ err = boost::winapi::GetLastError();
         if (BOOST_LIKELY(err == ERROR_ALREADY_EXISTS))
         {
             open(name);
@@ -172,25 +172,25 @@ void interprocess_semaphore::create_or_open(const wchar_t* name, permissions con
 
 void interprocess_semaphore::open(const wchar_t* name)
 {
-    boost::detail::winapi::HANDLE_ h = boost::detail::winapi::OpenSemaphoreW(boost::detail::winapi::SYNCHRONIZE_ | boost::detail::winapi::SEMAPHORE_MODIFY_STATE_ | boost::detail::winapi::SEMAPHORE_QUERY_STATE_, false, name);
+    boost::winapi::HANDLE_ h = boost::winapi::OpenSemaphoreW(boost::winapi::SYNCHRONIZE_ | boost::winapi::SEMAPHORE_MODIFY_STATE_ | boost::winapi::SEMAPHORE_QUERY_STATE_, false, name);
     if (BOOST_UNLIKELY(h == NULL))
     {
-        const boost::detail::winapi::DWORD_ err = boost::detail::winapi::GetLastError();
+        const boost::winapi::DWORD_ err = boost::winapi::GetLastError();
         BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, "Failed to open an interprocess semaphore object", (err));
     }
 
     m_sem.init(h);
 }
 
-bool interprocess_semaphore::is_semaphore_zero_count_init(boost::detail::winapi::HANDLE_ h)
+bool interprocess_semaphore::is_semaphore_zero_count_init(boost::winapi::HANDLE_ h)
 {
     is_semaphore_zero_count_t impl = &interprocess_semaphore::is_semaphore_zero_count_emulated;
 
     // Check if ntdll.dll provides NtQuerySemaphore, see: http://undocumented.ntinternals.net/index.html?page=UserMode%2FUndocumented%20Functions%2FNT%20Objects%2FSemaphore%2FNtQuerySemaphore.html
-    boost::detail::winapi::HMODULE_ ntdll = boost::detail::winapi::GetModuleHandleW(L"ntdll.dll");
+    boost::winapi::HMODULE_ ntdll = boost::winapi::GetModuleHandleW(L"ntdll.dll");
     if (ntdll)
     {
-        nt_query_semaphore_t ntqs = (nt_query_semaphore_t)boost::detail::winapi::get_proc_address(ntdll, "NtQuerySemaphore");
+        nt_query_semaphore_t ntqs = (nt_query_semaphore_t)boost::winapi::get_proc_address(ntdll, "NtQuerySemaphore");
         if (ntqs)
         {
             nt_query_semaphore = ntqs;
@@ -203,7 +203,7 @@ bool interprocess_semaphore::is_semaphore_zero_count_init(boost::detail::winapi:
     return impl(h);
 }
 
-bool interprocess_semaphore::is_semaphore_zero_count_nt_query_semaphore(boost::detail::winapi::HANDLE_ h)
+bool interprocess_semaphore::is_semaphore_zero_count_nt_query_semaphore(boost::winapi::HANDLE_ h)
 {
     semaphore_basic_information info = {};
     NTSTATUS_ err = nt_query_semaphore
@@ -224,21 +224,21 @@ bool interprocess_semaphore::is_semaphore_zero_count_nt_query_semaphore(boost::d
     return info.current_count == 0u;
 }
 
-bool interprocess_semaphore::is_semaphore_zero_count_emulated(boost::detail::winapi::HANDLE_ h)
+bool interprocess_semaphore::is_semaphore_zero_count_emulated(boost::winapi::HANDLE_ h)
 {
-    const boost::detail::winapi::DWORD_ retval = boost::detail::winapi::WaitForSingleObject(h, 0u);
-    if (retval == boost::detail::winapi::wait_timeout)
+    const boost::winapi::DWORD_ retval = boost::winapi::WaitForSingleObject(h, 0u);
+    if (retval == boost::winapi::wait_timeout)
     {
         return true;
     }
-    else if (BOOST_UNLIKELY(retval != boost::detail::winapi::wait_object_0))
+    else if (BOOST_UNLIKELY(retval != boost::winapi::wait_object_0))
     {
-        const boost::detail::winapi::DWORD_ err = boost::detail::winapi::GetLastError();
+        const boost::winapi::DWORD_ err = boost::winapi::GetLastError();
         BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, "Failed to test an interprocess semaphore object for zero count", (err));
     }
 
     // Restore the decremented counter
-    BOOST_VERIFY(!!boost::detail::winapi::ReleaseSemaphore(h, 1, NULL));
+    BOOST_VERIFY(!!boost::winapi::ReleaseSemaphore(h, 1, NULL));
 
     return false;
 }
@@ -272,7 +272,7 @@ void interprocess_mutex::lock_slow()
     }
 }
 
-bool interprocess_mutex::lock_slow(boost::detail::winapi::HANDLE_ abort_handle)
+bool interprocess_mutex::lock_slow(boost::winapi::HANDLE_ abort_handle)
 {
     uint32_t old_state = m_shared_state->m_lock_state.load(boost::memory_order_relaxed);
     mark_waiting_and_try_lock(old_state);
@@ -336,7 +336,7 @@ inline void interprocess_mutex::clear_waiting_and_try_lock(uint32_t& old_state)
 }
 
 
-bool interprocess_condition_variable::wait(interprocess_mutex::optional_unlock& lock, boost::detail::winapi::HANDLE_ abort_handle)
+bool interprocess_condition_variable::wait(interprocess_mutex::optional_unlock& lock, boost::winapi::HANDLE_ abort_handle)
 {
     int32_t waiters = m_shared_state->m_waiters;
     if (waiters < 0)
@@ -362,16 +362,16 @@ bool interprocess_condition_variable::wait(interprocess_mutex::optional_unlock& 
     m_shared_state->m_waiters = waiters + 1;
     const uint32_t generation = m_shared_state->m_generation;
 
-    boost::detail::winapi::HANDLE_ handles[2u] = { m_current_semaphore->m_semaphore.get_handle(), abort_handle };
+    boost::winapi::HANDLE_ handles[2u] = { m_current_semaphore->m_semaphore.get_handle(), abort_handle };
 
     interprocess_mutex* const mutex = lock.disengage();
     mutex->unlock();
 
-    boost::detail::winapi::DWORD_ retval = boost::detail::winapi::WaitForMultipleObjects(2u, handles, false, boost::detail::winapi::INFINITE_);
+    boost::winapi::DWORD_ retval = boost::winapi::WaitForMultipleObjects(2u, handles, false, boost::winapi::INFINITE_);
 
-    if (BOOST_UNLIKELY(retval == boost::detail::winapi::WAIT_FAILED_))
+    if (BOOST_UNLIKELY(retval == boost::winapi::WAIT_FAILED_))
     {
-        const boost::detail::winapi::DWORD_ err = boost::detail::winapi::GetLastError();
+        const boost::winapi::DWORD_ err = boost::winapi::GetLastError();
 
         // Although highly unrealistic, it is possible that it took so long for the current thread to enter WaitForMultipleObjects that
         // another thread has managed to destroy the semaphore. This can happen if the semaphore remains in a non-zero state
@@ -379,7 +379,7 @@ bool interprocess_condition_variable::wait(interprocess_mutex::optional_unlock& 
         // and the non-zero state timeout has passed. In this case the most logical behavior for the wait function is to return as
         // if because of a wakeup.
         if (err == ERROR_INVALID_HANDLE)
-            retval = boost::detail::winapi::WAIT_OBJECT_0_;
+            retval = boost::winapi::WAIT_OBJECT_0_;
         else
             BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, "Failed to block on an interprocess semaphore object", (err));
     }
@@ -391,7 +391,7 @@ bool interprocess_condition_variable::wait(interprocess_mutex::optional_unlock& 
     if (generation == m_shared_state->m_generation && m_shared_state->m_waiters > 0)
         --m_shared_state->m_waiters;
 
-    return retval == boost::detail::winapi::WAIT_OBJECT_0_;
+    return retval == boost::winapi::WAIT_OBJECT_0_;
 }
 
 //! Finds or opens a semaphore with the specified id

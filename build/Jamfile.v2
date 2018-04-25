@@ -42,7 +42,7 @@ lib ipv6 ;
 
 rule has-config-flag ( flag : properties * )
 {
-    if ( <define>$(flag) in $(properties) || <define>$(flag)=1 in $(properties) )
+    if ( "<define>$(flag)" in $(properties) || "<define>$(flag)=1" in $(properties) )
     {
         return 1 ;
     }
@@ -545,3 +545,5 @@ lib boost_log_setup
         <link>shared:<define>BOOST_LOG_SETUP_DYN_LINK=1
         <threading>single:<define>BOOST_LOG_NO_THREADS
     ;
+
+boost-install boost_log boost_log_setup ;

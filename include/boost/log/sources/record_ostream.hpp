@@ -27,12 +27,12 @@
 #include <boost/type_traits/remove_cv.hpp>
 #include <boost/core/addressof.hpp>
 #include <boost/core/enable_if.hpp>
+#include <boost/core/explicit_operator_bool.hpp>
 #include <boost/log/detail/config.hpp>
 #include <boost/log/detail/native_typeof.hpp>
 #include <boost/log/detail/unhandled_exception_count.hpp>
 #include <boost/log/core/record.hpp>
 #include <boost/log/utility/unique_identifier_name.hpp>
-#include <boost/utility/explicit_operator_bool.hpp>
 #include <boost/log/utility/formatting_ostream.hpp>
 #include <boost/log/detail/header.hpp>
 

@@ -37,7 +37,7 @@
 #include <boost/exception/info.hpp>
 #include <boost/exception/enable_error_info.hpp>
 #include <boost/align/align_up.hpp>
-#include <boost/detail/winapi/thread.hpp> // SwitchToThread
+#include <boost/winapi/thread.hpp> // SwitchToThread
 #include "windows/ipc_sync_wrappers.hpp"
 #include "windows/mapped_shared_memory.hpp"
 #include "windows/utf_code_conversion.hpp"
@@ -387,12 +387,12 @@ public:
 
     void stop_local()
     {
-        BOOST_VERIFY(boost::detail::winapi::SetEvent(m_stop.get()) != 0);
+        BOOST_VERIFY(boost::winapi::SetEvent(m_stop.get()) != 0);
     }
 
     void reset_local()
     {
-        BOOST_VERIFY(boost::detail::winapi::ResetEvent(m_stop.get()) != 0);
+        BOOST_VERIFY(boost::winapi::ResetEvent(m_stop.get()) != 0);
     }
 
     void clear()
@@ -416,15 +416,15 @@ private:
     void create_stop_event()
     {
 #if BOOST_USE_WINAPI_VERSION >= BOOST_WINAPI_VERSION_WIN6
-        boost::detail::winapi::HANDLE_ h = boost::detail::winapi::CreateEventExW
+        boost::winapi::HANDLE_ h = boost::winapi::CreateEventExW
         (
             NULL, // permissions
             NULL, // name
-            boost::detail::winapi::CREATE_EVENT_MANUAL_RESET_,
-            boost::detail::winapi::SYNCHRONIZE_ | boost::detail::winapi::EVENT_MODIFY_STATE_
+            boost::winapi::CREATE_EVENT_MANUAL_RESET_,
+            boost::winapi::SYNCHRONIZE_ | boost::winapi::EVENT_MODIFY_STATE_
         );
 #else
-        boost::detail::winapi::HANDLE_ h = boost::detail::winapi::CreateEventW
+        boost::winapi::HANDLE_ h = boost::winapi::CreateEventW
         (
             NULL, // permissions
             true, // manual reset
@@ -434,7 +434,7 @@ private:
 #endif
         if (BOOST_UNLIKELY(h == NULL))
         {
-            boost::detail::winapi::DWORD_ err = boost::detail::winapi::GetLastError();
+            boost::winapi::DWORD_ err = boost::winapi::GetLastError();
             BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, "Failed to create an stop event object", (err));
         }
 
@@ -480,7 +480,7 @@ private:
             }
             else
             {
-                boost::detail::winapi::SwitchToThread();
+                boost::winapi::SwitchToThread();
             }
         }
 

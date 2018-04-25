@@ -27,8 +27,8 @@
 #include <boost/thread/shared_mutex.hpp>
 #include <boost/log/utility/once_block.hpp>
 
-#include <boost/detail/winapi/basic_types.hpp>
-#include <boost/detail/winapi/dll.hpp>
+#include <boost/winapi/basic_types.hpp>
+#include <boost/winapi/dll.hpp>
 
 #include <boost/log/detail/header.hpp>
 
@@ -42,20 +42,20 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
 
 struct BOOST_LOG_MAY_ALIAS mutex_impl { void* p; }; // has the same layout as SRWLOCK and light_rw_mutex::m_Mutex
 
-typedef void (WINAPI *init_fun_t)(mutex_impl*);
-typedef void (WINAPI *destroy_fun_t)(mutex_impl*);
-typedef void (WINAPI *lock_exclusive_fun_t)(mutex_impl*);
-typedef void (WINAPI *lock_shared_fun_t)(mutex_impl*);
-typedef void (WINAPI *unlock_exclusive_fun_t)(mutex_impl*);
-typedef void (WINAPI *unlock_shared_fun_t)(mutex_impl*);
+typedef void (BOOST_WINAPI_WINAPI_CC *init_fun_t)(mutex_impl*);
+typedef void (BOOST_WINAPI_WINAPI_CC *destroy_fun_t)(mutex_impl*);
+typedef void (BOOST_WINAPI_WINAPI_CC *lock_exclusive_fun_t)(mutex_impl*);
+typedef void (BOOST_WINAPI_WINAPI_CC *lock_shared_fun_t)(mutex_impl*);
+typedef void (BOOST_WINAPI_WINAPI_CC *unlock_exclusive_fun_t)(mutex_impl*);
+typedef void (BOOST_WINAPI_WINAPI_CC *unlock_shared_fun_t)(mutex_impl*);
 
 //! A complement stub function for InitializeSRWLock
-void WINAPI DeinitializeSRWLock(mutex_impl*)
+void BOOST_WINAPI_WINAPI_CC DeinitializeSRWLock(mutex_impl*)
 {
 }
 
 // The Boost.Thread-based implementation
-void WINAPI InitializeSharedMutex(mutex_impl* mtx)
+void BOOST_WINAPI_WINAPI_CC InitializeSharedMutex(mutex_impl* mtx)
 {
     // To avoid cache line aliasing we do aligned memory allocation here
     enum
@@ -63,8 +63,7 @@ void WINAPI InitializeSharedMutex(mutex_impl* mtx)
         // Allocation size is the minimum number of cache lines to accommodate shared_mutex
         size =
             (
-                sizeof(shared_mutex) / BOOST_LOG_CPU_CACHE_LINE_SIZE
-                + ((sizeof(shared_mutex) % BOOST_LOG_CPU_CACHE_LINE_SIZE) != 0)
+                (sizeof(shared_mutex) + BOOST_LOG_CPU_CACHE_LINE_SIZE - 1u) / BOOST_LOG_CPU_CACHE_LINE_SIZE
             )
             * BOOST_LOG_CPU_CACHE_LINE_SIZE
     };
@@ -73,29 +72,29 @@ void WINAPI InitializeSharedMutex(mutex_impl* mtx)
     new (mtx->p) shared_mutex();
 }
 
-void WINAPI DeinitializeSharedMutex(mutex_impl* mtx)
+void BOOST_WINAPI_WINAPI_CC DeinitializeSharedMutex(mutex_impl* mtx)
 {
     static_cast< shared_mutex* >(mtx->p)->~shared_mutex();
     alignment::aligned_free(mtx->p);
     mtx->p = NULL;
 }
 
-void WINAPI ExclusiveLockSharedMutex(mutex_impl* mtx)
+void BOOST_WINAPI_WINAPI_CC ExclusiveLockSharedMutex(mutex_impl* mtx)
 {
     static_cast< shared_mutex* >(mtx->p)->lock();
 }
 
-void WINAPI SharedLockSharedMutex(mutex_impl* mtx)
+void BOOST_WINAPI_WINAPI_CC SharedLockSharedMutex(mutex_impl* mtx)
 {
     static_cast< shared_mutex* >(mtx->p)->lock_shared();
 }
 
-void WINAPI ExclusiveUnlockSharedMutex(mutex_impl* mtx)
+void BOOST_WINAPI_WINAPI_CC ExclusiveUnlockSharedMutex(mutex_impl* mtx)
 {
     static_cast< shared_mutex* >(mtx->p)->unlock();
 }
 
-void WINAPI SharedUnlockSharedMutex(mutex_impl* mtx)
+void BOOST_WINAPI_WINAPI_CC SharedUnlockSharedMutex(mutex_impl* mtx)
 {
     static_cast< shared_mutex* >(mtx->p)->unlock_shared();
 }
@@ -111,27 +110,27 @@ unlock_shared_fun_t g_pUnlockSharedLWRWMutex = NULL;
 //! The function dynamically initializes the implementation pointers
 void init_light_rw_mutex_impl()
 {
-    boost::detail::winapi::HMODULE_ hKernel32 = boost::detail::winapi::GetModuleHandleW(L"kernel32.dll");
+    boost::winapi::HMODULE_ hKernel32 = boost::winapi::GetModuleHandleW(L"kernel32.dll");
     if (hKernel32)
     {
         g_pInitializeLWRWMutex =
-            (init_fun_t)boost::detail::winapi::get_proc_address(hKernel32, "InitializeSRWLock");
+            (init_fun_t)boost::winapi::get_proc_address(hKernel32, "InitializeSRWLock");
         if (g_pInitializeLWRWMutex)
         {
             g_pLockExclusiveLWRWMutex =
-                (lock_exclusive_fun_t)boost::detail::winapi::get_proc_address(hKernel32, "AcquireSRWLockExclusive");
+                (lock_exclusive_fun_t)boost::winapi::get_proc_address(hKernel32, "AcquireSRWLockExclusive");
             if (g_pLockExclusiveLWRWMutex)
             {
                 g_pUnlockExclusiveLWRWMutex =
-                    (unlock_exclusive_fun_t)boost::detail::winapi::get_proc_address(hKernel32, "ReleaseSRWLockExclusive");
+                    (unlock_exclusive_fun_t)boost::winapi::get_proc_address(hKernel32, "ReleaseSRWLockExclusive");
                 if (g_pUnlockExclusiveLWRWMutex)
                 {
                     g_pLockSharedLWRWMutex =
-                        (lock_shared_fun_t)boost::detail::winapi::get_proc_address(hKernel32, "AcquireSRWLockShared");
+                        (lock_shared_fun_t)boost::winapi::get_proc_address(hKernel32, "AcquireSRWLockShared");
                     if (g_pLockSharedLWRWMutex)
                     {
                         g_pUnlockSharedLWRWMutex =
-                            (unlock_shared_fun_t)boost::detail::winapi::get_proc_address(hKernel32, "ReleaseSRWLockShared");
+                            (unlock_shared_fun_t)boost::winapi::get_proc_address(hKernel32, "ReleaseSRWLockShared");
                         if (g_pUnlockSharedLWRWMutex)
                         {
                             g_pDestroyLWRWMutex = &DeinitializeSRWLock;

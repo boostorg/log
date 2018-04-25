@@ -14,12 +14,12 @@
  */
 
 #include <boost/log/detail/config.hpp>
-#include <boost/detail/winapi/basic_types.hpp>
-#include <boost/detail/winapi/handles.hpp>
-#include <boost/detail/winapi/dll.hpp>
-#include <boost/detail/winapi/file_mapping.hpp>
-#include <boost/detail/winapi/page_protection_flags.hpp>
-#include <boost/detail/winapi/get_last_error.hpp>
+#include <boost/winapi/basic_types.hpp>
+#include <boost/winapi/handles.hpp>
+#include <boost/winapi/dll.hpp>
+#include <boost/winapi/file_mapping.hpp>
+#include <boost/winapi/page_protection_flags.hpp>
+#include <boost/winapi/get_last_error.hpp>
 #include <windows.h> // for error codes
 #include <cstddef>
 #include <limits>
@@ -52,7 +52,7 @@ mapped_shared_memory::~mapped_shared_memory()
 
     if (m_handle)
     {
-        BOOST_VERIFY(boost::detail::winapi::CloseHandle(m_handle) != 0);
+        BOOST_VERIFY(boost::winapi::CloseHandle(m_handle) != 0);
         m_handle = NULL;
     }
 }
@@ -65,21 +65,21 @@ void mapped_shared_memory::create(const wchar_t* name, std::size_t size, permiss
     const uint64_t size64 = static_cast< uint64_t >(size);
 
     // Unlike other create functions, this function opens the existing mapping, if one already exists
-    boost::detail::winapi::HANDLE_ h = boost::detail::winapi::CreateFileMappingW
+    boost::winapi::HANDLE_ h = boost::winapi::CreateFileMappingW
     (
-        boost::detail::winapi::INVALID_HANDLE_VALUE_,
-        reinterpret_cast< boost::detail::winapi::SECURITY_ATTRIBUTES_* >(perms.get_native()),
-        boost::detail::winapi::PAGE_READWRITE_ | boost::detail::winapi::SEC_COMMIT_,
-        static_cast< boost::detail::winapi::DWORD_ >(size64 >> 32u),
-        static_cast< boost::detail::winapi::DWORD_ >(size64),
+        boost::winapi::INVALID_HANDLE_VALUE_,
+        reinterpret_cast< boost::winapi::SECURITY_ATTRIBUTES_* >(perms.get_native()),
+        boost::winapi::PAGE_READWRITE_ | boost::winapi::SEC_COMMIT_,
+        static_cast< boost::winapi::DWORD_ >(size64 >> 32u),
+        static_cast< boost::winapi::DWORD_ >(size64),
         name
     );
 
-    boost::detail::winapi::DWORD_ err = boost::detail::winapi::GetLastError();
+    boost::winapi::DWORD_ err = boost::winapi::GetLastError();
     if (BOOST_UNLIKELY(h == NULL || err != ERROR_SUCCESS))
     {
         if (h != NULL)
-            boost::detail::winapi::CloseHandle(h);
+            boost::winapi::CloseHandle(h);
         std::ostringstream strm;
         strm << "Failed to create a shared memory segment of " << size << " bytes";
         BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, strm.str(), (err));
@@ -97,17 +97,17 @@ bool mapped_shared_memory::create_or_open(const wchar_t* name, std::size_t size,
     const uint64_t size64 = static_cast< uint64_t >(size);
 
     // Unlike other create functions, this function opens the existing mapping, if one already exists
-    boost::detail::winapi::HANDLE_ h = boost::detail::winapi::CreateFileMappingW
+    boost::winapi::HANDLE_ h = boost::winapi::CreateFileMappingW
     (
-        boost::detail::winapi::INVALID_HANDLE_VALUE_,
-        reinterpret_cast< boost::detail::winapi::SECURITY_ATTRIBUTES_* >(perms.get_native()),
-        boost::detail::winapi::PAGE_READWRITE_ | boost::detail::winapi::SEC_COMMIT_,
-        static_cast< boost::detail::winapi::DWORD_ >(size64 >> 32u),
-        static_cast< boost::detail::winapi::DWORD_ >(size64),
+        boost::winapi::INVALID_HANDLE_VALUE_,
+        reinterpret_cast< boost::winapi::SECURITY_ATTRIBUTES_* >(perms.get_native()),
+        boost::winapi::PAGE_READWRITE_ | boost::winapi::SEC_COMMIT_,
+        static_cast< boost::winapi::DWORD_ >(size64 >> 32u),
+        static_cast< boost::winapi::DWORD_ >(size64),
         name
     );
 
-    boost::detail::winapi::DWORD_ err = boost::detail::winapi::GetLastError();
+    boost::winapi::DWORD_ err = boost::winapi::GetLastError();
     if (BOOST_UNLIKELY(h == NULL))
     {
         std::ostringstream strm;
@@ -130,7 +130,7 @@ bool mapped_shared_memory::create_or_open(const wchar_t* name, std::size_t size,
     }
     catch (...)
     {
-        boost::detail::winapi::CloseHandle(h);
+        boost::winapi::CloseHandle(h);
         throw;
     }
 
@@ -145,11 +145,11 @@ void mapped_shared_memory::open(const wchar_t* name)
     BOOST_ASSERT(m_handle == NULL);
 
     // Note: FILE_MAP_WRITE implies reading permission as well
-    boost::detail::winapi::HANDLE_ h = boost::detail::winapi::OpenFileMappingW(boost::detail::winapi::FILE_MAP_WRITE_ | boost::detail::winapi::SECTION_QUERY_, false, name);
+    boost::winapi::HANDLE_ h = boost::winapi::OpenFileMappingW(boost::winapi::FILE_MAP_WRITE_ | boost::winapi::SECTION_QUERY_, false, name);
 
     if (BOOST_UNLIKELY(h == NULL))
     {
-        const boost::detail::winapi::DWORD_ err = boost::detail::winapi::GetLastError();
+        const boost::winapi::DWORD_ err = boost::winapi::GetLastError();
         BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, "Failed to create a shared memory segment", (err));
     }
 
@@ -159,7 +159,7 @@ void mapped_shared_memory::open(const wchar_t* name)
     }
     catch (...)
     {
-        boost::detail::winapi::CloseHandle(h);
+        boost::winapi::CloseHandle(h);
         throw;
     }
 
@@ -173,10 +173,10 @@ void mapped_shared_memory::map()
     BOOST_ASSERT(m_mapped_address == NULL);
 
     // Note: FILE_MAP_WRITE implies reading permission as well
-    m_mapped_address = boost::detail::winapi::MapViewOfFile
+    m_mapped_address = boost::winapi::MapViewOfFile
     (
         m_handle,
-        boost::detail::winapi::FILE_MAP_WRITE_ | boost::detail::winapi::SECTION_QUERY_,
+        boost::winapi::FILE_MAP_WRITE_ | boost::winapi::SECTION_QUERY_,
         0u,
         0u,
         m_size
@@ -184,7 +184,7 @@ void mapped_shared_memory::map()
 
     if (BOOST_UNLIKELY(m_mapped_address == NULL))
     {
-        const boost::detail::winapi::DWORD_ err = boost::detail::winapi::GetLastError();
+        const boost::winapi::DWORD_ err = boost::winapi::GetLastError();
         BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, "Failed to map the shared memory segment into the process address space", (err));
     }
 }
@@ -194,29 +194,29 @@ void mapped_shared_memory::unmap()
 {
     BOOST_ASSERT(m_mapped_address != NULL);
 
-    BOOST_VERIFY(boost::detail::winapi::UnmapViewOfFile(m_mapped_address) != 0);
+    BOOST_VERIFY(boost::winapi::UnmapViewOfFile(m_mapped_address) != 0);
     m_mapped_address = NULL;
 }
 
 //! Returns the size of the file mapping identified by the handle
-std::size_t mapped_shared_memory::obtain_size(boost::detail::winapi::HANDLE_ h)
+std::size_t mapped_shared_memory::obtain_size(boost::winapi::HANDLE_ h)
 {
     nt_query_section_t query_section = nt_query_section.load(boost::memory_order_acquire);
 
     if (BOOST_UNLIKELY(query_section == NULL))
     {
         // Check if ntdll.dll provides NtQuerySection, see: http://undocumented.ntinternals.net/index.html?page=UserMode%2FUndocumented%20Functions%2FNT%20Objects%2FSection%2FNtQuerySection.html
-        boost::detail::winapi::HMODULE_ ntdll = boost::detail::winapi::GetModuleHandleW(L"ntdll.dll");
+        boost::winapi::HMODULE_ ntdll = boost::winapi::GetModuleHandleW(L"ntdll.dll");
         if (BOOST_UNLIKELY(ntdll == NULL))
         {
-            const boost::detail::winapi::DWORD_ err = boost::detail::winapi::GetLastError();
+            const boost::winapi::DWORD_ err = boost::winapi::GetLastError();
             BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, "Failed to obtain a handle to ntdll.dll", (err));
         }
 
-        query_section = (nt_query_section_t)boost::detail::winapi::get_proc_address(ntdll, "NtQuerySection");
+        query_section = (nt_query_section_t)boost::winapi::get_proc_address(ntdll, "NtQuerySection");
         if (BOOST_UNLIKELY(query_section == NULL))
         {
-            const boost::detail::winapi::DWORD_ err = boost::detail::winapi::GetLastError();
+            const boost::winapi::DWORD_ err = boost::winapi::GetLastError();
             BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, "Failed to obtain the NtQuerySection function", (err));
         }
 
@@ -224,7 +224,7 @@ std::size_t mapped_shared_memory::obtain_size(boost::detail::winapi::HANDLE_ h)
     }
 
     section_basic_information info = {};
-    NTSTATUS_ err = query_section
+    boost::winapi::NTSTATUS_ err = query_section
     (
         h,
         0u, // SectionBasicInformation

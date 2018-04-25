@@ -24,7 +24,7 @@
 #include <boost/move/utility_core.hpp>
 #include <boost/log/exceptions.hpp>
 #include <boost/log/utility/ipc/object_name.hpp>
-#include <boost/detail/winapi/get_last_error.hpp>
+#include <boost/winapi/get_last_error.hpp>
 #include <windows.h>
 #include <lmcons.h>
 #include <security.h>
@@ -183,7 +183,7 @@ std::string get_scope_prefix(object_name::scope ns)
                 ULONG len = sizeof(buf) / sizeof(*buf);
                 if (BOOST_UNLIKELY(!GetUserNameExW(NameSamCompatible, buf, &len)))
                 {
-                    const boost::detail::winapi::DWORD_ err = boost::detail::winapi::GetLastError();
+                    const boost::winapi::DWORD_ err = boost::winapi::GetLastError();
                     BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, "Failed to obtain the current user name", (err));
                 }
 

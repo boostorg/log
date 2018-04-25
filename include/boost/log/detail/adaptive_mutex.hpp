@@ -38,8 +38,8 @@
 #if defined(BOOST_LOG_ADAPTIVE_MUTEX_USE_WINAPI)
 
 #include <boost/log/detail/pause.hpp>
+#include <boost/winapi/thread.hpp>
 #include <boost/detail/interlocked.hpp>
-#include <boost/detail/winapi/thread.hpp>
 
 #if defined(__INTEL_COMPILER) || defined(_MSC_VER)
 #    if defined(__INTEL_COMPILER)
@@ -103,10 +103,10 @@ public:
             {
                 // Restart spinning after waking up this thread
                 pause_count = initial_pause;
-                SwitchToThread();
+                boost::winapi::SwitchToThread();
             }
 #else
-            SwitchToThread();
+            boost::winapi::SwitchToThread();
 #endif
         }
     }

@@ -532,7 +532,7 @@ Sink settings are divided into separate subsections within the common top-level 
 [table Sections under the "Sinks" section. Common sink settings.
 [[Parameter]             [Format]                                                               [Description]]
 [[Destination]           [Sink target, see description]
-    [Sink backend type. Mandatory parameter. May have one of these values: [link log.detailed.sink_backends.text_ostream Console], [link log.detailed.sink_backends.text_file TextFile], [link log.detailed.sink_backends.syslog Syslog]. On Windows the following values are additionally supported: [link log.detailed.sink_backends.event_log SimpleEventLog], [link log.detailed.sink_backends.debugger Debugger]. Also, user-defined sink names may also be supported if registered by calling `register_sink_factory`.]
+    [Sink backend type. Mandatory parameter. May have one of these values: [link log.detailed.sink_backends.text_ostream Console], [link log.detailed.sink_backends.text_file TextFile], [link log.detailed.sink_backends.syslog Syslog]. On Windows the following values are additionally supported: [link log.detailed.sink_backends.event_log SimpleEventLog], [link log.detailed.sink_backends.debugger Debugger]. Also, user-defined sink names may also be supported if registered by calling [funcref boost::log::register_sink_factory `register_sink_factory`]. See [link log.extension.settings.sinks this] section on how to add support for new sinks.]
 ]
 [[Filter]                [Filter string as described [link log.detailed.utilities.setup.filter_formatter here]]
     [Sink-specific filter. If not specified, the filter is not set.]
@@ -564,6 +564,9 @@ Besides the common settings that all sinks support, some sink backends also acce
 ]
 [[AutoFlush]             ["true" or "false"]
     [Enables or disables the auto-flush feature of the backend. If not specified, the default value `false` is assumed.]
+]
+[[Append]                ["true" or "false"]
+    [Enables or disables appending to the existing file instead of overwriting it. If not specified, the default value `false` is assumed.]
 ]
 [[RotationSize]          [Unsigned integer]
     [File size, in bytes, upon which file rotation will be performed. If not specified, no size-based rotation will be made.]
