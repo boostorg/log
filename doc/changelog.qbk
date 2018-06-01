@@ -9,6 +9,12 @@
 
 [section:changelog Changelog]
 
+[heading 2.14, Boost 1.68]
+
+[*General changes:]
+
+* Improved support for VxWorks. ([pull_request 39])
+
 [heading 2.13, Boost 1.67]
 
 [*General changes:]
