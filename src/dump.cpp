@@ -22,7 +22,6 @@
 #include <intrin.h> // __cpuid
 #endif
 #include <boost/log/detail/header.hpp>
-
 namespace boost {
 
 BOOST_LOG_OPEN_NAMESPACE
@@ -192,8 +191,10 @@ private:
     static void cpuid(uint32_t& eax, uint32_t& ebx, uint32_t& ecx, uint32_t& edx)
     {
 #if defined(__GNUC__)
-#if defined(__i386__) && (defined(__PIC__) || defined(__PIE__)) && !(defined(__clang__) || (defined(BOOST_GCC) && BOOST_GCC >= 50100))
+#if (defined(__i386__) || defined(__VXWORKS__)) && (defined(__PIC__) || defined(__PIE__)) && !(defined(__clang__) || (defined(BOOST_GCC) && BOOST_GCC >= 50100)) 
+
         // Unless the compiler can do it automatically, we have to backup ebx in 32-bit PIC/PIE code because it is reserved by the ABI
+        // For VxWorks ebx is reserved on 64-bit as well
         __asm__ __volatile__
         (
             "xchgl %%ebx, %0\n\t"

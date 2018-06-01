@@ -116,6 +116,19 @@
 #   define BOOST_LOG_NO_ASIO
 #endif
 
+#if defined(__VXWORKS__)
+#   define BOOST_LOG_NO_GETPGRP 
+#   define BOOST_LOG_NO_GETSID
+    // for  _WRS_CONFIG_USER_MANAGEMENT used below 
+#   include <vsbConfig.h>
+#endif
+
+#if (!defined(__CRYSTAX__) && defined(__ANDROID__) && (__ANDROID_API__+0) < 21 ) \
+     || ( defined(__VXWORKS__) && !defined(_WRS_CONFIG_USER_MANAGEMENT))
+// Until Android API version 21 Google NDK does not provide getpwuid_r
+#    define BOOST_LOG_NO_GETPWUID_R
+#endif
+
 #if !defined(BOOST_LOG_USE_NATIVE_SYSLOG) && defined(BOOST_LOG_NO_ASIO)
 #   ifndef BOOST_LOG_WITHOUT_SYSLOG
 #       define BOOST_LOG_WITHOUT_SYSLOG
