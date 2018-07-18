@@ -60,8 +60,11 @@ protected:
     //! Returns the singleton instance (not thread-safe)
     static StorageT& get_instance()
     {
-        static StorageT instance;
-        return instance;
+        static StorageT* instance;
+        if (!instance) {
+            instance = new StorageT();
+        }
+        return *instance;
     }
 };
 
