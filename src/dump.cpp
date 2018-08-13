@@ -195,6 +195,17 @@ private:
 #if (defined(__i386__) || defined(__VXWORKS__)) && (defined(__PIC__) || defined(__PIE__)) && !(defined(__clang__) || (defined(BOOST_GCC) && BOOST_GCC >= 50100))
         // Unless the compiler can do it automatically, we have to backup ebx in 32-bit PIC/PIE code because it is reserved by the ABI.
         // For VxWorks ebx is reserved on 64-bit as well.
+#if defined(__x86_64__)
+        uint64_t rbx = ebx;
+        __asm__ __volatile__
+        (
+            "xchgq %%rbx, %0\n\t"
+            "cpuid\n\t"
+            "xchgq %%rbx, %0\n\t"
+                : "+DS" (rbx), "+a" (eax), "+c" (ecx), "+d" (edx)
+        );
+        ebx = static_cast< uint32_t >(rbx);
+#else // defined(__x86_64__)
         __asm__ __volatile__
         (
             "xchgl %%ebx, %0\n\t"
@@ -202,6 +213,7 @@ private:
             "xchgl %%ebx, %0\n\t"
                 : "+DS" (ebx), "+a" (eax), "+c" (ecx), "+d" (edx)
         );
+#endif // defined(__x86_64__)
 #else
         __asm__ __volatile__
         (
