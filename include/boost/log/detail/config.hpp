@@ -164,8 +164,6 @@
 
 #if defined(_MSC_VER)
 #   define BOOST_LOG_NO_VTABLE __declspec(novtable)
-#elif defined(__GNUC__)
-#   define BOOST_LOG_NO_VTABLE
 #else
 #   define BOOST_LOG_NO_VTABLE
 #endif
