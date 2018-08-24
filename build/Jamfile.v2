@@ -21,7 +21,6 @@ local here = [ modules.binding $(__name__) ] ;
 project.push-current [ project.current ] ;
 project.load [ path.join [ path.make $(here:D) ] ../config/message-compiler ] ;
 project.load [ path.join [ path.make $(here:D) ] ../config/x86-ext ] ;
-project.load [ path.join [ path.make $(here:D) ] ../config/visibility ] ;
 project.load [ path.join [ path.make $(here:D) ] ../config/pthread-mutex-robust ] ;
 project.load [ path.join [ path.make $(here:D) ] ../config/native-syslog ] ;
 project.load [ path.join [ path.make $(here:D) ] ../config/atomic-int32 ] ;
@@ -82,19 +81,6 @@ rule select-regex-backend ( properties * )
         [ has-config-flag BOOST_LOG_USE_BOOST_XPRESSIVE : $(properties) ] )
     {
         result = <library>/boost/regex//boost_regex ;
-    }
-
-    return $(result) ;
-}
-
-rule check-visibility ( properties * )
-{
-    local result = ;
-
-    local has_visibility = [ configure.builds /boost/log/visibility//visibility : $(properties) : compiler-supports-visibility ] ;
-    if $(has_visibility)
-    {
-        result = <cxxflags>"-fvisibility=hidden" ;
     }
 
     return $(result) ;
@@ -176,7 +162,6 @@ project boost/log
         <conditional>@check-instruction-set
         <conditional>@check-atomic-int32
         <conditional>@select-regex-backend
-        <conditional>@check-visibility
         <conditional>@check-pthread-mutex-robust
         <conditional>@check-native-syslog
         <conditional>@check-message-compiler
@@ -184,6 +169,7 @@ project boost/log
 
         <include>../src
 
+        <visibility>hidden
         <define>__STDC_CONSTANT_MACROS # Use system-defined macros for integer constants, if possible
         <define>BOOST_SPIRIT_USE_PHOENIX_V3=1
         <define>BOOST_THREAD_DONT_USE_CHRONO=1 # Don't introduce false dependency on Boost.Chrono
