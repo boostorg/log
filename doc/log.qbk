@@ -52,6 +52,7 @@
 [def __boost_quickbook__ [@http://www.boost.org/doc/libs/release/doc/html/quickbook.html Boost.Quickbook]]
 
 [template ticket[key] '''<ulink url="https://svn.boost.org/trac/boost/ticket/'''[key]'''">#'''[key]'''</ulink>''']
+[template github_issue[key] '''<ulink url="https://github.com/boostorg/log/issues/'''[key]'''">GH#'''[key]'''</ulink>''']
 [template pull_request[key] '''<ulink url="https://github.com/boostorg/log/pull/'''[key]'''">PR#'''[key]'''</ulink>''']
 
 [/ Auto-generated macros that refer to Reference sections /]
