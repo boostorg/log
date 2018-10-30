@@ -704,12 +704,23 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
                 // to ensure there's no conflict. I'll need to make this customizable some day.
                 file_counter_formatter formatter(file_name.size(), 5);
                 unsigned int n = 0;
-                do
+                while (true)
                 {
-                    path_string_type alt_file_name = formatter(file_name, n++);
+                    path_string_type alt_file_name = formatter(file_name, n);
                     info.m_Path = m_StorageDir / filesystem::path(alt_file_name);
+                    if (!filesystem::exists(info.m_Path))
+                        break;
+
+                    if (BOOST_UNLIKELY(n == (std::numeric_limits< unsigned int >::max)()))
+                    {
+                        BOOST_THROW_EXCEPTION(filesystem_error(
+                            "Target file exists and an unused fallback file name could not be found",
+                            info.m_Path,
+                            system::error_code(system::errc::io_error, system::generic_category())));
+                    }
+
+                    ++n;
                 }
-                while (filesystem::exists(info.m_Path) && n < (std::numeric_limits< unsigned int >::max)());
             }
 
             // The directory should have been created in constructor, but just in case it got deleted since then...
@@ -718,14 +729,44 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
 
         BOOST_LOG_EXPR_IF_MT(lock_guard< mutex > lock(m_Mutex);)
 
+        file_list::iterator it = m_Files.begin();
+        const file_list::iterator end = m_Files.end();
+        if (is_in_target_dir)
+        {
+            // If the sink writes log file into the target dir (is_in_target_dir == true), it is possible that after scanning
+            // an old file entry refers to the file that is picked up by the sink for writing. Later on, the sink attempts
+            // to store the file in the storage. At best, this would result in duplicate file entries. At worst, if the storage
+            // limits trigger a deletion and this file get deleted, we may have an entry that refers to no actual file. In any case,
+            // the total size of files in the storage will be incorrect. Here we work around this problem and simply remove
+            // the old file entry without removing the file. The entry will be re-added to the list later.
+            while (it != end)
+            {
+                system::error_code ec;
+                if (filesystem::equivalent(it->m_Path, info.m_Path, ec))
+                {
+                    m_TotalSize -= it->m_Size;
+                    m_Files.erase(it);
+                    break;
+                }
+                else
+                {
+                    ++it;
+                }
+            }
+
+            it = m_Files.begin();
+        }
+
         // Check if an old file should be erased
         uintmax_t free_space = m_MinFreeSpace ? filesystem::space(m_StorageDir).available : static_cast< uintmax_t >(0);
-        file_list::iterator it = m_Files.begin(), end = m_Files.end();
         while (it != end &&
             (m_TotalSize + info.m_Size > m_MaxSize || (m_MinFreeSpace && m_MinFreeSpace > free_space) || m_MaxFiles <= m_Files.size()))
         {
             file_info& old_info = *it;
-            if (filesystem::exists(old_info.m_Path) && filesystem::is_regular_file(old_info.m_Path))
+            system::error_code ec;
+            filesystem::file_status status = filesystem::status(old_info.m_Path, ec);
+
+            if (status.type() == filesystem::regular_file)
             {
                 try
                 {
@@ -781,7 +822,9 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
                 counter = NULL;
             }
 
-            if (filesystem::exists(dir) && filesystem::is_directory(dir))
+            system::error_code ec;
+            filesystem::file_status status = filesystem::status(dir, ec);
+            if (status.type() == filesystem::directory_file)
             {
                 BOOST_LOG_EXPR_IF_MT(lock_guard< mutex > lock(m_Mutex);)
 
@@ -795,7 +838,8 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
                 {
                     file_info info;
                     info.m_Path = *it;
-                    if (filesystem::is_regular_file(info.m_Path))
+                    status = filesystem::status(info.m_Path, ec);
+                    if (status.type() == filesystem::regular_file)
                     {
                         // Check that there are no duplicates in the resulting list
                         struct local
@@ -1385,7 +1429,13 @@ BOOST_LOG_API void text_file_backend::rotate_file()
     close_file();
 
     if (!!m_pImpl->m_pFileCollector)
-        m_pImpl->m_pFileCollector->store_file(prev_file_name);
+    {
+        // Check if the file has not been deleted by another process
+        system::error_code ec;
+        filesystem::file_status status = filesystem::status(prev_file_name, ec);
+        if (status.type() == filesystem::regular_file)
+            m_pImpl->m_pFileCollector->store_file(prev_file_name);
+    }
 }
 
 //! The method sets the file open mode

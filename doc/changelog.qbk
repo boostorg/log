@@ -15,6 +15,10 @@
 
 * Updated syslog sink backend to avoid using deprecated __boost_asio__ interfaces. ([github_issue 59])
 
+[*Bug fixes:]
+
+* Fixed a problem that could cause incorrect estimate of the total size of rotated files in the target storage if the [link log.detailed.sink_backends.text_file text file sink backend] was writing directly into the target storage directory and the log file name matched one of the old files in the storage, and that file was picked as the old log file by `file_collector::scan_for_files`. Note that this configuration is still not fully supported and may result in premature file deletion if multiple sinks write files directly into the common target storage directory. It is recommended to configure sinks to write log files into directories different from the target storage directory.
+
 [heading 2.14, Boost 1.68]
 
 [*General changes:]
