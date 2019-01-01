@@ -28,9 +28,9 @@
 #include <boost/core/addressof.hpp>
 #include <boost/core/enable_if.hpp>
 #include <boost/core/explicit_operator_bool.hpp>
+#include <boost/core/uncaught_exceptions.hpp>
 #include <boost/log/detail/config.hpp>
 #include <boost/log/detail/native_typeof.hpp>
-#include <boost/log/detail/unhandled_exception_count.hpp>
 #include <boost/log/core/record.hpp>
 #include <boost/log/utility/unique_identifier_name.hpp>
 #include <boost/log/utility/formatting_ostream.hpp>
@@ -504,7 +504,7 @@ public:
     explicit record_pump(logger_type& lg, record& rec) :
         m_pLogger(boost::addressof(lg)),
         m_pStreamCompound(stream_provider_type::allocate_compound(rec)),
-        m_ExceptionCount(unhandled_exception_count())
+        m_ExceptionCount(boost::core::uncaught_exceptions())
     {
     }
     //! Move constructor
@@ -523,7 +523,7 @@ public:
         {
             auto_release cleanup(m_pStreamCompound); // destructor doesn't throw
             // Only push the record if no exception has been thrown in the streaming expression (if possible)
-            if (m_ExceptionCount >= unhandled_exception_count())
+            if (m_ExceptionCount >= boost::core::uncaught_exceptions())
                 m_pLogger->push_record(boost::move(m_pStreamCompound->stream.get_record()));
         }
     }
