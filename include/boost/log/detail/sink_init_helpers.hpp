@@ -18,8 +18,6 @@
 
 #include <string>
 #include <boost/mpl/bool.hpp>
-#include <boost/parameter/binding.hpp>
-#include <boost/type_traits/is_void.hpp>
 #include <boost/core/enable_if.hpp>
 #include <boost/phoenix/core/is_actor.hpp>
 #include <boost/log/detail/config.hpp>
@@ -64,14 +62,14 @@ inline typename boost::enable_if_c<
 
 // The function installs filter into the sink, if provided in the arguments pack
 template< typename SinkT, typename ArgsT >
-inline void setup_filter(SinkT&, ArgsT const&, mpl::true_)
+inline void setup_filter(SinkT& s, ArgsT const& args, mpl::true_)
 {
+    s.set_filter(aux::acquire_filter(args[keywords::filter]));
 }
 
 template< typename SinkT, typename ArgsT >
-inline void setup_filter(SinkT& s, ArgsT const& args, mpl::false_)
+inline void setup_filter(SinkT&, ArgsT const&, mpl::false_)
 {
-    s.set_filter(aux::acquire_filter(args[keywords::filter]));
 }
 
 
@@ -97,14 +95,14 @@ inline typename boost::enable_if_c<
 
 // The function installs filter into the sink, if provided in the arguments pack
 template< typename SinkT, typename ArgsT >
-inline void setup_formatter(SinkT&, ArgsT const&, mpl::true_)
+inline void setup_formatter(SinkT& s, ArgsT const& args, mpl::true_)
 {
+    s.set_formatter(aux::acquire_formatter(args[keywords::format]));
 }
 
 template< typename SinkT, typename ArgsT >
-inline void setup_formatter(SinkT& s, ArgsT const& args, mpl::false_)
+inline void setup_formatter(SinkT&, ArgsT const&, mpl::false_)
 {
-    s.set_formatter(aux::acquire_formatter(args[keywords::format]));
 }
 
 } // namespace aux

@@ -18,6 +18,7 @@
 #include <boost/smart_ptr/shared_ptr.hpp>
 #include <boost/smart_ptr/make_shared_object.hpp>
 #include <boost/parameter/parameters.hpp> // for is_named_argument
+#include <boost/mpl/has_key.hpp>
 #include <boost/preprocessor/comparison/greater.hpp>
 #include <boost/preprocessor/punctuation/comma_if.hpp>
 #include <boost/preprocessor/repetition/enum_params.hpp>
@@ -57,14 +58,14 @@ namespace aux {
 
 //! The function creates a file collector according to the specified arguments
 template< typename ArgsT >
-inline shared_ptr< sinks::file::collector > setup_file_collector(ArgsT const&, mpl::true_ const&)
-{
-    return shared_ptr< sinks::file::collector >();
-}
-template< typename ArgsT >
-inline shared_ptr< sinks::file::collector > setup_file_collector(ArgsT const& args, mpl::false_ const&)
+inline shared_ptr< sinks::file::collector > setup_file_collector(ArgsT const& args, mpl::true_ const&)
 {
     return sinks::file::make_collector(args);
+}
+template< typename ArgsT >
+inline shared_ptr< sinks::file::collector > setup_file_collector(ArgsT const&, mpl::false_ const&)
+{
+    return shared_ptr< sinks::file::collector >();
 }
 
 //! The function constructs the sink and adds it to the core
@@ -75,7 +76,7 @@ shared_ptr< BOOST_LOG_FILE_SINK_FRONTEND_INTERNAL< sinks::text_file_backend > > 
     shared_ptr< backend_t > pBackend = boost::make_shared< backend_t >(args);
 
     shared_ptr< sinks::file::collector > pCollector = aux::setup_file_collector(args,
-        typename is_void< typename parameter::binding< ArgsT, keywords::tag::target, void >::type >::type());
+        typename mpl::has_key< ArgsT, keywords::tag::target >::type());
     if (pCollector)
     {
         pBackend->set_file_collector(pCollector);
@@ -86,10 +87,10 @@ shared_ptr< BOOST_LOG_FILE_SINK_FRONTEND_INTERNAL< sinks::text_file_backend > > 
         boost::make_shared< BOOST_LOG_FILE_SINK_FRONTEND_INTERNAL< backend_t > >(pBackend);
 
     aux::setup_filter(*pSink, args,
-        typename is_void< typename parameter::binding< ArgsT, keywords::tag::filter, void >::type >::type());
+        typename mpl::has_key< ArgsT, keywords::tag::filter >::type());
 
     aux::setup_formatter(*pSink, args,
-        typename is_void< typename parameter::binding< ArgsT, keywords::tag::format, void >::type >::type());
+        typename mpl::has_key< ArgsT, keywords::tag::format >::type());
 
     core::get()->add_sink(pSink);
 
@@ -103,7 +104,7 @@ inline T const& wrap_file_name(T const& arg, mpl::true_)
     return arg;
 }
 template< typename T >
-inline typename parameter::aux::tag< keywords::tag::file_name, T const >::type
+inline typename parameter::aux::tag< keywords::tag::file_name, T const& >::type
 wrap_file_name(T const& arg, mpl::false_)
 {
     return keywords::file_name = arg;

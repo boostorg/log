@@ -15,6 +15,12 @@
 #ifndef BOOST_LOG_SINKS_TEXT_FILE_BACKEND_HPP_INCLUDED_
 #define BOOST_LOG_SINKS_TEXT_FILE_BACKEND_HPP_INCLUDED_
 
+#include <boost/parameter/config.hpp>
+
+#if BOOST_PARAMETER_MAX_ARITY < 6
+#error Define BOOST_PARAMETER_MAX_ARITY as 6 or higher.
+#endif
+
 #include <ios>
 #include <string>
 #include <ostream>
@@ -26,6 +32,7 @@
 #include <boost/date_time/gregorian/greg_day.hpp>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 #include <boost/filesystem/path.hpp>
+#include <boost/parameter/preprocessor.hpp>
 #include <boost/log/keywords/max_size.hpp>
 #include <boost/log/keywords/max_files.hpp>
 #include <boost/log/keywords/min_free_space.hpp>
@@ -134,39 +141,24 @@ namespace aux {
         uintmax_t min_free_space,
         uintmax_t max_files = (std::numeric_limits< uintmax_t >::max)()
     );
-    template< typename ArgsT >
-    inline shared_ptr< collector > make_collector(ArgsT const& args)
-    {
-        return aux::make_collector(
-            filesystem::path(args[keywords::target]),
-            args[keywords::max_size | (std::numeric_limits< uintmax_t >::max)()],
-            args[keywords::min_free_space | static_cast< uintmax_t >(0)],
-            args[keywords::max_files | (std::numeric_limits< uintmax_t >::max)()]);
-    }
 
 } // namespace aux
 
 #ifndef BOOST_LOG_DOXYGEN_PASS
 
-template< typename T1 >
-inline shared_ptr< collector > make_collector(T1 const& a1)
+BOOST_PARAMETER_BASIC_FUNCTION(
+    (shared_ptr< collector >), make_collector, keywords::tag,
+    (required (target, *))
+    (optional (max_size, *))
+    (optional (min_free_space, *))
+    (optional (max_files, *))
+)
 {
-    return aux::make_collector(a1);
-}
-template< typename T1, typename T2 >
-inline shared_ptr< collector > make_collector(T1 const& a1, T2 const& a2)
-{
-    return aux::make_collector((a1, a2));
-}
-template< typename T1, typename T2, typename T3 >
-inline shared_ptr< collector > make_collector(T1 const& a1, T2 const& a2, T3 const& a3)
-{
-    return aux::make_collector((a1, a2, a3));
-}
-template< typename T1, typename T2, typename T3, typename T4 >
-inline shared_ptr< collector > make_collector(T1 const& a1, T2 const& a2, T3 const& a3, T4 const& a4)
-{
-    return aux::make_collector((a1, a2, a3, a4));
+    return aux::make_collector(
+        filesystem::path(args[keywords::target]),
+        args[keywords::max_size | (std::numeric_limits< uintmax_t >::max)()],
+        args[keywords::min_free_space | static_cast< uintmax_t >(0)],
+        args[keywords::max_files | (std::numeric_limits< uintmax_t >::max)()]);
 }
 
 #else

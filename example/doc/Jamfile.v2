@@ -53,19 +53,30 @@ project
     ;
 
 # Compiles each .cpp file in this directory into a separate executable
-rule compile_all
+rule compile_examples( all_flag )
 {
-   #ECHO executing compile_all rule ;
-   local all_rules = ;
-   for local file in [ glob *.cpp ]
-   {
-      local exename = [ MATCH "([^.]*).cpp$" : [ path.basename $(file) ] ] ;
-      #ECHO "exename = $(exename)" ;
-      all_rules += [ exe $(exename) : $(file) ] ;
-   }
+    #ECHO executing compile_all rule ;
+    local all_rules = ;
+    for local file in [ glob *.cpp ]
+    {
+        if ( all_flag == 1 ) || ( [ path.basename $(file) ] != "doc/sinks_simple_event_log.cpp" )
+        {
+            local exename = [ MATCH "([^.]*).cpp$" : [ path.basename $(file) ] ] ;
+            #ECHO "exename = $(exename)" ;
+            all_rules += [ exe $(exename) : $(file) ] ;
+        }
+    }
 
-   #ECHO $(all_rules) ;
-   return $(all_rules) ;
+    #ECHO $(all_rules) ;
+    return $(all_rules) ;
 }
+
+alias compile_all : [ compile_examples : 0 ] :
+        <target-os>windows
+        <toolset>gcc
+    ;
+
+alias compile_all : [ compile_examples : 1 ]
+    ;
 
 compile_all ;
