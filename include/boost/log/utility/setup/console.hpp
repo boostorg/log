@@ -19,7 +19,6 @@
 #include <boost/smart_ptr/shared_ptr.hpp>
 #include <boost/smart_ptr/make_shared_object.hpp>
 #include <boost/core/null_deleter.hpp>
-#include <boost/mpl/has_key.hpp>
 #include <boost/log/detail/config.hpp>
 #include <boost/log/detail/sink_init_helpers.hpp>
 #ifndef BOOST_LOG_NO_THREADS
@@ -72,10 +71,10 @@ shared_ptr<
     shared_ptr< sink_t > pSink = boost::make_shared< sink_t >(pBackend);
 
     aux::setup_filter(*pSink, args,
-        typename boost::mpl::has_key< ArgsT, keywords::tag::filter >::type());
+        typename is_void< typename parameter::binding< ArgsT, keywords::tag::filter, void >::type >::type());
 
     aux::setup_formatter(*pSink, args,
-        typename boost::mpl::has_key< ArgsT, keywords::tag::filter >::type());
+        typename is_void< typename parameter::binding< ArgsT, keywords::tag::format, void >::type >::type());
 
     core::get()->add_sink(pSink);
 
