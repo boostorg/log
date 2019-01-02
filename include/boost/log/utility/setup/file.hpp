@@ -103,7 +103,7 @@ inline T const& wrap_file_name(T const& arg, mpl::true_)
     return arg;
 }
 template< typename T >
-inline typename parameter::aux::tag< keywords::tag::file_name, T const >::type
+inline typename parameter::aux::tag< keywords::tag::file_name, T const& >::type
 wrap_file_name(T const& arg, mpl::false_)
 {
     return keywords::file_name = arg;
