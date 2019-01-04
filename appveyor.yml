@@ -83,7 +83,7 @@ environment:
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
 
 install:
-  - GIT_FETCH_JOBS=8
+  - set GIT_FETCH_JOBS=8
   - cd ..
   - git clone -b %APPVEYOR_REPO_BRANCH% https://github.com/boostorg/boost.git boost-root
   - cd boost-root
