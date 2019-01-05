@@ -9,6 +9,7 @@
 import testing ;
 import path ;
 import regex ;
+import os ;
 
 project
     : requirements
@@ -74,16 +75,21 @@ rule test_all
 {
     local all_rules ;
     local file ;
-    local headers_path = [ path.make $(BOOST_ROOT)/libs/log/include/boost/log ] ;
-    for file in [ path.glob-tree $(headers_path) : *.hpp : detail ]
+
+    if ! [ os.environ BOOST_LOG_TEST_WITHOUT_SELF_CONTAINED_HEADER_TESTS ]
     {
-        local rel_file = [ path.relative-to $(headers_path) $(file) ] ;
-        # Note: The test name starts with '~' in order to group these tests in the test report table, preferably at the end.
-        #       All '/' are replaced with '-' because apparently test scripts have a problem with test names containing slashes.
-        local test_name = [ regex.replace ~hdr/$(rel_file) "/" "-" ] ;
-        #ECHO $(rel_file) ;
-        all_rules += [ compile compile/self_contained_header.cpp : <define>"BOOST_LOG_TEST_HEADER=$(rel_file)" <dependency>$(file) : $(test_name) ] ;
+        local headers_path = [ path.make $(BOOST_ROOT)/libs/log/include/boost/log ] ;
+        for file in [ path.glob-tree $(headers_path) : *.hpp : detail ]
+        {
+            local rel_file = [ path.relative-to $(headers_path) $(file) ] ;
+            # Note: The test name starts with '~' in order to group these tests in the test report table, preferably at the end.
+            #       All '/' are replaced with '-' because apparently test scripts have a problem with test names containing slashes.
+            local test_name = [ regex.replace ~hdr/$(rel_file) "/" "-" ] ;
+            #ECHO $(rel_file) ;
+            all_rules += [ compile compile/self_contained_header.cpp : <define>"BOOST_LOG_TEST_HEADER=$(rel_file)" <dependency>$(file) : $(test_name) ] ;
+        }
     }
+
     for file in [ glob compile/*.cpp ]
     {
         if [ path.basename $(file) ] != "self_contained_header.cpp"
@@ -100,8 +106,13 @@ rule test_all
         all_rules += [ run $(file) ] ;
     }
 
+    if ! [ os.environ BOOST_LOG_TEST_WITHOUT_EXAMPLES ]
+    {
+        all_rules += [ build-project ../example ] ;
+    }
+
     #ECHO All rules: $(all_rules) ;
     return $(all_rules) ;
 }
 
-test-suite log : [ test_all ] [ build-project ../example ] ;
+test-suite log : [ test_all ] ;
