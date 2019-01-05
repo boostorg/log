@@ -6,9 +6,45 @@
 #
 
 import path ;
+import configure ;
+
+rule has-config-flag ( flag : properties * )
+{
+    if ( "<define>$(flag)" in $(properties) || "<define>$(flag)=1" in $(properties) )
+    {
+        return 1 ;
+    }
+    else
+    {
+        return ;
+    }
+}
+
+rule check-message-compiler ( properties * )
+{
+    local result ;
+
+    if <target-os>windows in $(properties)
+    {
+        if ! [ has-config-flag BOOST_LOG_WITHOUT_EVENT_LOG : $(properties) ]
+        {
+            local has_mc = [ configure.builds /boost/log/message-compiler//test-availability : $(properties) : message-compiler ] ;
+            if ! $(has_mc)
+            {
+                result += <define>BOOST_LOG_WITHOUT_EVENT_LOG=1 ;
+            }
+        }
+    }
+    else
+    {
+        result += <define>BOOST_LOG_WITHOUT_EVENT_LOG=1 ;
+    }
+}
 
 project
     : requirements
+        <conditional>@check-message-compiler
+
         <link>shared:<define>BOOST_ALL_DYN_LINK
         <toolset>msvc:<define>_SCL_SECURE_NO_WARNINGS
         <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE
@@ -55,17 +91,17 @@ project
 # Compiles each .cpp file in this directory into a separate executable
 rule compile_all
 {
-   #ECHO executing compile_all rule ;
-   local all_rules = ;
-   for local file in [ glob *.cpp ]
-   {
-      local exename = [ MATCH "([^.]*).cpp$" : [ path.basename $(file) ] ] ;
-      #ECHO "exename = $(exename)" ;
-      all_rules += [ exe $(exename) : $(file) ] ;
-   }
+    #ECHO executing compile_all rule ;
+    local all_rules = ;
+    for local file in [ glob *.cpp ]
+    {
+        local exename = [ MATCH "([^.]*).cpp$" : [ path.basename $(file) ] ] ;
+        #ECHO "exename = $(exename)" ;
+        all_rules += [ exe $(exename) : $(file) ] ;
+    }
 
-   #ECHO $(all_rules) ;
-   return $(all_rules) ;
+    #ECHO $(all_rules) ;
+    return $(all_rules) ;
 }
 
 compile_all ;
