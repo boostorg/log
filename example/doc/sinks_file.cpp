@@ -27,7 +27,8 @@ void init_logging()
 
     boost::shared_ptr< sinks::text_file_backend > backend =
         boost::make_shared< sinks::text_file_backend >(
-            keywords::file_name = "file_%5N.log",                                          /*< file name pattern >*/
+            keywords::file_name = "file.log",                                              /*< active file name pattern >*/
+            keywords::target_file_name = "file_%5N.log",                                   /*< target file name pattern >*/
             keywords::rotation_size = 5 * 1024 * 1024,                                     /*< rotate the file upon reaching 5 MiB size... >*/
             keywords::time_based_rotation = sinks::file::rotation_at_time_point(12, 0, 0)  /*< ...or every day, at noon, whichever comes first >*/
         );

@@ -9,6 +9,12 @@
 
 [section:changelog Changelog]
 
+[heading 2.16, Boost 1.70]
+
+[*New features:]
+
+* Added support for generating another log file name before collecting the file in the [link log.detailed.sink_backends.text_file text file sink backend]. This allows to combine [link log.detailed.sink_backends.text_file.appending appending] to an existing log file with timestamps and file counters in log filenames, and, consequently, [link log.detailed.sink_backends.text_file.file_collection file collection] in general. To enable this feature, one must set the target file name pattern in the text file sink backend (using the `target_file_name` named parameter, `text_file_backend::set_target_file_name_pattern` method call or "TargetFileName" sink parameter in the [link log.detailed.utilities.setup.settings settings]). This pattern will be used to generate a new file name when the file is finished writing and is about to be collected. Therefore, the original (active) file name can be set to a stable pattern (e.g. "app.log") so that appending to a previously written file works. Then the target file name can include a timestamp or a counter (e.g. "app-2019-01-05.log"), so that different rotated files don't conflict in the target storage.
+
 [heading 2.15, Boost 1.69]
 
 [*General changes:]

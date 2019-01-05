@@ -31,18 +31,32 @@ Although it is possible to write logs into files with the [link log.detailed.sin
 * Flexible log file naming
 * Placing the rotated files into a special location in the file system
 * Deleting the oldest files in order to free more space on the file system
+* Similar to [link log.detailed.sink_backends.text_ostream text stream backend], the file sink backend also supports the auto-flush feature
 
 The backend is called [class_sinks_text_file_backend].
 
 [warning This sink uses __boost_filesystem__ internally, which may cause problems on process termination. See [link log.rationale.why_crash_on_term here] for more details.]
 
-[heading File rotation]
+[section:file_rotation File rotation]
 
-File rotation is implemented by the sink backend itself. The file name pattern and rotation thresholds can be specified when the [class_sinks_text_file_backend] backend is constructed.
+File rotation happens when the sink detects that one or more rotation conditions are met and a new file needs to be created. It is implemented by the sink backend and includes the following steps:
+
+# If the log file is currently open, invoke the [link log.detailed.sink_backends.text_file.open_close_handlers file close handler] and close the file.
+# If a target file name pattern is set, generate a new target file name and rename the log file to that generated name.
+# If a [link log.detailed.sink_backends.text_file.file_collection file collector] is configured, pass the log file to it for collection. At this point the file collector may remove older log files to free up some space and move the new file into the target storage.
+# When a new log record needs to be written, generate a new file name for the new file and create a file with that name. If [link log.detailed.sink_backends.text_file.appending file appending] is enabled and a file with that name exists, the file is opened in append mode instead of overwriting.
+
+It is important to note that there are three kinds of file names or paths involved in this process:
+
+* The file name that is used to create or open the log file to actively write to. This is called an /active/ file name and is specified by the `file_name` named parameter of the sink backend constructor or by calling the `set_file_name_pattern` method.
+* The file name that is generated when the log file is closed and about to be collected. This is called a /target/ file name, because it defines how the log files will be named in the target storage. Target file name is optional, it can be specified by the `target_file_name` named parameter or by calling the `set_target_file_name_pattern` method.
+* The target storage location, which is a directory with previously rotated log files, managed by a [link log.detailed.sink_backends.text_file.file_collection file collector]. Multiple sinks can share the same target storage.
+
+The file name patterns and rotation conditions can be specified when the [class_sinks_text_file_backend] backend is constructed.
 
 [example_sinks_file]
 
-[note The file size at rotation can be imprecise. The implementation counts the number of characters written to the file, but the underlying API can introduce additional auxiliary data, which would increase the log file's actual size on disk. For instance, it is well known that Windows and DOS operating systems have a special treatment with regard to new-line characters. Each new-line character is written as a two byte sequence 0x0D 0x0A instead of a single 0x0A. Other platform-specific character translations are also known. The actual size on disk can also be less than the number of written characters on compressed filesystems.]
+[note The file size at rotation can be imprecise. The implementation counts the number of bytes written to the file, but the underlying API can introduce additional auxiliary data, which would increase the log file's actual size on disk. For instance, it is well known that Windows and DOS operating systems have a special treatment with regard to new-line characters. Each new-line character is written as a two byte sequence 0x0D 0x0A instead of a single 0x0A. Other platform-specific character translations are also known. The actual size on disk can also be less than the number of written characters on compressed filesystems.]
 
 The time-based rotation is not limited by only time points. There are following options available out of the box:
 
@@ -86,7 +100,8 @@ If none of the above applies, one can specify his own predicate for time-based r
 
         boost::shared_ptr< sinks::text_file_backend > backend =
             boost::make_shared< sinks::text_file_backend >(
-                keywords::file_name = "file_%5N.log",
+                keywords::file_name = "file.log",
+                keywords::target_file_name = "file_%5N.log",
                 keywords::time_based_rotation = &is_it_time_to_rotate
             );
 
@@ -103,14 +118,15 @@ In addition to time and size-based file rotation the backend also performs rotat
 
         boost::shared_ptr< sinks::text_file_backend > backend =
             boost::make_shared< sinks::text_file_backend >(
-                keywords::file_name = "file_%5N.log",
+                keywords::file_name = "file.log",
+                keywords::target_file_name = "file_%5N.log",
                 keywords::enable_final_rotation = false
             );
 
         // ...
     }
 
-The file name pattern may contain a number of wildcards, like the one you can see in the example above. Supported placeholders are:
+Both active and target file name patterns may contain a number of wildcards, like the one you can see in the example above. Supported placeholders are:
 
 * Current date and time components. The placeholders conform to the ones specified by __boost_date_time__ library.
 * File counter (`%N`) with an optional width specification in the `printf`-like format. The file counter will always be decimal, zero filled to the specified width.
@@ -126,17 +142,25 @@ A few quick examples:
     [[file\_%Y-%m-%d\_%H-%M-%S.%N.log]     [file\_2008-07-05\_13-44-23.1.log, file\_2008-07-06\_16-00-10.2.log...]]
 ]
 
-[important Although all __boost_date_time__ format specifiers will work, there are restrictions on some of them, if you intend to scan for old log files. This functionality is discussed in the next section.]
+[important Although all __boost_date_time__ format specifiers will work, there are restrictions on some of them, if you intend to scan for old log files. This functionality is discussed [link log.detailed.sink_backends.text_file.file_scanning here].]
 
-The sink backend allows hooking into the file rotation process in order to perform pre- and post-rotation actions. This can be useful to maintain log file validity by writing headers and footers. For example, this is how we could modify the `init_logging` function in order to write logs into XML files:
+Note that, as described above, active and target file names are generated at different points in time. Specifically, the active file name is generated when the log file is originally created, and the target file name - when the file is closed. Timestamps used to construct these file names will reflect that difference.
+
+[tip When [link log.detailed.sink_backends.text_file.appending file appending] is needed, it is recommended to avoid any placeholders in the active file name pattern. Otherwise appending won't happen because of the different active log file names. You can use the target file name pattern to add a timestamp or counter to the log file after rotation.]
+
+[endsect]
+
+[section:open_close_handlers File open and close handlers]
+
+The sink backend allows hooking into the file rotation process in order to perform pre- and post-rotation actions. This can be useful to maintain log file validity by writing headers and footers. For example, this is how we could modify the `init_logging` function from our previous examples in order to write logs into XML files:
 
 [example_sinks_xml_file]
 
 [@boost:/libs/log/example/doc/sinks_xml_file.cpp See the complete code].
 
-Finally, the sink backend also supports the auto-flush feature, like the [link log.detailed.sink_backends.text_ostream text stream backend] does.
+[endsect]
 
-[heading Managing rotated files]
+[section:file_collection Managing rotated files]
 
 After being closed, the rotated files can be collected. In order to do so one has to set up a file collector by specifying the target directory where to collect the rotated files and, optionally, size thresholds. For example, we can modify the `init_logging` function to place rotated files into a distinct directory and limit total size of the files. Let's assume the following function is called by `init_logging` with the constructed sink:
 
@@ -148,14 +172,52 @@ One can create multiple file sink backends that collect files into the same targ
 
 [warning The collector does not resolve log file name clashes between different sink backends, so if the clash occurs the behavior is undefined, in general. Depending on the circumstances, the files may overwrite each other or the operation may fail entirely.]
 
-The file collector provides another useful feature. Suppose you ran your application 5 times and you have 5 log files in the "logs" directory. The file sink backend and file collector provide a `scan_for_files` method that searches the target directory for these files and takes them into account. So, if it comes to deleting files, these files are not forgotten. What's more, if the file name pattern in the backend involves a file counter, scanning for older files allows updating the counter to the most recent value. Here is the final version of our `init_logging` function:
+[endsect]
+
+[section:file_scanning Scanning for rotated files]
+
+The file collector provides another useful feature. Suppose you ran your application 5 times and you have 5 log files in the "logs" directory. The file sink backend and file collector provide a `scan_for_files` method that searches the target directory for these files and takes them into account. So, if it comes to deleting files, these files are not forgotten. What's more, if a file name pattern in the backend involves a file counter, scanning for older files allows updating the counter to the most recent value. Here is the final version of our `init_logging` function:
 
 [example_sinks_xml_file_final]
 
-There are two methods of file scanning: the scan that involves file name matching with the file name pattern (the default) and the scan that assumes that all files in the target directory are log files. The former applies certain restrictions on the placeholders that can be used within the file name pattern, in particular only file counter placeholder and these placeholders of __boost_date_time__ are supported: `%y`, `%Y`, `%m`, `%d`, `%H`, `%M`, `%S`, `%f`. The latter scanning method, in its turn, has its own drawback: it does not allow updating the file counter in the backend. It is also considered to be more dangerous as it may result in unintended file deletion, so be cautious. The all-files scanning method can be enabled by passing it as an additional parameter to the `scan_for_files` call:
+There are two methods of file scanning: the scan that involves file name matching with the target file name pattern (the default) and the scan that assumes that all files in the target directory are log files. The former applies certain restrictions on the placeholders that can be used within the file name pattern, in particular only file counter placeholder and these placeholders of __boost_date_time__ are supported: `%y`, `%Y`, `%m`, `%d`, `%H`, `%M`, `%S`, `%f`. The latter scanning method, in its turn, has its own drawback: it does not allow updating the file counter in the backend. It is also considered to be more dangerous as it may result in unintended file deletion, so be cautious. The all-files scanning method can be enabled by passing it as an additional parameter to the `scan_for_files` call:
 
     // Look for all files in the target directory
     backend->scan_for_files(sinks::file::scan_all);
+
+When scanning for matching file names, if the target file name is not set then the active file name pattern is used instead.
+
+[endsect]
+
+[section:appending Appending to the previously written files]
+
+The sink backend supports appending to the previously written files (e.g. left from a previous run of your application). In order to enable this mode, one has to add `std::ios_base::app` to the file open mode used by the backend. This can be done with the `open_mode` named parameter of the backend constructor or the `set_open_mode` method.
+
+    void init_logging()
+    {
+        // ...
+
+        boost::shared_ptr< sinks::text_file_backend > backend =
+            boost::make_shared< sinks::text_file_backend >(
+                keywords::file_name = "file.log",
+                keywords::target_file_name = "file_%5N.log",
+                keywords::open_mode = std::ios_base::out | std::ios_base::app,
+                keywords::enable_final_rotation = false
+            );
+
+        // ...
+    }
+
+When initializing from [link log.detailed.utilities.setup.settings settings], the "Append" parameter of the "TextFile" sink enables appending.
+
+In order for file appending to actually happen, it is important that the name of the newly opened log file matches the previously written file. Othewise, the sink will simply create a new file under the new name. There are several recommendations to follow when file appending is desirable:
+
+* Don't use placeholders in the active file name pattern. This will ensure that every time the sink opens a file for writing, that file has the same name.
+* Use a distinct target file name pattern, preferably with date, time or counter placeholders. This will ensure that when the file is rotated and collected, it doesn't clash with the previously written files, and that the newly opened file will have a different name from the previous one.
+* Disable file rotation on sink destruction. This will leave the last actively written log file in its original location and with the original name so that it can be picked up by a future run of your application.
+* Prefer a stable location and file name for the actively written log files. The library will not find the previously written file if its name or directory changes between application runs.
+
+[endsect]
 
 [endsect]
 

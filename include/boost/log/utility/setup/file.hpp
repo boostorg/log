@@ -134,7 +134,11 @@ BOOST_PP_REPEAT_FROM_TO(1, BOOST_LOG_MAX_PARAMETER_ARGS, BOOST_LOG_INIT_LOG_TO_F
  * The function initializes the logging library to write logs to a file stream.
  *
  * \param args A number of named arguments. The following parameters are supported:
- *             \li \c file_name The file name or its pattern. This parameter is mandatory.
+ *             \li \c file_name The active file name or its pattern. This parameter is mandatory.
+ *             \li \c target_file_name - Specifies the target file name pattern to use to rename the log file on rotation,
+ *                                       before passing it to the file collector. The pattern may contain the same
+ *                                       placeholders as the \c file_name parameter. By default, no renaming is done,
+ *                                       i.e. the written log file keeps its name according to \c file_name.
  *             \li \c open_mode The mask that describes the open mode for the file. See <tt>std::ios_base::openmode</tt>.
  *             \li \c rotation_size The size of the file at which rotation should occur. See <tt>basic_text_file_backend</tt>.
  *             \li \c time_based_rotation The predicate for time-based file rotations. See <tt>basic_text_file_backend</tt>.
