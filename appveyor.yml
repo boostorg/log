@@ -31,20 +31,23 @@ environment:
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
     - TOOLSET: msvc-14.1
       ADDRESS_MODEL: 64
+      EXTRA_TESTS: 1
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
     - TOOLSET: gcc
       ADDRESS_MODEL: 64
-      CXXSTD: 03,11,03-gnu,11-gnu
+      CXXSTD: 03,11
       ADDPATH: C:\cygwin64\bin
+      EXTRA_TESTS: 1
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
     - TOOLSET: gcc
       ADDRESS_MODEL: 64
-      CXXSTD: 03,11,14,03-gnu,11-gnu,14-gnu
+      CXXSTD: 03,11,14
       ADDPATH: C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin
+      EXTRA_TESTS: 1
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
     - TOOLSET: gcc
       ADDRESS_MODEL: 64
-      CXXSTD: 03,11,14,17,03-gnu,11-gnu,14-gnu,17-gnu
+      CXXSTD: 03,11,14,17
       ADDPATH: C:\mingw-w64\x86_64-7.3.0-posix-seh-rt_v5-rev0\mingw64\bin
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
 
@@ -68,17 +71,17 @@ environment:
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
     - TOOLSET: gcc
       ADDRESS_MODEL: 32
-      CXXSTD: 03,11,03-gnu,11-gnu
+      CXXSTD: 03,11
       ADDPATH: C:\cygwin\bin
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
     - TOOLSET: gcc
       ADDRESS_MODEL: 32
-      CXXSTD: 03,11,03-gnu,11-gnu
+      CXXSTD: 03,11
       ADDPATH: C:\mingw\bin
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
     - TOOLSET: gcc
       ADDRESS_MODEL: 32
-      CXXSTD: 03,11,14,03-gnu,11-gnu,14-gnu
+      CXXSTD: 03,11,14
       ADDPATH: C:\mingw-w64\i686-6.3.0-posix-dwarf-rt_v5-rev1\mingw32\bin
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
 
@@ -94,7 +97,8 @@ install:
   - git submodule init libs/config
   - git submodule update --jobs %GIT_FETCH_JOBS%
   - xcopy /s /e /q %APPVEYOR_BUILD_FOLDER% libs\log
-  - python tools/boostdep/depinst/depinst.py --include example --git_args "--jobs %GIT_FETCH_JOBS%" log
+  - if not "%EXTRA_TESTS%" == "" set DEPINST_ARG_INCLUDE_EXAMPLES="--include example"
+  - python tools/boostdep/depinst/depinst.py %DEPINST_ARG_INCLUDE_EXAMPLES% --git_args "--jobs %GIT_FETCH_JOBS%" log
   - cmd /c bootstrap
   - b2 headers
 
@@ -102,5 +106,6 @@ build: off
 
 test_script:
   - PATH=%ADDPATH%;%PATH%
+  - if "%EXTRA_TESTS%" == "" set BOOST_LOG_TEST_WITHOUT_SELF_CONTAINED_HEADER_TESTS=1 & set BOOST_LOG_TEST_WITHOUT_EXAMPLES=1
   - if not "%CXXSTD%" == "" set CXXSTD=cxxstd=%CXXSTD%
   - b2 -j %NUMBER_OF_PROCESSORS% libs/log/test variant=release toolset=%TOOLSET% address-model=%ADDRESS_MODEL% %CXXSTD% %B2_ARGS%

@@ -29,10 +29,10 @@ matrix:
   include:
 # gcc, Linux
     - os: linux
-      env: TOOLSET=gcc COMPILER=g++ CXXSTD64=03,11
+      env: TOOLSET=gcc COMPILER=g++ CXXSTD=03,11 EXTRA_TESTS=1
 
     - os: linux
-      env: TOOLSET=gcc COMPILER=g++-4.7 CXXSTD64=03,11 CXXSTD32=03,11
+      env: TOOLSET=gcc COMPILER=g++-4.7 CXXSTD=03,11
       addons:
         apt:
           packages:
@@ -43,7 +43,7 @@ matrix:
             - ubuntu-toolchain-r-test
 
     - os: linux
-      env: TOOLSET=gcc COMPILER=g++-4.8 CXXSTD64=03,11 CXXSTD32=03,11
+      env: TOOLSET=gcc COMPILER=g++-4.8 CXXSTD=03,11
       addons:
         apt:
           packages:
@@ -54,7 +54,7 @@ matrix:
             - ubuntu-toolchain-r-test
 
     - os: linux
-      env: TOOLSET=gcc COMPILER=g++-4.9 CXXSTD64=03,11 CXXSTD32=03,11
+      env: TOOLSET=gcc COMPILER=g++-4.9 CXXSTD=03,11
       addons:
         apt:
           packages:
@@ -65,7 +65,7 @@ matrix:
             - ubuntu-toolchain-r-test
 
     - os: linux
-      env: TOOLSET=gcc COMPILER=g++-5 CXXSTD64=03,11,14 CXXSTD32=03,11
+      env: TOOLSET=gcc COMPILER=g++-5 CXXSTD=03,11,14
       addons:
         apt:
           packages:
@@ -76,7 +76,7 @@ matrix:
             - ubuntu-toolchain-r-test
 
     - os: linux
-      env: TOOLSET=gcc COMPILER=g++-6 CXXSTD64=03,11,14,1z CXXSTD32=03,11
+      env: TOOLSET=gcc COMPILER=g++-6 CXXSTD=03,11,14,1z
       addons:
         apt:
           packages:
@@ -87,7 +87,7 @@ matrix:
             - ubuntu-toolchain-r-test
 
     - os: linux
-      env: TOOLSET=gcc COMPILER=g++-7 CXXSTD64=03,11,14,17 CXXSTD32=03,11
+      env: TOOLSET=gcc COMPILER=g++-7 CXXSTD=03,11,14,17
       addons:
         apt:
           packages:
@@ -98,7 +98,7 @@ matrix:
             - ubuntu-toolchain-r-test
 
     - os: linux
-      env: TOOLSET=gcc COMPILER=g++-8 CXXSTD64=03,11,14,17,03-gnu,11-gnu,14-gnu,17-gnu CXXSTD32=03,11
+      env: TOOLSET=gcc COMPILER=g++-8 CXXSTD=03,11,14,17
       addons:
         apt:
           packages:
@@ -110,7 +110,7 @@ matrix:
 
     - os: linux
       compiler: g++-8
-      env: UBSAN=1 TOOLSET=gcc COMPILER=g++-8 CXXSTD64=03,11,14,17 UBSAN_OPTIONS=print_stacktrace=1 LINKFLAGS=-fuse-ld=gold
+      env: UBSAN=1 TOOLSET=gcc COMPILER=g++-8 CXXSTD=03,11,14,17 UBSAN_OPTIONS=print_stacktrace=1 LINKFLAGS=-fuse-ld=gold
       addons:
         apt:
           packages:
@@ -120,10 +120,10 @@ matrix:
 
 # clang, Linux
     - os: linux
-      env: TOOLSET=clang COMPILER=clang++ CXXSTD64=03,11
+      env: TOOLSET=clang COMPILER=clang++ CXXSTD=03,11
 
     - os: linux
-      env: TOOLSET=clang COMPILER=clang++-3.5 CXXSTD64=03,11 CXXSTD32=03,11
+      env: TOOLSET=clang COMPILER=clang++-3.5 CXXSTD=03,11
       addons:
         apt:
           packages:
@@ -135,7 +135,7 @@ matrix:
             - llvm-toolchain-precise-3.5
 
     - os: linux
-      env: TOOLSET=clang COMPILER=clang++-3.6 CXXSTD64=03,11 CXXSTD32=03,11
+      env: TOOLSET=clang COMPILER=clang++-3.6 CXXSTD=03,11
       addons:
         apt:
           packages:
@@ -147,7 +147,7 @@ matrix:
             - llvm-toolchain-precise-3.6
 
     - os: linux
-      env: TOOLSET=clang COMPILER=clang++-3.7 CXXSTD64=03,11 CXXSTD32=03,11
+      env: TOOLSET=clang COMPILER=clang++-3.7 CXXSTD=03,11
       addons:
         apt:
           packages:
@@ -159,7 +159,7 @@ matrix:
             - llvm-toolchain-precise-3.7
 
     - os: linux
-      env: TOOLSET=clang COMPILER=clang++-3.8 CXXSTD64=03,11,14,1z CXXSTD32=03,11
+      env: TOOLSET=clang COMPILER=clang++-3.8 CXXSTD=03,11,14,1z
       addons:
         apt:
           packages:
@@ -171,7 +171,7 @@ matrix:
             - llvm-toolchain-precise-3.8
 
     - os: linux
-      env: TOOLSET=clang COMPILER=clang++-3.9 CXXSTD64=03,11,14,1z CXXSTD32=03,11
+      env: TOOLSET=clang COMPILER=clang++-3.9 CXXSTD=03,11,14,1z
       addons:
         apt:
           packages:
@@ -183,7 +183,7 @@ matrix:
             - llvm-toolchain-trusty-3.9
 
     - os: linux
-      env: TOOLSET=clang COMPILER=clang++-4.0 CXXSTD64=03,11,14,1z CXXSTD32=03,11
+      env: TOOLSET=clang COMPILER=clang++-4.0 CXXSTD=03,11,14,1z
       addons:
         apt:
           packages:
@@ -195,7 +195,7 @@ matrix:
             - llvm-toolchain-trusty-4.0
 
     - os: linux
-      env: TOOLSET=clang COMPILER=clang++-5.0 CXXSTD64=03,11,14,1z CXXSTD32=03,11
+      env: TOOLSET=clang COMPILER=clang++-5.0 CXXSTD=03,11,14,1z
       addons:
         apt:
           packages:
@@ -207,7 +207,7 @@ matrix:
             - llvm-toolchain-trusty-5.0
 
     - os: linux
-      env: TOOLSET=clang COMPILER=clang++-6.0 CXXSTD64=03,11,14,17 CXXSTD32=03,11
+      env: TOOLSET=clang COMPILER=clang++-6.0 CXXSTD=03,11,14,17
       addons:
         apt:
           packages:
@@ -219,7 +219,19 @@ matrix:
             - llvm-toolchain-trusty-6.0
 
     - os: linux
-      env: TOOLSET=clang COMPILER=clang++-7 CXXSTD64=03,11,14,17 CXXSTD32=03,11
+      env: TOOLSET=clang COMPILER=clang++-7 CXXSTD=03,11,14,17
+      addons:
+        apt:
+          packages:
+            - clang-7
+            - g++-5-multilib
+            - linux-libc-dev:i386
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-trusty-7
+
+    - os: linux
+      env: UBSAN=1 TOOLSET=clang COMPILER=clang++-7 CXXSTD=03,11,14,17 UBSAN_OPTIONS=print_stacktrace=1
       addons:
         apt:
           packages:
@@ -232,7 +244,7 @@ matrix:
 
     - os: linux
       compiler: clang++-libc++
-      env: TOOLSET=clang COMPILER=clang++-libc++ CXXSTD64=03,11,14,1z
+      env: TOOLSET=clang COMPILER=clang++-libc++ CXXSTD=03,11,14,1z
       addons:
         apt:
           packages:
@@ -240,15 +252,19 @@ matrix:
 
     - os: linux
       compiler: clang++-libc++
-      env: UBSAN=1 TOOLSET=clang COMPILER=clang++-libc++ CXXSTD64=03,11,14,1z UBSAN_OPTIONS=print_stacktrace=1
+      env: UBSAN=1 TOOLSET=clang COMPILER=clang++-libc++ CXXSTD=03,11,14,1z UBSAN_OPTIONS=print_stacktrace=1
       addons:
         apt:
           packages:
             - libc++-dev
 
-# clang, OS X, 64-bit
+# clang, OS X
     - os: osx
-      env: TOOLSET=clang COMPILER=clang++ CXXSTD64=03,11,14,1z
+      env: TOOLSET=clang COMPILER=clang++ CXXSTD=03,11 EXTRA_TESTS=1
+      osx_image: xcode9.4
+
+    - os: osx
+      env: TOOLSET=clang COMPILER=clang++ CXXSTD=14,1z
       osx_image: xcode9.4
 
 
@@ -264,7 +280,8 @@ install:
   - git submodule init libs/config
   - git submodule update --jobs $GIT_FETCH_JOBS
   - cp -r $TRAVIS_BUILD_DIR/* libs/log
-  - python tools/boostdep/depinst/depinst.py --include example --git_args "--jobs $GIT_FETCH_JOBS" log
+  - if [ -n "$EXTRA_TESTS" ]; then DEPINST_ARG_INCLUDE_EXAMPLES="--include example"; fi
+  - python tools/boostdep/depinst/depinst.py $DEPINST_ARG_INCLUDE_EXAMPLES --git_args "--jobs $GIT_FETCH_JOBS" log
   - ./bootstrap.sh
   - ./b2 headers
 
@@ -272,8 +289,8 @@ script:
   - |-
     echo "using $TOOLSET : : $COMPILER ;" > ~/user-config.jam
   - BUILD_JOBS=`(nproc || sysctl -n hw.ncpu) 2> /dev/null`
-  - if [ -n "$CXXSTD64" ]; then echo ""; echo "Testing 64-bit targets"; echo ""; ./b2 -j $BUILD_JOBS libs/log/test toolset=$TOOLSET address-model=64 cxxstd=$CXXSTD64 ${UBSAN:+cxxflags=-fsanitize=undefined cxxflags=-fno-sanitize-recover=undefined linkflags=-fsanitize=undefined define=UBSAN=1 debug-symbols=on} ${LINKFLAGS:+linkflags=$LINKFLAGS}; fi
-  - if [ -n "$CXXSTD32" ]; then echo ""; echo "Testing 32-bit targets"; echo ""; ./b2 -j $BUILD_JOBS libs/log/test toolset=$TOOLSET address-model=32 cxxstd=$CXXSTD32 ${UBSAN:+cxxflags=-fsanitize=undefined cxxflags=-fno-sanitize-recover=undefined linkflags=-fsanitize=undefined define=UBSAN=1 debug-symbols=on} ${LINKFLAGS:+linkflags=$LINKFLAGS}; fi
+  - if [ -z "$EXTRA_TESTS" ]; then export BOOST_LOG_TEST_WITHOUT_SELF_CONTAINED_HEADER_TESTS=1; export BOOST_LOG_TEST_WITHOUT_EXAMPLES=1; fi
+  - ./b2 -j $BUILD_JOBS libs/log/test toolset=$TOOLSET cxxstd=$CXXSTD ${UBSAN:+cxxflags=-fsanitize=undefined cxxflags=-fno-sanitize-recover=undefined linkflags=-fsanitize=undefined define=UBSAN=1 debug-symbols=on visibility=global} ${LINKFLAGS:+linkflags=$LINKFLAGS}
 
 notifications:
   email:
