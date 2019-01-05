@@ -261,11 +261,11 @@ matrix:
 # clang, OS X
     - os: osx
       env: TOOLSET=clang COMPILER=clang++ CXXSTD=03,11 EXTRA_TESTS=1
-      osx_image: xcode9.4
+      osx_image: xcode10.1
 
     - os: osx
       env: TOOLSET=clang COMPILER=clang++ CXXSTD=14,1z
-      osx_image: xcode9.4
+      osx_image: xcode10.1
 
 
 install:
