@@ -97,7 +97,7 @@ install:
   - git submodule init libs/config
   - git submodule update --jobs %GIT_FETCH_JOBS%
   - xcopy /s /e /q %APPVEYOR_BUILD_FOLDER% libs\log
-  - if not "%EXTRA_TESTS%" == "" set DEPINST_ARG_INCLUDE_EXAMPLES=--include;example
+  - if not "%EXTRA_TESTS%" == "" set DEPINST_ARG_INCLUDE_EXAMPLES="--include=example"
   - python tools/boostdep/depinst/depinst.py %DEPINST_ARG_INCLUDE_EXAMPLES% --git_args "--jobs %GIT_FETCH_JOBS%" log
   - cmd /c bootstrap
   - b2 headers
