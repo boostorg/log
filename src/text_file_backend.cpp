@@ -466,7 +466,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
                     {
                         path_string_type::const_iterator p = p_it;
                         unsigned int width = 0;
-                        if (!sinks::parse_counter_placeholder(p, p_end, width))
+                        if (!parse_counter_placeholder(p, p_end, width))
                         {
                             BOOST_THROW_EXCEPTION(std::invalid_argument("Unsupported placeholder used in pattern for file scanning"));
                         }
@@ -546,7 +546,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
             if (!counter_found)
             {
                 path_string_type::const_iterator it2 = it;
-                if (sinks::parse_counter_placeholder(it2, end, width))
+                if (parse_counter_placeholder(it2, end, width))
                 {
                     // We've found the file counter placeholder in the pattern
                     counter_found = true;
@@ -876,7 +876,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         if (!is_in_target_dir)
         {
             // Move/rename the file to the target storage
-            sinks::move_file(src_path, info.m_Path);
+            move_file(src_path, info.m_Path);
         }
 
         m_Files.push_back(info);
@@ -937,7 +937,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
                             unsigned int file_number = 0;
                             bool file_number_parsed = false;
                             if (method != file::scan_matching ||
-                                sinks::match_pattern(filename_string(info.m_Path), mask, file_number, file_number_parsed))
+                                match_pattern(filename_string(info.m_Path), mask, file_number, file_number_parsed))
                             {
                                 info.m_Size = filesystem::file_size(info.m_Path);
                                 total_size += info.m_Size;
@@ -1064,7 +1064,7 @@ BOOST_LOG_API rotation_at_time_point::rotation_at_time_point(
     m_Second(second),
     m_Previous(date_time::not_a_date_time)
 {
-    sinks::check_time_point_validity(hour, minute, second);
+    check_time_point_validity(hour, minute, second);
 }
 
 //! Creates a rotation time point of each specified weekday at the specified time
@@ -1081,7 +1081,7 @@ BOOST_LOG_API rotation_at_time_point::rotation_at_time_point(
     m_Second(second),
     m_Previous(date_time::not_a_date_time)
 {
-    sinks::check_time_point_validity(hour, minute, second);
+    check_time_point_validity(hour, minute, second);
 }
 
 //! Creates a rotation time point of each specified day of month at the specified time
@@ -1098,7 +1098,7 @@ BOOST_LOG_API rotation_at_time_point::rotation_at_time_point(
     m_Second(second),
     m_Previous(date_time::not_a_date_time)
 {
-    sinks::check_time_point_validity(hour, minute, second);
+    check_time_point_validity(hour, minute, second);
 }
 
 //! Checks if it's time to rotate the file
@@ -1406,7 +1406,7 @@ BOOST_LOG_API void text_file_backend::set_file_name_pattern_internal(filesystem:
 {
     typedef file_char_traits< path_char_type > traits_t;
 
-    sinks::parse_file_name_pattern
+    parse_file_name_pattern
     (
         !pattern.empty() ? pattern : filesystem::path(traits_t::default_file_name_pattern()),
         m_pImpl->m_StorageDir,
@@ -1420,7 +1420,7 @@ BOOST_LOG_API void text_file_backend::set_target_file_name_pattern_internal(file
 {
     if (!pattern.empty())
     {
-        sinks::parse_file_name_pattern(pattern, m_pImpl->m_TargetStorageDir, m_pImpl->m_TargetFileNamePattern, m_pImpl->m_TargetFileNameGenerator);
+        parse_file_name_pattern(pattern, m_pImpl->m_TargetStorageDir, m_pImpl->m_TargetFileNamePattern, m_pImpl->m_TargetFileNameGenerator);
     }
     else
     {
@@ -1469,7 +1469,7 @@ BOOST_LOG_API void text_file_backend::rotate_file()
         if (new_file_name != prev_file_name)
         {
             filesystem::create_directories(new_file_name.parent_path());
-            sinks::move_file(prev_file_name, new_file_name);
+            move_file(prev_file_name, new_file_name);
 
             prev_file_name.swap(new_file_name);
         }
