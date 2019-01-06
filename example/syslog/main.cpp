@@ -73,8 +73,10 @@ int main(int argc, char* argv[])
 
         sink->locked_backend()->set_severity_mapper(mapping);
 
+#if !defined(BOOST_LOG_NO_ASIO)
         // Set the remote address to sent syslog messages to
         sink->locked_backend()->set_target_address("localhost");
+#endif
 
         // Add the sink to the core
         logging::core::get()->add_sink(sink);
