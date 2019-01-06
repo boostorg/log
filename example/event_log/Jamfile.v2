@@ -7,6 +7,7 @@
 
 import os ;
 import configure ;
+import ../../build/log-platform-config ;
 
 rule has-config-flag ( flag : properties * )
 {
@@ -39,10 +40,13 @@ rule check-message-compiler ( properties * )
     {
         result += <build>no ;
     }
+
+    return $(result) ;
 }
 
 project
     : requirements
+        <conditional>@log-platform-config.set-platform-defines
         <conditional>@check-message-compiler
 
         <link>shared

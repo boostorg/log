@@ -7,6 +7,7 @@
 
 import path ;
 import configure ;
+import ../../build/log-platform-config ;
 
 rule has-config-flag ( flag : properties * )
 {
@@ -31,18 +32,26 @@ rule check-message-compiler ( properties * )
             local has_mc = [ configure.builds /boost/log/message-compiler//test-availability : $(properties) : message-compiler ] ;
             if ! $(has_mc)
             {
-                result += <define>BOOST_LOG_WITHOUT_EVENT_LOG=1 ;
+                result = <define>BOOST_LOG_WITHOUT_EVENT_LOG ;
             }
+        }
+        else
+        {
+            # This branch is needed to fix building with MinGW
+            result = <define>BOOST_LOG_WITHOUT_EVENT_LOG ;
         }
     }
     else
     {
-        result += <define>BOOST_LOG_WITHOUT_EVENT_LOG=1 ;
+        result = <define>BOOST_LOG_WITHOUT_EVENT_LOG ;
     }
+
+    return $(result) ;
 }
 
 project
     : requirements
+        <conditional>@log-platform-config.set-platform-defines
         <conditional>@check-message-compiler
 
         <link>shared:<define>BOOST_ALL_DYN_LINK

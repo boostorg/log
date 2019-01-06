@@ -10,9 +10,12 @@ import testing ;
 import path ;
 import regex ;
 import os ;
+import ../build/log-platform-config ;
 
 project
     : requirements
+        <conditional>@log-platform-config.set-platform-defines
+
         <include>common
 
         # Disable warnings about using 'insecure' standard C functions

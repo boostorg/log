@@ -5,8 +5,12 @@
 #          http://www.boost.org/LICENSE_1_0.txt)
 #
 
+import ../../build/log-platform-config ;
+
 project
     : requirements
+        <conditional>@log-platform-config.set-platform-defines
+
         <link>shared:<define>BOOST_ALL_DYN_LINK
         <toolset>msvc:<define>_SCL_SECURE_NO_WARNINGS
         <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE
