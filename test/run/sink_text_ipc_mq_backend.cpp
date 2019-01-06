@@ -14,6 +14,8 @@
  * \brief  The test verifies that \c text_ipc_message_queue_backend works as expected.
  */
 
+#if !defined(BOOST_LOG_WITHOUT_IPC)
+
 #define BOOST_TEST_MODULE sink_text_ipc_mq_backend
 
 #include <boost/log/sinks/text_ipc_message_queue_backend.hpp>
@@ -54,3 +56,12 @@ BOOST_AUTO_TEST_CASE(text_ipc_message_queue_backend)
     BOOST_CHECK(queue.try_receive(msg));
     BOOST_CHECK(equal_strings(msg, message));
 }
+
+#else // !defined(BOOST_LOG_WITHOUT_IPC)
+
+int main()
+{
+    return 0;
+}
+
+#endif // !defined(BOOST_LOG_WITHOUT_IPC)

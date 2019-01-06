@@ -12,6 +12,8 @@
  * \brief  The test verifies that \c ipc::object_name works.
  */
 
+#if !defined(BOOST_LOG_WITHOUT_IPC)
+
 #define BOOST_TEST_MODULE util_ipc_object_name
 
 #include <boost/log/utility/ipc/object_name.hpp>
@@ -164,3 +166,12 @@ BOOST_AUTO_TEST_CASE(name_equivalence)
         BOOST_CHECK_NE(name1, name2);
     }
 }
+
+#else // !defined(BOOST_LOG_WITHOUT_IPC)
+
+int main()
+{
+    return 0;
+}
+
+#endif // !defined(BOOST_LOG_WITHOUT_IPC)
