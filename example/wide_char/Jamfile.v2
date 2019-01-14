@@ -49,7 +49,6 @@ project
         <library>/boost/log//boost_log_setup
         <library>/boost/date_time//boost_date_time
         <library>/boost/filesystem//boost_filesystem
-        <library>/boost/system//boost_system
         <library>/boost/locale//boost_locale
         <library>/boost/thread//boost_thread
         <threading>multi

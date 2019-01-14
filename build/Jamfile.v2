@@ -215,7 +215,6 @@ project boost/log
 
         <library>/boost/date_time//boost_date_time
         <library>/boost/filesystem//boost_filesystem
-        <library>/boost/system//boost_system
         <threading>single:<define>BOOST_LOG_NO_THREADS
         <threading>multi:<library>/boost/atomic//boost_atomic
         <threading>multi:<library>/boost/thread//boost_thread
