@@ -5,8 +5,12 @@
 #          http://www.boost.org/LICENSE_1_0.txt)
 #
 
+import ../../build/log-platform-config ;
+
 project
     : requirements
+        <conditional>@log-platform-config.set-platform-defines
+
         <link>shared:<define>BOOST_ALL_DYN_LINK
         <toolset>msvc:<define>_SCL_SECURE_NO_WARNINGS
         <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE
@@ -45,7 +49,6 @@ project
         <library>/boost/log//boost_log_setup
         <library>/boost/date_time//boost_date_time
         <library>/boost/filesystem//boost_filesystem
-        <library>/boost/system//boost_system
         <library>/boost/locale//boost_locale
         <library>/boost/thread//boost_thread
         <threading>multi

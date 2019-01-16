@@ -6,6 +6,8 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  */
 
+#if !defined(BOOST_LOG_WITHOUT_IPC)
+
 #include <iostream>
 #include <string>
 #include <exception>
@@ -55,3 +57,12 @@ int main()
     return 0;
 }
 //]
+
+#else // !defined(BOOST_LOG_WITHOUT_IPC)
+
+int main()
+{
+    return 0;
+}
+
+#endif // !defined(BOOST_LOG_WITHOUT_IPC)

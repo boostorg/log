@@ -14,6 +14,8 @@
  * \brief  The test verifies that \c ipc::reliable_message_queue works.
  */
 
+#if !defined(BOOST_LOG_WITHOUT_IPC)
+
 #define BOOST_TEST_MODULE util_ipc_reliable_mq
 
 #include <boost/log/utility/ipc/reliable_message_queue.hpp>
@@ -461,3 +463,12 @@ BOOST_AUTO_TEST_CASE(stop_reset_local)
 }
 
 #endif // !defined(BOOST_LOG_NO_THREADS)
+
+#else // !defined(BOOST_LOG_WITHOUT_IPC)
+
+int main()
+{
+    return 0;
+}
+
+#endif // !defined(BOOST_LOG_WITHOUT_IPC)

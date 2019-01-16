@@ -7,6 +7,7 @@
 
 import os ;
 import configure ;
+import ../../build/log-platform-config ;
 
 rule has-config-flag ( flag : properties * )
 {
@@ -39,10 +40,13 @@ rule check-message-compiler ( properties * )
     {
         result += <build>no ;
     }
+
+    return $(result) ;
 }
 
 project
     : requirements
+        <conditional>@log-platform-config.set-platform-defines
         <conditional>@check-message-compiler
 
         <link>shared
@@ -82,7 +86,6 @@ project
         <library>/boost/log//boost_log
         <library>/boost/date_time//boost_date_time
         <library>/boost/filesystem//boost_filesystem
-        <library>/boost/system//boost_system
         <library>/boost/thread//boost_thread
         <threading>multi
     ;

@@ -439,6 +439,12 @@ public:
         else
             BOOST_LOG_THROW_DESCR(missing_value, "File name is not specified");
 
+        // Target file name
+        if (optional< string_type > target_file_name_param = params["TargetFileName"])
+        {
+            backend->set_target_file_name_pattern(filesystem::path(target_file_name_param.get()));
+        }
+
         // File rotation size
         if (optional< string_type > rotation_size_param = params["RotationSize"])
         {

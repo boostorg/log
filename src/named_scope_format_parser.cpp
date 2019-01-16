@@ -59,12 +59,7 @@ BOOST_FORCEINLINE bool is_name_character(char c)
 //! The function checks if there is 'operator' keyword at the specified position
 BOOST_FORCEINLINE bool is_operator_keyword(const char* p)
 {
-#if defined(__i386__) || defined(__x86_64__) || defined(_M_AMD64) || defined(_M_IX86)
-    // Intel architecture allows unaligned accesses, so just compare with the whole keyword at once
-    return *reinterpret_cast< const uint64_t* >(p) == UINT64_C(0x726f74617265706f);
-#else
     return std::memcmp(p, "operator", 8) == 0;
-#endif
 }
 
 //! The function tries to parse operator signature

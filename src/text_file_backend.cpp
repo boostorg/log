@@ -89,7 +89,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         filesystem::rename(from, to, ec);
         if (ec)
         {
-            if (ec.value() == system::errc::cross_device_link)
+            if (BOOST_LIKELY(ec.value() == system::errc::cross_device_link))
             {
                 // Attempt to manually move the file instead
                 filesystem::copy_file(from, to);
@@ -504,6 +504,87 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         }
         else
             return false;
+    }
+
+    //! The function parses file name pattern and splits it into path and filename and creates a function object that will generate the actual filename from the pattern
+    void parse_file_name_pattern(filesystem::path const& pattern, filesystem::path& storage_dir, filesystem::path& file_name_pattern, boost::log::aux::light_function< path_string_type (unsigned int) >& file_name_generator)
+    {
+        // Note: avoid calling Boost.Filesystem functions that involve path::codecvt()
+        // https://svn.boost.org/trac/boost/ticket/9119
+
+        typedef file_char_traits< path_char_type > traits_t;
+
+        file_name_pattern = pattern.filename();
+        path_string_type name_pattern = file_name_pattern.native();
+        storage_dir = filesystem::absolute(pattern.parent_path());
+
+        // Let's try to find the file counter placeholder
+        unsigned int placeholder_count = 0;
+        unsigned int width = 0;
+        bool counter_found = false;
+        path_string_type::size_type counter_pos = 0;
+        path_string_type::const_iterator end = name_pattern.end();
+        path_string_type::const_iterator it = name_pattern.begin();
+
+        do
+        {
+            it = std::find(it, end, traits_t::percent);
+            if (it == end)
+                break;
+            path_string_type::const_iterator placeholder_begin = it++;
+            if (it == end)
+                break;
+            if (*it == traits_t::percent)
+            {
+                // An escaped percent detected
+                ++it;
+                continue;
+            }
+
+            ++placeholder_count;
+
+            if (!counter_found)
+            {
+                path_string_type::const_iterator it2 = it;
+                if (parse_counter_placeholder(it2, end, width))
+                {
+                    // We've found the file counter placeholder in the pattern
+                    counter_found = true;
+                    counter_pos = placeholder_begin - name_pattern.begin();
+                    name_pattern.erase(counter_pos, it2 - placeholder_begin);
+                    --placeholder_count;
+                    it = name_pattern.begin() + counter_pos;
+                    end = name_pattern.end();
+                }
+            }
+        }
+        while (it != end);
+
+        // Construct the formatter functor
+        if (placeholder_count > 0)
+        {
+            if (counter_found)
+            {
+                // Both counter and date/time placeholder in the pattern
+                file_name_generator = boost::bind(date_and_time_formatter(),
+                    boost::bind(file_counter_formatter(counter_pos, width), name_pattern, _1), _1);
+            }
+            else
+            {
+                // Only date/time placeholders in the pattern
+                file_name_generator = boost::bind(date_and_time_formatter(), name_pattern, _1);
+            }
+        }
+        else if (counter_found)
+        {
+            // Only counter placeholder in the pattern
+            file_name_generator = boost::bind(file_counter_formatter(counter_pos, width), name_pattern, _1);
+        }
+        else
+        {
+            // No placeholders detected
+            file_name_generator = empty_formatter(name_pattern);
+        }
     }
 
 
@@ -932,19 +1013,19 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
     //! Checks if the time point is valid
     void check_time_point_validity(unsigned char hour, unsigned char minute, unsigned char second)
     {
-        if (hour >= 24)
+        if (BOOST_UNLIKELY(hour >= 24))
         {
             std::ostringstream strm;
             strm << "Time point hours value is out of range: " << static_cast< unsigned int >(hour);
             BOOST_THROW_EXCEPTION(std::out_of_range(strm.str()));
         }
-        if (minute >= 60)
+        if (BOOST_UNLIKELY(minute >= 60))
         {
             std::ostringstream strm;
             strm << "Time point minutes value is out of range: " << static_cast< unsigned int >(minute);
             BOOST_THROW_EXCEPTION(std::out_of_range(strm.str()));
         }
-        if (second >= 60)
+        if (BOOST_UNLIKELY(second >= 60))
         {
             std::ostringstream strm;
             strm << "Time point seconds value is out of range: " << static_cast< unsigned int >(second);
@@ -1130,6 +1211,13 @@ struct text_file_backend::implementation
     //! File name generator (according to m_FileNamePattern)
     boost::log::aux::light_function< path_string_type (unsigned int) > m_FileNameGenerator;
 
+    //! Target file name pattern
+    filesystem::path m_TargetFileNamePattern;
+    //! Target directory to store files in
+    filesystem::path m_TargetStorageDir;
+    //! Target file name generator (according to m_TargetFileNamePattern)
+    boost::log::aux::light_function< path_string_type (unsigned int) > m_TargetFileNameGenerator;
+
     //! Stored files counter
     unsigned int m_FileCounter;
 
@@ -1192,6 +1280,7 @@ BOOST_LOG_API text_file_backend::~text_file_backend()
 //! Constructor implementation
 BOOST_LOG_API void text_file_backend::construct(
     filesystem::path const& pattern,
+    filesystem::path const& target_file_name,
     std::ios_base::openmode mode,
     uintmax_t rotation_size,
     time_based_rotation_predicate const& time_based_rotation,
@@ -1200,6 +1289,7 @@ BOOST_LOG_API void text_file_backend::construct(
 {
     m_pImpl = new implementation(rotation_size, auto_flush, enable_final_rotation);
     set_file_name_pattern_internal(pattern);
+    set_target_file_name_pattern_internal(target_file_name);
     set_time_based_rotation(time_based_rotation);
     set_open_mode(mode);
 }
@@ -1311,89 +1401,32 @@ BOOST_LOG_API void text_file_backend::flush()
         m_pImpl->m_File.flush();
 }
 
-//! The method sets file name mask
+//! The method sets file name pattern
 BOOST_LOG_API void text_file_backend::set_file_name_pattern_internal(filesystem::path const& pattern)
 {
-    // Note: avoid calling Boost.Filesystem functions that involve path::codecvt()
-    // https://svn.boost.org/trac/boost/ticket/9119
-
     typedef file_char_traits< path_char_type > traits_t;
-    filesystem::path p = pattern;
-    if (p.empty())
-        p = filesystem::path(traits_t::default_file_name_pattern());
 
-    m_pImpl->m_FileNamePattern = p.filename();
-    path_string_type name_pattern = m_pImpl->m_FileNamePattern.native();
-    m_pImpl->m_StorageDir = filesystem::absolute(p.parent_path());
+    parse_file_name_pattern
+    (
+        !pattern.empty() ? pattern : filesystem::path(traits_t::default_file_name_pattern()),
+        m_pImpl->m_StorageDir,
+        m_pImpl->m_FileNamePattern,
+        m_pImpl->m_FileNameGenerator
+    );
+}
 
-    // Let's try to find the file counter placeholder
-    unsigned int placeholder_count = 0;
-    unsigned int width = 0;
-    bool counter_found = false;
-    path_string_type::size_type counter_pos = 0;
-    path_string_type::const_iterator end = name_pattern.end();
-    path_string_type::const_iterator it = name_pattern.begin();
-
-    do
+//! The method sets target file name pattern
+BOOST_LOG_API void text_file_backend::set_target_file_name_pattern_internal(filesystem::path const& pattern)
+{
+    if (!pattern.empty())
     {
-        it = std::find(it, end, traits_t::percent);
-        if (it == end)
-            break;
-        path_string_type::const_iterator placeholder_begin = it++;
-        if (it == end)
-            break;
-        if (*it == traits_t::percent)
-        {
-            // An escaped percent detected
-            ++it;
-            continue;
-        }
-
-        ++placeholder_count;
-
-        if (!counter_found)
-        {
-            path_string_type::const_iterator it2 = it;
-            if (parse_counter_placeholder(it2, end, width))
-            {
-                // We've found the file counter placeholder in the pattern
-                counter_found = true;
-                counter_pos = placeholder_begin - name_pattern.begin();
-                name_pattern.erase(counter_pos, it2 - placeholder_begin);
-                --placeholder_count;
-                it = name_pattern.begin() + counter_pos;
-                end = name_pattern.end();
-            }
-        }
-    }
-    while (it != end);
-
-    // Construct the formatter functor
-    if (placeholder_count > 0)
-    {
-        if (counter_found)
-        {
-            // Both counter and date/time placeholder in the pattern
-            m_pImpl->m_FileNameGenerator = boost::bind(date_and_time_formatter(),
-                boost::bind(file_counter_formatter(counter_pos, width), name_pattern, _1), _1);
-        }
-        else
-        {
-            // Only date/time placeholders in the pattern
-            m_pImpl->m_FileNameGenerator =
-                boost::bind(date_and_time_formatter(), name_pattern, _1);
-        }
-    }
-    else if (counter_found)
-    {
-        // Only counter placeholder in the pattern
-        m_pImpl->m_FileNameGenerator =
-            boost::bind(file_counter_formatter(counter_pos, width), name_pattern, _1);
+        parse_file_name_pattern(pattern, m_pImpl->m_TargetStorageDir, m_pImpl->m_TargetFileNamePattern, m_pImpl->m_TargetFileNameGenerator);
     }
     else
     {
-        // No placeholders detected
-        m_pImpl->m_FileNameGenerator = empty_formatter(name_pattern);
+        m_pImpl->m_TargetStorageDir.clear();
+        m_pImpl->m_TargetFileNamePattern.clear();
+        m_pImpl->m_TargetFileNameGenerator.clear();
     }
 }
 
@@ -1427,6 +1460,20 @@ BOOST_LOG_API void text_file_backend::rotate_file()
 {
     filesystem::path prev_file_name = m_pImpl->m_FileName;
     close_file();
+
+    if (!!m_pImpl->m_TargetFileNameGenerator)
+    {
+        filesystem::path new_file_name;
+        new_file_name = m_pImpl->m_TargetStorageDir / m_pImpl->m_TargetFileNameGenerator(m_pImpl->m_FileCounter);
+
+        if (new_file_name != prev_file_name)
+        {
+            filesystem::create_directories(new_file_name.parent_path());
+            move_file(prev_file_name, new_file_name);
+
+            prev_file_name.swap(new_file_name);
+        }
+    }
 
     if (!!m_pImpl->m_pFileCollector)
     {
@@ -1475,10 +1522,15 @@ BOOST_LOG_API filesystem::path text_file_backend::get_current_file_name() const
 //! Performs scanning of the target directory for log files
 BOOST_LOG_API uintmax_t text_file_backend::scan_for_files(file::scan_method method, bool update_counter)
 {
-    if (m_pImpl->m_pFileCollector)
+    if (BOOST_LIKELY(!!m_pImpl->m_pFileCollector))
     {
         unsigned int* counter = update_counter ? &m_pImpl->m_FileCounter : static_cast< unsigned int* >(NULL);
-        return m_pImpl->m_pFileCollector->scan_for_files(method, m_pImpl->m_FileNamePattern, counter);
+        return m_pImpl->m_pFileCollector->scan_for_files
+        (
+            method,
+            m_pImpl->m_TargetFileNamePattern.empty() ? m_pImpl->m_FileNamePattern : m_pImpl->m_TargetFileNamePattern,
+            counter
+        );
     }
     else
     {

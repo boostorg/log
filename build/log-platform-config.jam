@@ -32,6 +32,7 @@ rule set-platform-defines ( properties * )
         if <target-os>cygwin in $(properties)
         {
             result += <define>__USE_W32_SOCKETS ;
+            result += <define>_XOPEN_SOURCE=600 ;
         }
     }
     else if <target-os>solaris in $(properties)

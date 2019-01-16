@@ -9,9 +9,13 @@
 import testing ;
 import path ;
 import regex ;
+import os ;
+import ../build/log-platform-config ;
 
 project
     : requirements
+        <conditional>@log-platform-config.set-platform-defines
+
         <include>common
 
         # Disable warnings about using 'insecure' standard C functions
@@ -52,12 +56,14 @@ project
 
         <toolset>gcc:<cxxflags>-fno-strict-aliasing  # avoids strict aliasing violations in other Boost components
 
+        # Boost.Interprocess does not compile on Cygwin: https://github.com/boostorg/interprocess/issues/76
+        <target-os>cygwin:<define>BOOST_LOG_WITHOUT_IPC
+
         <library>/boost/log//boost_log
         <library>/boost/log//boost_log_setup
         <library>/boost/date_time//boost_date_time
         <library>/boost/regex//boost_regex
         <library>/boost/filesystem//boost_filesystem
-        <library>/boost/system//boost_system
         <library>/boost/test//boost_unit_test_framework
         <threading>single:<define>BOOST_LOG_NO_THREADS
         <threading>multi:<library>/boost/thread//boost_thread
@@ -74,16 +80,21 @@ rule test_all
 {
     local all_rules ;
     local file ;
-    local headers_path = [ path.make $(BOOST_ROOT)/libs/log/include/boost/log ] ;
-    for file in [ path.glob-tree $(headers_path) : *.hpp : detail ]
+
+    if ! [ os.environ BOOST_LOG_TEST_WITHOUT_SELF_CONTAINED_HEADER_TESTS ]
     {
-        local rel_file = [ path.relative-to $(headers_path) $(file) ] ;
-        # Note: The test name starts with '~' in order to group these tests in the test report table, preferably at the end.
-        #       All '/' are replaced with '-' because apparently test scripts have a problem with test names containing slashes.
-        local test_name = [ regex.replace ~hdr/$(rel_file) "/" "-" ] ;
-        #ECHO $(rel_file) ;
-        all_rules += [ compile compile/self_contained_header.cpp : <define>"BOOST_LOG_TEST_HEADER=$(rel_file)" <dependency>$(file) : $(test_name) ] ;
+        local headers_path = [ path.make $(BOOST_ROOT)/libs/log/include/boost/log ] ;
+        for file in [ path.glob-tree $(headers_path) : *.hpp : detail ]
+        {
+            local rel_file = [ path.relative-to $(headers_path) $(file) ] ;
+            # Note: The test name starts with '~' in order to group these tests in the test report table, preferably at the end.
+            #       All '/' are replaced with '-' because apparently test scripts have a problem with test names containing slashes.
+            local test_name = [ regex.replace ~hdr/$(rel_file) "/" "-" ] ;
+            #ECHO $(rel_file) ;
+            all_rules += [ compile compile/self_contained_header.cpp : <define>"BOOST_LOG_TEST_HEADER=$(rel_file)" <dependency>$(file) : $(test_name) ] ;
+        }
     }
+
     for file in [ glob compile/*.cpp ]
     {
         if [ path.basename $(file) ] != "self_contained_header.cpp"
@@ -100,8 +111,13 @@ rule test_all
         all_rules += [ run $(file) ] ;
     }
 
+    if ! [ os.environ BOOST_LOG_TEST_WITHOUT_EXAMPLES ]
+    {
+        all_rules += [ build-project ../example ] ;
+    }
+
     #ECHO All rules: $(all_rules) ;
     return $(all_rules) ;
 }
 
-test-suite log : [ test_all ] [ build-project ../example ] ;
+test-suite log : [ test_all ] ;

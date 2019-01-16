@@ -48,16 +48,17 @@ int main(int argc, char* argv[])
         // Create a text file sink
         typedef sinks::synchronous_sink< sinks::text_file_backend > file_sink;
         shared_ptr< file_sink > sink(new file_sink(
-            keywords::file_name = "%Y%m%d_%H%M%S_%5N.log",      // file name pattern
-            keywords::rotation_size = 16384                     // rotation size, in characters
+            keywords::file_name = "file.log",                       // file name pattern
+            keywords::target_file_name = "%Y%m%d_%H%M%S_%5N.log",   // file name pattern
+            keywords::rotation_size = 16384                         // rotation size, in characters
             ));
 
         // Set up where the rotated files will be stored
         sink->locked_backend()->set_file_collector(sinks::file::make_collector(
-            keywords::target = "logs",                          // where to store rotated files
-            keywords::max_size = 16 * 1024 * 1024,              // maximum total size of the stored files, in bytes
-            keywords::min_free_space = 100 * 1024 * 1024,       // minimum free space on the drive, in bytes
-            keywords::max_files = 512                           // maximum number of stored files
+            keywords::target = "logs",                              // where to store rotated files
+            keywords::max_size = 16 * 1024 * 1024,                  // maximum total size of the stored files, in bytes
+            keywords::min_free_space = 100 * 1024 * 1024,           // minimum free space on the drive, in bytes
+            keywords::max_files = 512                               // maximum number of stored files
             ));
 
         // Upon restart, scan the target directory for files matching the file_name pattern
