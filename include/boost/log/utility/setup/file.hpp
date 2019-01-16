@@ -103,7 +103,12 @@ inline T const& wrap_file_name(T const& arg, mpl::true_)
     return arg;
 }
 template< typename T >
+#if defined(BOOST_PARAMETER_HAS_PERFECT_FORWARDING) || \
+    defined(BOOST_PARAMETER_COMPOSE_MAX_ARITY)
 inline typename parameter::aux::tag< keywords::tag::file_name, T const& >::type
+#else
+inline typename parameter::aux::tag< keywords::tag::file_name, T const >::type
+#endif
 wrap_file_name(T const& arg, mpl::false_)
 {
     return keywords::file_name = arg;
