@@ -255,6 +255,8 @@ The library provides the `BOOST_LOG_USE_COMPILER_TLS` configuration macro that a
 
 Note that the `BOOST_LOG_USE_COMPILER_TLS` macro only controls use of TLS in Boost.Log but not in other libraries used by Boost.Log. For example, __boost_asio__ uses compiler-supplied TLS by default. In order to build Boost.Log binaries completely free from use of compiler-supplied TLS, this feature has to be disabled in those other libraries as well (in case of __boost_asio__ this can be achieved by defining `BOOST_ASIO_DISABLE_THREAD_KEYWORD_EXTENSION` when building and using Boost).
 
+Also note that enabling builtin compiler support for TLS does not remove the dependency on __boost_thread__ or lower level OS threading primitives, including those implementing TLS. The purpose of using compiler intrinsics for TLS is better performance rather than reducing dependencies.
+
 [heading Notes about native `wchar_t` support]
 
 Some compilers, most notably MSVC, have an option to disable the native `wchar_t` type, emulating it with a typedef for one of the standard integral types. From the C++ language perspective this behavior is not conforming but it may be useful for compatibility with some legacy code which is difficult to update.
