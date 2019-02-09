@@ -16,6 +16,7 @@
 #ifndef BOOST_LOG_DETAIL_PARAMETER_TOOLS_HPP_INCLUDED_
 #define BOOST_LOG_DETAIL_PARAMETER_TOOLS_HPP_INCLUDED_
 
+#include <boost/mpl/or.hpp>
 #include <boost/core/enable_if.hpp>
 #include <boost/parameter/keyword.hpp>
 #include <boost/type_traits/is_base_of.hpp>
@@ -126,13 +127,13 @@ struct make_arg_list< ArgT0, BOOST_PP_ENUM_PARAMS(BOOST_PP_DEC(BOOST_LOG_MAX_PAR
 #if !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
 
 template< typename T, typename R >
-using enable_if_named_parameters = boost::enable_if_c< boost::is_base_of< boost::parameter::aux::tagged_argument_base, T >::value || boost::is_base_of< empty_arg_list, T >::value, R >;
+using enable_if_named_parameters = boost::enable_if_c< boost::mpl::or_< boost::is_base_of< boost::parameter::aux::tagged_argument_base, T >, boost::is_base_of< empty_arg_list, T > >::value, R >;
 
 #else // !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
 
 template< typename T, typename R >
 struct enable_if_named_parameters :
-    public boost::enable_if_c< boost::is_base_of< boost::parameter::aux::tagged_argument_base, T >::value || boost::is_base_of< empty_arg_list, T >::value, R >
+    public boost::enable_if_c< boost::mpl::or_< boost::is_base_of< boost::parameter::aux::tagged_argument_base, T >, boost::is_base_of< empty_arg_list, T > >::value, R >
 {
 };
 
