@@ -390,8 +390,10 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
             {
                 for (; n > 0; --n)
                 {
+                    if (it == end)
+                        return false;
                     path_char_type c = *it++;
-                    if (!traits_t::is_digit(c) || it == end)
+                    if (!traits_t::is_digit(c))
                         return false;
                 }
                 return true;

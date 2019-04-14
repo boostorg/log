@@ -1,5 +1,5 @@
 [/
-              Copyright Andrey Semashev 2007 - 2018.
+              Copyright Andrey Semashev 2007 - 2019.
      Distributed under the Boost Software License, Version 1.0.
         (See accompanying file LICENSE_1_0.txt or copy at
               http://www.boost.org/LICENSE_1_0.txt)
@@ -8,6 +8,12 @@
 /]
 
 [section:changelog Changelog]
+
+[heading 2.17, Boost 1.71]
+
+[*Bug fixes:]
+
+* Fixed incorrect parsing of components of the rotated file names while scanning for files in the [link log.detailed.sink_backends.text_file text file sink backend]. If the file name pattern ended with a placeholder (for example, a file counter), the `scan_for_files` method would not find files matching that patter in the target storage, leaving them unmanaged. In particular, such files would not be deleted to free target storage. ([github_issue 78])
 
 [heading 2.16, Boost 1.70]
 
