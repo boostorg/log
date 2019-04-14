@@ -919,9 +919,10 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
                 uintmax_t total_size = 0;
                 for (; it != end; ++it)
                 {
+                    filesystem::directory_entry const& dir_entry = *it;
                     file_info info;
-                    info.m_Path = *it;
-                    status = filesystem::status(info.m_Path, ec);
+                    info.m_Path = dir_entry.path();
+                    status = dir_entry.status(ec);
                     if (status.type() == filesystem::regular_file)
                     {
                         // Check that there are no duplicates in the resulting list
