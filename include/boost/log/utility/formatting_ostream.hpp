@@ -48,18 +48,28 @@ namespace aux {
 
 template< typename T, typename R >
 struct enable_if_streamable_char_type {};
+template< typename T, typename R >
+struct disable_if_streamable_char_type { typedef R type; };
 template< typename R >
 struct enable_if_streamable_char_type< char, R > { typedef R type; };
 template< typename R >
+struct disable_if_streamable_char_type< char, R > {};
+template< typename R >
 struct enable_if_streamable_char_type< wchar_t, R > { typedef R type; };
+template< typename R >
+struct disable_if_streamable_char_type< wchar_t, R > {};
 #if !defined(BOOST_LOG_NO_CXX11_CODECVT_FACETS)
 #if !defined(BOOST_NO_CXX11_CHAR16_T)
 template< typename R >
 struct enable_if_streamable_char_type< char16_t, R > { typedef R type; };
+template< typename R >
+struct disable_if_streamable_char_type< char16_t, R > {};
 #endif
 #if !defined(BOOST_NO_CXX11_CHAR32_T)
 template< typename R >
 struct enable_if_streamable_char_type< char32_t, R > { typedef R type; };
+template< typename R >
+struct disable_if_streamable_char_type< char32_t, R > {};
 #endif
 #endif
 
@@ -73,6 +83,14 @@ struct enable_formatting_ostream_generic_operator< basic_formatting_ostream< Cha
 template< typename CharT, typename TraitsT, typename AllocatorT, typename T, typename R >
 struct enable_formatting_ostream_generic_operator< basic_formatting_ostream< CharT, TraitsT, AllocatorT >, T, true, R > :
     public boost::enable_if_c< boost::is_enum< typename boost::remove_cv< T >::type >::value, R >
+{
+};
+
+template< typename StreamT, typename T, typename R >
+struct enable_formatting_ostream_pointer_operator {};
+template< typename CharT, typename TraitsT, typename AllocatorT, typename T, typename R >
+struct enable_formatting_ostream_pointer_operator< basic_formatting_ostream< CharT, TraitsT, AllocatorT >, T, R > :
+    public disable_if_streamable_char_type< typename boost::remove_cv< T >::type, R >
 {
 };
 
@@ -531,12 +549,6 @@ public:
         return *this;
     }
 
-    basic_formatting_ostream& operator<< (const void* value)
-    {
-        m_stream << value;
-        return *this;
-    }
-
     basic_formatting_ostream& operator<< (std::basic_streambuf< char_type, traits_type >* buf)
     {
         m_stream << buf;
@@ -918,6 +930,14 @@ operator<< (StreamT& strm, T& value)
     return strm;
 }
 
+template< typename StreamT, typename T >
+inline typename boost::log::aux::enable_formatting_ostream_pointer_operator< StreamT, T, StreamT& >::type
+operator<< (StreamT& strm, T* value)
+{
+    strm.stream() << value;
+    return strm;
+}
+
 #if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
 
 template< typename StreamT, typename T >
@@ -939,6 +959,14 @@ operator<< (StreamT&& strm, T const& value)
 template< typename StreamT, typename T >
 inline typename boost::log::aux::enable_formatting_ostream_generic_operator< StreamT, T, false, StreamT& >::type
 operator<< (StreamT&& strm, T& value)
+{
+    strm.stream() << value;
+    return strm;
+}
+
+template< typename StreamT, typename T >
+inline typename boost::log::aux::enable_formatting_ostream_pointer_operator< StreamT, T, StreamT& >::type
+operator<< (StreamT&& strm, T* value)
 {
     strm.stream() << value;
     return strm;

@@ -62,6 +62,14 @@ struct enable_record_ostream_generic_operator< basic_record_ostream< CharT >, T,
 {
 };
 
+template< typename StreamT, typename T, typename R >
+struct enable_record_ostream_pointer_operator {};
+template< typename CharT, typename T, typename R >
+struct enable_record_ostream_pointer_operator< basic_record_ostream< CharT >, T, R > :
+    public disable_if_streamable_char_type< typename boost::remove_cv< T >::type, R >
+{
+};
+
 } // namespace aux
 
 /*!
@@ -326,12 +334,6 @@ public:
         return *this;
     }
 
-    basic_record_ostream& operator<< (const void* value)
-    {
-        static_cast< base_type& >(*this) << value;
-        return *this;
-    }
-
     basic_record_ostream& operator<< (std::basic_streambuf< char_type, traits_type >* buf)
     {
         static_cast< base_type& >(*this) << buf;
@@ -391,6 +393,15 @@ operator<< (StreamT& strm, T& value)
     return strm;
 }
 
+template< typename StreamT, typename T >
+inline typename boost::log::aux::enable_record_ostream_pointer_operator< StreamT, T, StreamT& >::type
+operator<< (StreamT& strm, T* value)
+{
+    typedef basic_formatting_ostream< typename StreamT::char_type > formatting_ostream_type;
+    static_cast< formatting_ostream_type& >(strm) << value;
+    return strm;
+}
+
 #if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
 
 template< typename StreamT, typename T >
@@ -414,6 +425,15 @@ operator<< (StreamT&& strm, T const& value)
 template< typename StreamT, typename T >
 inline typename boost::log::aux::enable_record_ostream_generic_operator< StreamT, T, false, StreamT& >::type
 operator<< (StreamT&& strm, T& value)
+{
+    typedef basic_formatting_ostream< typename StreamT::char_type > formatting_ostream_type;
+    static_cast< formatting_ostream_type& >(strm) << value;
+    return strm;
+}
+
+template< typename StreamT, typename T >
+inline typename boost::log::aux::enable_record_ostream_pointer_operator< StreamT, T, StreamT& >::type
+operator<< (StreamT&& strm, T* value)
 {
     typedef basic_formatting_ostream< typename StreamT::char_type > formatting_ostream_type;
     static_cast< formatting_ostream_type& >(strm) << value;

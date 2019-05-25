@@ -321,6 +321,20 @@ inline std::basic_ostream< CharT, TraitsT >& operator<< (std::basic_ostream< Cha
     return strm;
 }
 
+template< typename CharT, typename TraitsT >
+inline std::basic_ostream< CharT, TraitsT >& operator<< (std::basic_ostream< CharT, TraitsT >& strm, B*)
+{
+    strm << "B*";
+    return strm;
+}
+
+template< typename CharT, typename TraitsT >
+inline std::basic_ostream< CharT, TraitsT >& operator<< (std::basic_ostream< CharT, TraitsT >& strm, const B*)
+{
+    strm << "const B*";
+    return strm;
+}
+
 class C {};
 template< typename CharT, typename TraitsT >
 inline std::basic_ostream< CharT, TraitsT >& operator<< (std::basic_ostream< CharT, TraitsT >& strm, C const&)
@@ -355,11 +369,12 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(operator_forwarding, CharT, char_types)
     my_namespace::B b; // lvalue
     strm_fmt << a << b << my_namespace::C(); // rvalue
     strm_fmt << my_namespace::eee;
+    strm_fmt << &b << (my_namespace::B const*)&b;
     strm_fmt.flush();
     string_type rec_message = logging::extract_or_throw< string_type >(expr::message.get_name(), rec);
 
     ostream_type strm_correct;
-    strm_correct << a << b << my_namespace::C() << my_namespace::eee;
+    strm_correct << a << b << my_namespace::C() << my_namespace::eee << &b << (my_namespace::B const*)&b;
 
     BOOST_CHECK(equal_strings(rec_message, strm_correct.str()));
 }
