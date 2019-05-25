@@ -11,6 +11,10 @@
 
 [heading 2.17, Boost 1.71]
 
+[*New features:]
+
+* Improved support for C++17 `std::string_view` in [class_log_basic_formatting_ostream]. The string view can now participate in character code conversion on output.
+
 [*Bug fixes:]
 
 * Fixed incorrect parsing of components of the rotated file names while scanning for files in the [link log.detailed.sink_backends.text_file text file sink backend]. If the file name pattern ended with a placeholder (for example, a file counter), the `scan_for_files` method would not find files matching that patter in the target storage, leaving them unmanaged. In particular, such files would not be deleted to free target storage. ([github_issue 78])
