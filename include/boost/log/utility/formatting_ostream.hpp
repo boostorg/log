@@ -75,21 +75,21 @@ struct disable_if_streamable_char_type< char32_t, R > {};
 
 template< typename StreamT, typename T, bool ByValueV, typename R >
 struct enable_formatting_ostream_generic_operator {};
+
 template< typename CharT, typename TraitsT, typename AllocatorT, typename T, typename R >
 struct enable_formatting_ostream_generic_operator< basic_formatting_ostream< CharT, TraitsT, AllocatorT >, T, false, R > :
     public boost::disable_if_c< boost::is_scalar< typename boost::remove_cv< T >::type >::value, R >
 {
 };
+
 template< typename CharT, typename TraitsT, typename AllocatorT, typename T, typename R >
 struct enable_formatting_ostream_generic_operator< basic_formatting_ostream< CharT, TraitsT, AllocatorT >, T, true, R > :
     public boost::enable_if_c< boost::is_enum< typename boost::remove_cv< T >::type >::value, R >
 {
 };
 
-template< typename StreamT, typename T, typename R >
-struct enable_formatting_ostream_pointer_operator {};
 template< typename CharT, typename TraitsT, typename AllocatorT, typename T, typename R >
-struct enable_formatting_ostream_pointer_operator< basic_formatting_ostream< CharT, TraitsT, AllocatorT >, T, R > :
+struct enable_formatting_ostream_generic_operator< basic_formatting_ostream< CharT, TraitsT, AllocatorT >, T*, true, R > :
     public disable_if_streamable_char_type< typename boost::remove_cv< T >::type, R >
 {
 };
@@ -930,14 +930,6 @@ operator<< (StreamT& strm, T& value)
     return strm;
 }
 
-template< typename StreamT, typename T >
-inline typename boost::log::aux::enable_formatting_ostream_pointer_operator< StreamT, T, StreamT& >::type
-operator<< (StreamT& strm, T* value)
-{
-    strm.stream() << value;
-    return strm;
-}
-
 #if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
 
 template< typename StreamT, typename T >
@@ -959,14 +951,6 @@ operator<< (StreamT&& strm, T const& value)
 template< typename StreamT, typename T >
 inline typename boost::log::aux::enable_formatting_ostream_generic_operator< StreamT, T, false, StreamT& >::type
 operator<< (StreamT&& strm, T& value)
-{
-    strm.stream() << value;
-    return strm;
-}
-
-template< typename StreamT, typename T >
-inline typename boost::log::aux::enable_formatting_ostream_pointer_operator< StreamT, T, StreamT& >::type
-operator<< (StreamT&& strm, T* value)
 {
     strm.stream() << value;
     return strm;
