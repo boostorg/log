@@ -53,6 +53,7 @@
 #include <boost/log/detail/light_function.hpp>
 #include <boost/log/exceptions.hpp>
 #include <boost/log/attributes/time_traits.hpp>
+#include <boost/log/sinks/auto_newline_mode.hpp>
 #include <boost/log/sinks/text_file_backend.hpp>
 #include "unique_ptr.hpp"
 
@@ -1242,16 +1243,19 @@ struct text_file_backend::implementation
     uintmax_t m_FileRotationSize;
     //! Time-based rotation predicate
     time_based_rotation_predicate m_TimeBasedRotation;
+    //! Indicates whether to append a trailing newline after every log record
+    auto_newline_mode m_AutoNewlineMode;
     //! The flag shows if every written record should be flushed
     bool m_AutoFlush;
     //! The flag indicates whether the final rotation should be performed
     bool m_FinalRotationEnabled;
 
-    implementation(uintmax_t rotation_size, bool auto_flush, bool enable_final_rotation) :
+    implementation(uintmax_t rotation_size, auto_newline_mode auto_newline, bool auto_flush, bool enable_final_rotation) :
         m_FileOpenMode(std::ios_base::trunc | std::ios_base::out),
         m_FileCounter(0),
         m_CharactersWritten(0),
         m_FileRotationSize(rotation_size),
+        m_AutoNewlineMode(auto_newline),
         m_AutoFlush(auto_flush),
         m_FinalRotationEnabled(enable_final_rotation)
     {
@@ -1287,10 +1291,11 @@ BOOST_LOG_API void text_file_backend::construct(
     std::ios_base::openmode mode,
     uintmax_t rotation_size,
     time_based_rotation_predicate const& time_based_rotation,
+    auto_newline_mode auto_newline,
     bool auto_flush,
     bool enable_final_rotation)
 {
-    m_pImpl = new implementation(rotation_size, auto_flush, enable_final_rotation);
+    m_pImpl = new implementation(rotation_size, auto_newline, auto_flush, enable_final_rotation);
     set_file_name_pattern_internal(pattern);
     set_target_file_name_pattern_internal(target_file_name);
     set_time_based_rotation(time_based_rotation);
@@ -1319,6 +1324,12 @@ BOOST_LOG_API void text_file_backend::enable_final_rotation(bool enable)
 BOOST_LOG_API void text_file_backend::auto_flush(bool enable)
 {
     m_pImpl->m_AutoFlush = enable;
+}
+
+//! Selects whether a trailing newline should be automatically inserted after every log record.
+BOOST_LOG_API void text_file_backend::set_auto_newline_mode(auto_newline_mode mode)
+{
+    m_pImpl->m_AutoNewlineMode = mode;
 }
 
 //! The method writes the message to the sink
@@ -1389,9 +1400,16 @@ BOOST_LOG_API void text_file_backend::consume(record_view const& rec, string_typ
     }
 
     m_pImpl->m_File.write(formatted_message.data(), static_cast< std::streamsize >(formatted_message.size()));
-    m_pImpl->m_File.put(traits_t::newline);
+    m_pImpl->m_CharactersWritten += formatted_message.size();
 
-    m_pImpl->m_CharactersWritten += formatted_message.size() + 1;
+    if (m_pImpl->m_AutoNewlineMode != disabled_auto_newline)
+    {
+        if (m_pImpl->m_AutoNewlineMode == always_insert || formatted_message.empty() || formatted_message.back() != traits_t::newline)
+        {
+            m_pImpl->m_File.put(traits_t::newline);
+            ++m_pImpl->m_CharactersWritten;
+        }
+    }
 
     if (m_pImpl->m_AutoFlush)
         m_pImpl->m_File.flush();

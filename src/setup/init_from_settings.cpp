@@ -53,6 +53,7 @@
 #include <boost/log/core.hpp>
 #include <boost/log/sinks.hpp>
 #include <boost/log/exceptions.hpp>
+#include <boost/log/sinks/auto_newline_mode.hpp>
 #include <boost/log/sinks/frontend_requirements.hpp>
 #include <boost/log/expressions/filter.hpp>
 #include <boost/log/expressions/formatter.hpp>
@@ -146,6 +147,27 @@ inline bool param_cast_to_bool(const char* param_name, std::basic_string< CharT 
         {
             return param_cast_to_int< unsigned int >(param_name, value) != 0;
         }
+    }
+}
+
+//! Extracts an \c auto_newline_mode value from parameter value
+template< typename CharT >
+inline sinks::auto_newline_mode param_cast_to_auto_newline_mode(const char* param_name, std::basic_string< CharT > const& value)
+{
+    typedef CharT char_type;
+    typedef boost::log::aux::char_constants< char_type > constants;
+    typedef boost::log::basic_string_literal< char_type > literal_type;
+
+    if (value == constants::auto_newline_mode_disabled())
+        return sinks::disabled_auto_newline;
+    else if (value == constants::auto_newline_mode_always_insert())
+        return sinks::always_insert;
+    else if (value == constants::auto_newline_mode_insert_if_missing())
+        return sinks::insert_if_missing;
+    else
+    {
+        BOOST_LOG_THROW_DESCR(invalid_value,
+            "Auto newline mode \"" + boost::log::aux::to_narrow(value) + "\" is not supported");
     }
 }
 
@@ -394,6 +416,12 @@ private:
             shared_ptr< backend_t > backend = boost::make_shared< backend_t >();
             backend->add_stream(shared_ptr< typename backend_t::stream_type >(&constants::get_console_log_stream(), boost::null_deleter()));
 
+            // Auto newline mode
+            if (optional< string_type > auto_newline_param = params["AutoNewline"])
+            {
+                backend->set_auto_newline_mode(param_cast_to_auto_newline_mode("AutoNewline", auto_newline_param.get()));
+            }
+
             // Auto flush
             if (optional< string_type > auto_flush_param = params["AutoFlush"])
             {
@@ -467,6 +495,12 @@ public:
         if (optional< string_type > enable_final_rotation_param = params["EnableFinalRotation"])
         {
             backend->enable_final_rotation(param_cast_to_bool("EnableFinalRotation", enable_final_rotation_param.get()));
+        }
+
+        // Auto newline mode
+        if (optional< string_type > auto_newline_param = params["AutoNewline"])
+        {
+            backend->set_auto_newline_mode(param_cast_to_auto_newline_mode("AutoNewline", auto_newline_param.get()));
         }
 
         // Auto flush

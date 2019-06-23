@@ -16,6 +16,8 @@
 #include <boost/log/detail/config.hpp>
 #include <vector>
 #include <algorithm>
+#include <boost/log/detail/parameter_tools.hpp>
+#include <boost/log/sinks/auto_newline_mode.hpp>
 #include <boost/log/sinks/text_ostream_backend.hpp>
 #include <boost/log/detail/header.hpp>
 
@@ -34,10 +36,14 @@ struct basic_text_ostream_backend< CharT >::implementation
 
     //! Output stream list
     ostream_sequence m_Streams;
+    //! Indicates whether to append a trailing newline after every log record
+    auto_newline_mode m_AutoNewlineMode;
     //! Auto-flush flag
     bool m_fAutoFlush;
 
-    implementation() : m_fAutoFlush(false)
+    implementation(auto_newline_mode auto_newline, bool auto_flush) :
+        m_AutoNewlineMode(auto_newline),
+        m_fAutoFlush(auto_flush)
     {
     }
 };
@@ -45,8 +51,16 @@ struct basic_text_ostream_backend< CharT >::implementation
 
 //! Constructor
 template< typename CharT >
-BOOST_LOG_API basic_text_ostream_backend< CharT >::basic_text_ostream_backend() : m_pImpl(new implementation())
+BOOST_LOG_API basic_text_ostream_backend< CharT >::basic_text_ostream_backend()
 {
+    construct(log::aux::empty_arg_list());
+}
+
+//! Constructor implementation
+template< typename CharT >
+BOOST_LOG_API void basic_text_ostream_backend< CharT >::construct(auto_newline_mode auto_newline, bool auto_flush)
+{
+    m_pImpl = new implementation(auto_newline, auto_flush);
 }
 
 //! Destructor (just to make it link from the shared library)
@@ -54,6 +68,13 @@ template< typename CharT >
 BOOST_LOG_API basic_text_ostream_backend< CharT >::~basic_text_ostream_backend()
 {
     delete m_pImpl;
+}
+
+//! Selects whether a trailing newline should be automatically inserted after every log record.
+template< typename CharT >
+BOOST_LOG_API void basic_text_ostream_backend< CharT >::set_auto_newline_mode(auto_newline_mode mode)
+{
+    m_pImpl->m_AutoNewlineMode = mode;
 }
 
 //! The method adds a new stream to the sink
@@ -93,13 +114,18 @@ BOOST_LOG_API void basic_text_ostream_backend< CharT >::consume(record_view cons
     typename string_type::size_type const s = message.size();
     typename implementation::ostream_sequence::const_iterator
         it = m_pImpl->m_Streams.begin(), end = m_pImpl->m_Streams.end();
+    bool need_trailing_newline = false;
+    if (m_pImpl->m_AutoNewlineMode != disabled_auto_newline)
+        need_trailing_newline = (m_pImpl->m_AutoNewlineMode == always_insert || s == 0u || p[s - 1u] != static_cast< char_type >('\n'));
+
     for (; it != end; ++it)
     {
         stream_type* const strm = it->get();
-        if (strm->good())
+        if (BOOST_LIKELY(strm->good()))
         {
             strm->write(p, static_cast< std::streamsize >(s));
-            strm->put(static_cast< char_type >('\n'));
+            if (need_trailing_newline)
+                strm->put(static_cast< char_type >('\n'));
 
             if (m_pImpl->m_fAutoFlush)
                 strm->flush();
@@ -116,7 +142,7 @@ BOOST_LOG_API void basic_text_ostream_backend< CharT >::flush()
     for (; it != end; ++it)
     {
         stream_type* const strm = it->get();
-        if (strm->good())
+        if (BOOST_LIKELY(strm->good()))
             strm->flush();
     }
 }
