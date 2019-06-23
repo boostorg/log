@@ -250,6 +250,18 @@ There is another manipulator called [funcref boost::log::dump_elements `dump_ele
 
 [endsect]
 
+[section:auto_newline Automatic newline insertion]
+
+    #include <``[boost_log_utility_manipulators_auto_newline_hpp]``>
+
+Sometimes it can be useful to be able to insert a newline character in the output stream, but only if it hasn't been inserted as part of the previous output. For example, if a string may or may not end with a newline, and we cannot easily tell which one it is each time. The `auto_newline` manipulator can be used to ensure that all such strings are reliably terminated with a newline and there are no duplicate newline characters. The manipulator will insert a newline unless the last character inserted into the stream before it was a newline. Its use is similar to standard stream manipulators:
+
+    BOOST_LOG(lg) << "Parameter: " << param.name << ", value: " << param.value << logging::auto_newline;
+
+[note This manipulator inspects previous output to the stream, and therefore can only be used with Boost.Log streams based on [class_log_basic_formatting_ostream].]
+
+[endsect]
+
 [endsect]
 
 [section:ipc Interprocess communication tools]
