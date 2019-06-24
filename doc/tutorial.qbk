@@ -336,11 +336,17 @@ Notably, the formatter itself contains a filter here. As you can see, the format
 
 Further goes the initialization of the two sinks. The first sink does not have any filter, which means it will save every log record to the file. We call `set_filter` on the second sink to only save log records with severity no less than `warning` or having a "Tag" attribute with value "IMPORTANT_MESSAGE". As you can see, the filter syntax resembles usual C++ very much, especially when attribute keywords are used.
 
-Like with formatters, it is also possible to use custom functions as filters. __boost_phoenix__ can be very helpful in this case as its `bind` implementation is compatible with attribute placeholders. The previous example can be modified in the following way:
+Like with formatters, it is also possible to use custom functions as filters. Fundamentally, a filter function must support the following signature:
+
+    bool (logging::attribute_value_set const& attrs);
+
+When the filter is called, `attrs` will contain a complete set of attribute values, which can be used to decide whether the log record should be passed or suppressed. If the filter returns `true`, the log record will be constructed and further processed by sinks. Otherwise, the record will be discarded.
+
+__boost_phoenix__ can be very helpful in constructing filters. It allows to automate extraction of attribute values from the `attrs` set as its `bind` implementation is compatible with attribute placeholders. The previous example can be modified in the following way:
 
 [example_tutorial_filtering_bind]
 
-As you can see, the custom filter receives attribute values wrapped into the [link log.detailed.utilities.value_ref `value_ref`] template. This wrapper contains an optional reference to the attribute value of the specified type; the reference is valid if the log record contains the attribute value of the required type. The relational operators used in `my_filter` can be applied unconditionally because they will automatically return `false` if the reference is not valid. The rest is done with the `bind` expression which will recognize the `severity` and `tag_attr` keywords and extract the corresponding values before passing them to `my_filter`.
+As you can see, the custom filter receives attribute values as separate arguments, wrapped into the [link log.detailed.utilities.value_ref `value_ref`] template. This wrapper contains an optional reference to the attribute value of the specified type; the reference is valid if the log record contains the attribute value of the required type. The relational operators used in `my_filter` can be applied unconditionally because they will automatically return `false` if the reference is not valid. The rest is done with the `bind` expression which will recognize the `severity` and `tag_attr` keywords and extract the corresponding values before passing them to `my_filter`.
 
 [note Because of limitations related to the integration with __boost_phoenix__ (see [ticket 7996]), it is required to explicitly specify the fallback policy in case if the attribute value is missing, when attribute keywords are used with `phoenix::bind` or `phoenix::function`. In the example above, this is done by calling `or_none`, which results in an empty [link log.detailed.utilities.value_ref `value_ref`] if the value is not found. In other contexts this policy is the default. There are [link log.detailed.expressions.attr.fallback_policies other policies] that can be used instead.]
 
