@@ -145,7 +145,7 @@ matrix:
 
 # clang, Linux
     - os: linux
-      dist: trusty
+      dist: precise
       compiler: clang-3.5
       env: TOOLSET=clang COMPILER=clang++-3.5 CXXSTD=03,11
       addons:
@@ -156,10 +156,10 @@ matrix:
             - linux-libc-dev:i386
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-trusty-3.5
+            - llvm-toolchain-precise-3.5
 
     - os: linux
-      dist: trusty
+      dist: precise
       compiler: clang-3.6
       env: TOOLSET=clang COMPILER=clang++-3.6 CXXSTD=03,11
       addons:
@@ -170,10 +170,10 @@ matrix:
             - linux-libc-dev:i386
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-trusty-3.6
+            - llvm-toolchain-precise-3.6
 
     - os: linux
-      dist: trusty
+      dist: precise
       compiler: clang-3.7
       env: TOOLSET=clang COMPILER=clang++-3.7 CXXSTD=03,11
       addons:
@@ -184,10 +184,10 @@ matrix:
             - linux-libc-dev:i386
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-trusty-3.7
+            - llvm-toolchain-precise-3.7
 
     - os: linux
-      dist: trusty
+      dist: precise
       compiler: clang-3.8
       env: TOOLSET=clang COMPILER=clang++-3.8 CXXSTD=03,11,14,1z
       addons:
@@ -198,7 +198,7 @@ matrix:
             - linux-libc-dev:i386
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-trusty-3.8
+            - llvm-toolchain-precise-3.8
 
     - os: linux
       dist: trusty
@@ -215,6 +215,7 @@ matrix:
             - llvm-toolchain-trusty-3.9
 
     - os: linux
+      dist: trusty
       compiler: clang-4
       env: TOOLSET=clang COMPILER=clang++-4.0 CXXSTD=03,11,14,1z
       addons:
@@ -225,9 +226,10 @@ matrix:
             - linux-libc-dev:i386
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-xenial-4.0
+            - llvm-toolchain-trusty-4.0
 
     - os: linux
+      dist: trusty
       compiler: clang-5
       env: TOOLSET=clang COMPILER=clang++-5.0 CXXSTD=03,11,14,1z
       addons:
@@ -238,7 +240,7 @@ matrix:
             - linux-libc-dev:i386
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-xenial-5.0
+            - llvm-toolchain-trusty-5.0
 
     - os: linux
       compiler: clang-6
@@ -292,10 +294,9 @@ matrix:
             - ubuntu-toolchain-r-test
             - llvm-toolchain-xenial-8
 
-# Note: libc++ currently causes linking errors about missing operator new/delete with std::align_val_t arguments in C++17
     - os: linux
       compiler: clang-libc++
-      env: TOOLSET=clang COMPILER=clang++-8 CXXSTD=03,11,14,17 CXXFLAGS="-stdlib=libc++ -fno-aligned-new" LINKFLAGS="-stdlib=libc++"
+      env: TOOLSET=clang COMPILER=clang++-8 CXXSTD=03,11,14,17 CXXFLAGS="-stdlib=libc++" LINKFLAGS="-stdlib=libc++"
       addons:
         apt:
           packages:
@@ -303,13 +304,14 @@ matrix:
             - g++-8-multilib
             - linux-libc-dev:i386
             - libc++-dev
+            - libc++abi-dev
           sources:
             - ubuntu-toolchain-r-test
             - llvm-toolchain-xenial-8
 
     - os: linux
       compiler: clang-libc++-UBSAN
-      env: UBSAN=1 TOOLSET=clang COMPILER=clang++-8 CXXSTD=03,11,14,17 UBSAN_OPTIONS=print_stacktrace=1 CXXFLAGS="-stdlib=libc++ -fno-aligned-new" LINKFLAGS="-stdlib=libc++"
+      env: UBSAN=1 TOOLSET=clang COMPILER=clang++-8 CXXSTD=03,11,14,17 UBSAN_OPTIONS=print_stacktrace=1 CXXFLAGS="-stdlib=libc++" LINKFLAGS="-stdlib=libc++"
       addons:
         apt:
           packages:
@@ -317,6 +319,7 @@ matrix:
             - g++-8-multilib
             - linux-libc-dev:i386
             - libc++-dev
+            - libc++abi-dev
           sources:
             - ubuntu-toolchain-r-test
             - llvm-toolchain-xenial-8
