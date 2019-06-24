@@ -49,7 +49,7 @@ inline basic_formatting_ostream< CharT, TraitsT, AllocatorT >& operator<< (basic
         if (BOOST_LIKELY(!!str))
         {
             strm.rdbuf()->pubsync();
-            if (str->empty() || str->back() != static_cast< char_type >('\n'))
+            if (str->empty() || *str->rbegin() != static_cast< char_type >('\n'))
                 strm.rdbuf()->push_back(static_cast< char_type >('\n'));
         }
     }

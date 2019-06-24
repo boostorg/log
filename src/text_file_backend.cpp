@@ -1404,7 +1404,7 @@ BOOST_LOG_API void text_file_backend::consume(record_view const& rec, string_typ
 
     if (m_pImpl->m_AutoNewlineMode != disabled_auto_newline)
     {
-        if (m_pImpl->m_AutoNewlineMode == always_insert || formatted_message.empty() || formatted_message.back() != traits_t::newline)
+        if (m_pImpl->m_AutoNewlineMode == always_insert || formatted_message.empty() || *formatted_message.rbegin() != traits_t::newline)
         {
             m_pImpl->m_File.put(traits_t::newline);
             ++m_pImpl->m_CharactersWritten;

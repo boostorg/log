@@ -97,7 +97,7 @@ BOOST_LOG_API void text_multifile_backend::consume(record_view const& rec, strin
             m_pImpl->m_File.write(formatted_message.data(), static_cast< std::streamsize >(formatted_message.size()));
             if (m_pImpl->m_AutoNewlineMode != disabled_auto_newline)
             {
-                if (m_pImpl->m_AutoNewlineMode == always_insert || formatted_message.empty() || formatted_message.back() != static_cast< string_type::value_type >('\n'))
+                if (m_pImpl->m_AutoNewlineMode == always_insert || formatted_message.empty() || *formatted_message.rbegin() != static_cast< string_type::value_type >('\n'))
                     m_pImpl->m_File.put(static_cast< string_type::value_type >('\n'));
             }
             m_pImpl->m_File.close();
