@@ -659,28 +659,13 @@ The RotationTimePoint parameter should have one of the following formats, accord
 
 The user is free to fill the settings container from whatever settings source he needs. The usage example is below:
 
-    void init_logging()
-    {
-        logging::settings setts;
+[example_util_setup_settings]
 
-        setts["Core"]["Filter"] = "%Severity% >= warning";
-        setts["Core"]["DisableLogging"] = false;
+[@boost:/libs/log/example/doc/util_setup_settings.cpp See the complete code].
 
-        // Subsections can be referred to with a single path
-        setts["Sinks.Console"]["Destination"] = "Console";
-        setts["Sinks.Console"]["Filter"] = "%Severity% >= fatal";
-        setts["Sinks.Console"]["AutoFlush"] = true;
+[note Initialization from settings does not automatically create any attributes or loggers, the application developer is still responsible for creating those. It can be said that loggers and attributes define the data that is exported by the application and the settings only describe how that data is going to be presented to the application user.]
 
-        // ...as well as the individual parameters
-        setts["Sinks.File.Destination"] = "TextFile";
-        setts["Sinks.File.FileName"] = "MyApp_%3N.log";
-        setts["Sinks.File.AutoFlush"] = true;
-        setts["Sinks.File.RotationSize"] = 10 * 1024 * 1024; // 10 MiB
-
-        logging::init_from_settings(setts);
-    }
-
-The settings reader also allows to be extended to support custom sink types. See the [link log.extension.settings Extending the library] section for more information.
+The settings reader also can be extended to support custom sink types. See the [link log.extension.settings Extending the library] section for more information.
 
 [endsect]
 
@@ -688,7 +673,7 @@ The settings reader also allows to be extended to support custom sink types. See
 
     #include <``[boost_log_utility_setup_from_stream_hpp]``>
 
-Support for configuration files is a frequently requested feature of the library. And despite the fact there is no ultimately convenient and flexible format of the library settings, the library provides preliminary support for this feature. The functionality is implemented with a simple function [funcref boost::log::init_from_stream `init_from_stream`], which accepts an STL input stream and reads the library settings from it. The function then passes on the read settings to the [funcref boost::log::init_from_settings `init_from_settings`] function, described [link log.detailed.utilities.setup.settings above]. Therefore the parameter names and their meaning is the same as for the [funcref boost::log::init_from_settings `init_from_settings`] function.
+Support for configuration files is a frequently requested feature of the library. And despite the fact there is no ultimately convenient and flexible format of the library settings, the library provides preliminary support for this feature. The functionality is implemented with a simple function [funcref boost::log::init_from_stream `init_from_stream`], which accepts a `std::istream` and reads the library settings from it. The function then passes on the read settings to the [funcref boost::log::init_from_settings `init_from_settings`] function, described [link log.detailed.utilities.setup.settings above]. Therefore the parameter names and their meaning is the same as for the [funcref boost::log::init_from_settings `init_from_settings`] function.
 
 The settings format is quite simple and widely used. Below is the description of syntax and parameters.
 

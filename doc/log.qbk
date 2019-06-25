@@ -110,6 +110,7 @@
 [import ../example/doc/util_dynamic_type_disp.cpp]
 [import ../example/doc/util_manip_to_log.cpp]
 [import ../example/doc/util_ipc_reliable_mq_writer.cpp]
+[import ../example/doc/util_setup_settings.cpp]
 [import ../example/doc/extension_stat_collector.cpp]
 [import ../example/doc/extension_app_launcher.cpp]
 [import ../example/doc/extension_record_tagger.cpp]
