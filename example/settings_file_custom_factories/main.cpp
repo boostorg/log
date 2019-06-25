@@ -10,7 +10,7 @@
  * \date   12.05.2010
  *
  * \brief  An example of initializing the library from a settings file,
- *         with a custom formatter for an attribute.
+ *         with custom filter and formatter factories for attributes.
  */
 
 // #define BOOST_ALL_DYN_LINK 1
@@ -29,12 +29,14 @@
 #include <boost/log/attributes/value_visitation.hpp>
 #include <boost/log/utility/setup/from_stream.hpp>
 #include <boost/log/utility/setup/common_attributes.hpp>
+#include <boost/log/utility/setup/filter_parser.hpp>
 #include <boost/log/utility/setup/formatter_parser.hpp>
 
 namespace logging = boost::log;
 namespace attrs = boost::log::attributes;
 namespace src = boost::log::sources;
 
+//! Enum for our custom severity levels
 enum severity_level
 {
     normal,
@@ -44,7 +46,57 @@ enum severity_level
     critical
 };
 
-BOOST_LOG_INLINE_GLOBAL_LOGGER_DEFAULT(test_lg, src::severity_logger< >)
+//! Formatting operator for severity levels
+inline std::ostream& operator<< (std::ostream& strm, severity_level level)
+{
+    switch (level)
+    {
+    case normal:
+        strm << "normal";
+        break;
+    case notification:
+        strm << "notification";
+        break;
+    case warning:
+        strm << "warning";
+        break;
+    case error:
+        strm << "error";
+        break;
+    case critical:
+        strm << "critical";
+        break;
+    default:
+        strm << static_cast< int >(level);
+        break;
+    }
+
+    return strm;
+}
+
+//! Parsing operator for severity levels
+inline std::istream& operator>> (std::istream& strm, severity_level& level)
+{
+    if (strm.good())
+    {
+        std::string str;
+        strm >> str;
+        if (str == "normal")
+            level = normal;
+        else if (str == "notification")
+            level = notification;
+        else if (str == "warning")
+            level = warning;
+        else if (str == "error")
+            level = error;
+        else if (str == "critical")
+            level = critical;
+        else
+            strm.setstate(std::ios_base::failbit);
+    }
+
+    return strm;
+}
 
 //! Our custom formatter for the scope list
 struct scope_list_formatter
@@ -103,24 +155,32 @@ void init_logging()
     // First thing - register the custom formatter for MyScopes
     logging::register_formatter_factory("MyScopes", boost::make_shared< my_scopes_formatter_factory >());
 
+    // Also register filter and formatter factories for our custom severity level enum. Since our operator<< and operator>> implement
+    // all required behavior, simple factories provided by Boost.Log will do.
+    logging::register_simple_filter_factory< severity_level >("Severity");
+    logging::register_simple_formatter_factory< severity_level, char >("Severity");
+
     // Then load the settings from the file
     std::ifstream settings("settings.txt");
     if (!settings.is_open())
         throw std::runtime_error("Could not open settings.txt file");
     logging::init_from_stream(settings);
 
-    // Add some attributes
+    // Add some attributes. Note that severity level will be provided by the logger, so we don't need to add it here.
     logging::add_common_attributes();
 
     logging::core::get()->add_global_attribute("MyScopes", attrs::named_scope());
 }
+
+//! Global logger, which we will use to write log messages
+BOOST_LOG_INLINE_GLOBAL_LOGGER_DEFAULT(test_lg, src::severity_logger< severity_level >)
 
 //! The function tests logging
 void try_logging()
 {
     BOOST_LOG_FUNCTION();
 
-    src::severity_logger< >& lg = test_lg::get();
+    src::severity_logger< severity_level >& lg = test_lg::get();
 
     BOOST_LOG_SEV(lg, critical) << "This is a critical severity record";
 

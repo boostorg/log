@@ -9,5 +9,6 @@
 Destination=TextFile
 FileName=test.log
 AutoFlush=true
+Filter="%Severity% > normal"
 Format="[%TimeStamp%] [%Severity%]\n%MyScopes%\n\t:: %Message%"
 Asynchronous=false

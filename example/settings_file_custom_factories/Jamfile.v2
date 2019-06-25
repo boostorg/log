@@ -53,7 +53,6 @@ project
         <threading>multi:<library>/boost/thread//boost_thread
     ;
 
-exe settings_file_formatter_factory
+exe settings_file_custom_factories
     : main.cpp
     ;
-
