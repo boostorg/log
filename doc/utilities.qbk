@@ -718,6 +718,8 @@ Here's the usage example:
         return 0;
     }
 
+See a [@boost:/libs/log/example/settings_file/main.cpp more complete example].
+
 [endsect]
 
 [endsect]
