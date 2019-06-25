@@ -12,7 +12,7 @@ os:
   - linux
   - osx
 
-dist: bionic
+dist: xenial
 
 branches:
   only:
@@ -74,7 +74,7 @@ matrix:
             - ubuntu-toolchain-r-test
 
     - os: linux
-      dist: bionic
+      dist: xenial
       compiler: gcc-5
       env: TOOLSET=gcc COMPILER=g++-5 CXXSTD=03,11,14
       addons:
@@ -87,7 +87,7 @@ matrix:
             - ubuntu-toolchain-r-test
 
     - os: linux
-      dist: bionic
+      dist: xenial
       compiler: gcc-6
       env: TOOLSET=gcc COMPILER=g++-6 CXXSTD=03,11,14,1z
       addons:
@@ -100,7 +100,7 @@ matrix:
             - ubuntu-toolchain-r-test
 
     - os: linux
-      dist: bionic
+      dist: xenial
       compiler: gcc-7
       env: TOOLSET=gcc COMPILER=g++-7 CXXSTD=03,11,14,17
       addons:
@@ -113,7 +113,7 @@ matrix:
             - ubuntu-toolchain-r-test
 
     - os: linux
-      dist: bionic
+      dist: xenial
       compiler: gcc-8
       env: TOOLSET=gcc COMPILER=g++-8 CXXSTD=03,11,14,17
       addons:
@@ -126,7 +126,7 @@ matrix:
             - ubuntu-toolchain-r-test
 
     - os: linux
-      dist: bionic
+      dist: xenial
       compiler: gcc-9
       env: TOOLSET=gcc COMPILER=g++-9 CXXSTD=03,11,14,17
       addons:
@@ -139,7 +139,7 @@ matrix:
             - ubuntu-toolchain-r-test
 
     - os: linux
-      dist: bionic
+      dist: xenial
       compiler: gcc-UBSAN
       env: UBSAN=1 TOOLSET=gcc COMPILER=g++-9 CXXSTD=03,11,14,17 UBSAN_OPTIONS=print_stacktrace=1 LINKFLAGS=-fuse-ld=gold
       addons:
@@ -241,7 +241,7 @@ matrix:
               key_url: "https://apt.llvm.org/llvm-snapshot.gpg.key"
 
     - os: linux
-      dist: bionic
+      dist: xenial
       compiler: clang-5
       env: TOOLSET=clang COMPILER=clang++-5.0 CXXSTD=03,11,14,1z
       addons:
@@ -252,11 +252,11 @@ matrix:
             - linux-libc-dev:i386
           sources:
             - ubuntu-toolchain-r-test
-            - sourceline: "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-5.0 main"
+            - sourceline: "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-5.0 main"
               key_url: "https://apt.llvm.org/llvm-snapshot.gpg.key"
 
     - os: linux
-      dist: bionic
+      dist: xenial
       compiler: clang-6
       env: TOOLSET=clang COMPILER=clang++-6.0 CXXSTD=03,11,14,17
       addons:
@@ -267,11 +267,11 @@ matrix:
             - linux-libc-dev:i386
           sources:
             - ubuntu-toolchain-r-test
-            - sourceline: "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-6.0 main"
+            - sourceline: "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-6.0 main"
               key_url: "https://apt.llvm.org/llvm-snapshot.gpg.key"
 
     - os: linux
-      dist: bionic
+      dist: xenial
       compiler: clang-7
       env: TOOLSET=clang COMPILER=clang++-7 CXXSTD=03,11,14,17
       addons:
@@ -282,11 +282,11 @@ matrix:
             - linux-libc-dev:i386
           sources:
             - ubuntu-toolchain-r-test
-            - sourceline: "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-7 main"
+            - sourceline: "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-7 main"
               key_url: "https://apt.llvm.org/llvm-snapshot.gpg.key"
 
     - os: linux
-      dist: bionic
+      dist: xenial
       compiler: clang-8
       env: TOOLSET=clang COMPILER=clang++-8 CXXSTD=03,11,14,17
       addons:
@@ -297,11 +297,11 @@ matrix:
             - linux-libc-dev:i386
           sources:
             - ubuntu-toolchain-r-test
-            - sourceline: "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-8 main"
+            - sourceline: "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-8 main"
               key_url: "https://apt.llvm.org/llvm-snapshot.gpg.key"
 
     - os: linux
-      dist: bionic
+      dist: xenial
       compiler: clang-UBSAN
       env: UBSAN=1 TOOLSET=clang COMPILER=clang++-8 CXXSTD=03,11,14,17 UBSAN_OPTIONS=print_stacktrace=1
       addons:
@@ -312,11 +312,11 @@ matrix:
             - linux-libc-dev:i386
           sources:
             - ubuntu-toolchain-r-test
-            - sourceline: "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-8 main"
+            - sourceline: "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-8 main"
               key_url: "https://apt.llvm.org/llvm-snapshot.gpg.key"
 
     - os: linux
-      dist: bionic
+      dist: xenial
       compiler: clang-libc++
       env: TOOLSET=clang COMPILER=clang++-8 CXXSTD=03,11,14,17 CXXFLAGS="-stdlib=libc++" LINKFLAGS="-stdlib=libc++"
       addons:
@@ -329,11 +329,11 @@ matrix:
             - libc++abi-8-dev
           sources:
             - ubuntu-toolchain-r-test
-            - sourceline: "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-8 main"
+            - sourceline: "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-8 main"
               key_url: "https://apt.llvm.org/llvm-snapshot.gpg.key"
 
     - os: linux
-      dist: bionic
+      dist: xenial
       compiler: clang-libc++-UBSAN
       env: UBSAN=1 TOOLSET=clang COMPILER=clang++-8 CXXSTD=03,11,14,17 UBSAN_OPTIONS=print_stacktrace=1 CXXFLAGS="-stdlib=libc++" LINKFLAGS="-stdlib=libc++"
       addons:
@@ -346,7 +346,7 @@ matrix:
             - libc++abi-8-dev
           sources:
             - ubuntu-toolchain-r-test
-            - sourceline: "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-8 main"
+            - sourceline: "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-8 main"
               key_url: "https://apt.llvm.org/llvm-snapshot.gpg.key"
 
 # clang, OS X
