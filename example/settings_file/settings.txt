@@ -7,14 +7,14 @@
 
 [Core]
 
-Filter="%Severity% >= 2"
+Filter="%Severity% >= debug"
 
 
 [Sinks.1]
 
 Destination=Console
-Format="%TimeStamp% *** %Message%"
-Filter="%Tag% | %Severity% > 3"
+Format="%TimeStamp% [%Severity%] *** %Message%"
+Filter="%Tag% | %Severity% > info"
 
 
 [Sinks.2]
@@ -22,4 +22,4 @@ Filter="%Tag% | %Severity% > 3"
 Destination=TextFile
 FileName=test.log
 AutoFlush=true
-Format="[%TimeStamp%] %Tag% %Message%"
+Format="[%TimeStamp%] [%Severity%] [%Tag%] %Message%"

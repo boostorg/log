@@ -18,41 +18,25 @@
 // #define BOOST_ALL_DYN_LINK 1
 
 #include <exception>
-#include <string>
 #include <iostream>
 #include <fstream>
 
+#include <boost/log/trivial.hpp>
 #include <boost/log/common.hpp>
 #include <boost/log/attributes.hpp>
 #include <boost/log/utility/setup/from_stream.hpp>
 
 namespace logging = boost::log;
 namespace attrs = boost::log::attributes;
-namespace src = boost::log::sources;
-
-using boost::shared_ptr;
-
-// Here we define our application severity levels.
-enum severity_level
-{
-    normal,
-    notification,
-    warning,
-    error,
-    critical
-};
-
-//  Global logger declaration
-BOOST_LOG_INLINE_GLOBAL_LOGGER_DEFAULT(test_lg, src::severity_logger< >)
 
 void try_logging()
 {
-    src::severity_logger< >& lg = test_lg::get();
-    BOOST_LOG_SEV(lg, normal) << "This is a normal severity record";
-    BOOST_LOG_SEV(lg, notification) << "This is a notification severity record";
-    BOOST_LOG_SEV(lg, warning) << "This is a warning severity record";
-    BOOST_LOG_SEV(lg, error) << "This is a error severity record";
-    BOOST_LOG_SEV(lg, critical) << "This is a critical severity record";
+    BOOST_LOG_TRIVIAL(trace) << "This is a trace severity record";
+    BOOST_LOG_TRIVIAL(debug) << "This is a debug severity record";
+    BOOST_LOG_TRIVIAL(info) << "This is an info severity record";
+    BOOST_LOG_TRIVIAL(warning) << "This is a warning severity record";
+    BOOST_LOG_TRIVIAL(error) << "This is an error severity record";
+    BOOST_LOG_TRIVIAL(fatal) << "This is a fatal severity record";
 }
 
 int main(int argc, char* argv[])

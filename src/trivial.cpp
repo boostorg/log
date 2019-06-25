@@ -43,7 +43,7 @@ BOOST_LOG_API logger::logger_type& logger::get()
 
 BOOST_LOG_ANONYMOUS_NAMESPACE {
 
-const unsigned int names_count = 6;
+BOOST_CONSTEXPR_OR_CONST unsigned int names_count = 6;
 
 template< typename CharT >
 struct severity_level_names
@@ -64,43 +64,82 @@ const CharT severity_level_names< CharT >::names[names_count][8] =
 
 } // namespace
 
-BOOST_LOG_API const char* to_string(severity_level lvl)
+template< typename CharT >
+BOOST_LOG_API const CharT* to_string(severity_level lvl)
 {
-    typedef severity_level_names< char > level_names;
-    if (static_cast< unsigned int >(lvl) < names_count)
+    typedef severity_level_names< CharT > level_names;
+    if (BOOST_LIKELY(static_cast< unsigned int >(lvl) < names_count))
         return level_names::names[static_cast< unsigned int >(lvl)];
-    else
-        return NULL;
+    return NULL;
+}
+
+//! Parses enumeration value from string and returns \c true on success and \c false otherwise
+template< typename CharT >
+BOOST_LOG_API bool from_string(const CharT* str, std::size_t len, severity_level& lvl)
+{
+    typedef severity_level_names< CharT > level_names;
+    typedef std::char_traits< CharT > char_traits;
+
+    if (len == 5u)
+    {
+        if (char_traits::compare(str, level_names::names[0], len) == 0)
+            lvl = static_cast< severity_level >(0);
+        else if (char_traits::compare(str, level_names::names[1], len) == 0)
+            lvl = static_cast< severity_level >(1);
+        else if (char_traits::compare(str, level_names::names[4], len) == 0)
+            lvl = static_cast< severity_level >(4);
+        else if (char_traits::compare(str, level_names::names[5], len) == 0)
+            lvl = static_cast< severity_level >(5);
+        else
+            goto no_match;
+        return true;
+    }
+    else if (len == 4u)
+    {
+        if (char_traits::compare(str, level_names::names[2], len) == 0)
+            lvl = static_cast< severity_level >(2);
+        else
+            goto no_match;
+        return true;
+    }
+    else if (len == 7u)
+    {
+        if (char_traits::compare(str, level_names::names[3], len) == 0)
+            lvl = static_cast< severity_level >(3);
+        else
+            goto no_match;
+        return true;
+    }
+
+no_match:
+    return false;
 }
 
 template< typename CharT, typename TraitsT >
 BOOST_LOG_API std::basic_istream< CharT, TraitsT >& operator>> (
     std::basic_istream< CharT, TraitsT >& strm, severity_level& lvl)
 {
-    if (strm.good())
+    if (BOOST_LIKELY(strm.good()))
     {
         typedef severity_level_names< CharT > level_names;
         typedef std::basic_string< CharT, TraitsT > string_type;
         string_type str;
         strm >> str;
-        for (unsigned int i = 0; i < names_count; ++i)
-        {
-            if (str == level_names::names[i])
-            {
-                lvl = static_cast< severity_level >(i);
-                return strm;
-            }
-        }
-        strm.setstate(std::ios_base::failbit);
+        if (BOOST_UNLIKELY(!boost::log::trivial::from_string(str.data(), str.size(), lvl)))
+            strm.setstate(std::ios_base::failbit);
     }
 
     return strm;
 }
 
+template BOOST_LOG_API const char* to_string< char >(severity_level lvl);
+template BOOST_LOG_API bool from_string< char >(const char* begin, std::size_t len, severity_level& lvl);
 template BOOST_LOG_API std::basic_istream< char, std::char_traits< char > >&
     operator>> < char, std::char_traits< char > > (
         std::basic_istream< char, std::char_traits< char > >& strm, severity_level& lvl);
 #ifdef BOOST_LOG_USE_WCHAR_T
+template BOOST_LOG_API const wchar_t* to_string< wchar_t >(severity_level lvl);
+template BOOST_LOG_API bool from_string< wchar_t >(const wchar_t* begin, std::size_t len, severity_level& lvl);
 template BOOST_LOG_API std::basic_istream< wchar_t, std::char_traits< wchar_t > >&
     operator>> < wchar_t, std::char_traits< wchar_t > > (
         std::basic_istream< wchar_t, std::char_traits< wchar_t > >& strm, severity_level& lvl);

@@ -27,6 +27,7 @@
 #include <boost/date_time/gregorian/gregorian_types.hpp>
 #include <boost/date_time/local_time/local_time_types.hpp>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
+#include <boost/log/trivial.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/attributes/value_visitation.hpp>
 #include <boost/log/utility/type_dispatch/standard_types.hpp>
@@ -56,7 +57,10 @@ namespace aux {
 #endif
 
 #define BOOST_LOG_AUX_LOG_ATTRIBUTE_VALUE_TYPES()\
-    (boost::log::attributes::named_scope_list)(boost::log::aux::process::id)BOOST_LOG_AUX_THREAD_ID_TYPE()
+    (boost::log::trivial::severity_level)\
+    (boost::log::attributes::named_scope_list)\
+    (boost::log::aux::process::id)\
+    BOOST_LOG_AUX_THREAD_ID_TYPE()
 
 // The list of the attribute value types supported by the default formatter. Note that we have to exclude std::time_t
 // as it is an integral type, as well as double from the native time duration types - these are part of arithmetic types already.

@@ -20,6 +20,7 @@
 #include <boost/mpl/vector.hpp>
 #include <boost/preprocessor/seq/enum.hpp>
 #include <boost/spirit/include/qi_core.hpp>
+#include <boost/log/trivial.hpp>
 #include <boost/log/exceptions.hpp>
 #include <boost/log/expressions/predicates/has_attr.hpp>
 #include <boost/log/utility/type_dispatch/standard_types.hpp>
@@ -29,6 +30,7 @@
 #include <boost/log/utility/functional/ends_with.hpp>
 #include <boost/log/utility/functional/contains.hpp>
 #include <boost/log/detail/code_conversion.hpp>
+#include <boost/log/detail/default_attribute_names.hpp>
 #if defined(BOOST_LOG_USE_CHAR) && defined(BOOST_LOG_USE_WCHAR_T)
 #include <boost/fusion/container/set.hpp>
 #include <boost/fusion/sequence/intrinsic/at_key.hpp>
@@ -139,6 +141,37 @@ private:
 };
 
 #endif // defined(BOOST_LOG_USE_CHAR) && defined(BOOST_LOG_USE_WCHAR_T)
+
+//! A special filtering predicate that adopts the severity level or string operand to the attribute value character type
+template< typename RelationT >
+class severity_or_string_predicate :
+    public string_predicate< RelationT >
+{
+private:
+    typedef string_predicate< RelationT > base_type;
+
+public:
+    typedef typename base_type::relation_type relation_type;
+    typedef typename base_type::result_type result_type;
+
+public:
+    template< typename StringT >
+    severity_or_string_predicate(relation_type const& rel, StringT const& string_operand, boost::log::trivial::severity_level severity_operand) :
+        base_type(rel, string_operand),
+        m_severity_operand(severity_operand)
+    {
+    }
+
+    using base_type::operator();
+
+    result_type operator() (boost::log::trivial::severity_level val) const
+    {
+        return relation_type::operator() (val, m_severity_operand);
+    }
+
+private:
+    const boost::log::trivial::severity_level m_severity_operand;
+};
 
 //! A filtering predicate for numeric relations
 template< typename NumericT, typename RelationT >
@@ -283,13 +316,23 @@ filter default_filter_factory< CharT >::parse_argument(attribute_name const& nam
         if (qi::parse(begin, end, qi::long_, int_val) && begin == end)
         {
             typedef numeric_predicate< long, RelationT > predicate;
-            typedef default_attribute_types value_types;
+            typedef default_attribute_value_types value_types;
             return predicate_wrapper< value_types, predicate >(name, predicate(RelationT(), arg, int_val));
         }
         else
         {
-            typedef string_predicate< RelationT > predicate;
-            return predicate_wrapper< log::string_types, predicate >(name, predicate(RelationT(), arg));
+            boost::log::trivial::severity_level lvl;
+            if (name == boost::log::aux::default_attribute_names::severity() && boost::log::trivial::from_string(arg.data(), arg.size(), lvl))
+            {
+                typedef severity_or_string_predicate< RelationT > predicate;
+                typedef mpl::vector< boost::log::trivial::severity_level, BOOST_PP_SEQ_ENUM(BOOST_LOG_STANDARD_STRING_TYPES()) > value_types;
+                return predicate_wrapper< value_types, predicate >(name, predicate(RelationT(), arg, lvl));
+            }
+            else
+            {
+                typedef string_predicate< RelationT > predicate;
+                return predicate_wrapper< log::string_types, predicate >(name, predicate(RelationT(), arg));
+            }
         }
     }
 }

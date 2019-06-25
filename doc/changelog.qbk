@@ -21,6 +21,7 @@
 
 * [link log.detailed.sink_backends.text_ostream Output stream] and [link log.detailed.sink_backends.text_multifile text multi-file] sink backends can now be constructed with named parameters.
 * Added support for passing arbitrary function objects (as opposed to only __boost_phoenix__ function objects, which were supported before) in the `filter` and `format` named parameters to sink constructors and [link log.detailed.utilities.setup.convenience convenience functions] for initializing sinks. For example, it is now possible to specify C++11 lambda functions directly in these parameters. ([github_issue 63])
+* In the default filter and formatter factories used in [link log.detailed.utilities.setup.filter_formatter filter and formatter parsers], added support for severity level attribute values of type [enumref boost::log::trivial::severity_level `boost::log::trivial::severity_level`]. For filters, the support is limited to attributes with "Severity" name. This relieves the user from having to register filter and formatter factories in order to use `boost::log::trivial::severity_level` with filters and formatters parsed from strings or [link log.detailed.utilities.setup.settings settings]. Note that any other custom severity level enums must still be [link log.extension.settings registered], as before.
 
 [*Bug fixes:]
 
