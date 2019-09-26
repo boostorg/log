@@ -37,6 +37,10 @@
 #include "windows/simple_event_log.h"
 #include <boost/log/detail/header.hpp>
 
+#define BOOST_AUTO_LINK_NOMANGLE
+#define BOOST_LIB_NAME "Psapi"
+#include <boost/config/auto_link.hpp>
+
 namespace boost {
 
 BOOST_LOG_OPEN_NAMESPACE
