@@ -33,6 +33,12 @@ environment:
       ADDRESS_MODEL: 64
       EXTRA_TESTS: 1
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+    - TOOLSET: clang-win
+      ADDRESS_MODEL: 64
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+    - TOOLSET: clang-win
+      ADDRESS_MODEL: 32
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
     - TOOLSET: gcc
       ADDRESS_MODEL: 64
       CXXSTD: 03,11
