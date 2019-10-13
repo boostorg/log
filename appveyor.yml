@@ -31,8 +31,13 @@ environment:
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
     - TOOLSET: msvc-14.1
       ADDRESS_MODEL: 64
-      EXTRA_TESTS: 1
+      CXXSTD: 14,17
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+    - TOOLSET: msvc-14.2
+      ADDRESS_MODEL: 64
+      CXXSTD: 14,17
+      EXTRA_TESTS: 1
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
     - TOOLSET: gcc
       ADDRESS_MODEL: 64
       CXXSTD: 03,11
@@ -68,7 +73,12 @@ environment:
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
     - TOOLSET: msvc-14.1
       ADDRESS_MODEL: 32
+      CXXSTD: 14,17
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+    - TOOLSET: msvc-14.2
+      ADDRESS_MODEL: 32
+      CXXSTD: 14,17
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
     - TOOLSET: gcc
       ADDRESS_MODEL: 32
       CXXSTD: 03,11

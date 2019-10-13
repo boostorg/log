@@ -12,7 +12,7 @@ os:
   - linux
   - osx
 
-dist: xenial
+dist: bionic
 
 branches:
   only:
@@ -126,7 +126,7 @@ matrix:
             - ubuntu-toolchain-r-test
 
     - os: linux
-      dist: xenial
+      dist: bionic
       compiler: gcc-9
       env: TOOLSET=gcc COMPILER=g++-9 CXXSTD=03,11,14,17
       addons:
@@ -136,10 +136,10 @@ matrix:
             - g++-9-multilib
             - linux-libc-dev:i386
           sources:
-            - ubuntu-toolchain-r-test
+            - sourceline: "ppa:ubuntu-toolchain-r/test"
 
     - os: linux
-      dist: xenial
+      dist: bionic
       compiler: gcc-UBSAN
       env: UBSAN=1 TOOLSET=gcc COMPILER=g++-9 CXXSTD=03,11,14,17 UBSAN_OPTIONS=print_stacktrace=1 LINKFLAGS=-fuse-ld=gold
       addons:
@@ -147,7 +147,7 @@ matrix:
           packages:
             - g++-9
           sources:
-            - ubuntu-toolchain-r-test
+            - sourceline: "ppa:ubuntu-toolchain-r/test"
 
 # clang, Linux
     - os: linux
@@ -302,51 +302,66 @@ matrix:
 
     - os: linux
       dist: xenial
-      compiler: clang-UBSAN
-      env: UBSAN=1 TOOLSET=clang COMPILER=clang++-8 CXXSTD=03,11,14,17 UBSAN_OPTIONS=print_stacktrace=1
+      compiler: clang-9
+      env: TOOLSET=clang COMPILER=clang++-9 CXXSTD=03,11,14,17
       addons:
         apt:
           packages:
-            - clang-8
-            - g++-8-multilib
+            - clang-9
+            - g++-9-multilib
             - linux-libc-dev:i386
           sources:
-            - ubuntu-toolchain-r-test
-            - sourceline: "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-8 main"
+            - sourceline: "ppa:ubuntu-toolchain-r/test"
+            - sourceline: "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-9 main"
+              key_url: "https://apt.llvm.org/llvm-snapshot.gpg.key"
+
+    - os: linux
+      dist: xenial
+      compiler: clang-UBSAN
+      env: UBSAN=1 TOOLSET=clang COMPILER=clang++-9 CXXSTD=03,11,14,17 UBSAN_OPTIONS=print_stacktrace=1
+      addons:
+        apt:
+          packages:
+            - clang-9
+            - g++-9-multilib
+            - linux-libc-dev:i386
+          sources:
+            - sourceline: "ppa:ubuntu-toolchain-r/test"
+            - sourceline: "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-9 main"
               key_url: "https://apt.llvm.org/llvm-snapshot.gpg.key"
 
     - os: linux
       dist: xenial
       compiler: clang-libc++
-      env: TOOLSET=clang COMPILER=clang++-8 CXXSTD=03,11,14,17 CXXFLAGS="-stdlib=libc++" LINKFLAGS="-stdlib=libc++"
+      env: TOOLSET=clang COMPILER=clang++-9 CXXSTD=03,11,14,17 CXXFLAGS="-stdlib=libc++" LINKFLAGS="-stdlib=libc++"
       addons:
         apt:
           packages:
-            - clang-8
-            - g++-8-multilib
+            - clang-9
+            - g++-9-multilib
             - linux-libc-dev:i386
-            - libc++-8-dev
-            - libc++abi-8-dev
+            - libc++-9-dev
+            - libc++abi-9-dev
           sources:
-            - ubuntu-toolchain-r-test
-            - sourceline: "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-8 main"
+            - sourceline: "ppa:ubuntu-toolchain-r/test"
+            - sourceline: "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-9 main"
               key_url: "https://apt.llvm.org/llvm-snapshot.gpg.key"
 
     - os: linux
       dist: xenial
       compiler: clang-libc++-UBSAN
-      env: UBSAN=1 TOOLSET=clang COMPILER=clang++-8 CXXSTD=03,11,14,17 UBSAN_OPTIONS=print_stacktrace=1 CXXFLAGS="-stdlib=libc++" LINKFLAGS="-stdlib=libc++"
+      env: UBSAN=1 TOOLSET=clang COMPILER=clang++-9 CXXSTD=03,11,14,17 UBSAN_OPTIONS=print_stacktrace=1 CXXFLAGS="-stdlib=libc++" LINKFLAGS="-stdlib=libc++"
       addons:
         apt:
           packages:
-            - clang-8
-            - g++-8-multilib
+            - clang-9
+            - g++-9-multilib
             - linux-libc-dev:i386
-            - libc++-8-dev
-            - libc++abi-8-dev
+            - libc++-9-dev
+            - libc++abi-9-dev
           sources:
-            - ubuntu-toolchain-r-test
-            - sourceline: "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-8 main"
+            - sourceline: "ppa:ubuntu-toolchain-r/test"
+            - sourceline: "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-9 main"
               key_url: "https://apt.llvm.org/llvm-snapshot.gpg.key"
 
 # clang, OS X
