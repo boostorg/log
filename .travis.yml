@@ -42,8 +42,6 @@ matrix:
         apt:
           packages:
             - g++-4.7
-            - g++-4.7-multilib
-            - linux-libc-dev:i386
           sources:
             - ubuntu-toolchain-r-test
 
@@ -55,8 +53,6 @@ matrix:
         apt:
           packages:
             - g++-4.8
-            - g++-4.8-multilib
-            - linux-libc-dev:i386
           sources:
             - ubuntu-toolchain-r-test
 
@@ -68,8 +64,6 @@ matrix:
         apt:
           packages:
             - g++-4.9
-            - g++-4.9-multilib
-            - linux-libc-dev:i386
           sources:
             - ubuntu-toolchain-r-test
 
@@ -81,8 +75,6 @@ matrix:
         apt:
           packages:
             - g++-5
-            - g++-5-multilib
-            - linux-libc-dev:i386
           sources:
             - ubuntu-toolchain-r-test
 
@@ -94,8 +86,6 @@ matrix:
         apt:
           packages:
             - g++-6
-            - g++-6-multilib
-            - linux-libc-dev:i386
           sources:
             - ubuntu-toolchain-r-test
 
@@ -107,41 +97,35 @@ matrix:
         apt:
           packages:
             - g++-7
-            - g++-7-multilib
-            - linux-libc-dev:i386
           sources:
             - ubuntu-toolchain-r-test
 
     - os: linux
       dist: xenial
       compiler: gcc-8
-      env: TOOLSET=gcc COMPILER=g++-8 CXXSTD=03,11,14,17
+      env: TOOLSET=gcc COMPILER=g++-8 CXXSTD=03,11,14,17,2a
       addons:
         apt:
           packages:
             - g++-8
-            - g++-8-multilib
-            - linux-libc-dev:i386
           sources:
             - ubuntu-toolchain-r-test
 
     - os: linux
       dist: bionic
       compiler: gcc-9
-      env: TOOLSET=gcc COMPILER=g++-9 CXXSTD=03,11,14,17
+      env: TOOLSET=gcc COMPILER=g++-9 CXXSTD=03,11,14,17,2a
       addons:
         apt:
           packages:
             - g++-9
-            - g++-9-multilib
-            - linux-libc-dev:i386
           sources:
             - sourceline: "ppa:ubuntu-toolchain-r/test"
 
     - os: linux
       dist: bionic
       compiler: gcc-UBSAN
-      env: UBSAN=1 TOOLSET=gcc COMPILER=g++-9 CXXSTD=03,11,14,17 UBSAN_OPTIONS=print_stacktrace=1 LINKFLAGS=-fuse-ld=gold
+      env: UBSAN=1 TOOLSET=gcc COMPILER=g++-9 CXXSTD=03,11,14,17,2a UBSAN_OPTIONS=print_stacktrace=1 LINKFLAGS=-fuse-ld=gold
       addons:
         apt:
           packages:
@@ -158,8 +142,7 @@ matrix:
         apt:
           packages:
             - clang-3.5
-            - g++-4.9-multilib
-            - linux-libc-dev:i386
+            - libstdc++-4.9-dev
           sources:
             - ubuntu-toolchain-r-test
             - sourceline: "deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.5 main"
@@ -173,8 +156,7 @@ matrix:
         apt:
           packages:
             - clang-3.6
-            - g++-5-multilib
-            - linux-libc-dev:i386
+            - libstdc++-5-dev
           sources:
             - ubuntu-toolchain-r-test
             - sourceline: "deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.6 main"
@@ -188,8 +170,7 @@ matrix:
         apt:
           packages:
             - clang-3.7
-            - g++-5-multilib
-            - linux-libc-dev:i386
+            - libstdc++-5-dev
           sources:
             - ubuntu-toolchain-r-test
             - sourceline: "deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.7 main"
@@ -203,8 +184,7 @@ matrix:
         apt:
           packages:
             - clang-3.8
-            - g++-6-multilib
-            - linux-libc-dev:i386
+            - libstdc++-6-dev
           sources:
             - ubuntu-toolchain-r-test
             - sourceline: "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-3.8 main"
@@ -218,8 +198,7 @@ matrix:
         apt:
           packages:
             - clang-3.9
-            - g++-6-multilib
-            - linux-libc-dev:i386
+            - libstdc++-6-dev
           sources:
             - ubuntu-toolchain-r-test
             - sourceline: "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-3.9 main"
@@ -233,8 +212,7 @@ matrix:
         apt:
           packages:
             - clang-4.0
-            - g++-6-multilib
-            - linux-libc-dev:i386
+            - libstdc++-6-dev
           sources:
             - ubuntu-toolchain-r-test
             - sourceline: "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-4.0 main"
@@ -248,8 +226,7 @@ matrix:
         apt:
           packages:
             - clang-5.0
-            - g++-7-multilib
-            - linux-libc-dev:i386
+            - libstdc++-7-dev
           sources:
             - ubuntu-toolchain-r-test
             - sourceline: "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-5.0 main"
@@ -258,13 +235,12 @@ matrix:
     - os: linux
       dist: xenial
       compiler: clang-6
-      env: TOOLSET=clang COMPILER=clang++-6.0 CXXSTD=03,11,14,17
+      env: TOOLSET=clang COMPILER=clang++-6.0 CXXSTD=03,11,14,17,2a
       addons:
         apt:
           packages:
             - clang-6.0
-            - g++-8-multilib
-            - linux-libc-dev:i386
+            - libstdc++-8-dev
           sources:
             - ubuntu-toolchain-r-test
             - sourceline: "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-6.0 main"
@@ -273,13 +249,12 @@ matrix:
     - os: linux
       dist: xenial
       compiler: clang-7
-      env: TOOLSET=clang COMPILER=clang++-7 CXXSTD=03,11,14,17
+      env: TOOLSET=clang COMPILER=clang++-7 CXXSTD=03,11,14,17,2a
       addons:
         apt:
           packages:
             - clang-7
-            - g++-8-multilib
-            - linux-libc-dev:i386
+            - libstdc++-8-dev
           sources:
             - ubuntu-toolchain-r-test
             - sourceline: "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-7 main"
@@ -288,13 +263,12 @@ matrix:
     - os: linux
       dist: xenial
       compiler: clang-8
-      env: TOOLSET=clang COMPILER=clang++-8 CXXSTD=03,11,14,17
+      env: TOOLSET=clang COMPILER=clang++-8 CXXSTD=03,11,14,17,2a
       addons:
         apt:
           packages:
             - clang-8
-            - g++-8-multilib
-            - linux-libc-dev:i386
+            - libstdc++-8-dev
           sources:
             - ubuntu-toolchain-r-test
             - sourceline: "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-8 main"
@@ -303,13 +277,12 @@ matrix:
     - os: linux
       dist: xenial
       compiler: clang-9
-      env: TOOLSET=clang COMPILER=clang++-9 CXXSTD=03,11,14,17
+      env: TOOLSET=clang COMPILER=clang++-9 CXXSTD=03,11,14,17,2a
       addons:
         apt:
           packages:
             - clang-9
-            - g++-9-multilib
-            - linux-libc-dev:i386
+            - libstdc++-9-dev
           sources:
             - sourceline: "ppa:ubuntu-toolchain-r/test"
             - sourceline: "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-9 main"
@@ -318,13 +291,12 @@ matrix:
     - os: linux
       dist: xenial
       compiler: clang-UBSAN
-      env: UBSAN=1 TOOLSET=clang COMPILER=clang++-9 CXXSTD=03,11,14,17 UBSAN_OPTIONS=print_stacktrace=1
+      env: UBSAN=1 TOOLSET=clang COMPILER=clang++-9 CXXSTD=03,11,14,17,2a UBSAN_OPTIONS=print_stacktrace=1
       addons:
         apt:
           packages:
             - clang-9
-            - g++-9-multilib
-            - linux-libc-dev:i386
+            - libstdc++-9-dev
           sources:
             - sourceline: "ppa:ubuntu-toolchain-r/test"
             - sourceline: "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-9 main"
@@ -333,13 +305,11 @@ matrix:
     - os: linux
       dist: xenial
       compiler: clang-libc++
-      env: TOOLSET=clang COMPILER=clang++-9 CXXSTD=03,11,14,17 CXXFLAGS="-stdlib=libc++" LINKFLAGS="-stdlib=libc++"
+      env: TOOLSET=clang COMPILER=clang++-9 CXXSTD=03,11,14,17,2a CXXFLAGS="-stdlib=libc++" LINKFLAGS="-stdlib=libc++"
       addons:
         apt:
           packages:
             - clang-9
-            - g++-9-multilib
-            - linux-libc-dev:i386
             - libc++-9-dev
             - libc++abi-9-dev
           sources:
@@ -350,13 +320,11 @@ matrix:
     - os: linux
       dist: xenial
       compiler: clang-libc++-UBSAN
-      env: UBSAN=1 TOOLSET=clang COMPILER=clang++-9 CXXSTD=03,11,14,17 UBSAN_OPTIONS=print_stacktrace=1 CXXFLAGS="-stdlib=libc++" LINKFLAGS="-stdlib=libc++"
+      env: UBSAN=1 TOOLSET=clang COMPILER=clang++-9 CXXSTD=03,11,14,17,2a UBSAN_OPTIONS=print_stacktrace=1 CXXFLAGS="-stdlib=libc++" LINKFLAGS="-stdlib=libc++"
       addons:
         apt:
           packages:
             - clang-9
-            - g++-9-multilib
-            - linux-libc-dev:i386
             - libc++-9-dev
             - libc++abi-9-dev
           sources:
