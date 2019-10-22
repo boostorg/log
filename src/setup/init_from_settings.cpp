@@ -156,7 +156,6 @@ inline sinks::auto_newline_mode param_cast_to_auto_newline_mode(const char* para
 {
     typedef CharT char_type;
     typedef boost::log::aux::char_constants< char_type > constants;
-    typedef boost::log::basic_string_literal< char_type > literal_type;
 
     if (value == constants::auto_newline_mode_disabled())
         return sinks::disabled_auto_newline;

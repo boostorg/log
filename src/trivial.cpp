@@ -121,7 +121,6 @@ BOOST_LOG_API std::basic_istream< CharT, TraitsT >& operator>> (
 {
     if (BOOST_LIKELY(strm.good()))
     {
-        typedef severity_level_names< CharT > level_names;
         typedef std::basic_string< CharT, TraitsT > string_type;
         string_type str;
         strm >> str;
