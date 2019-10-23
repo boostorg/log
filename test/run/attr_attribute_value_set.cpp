@@ -20,8 +20,8 @@
 #include <utility>
 #include <iterator>
 #include <boost/config.hpp>
-#include <boost/test/floating_point_comparison.hpp>
 #include <boost/test/unit_test.hpp>
+#include <boost/test/tools//floating_point_comparison.hpp>
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
 #include <boost/log/attributes/attribute_value_set.hpp>

@@ -15,10 +15,10 @@
 #define BOOST_TEST_MODULE attr_attribute_value_impl
 
 #include <string>
-#include <boost/intrusive_ptr.hpp>
+#include <boost/smart_ptr/intrusive_ptr.hpp>
 #include <boost/mpl/vector.hpp>
-#include <boost/test/floating_point_comparison.hpp>
 #include <boost/test/unit_test.hpp>
+#include <boost/test/tools//floating_point_comparison.hpp>
 #include <boost/log/attributes/attribute_value.hpp>
 #include <boost/log/attributes/attribute_value_impl.hpp>
 #include <boost/log/attributes/value_extraction.hpp>
