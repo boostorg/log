@@ -214,11 +214,7 @@ private:
     template< typename ExceptionT >
     static BOOST_NOINLINE BOOST_LOG_NORETURN void throw_exception(int err, const char* descr, const char* func, const char* file, int line)
     {
-#if !defined(BOOST_EXCEPTION_DISABLE)
-        boost::exception_detail::throw_exception_(ExceptionT(err, descr), func, file, line);
-#else
-        boost::throw_exception(ExceptionT(err, descr));
-#endif
+        boost::throw_exception(ExceptionT(err, descr), boost::source_location(file, line, func));
     }
 };
 
