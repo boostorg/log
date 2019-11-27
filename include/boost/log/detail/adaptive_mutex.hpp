@@ -26,6 +26,7 @@
 
 #include <boost/throw_exception.hpp>
 #include <boost/thread/exceptions.hpp>
+#include <boost/assert/source_location.hpp>
 
 #if defined(BOOST_THREAD_POSIX) // This one can be defined by users, so it should go first
 #define BOOST_LOG_ADAPTIVE_MUTEX_USE_PTHREAD
