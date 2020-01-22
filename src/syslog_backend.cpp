@@ -134,10 +134,25 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         typedef log::aux::lazy_singleton< native_syslog_initializer, mutex > mutex_holder;
 #endif
 
+    private:
+        /*!
+         * \brief Application identification string
+         *
+         * \note We have to keep it as an immutable member because some syslog implementations (e.g. glibc)
+         *       do not deep-copy the ident string to internal storage when \c openlog is called
+         *       and instead save a pointer to the user-provided string. This means the user-provided
+         *       string needs to remain accessible for the whole duration of logging.
+         *
+         *       https://github.com/boostorg/log/issues/97
+         *       https://sourceware.org/bugzilla/show_bug.cgi?id=25442
+         */
+        const std::string m_Ident;
+
     public:
-        native_syslog_initializer(std::string const& ident, int facility)
+        native_syslog_initializer(std::string const& ident, int facility) :
+            m_Ident(ident)
         {
-            ::openlog((ident.empty() ? static_cast< const char* >(NULL) : ident.c_str()), 0, facility);
+            ::openlog((m_Ident.empty() ? static_cast< const char* >(NULL) : m_Ident.c_str()), 0, facility);
         }
         ~native_syslog_initializer()
         {
@@ -158,6 +173,9 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
             }
             return p;
         }
+
+        BOOST_DELETED_FUNCTION(native_syslog_initializer(native_syslog_initializer const&))
+        BOOST_DELETED_FUNCTION(native_syslog_initializer& operator= (native_syslog_initializer const&))
     };
 
 } // namespace

@@ -1,5 +1,5 @@
 [/
-              Copyright Andrey Semashev 2007 - 2019.
+              Copyright Andrey Semashev 2007 - 2020.
      Distributed under the Boost Software License, Version 1.0.
         (See accompanying file LICENSE_1_0.txt or copy at
               http://www.boost.org/LICENSE_1_0.txt)
@@ -8,6 +8,12 @@
 /]
 
 [section:changelog Changelog]
+
+[heading 2.18, Boost 1.73]
+
+[*Bug fixes:]
+
+* Added a workaround for some syslog API implementations (e.g. glibc), which do not save the application identification string in `openlog` call. Such implementations could access already freed memory on each `syslog` call, resulting in undefined behavior. ([github_issue 97])
 
 [heading 2.17, Boost 1.71]
 
