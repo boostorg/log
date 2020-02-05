@@ -1122,7 +1122,7 @@ BOOST_LOG_API bool rotation_at_time_point::operator()() const
     }
 
     const bool time_of_day_passed = rotation_time.total_seconds() <= m_Previous.time_of_day().total_seconds();
-    switch (m_DayKind)
+    switch (static_cast< day_kind >(m_DayKind))
     {
     case not_specified:
         {

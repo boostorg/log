@@ -14,6 +14,7 @@
 [*Bug fixes:]
 
 * Added a workaround for some syslog API implementations (e.g. glibc), which do not save the application identification string in `openlog` call. Such implementations could access already freed memory on each `syslog` call, resulting in undefined behavior. ([github_issue 97])
+* Fixed that log file rotation on a specific day of month (e.g. `rotation_at_time_point(boost::gregorian::greg_day(1))`) could be silently ignored and not happen. ([github_issue 98])
 
 [heading 2.17, Boost 1.71]
 
