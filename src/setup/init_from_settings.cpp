@@ -44,8 +44,9 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/date_time/date_defs.hpp>
 #include <boost/property_tree/ptree.hpp>
-#include <boost/mpl/if.hpp>
+#include <boost/type_traits/conditional.hpp>
 #include <boost/type_traits/is_unsigned.hpp>
+#include <boost/type_traits/integral_constant.hpp>
 #include <boost/spirit/home/qi/numeric/numeric_utils.hpp>
 #include <boost/log/detail/code_conversion.hpp>
 #include <boost/log/detail/singleton.hpp>
@@ -95,8 +96,8 @@ template< typename IntT, typename CharT >
 inline IntT param_cast_to_int(const char* param_name, std::basic_string< CharT > const& value)
 {
     IntT res = 0;
-    typedef typename mpl::if_<
-        is_unsigned< IntT >,
+    typedef typename conditional<
+        is_unsigned< IntT >::value,
         qi::extract_uint< IntT, 10, 1, -1 >,
         qi::extract_int< IntT, 10, 1, -1 >
     >::type extract;
@@ -368,7 +369,7 @@ protected:
 private:
     //! The function initializes formatter for the sinks that support formatting
     template< typename SinkT >
-    static shared_ptr< SinkT > init_formatter(shared_ptr< SinkT > const& sink, settings_section const& params, mpl::true_)
+    static shared_ptr< SinkT > init_formatter(shared_ptr< SinkT > const& sink, settings_section const& params, true_type)
     {
         // Formatter
         if (optional< string_type > format_param = params["Format"])
@@ -381,7 +382,7 @@ private:
         return sink;
     }
     template< typename SinkT >
-    static shared_ptr< SinkT > init_formatter(shared_ptr< SinkT > const& sink, settings_section const& params, mpl::false_)
+    static shared_ptr< SinkT > init_formatter(shared_ptr< SinkT > const& sink, settings_section const& params, false_type)
     {
         return sink;
     }

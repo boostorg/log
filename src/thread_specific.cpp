@@ -69,7 +69,7 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 #include <cstring>
 #include <pthread.h>
 #include <boost/cstdint.hpp>
-#include <boost/mpl/if.hpp>
+#include <boost/type_traits/conditional.hpp>
 #include <boost/type_traits/is_integral.hpp>
 #include <boost/type_traits/is_signed.hpp>
 #include <boost/log/detail/header.hpp>
@@ -128,13 +128,13 @@ struct pthread_key_traits< KeyT, true, true >
     typedef KeyT pthread_key_type;
 
 #if defined(BOOST_HAS_INTPTR_T)
-    typedef typename mpl::if_c<
+    typedef typename boost::conditional<
         boost::is_signed< pthread_key_type >::value,
         intptr_t,
         uintptr_t
     >::type intptr_type;
 #else
-    typedef typename mpl::if_c<
+    typedef typename boost::conditional<
         boost::is_signed< pthread_key_type >::value,
         std::ptrdiff_t,
         std::size_t
