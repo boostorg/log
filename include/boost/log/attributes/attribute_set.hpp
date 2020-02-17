@@ -18,8 +18,8 @@
 #include <cstddef>
 #include <utility>
 #include <iterator>
-#include <boost/mpl/if.hpp>
 #include <boost/move/core.hpp>
+#include <boost/type_traits/conditional.hpp>
 #include <boost/log/detail/config.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/attributes/attribute.hpp>
@@ -157,12 +157,12 @@ private:
         //  Standard typedefs
         typedef attribute_set::difference_type difference_type;
         typedef attribute_set::value_type value_type;
-        typedef typename mpl::if_c<
+        typedef typename boost::conditional<
             fConstV,
             attribute_set::const_reference,
             attribute_set::reference
         >::type reference;
-        typedef typename mpl::if_c<
+        typedef typename boost::conditional<
             fConstV,
             attribute_set::const_pointer,
             attribute_set::pointer

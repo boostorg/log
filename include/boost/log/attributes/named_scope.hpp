@@ -22,7 +22,7 @@
 #include <cstddef>
 #include <boost/log/detail/config.hpp>
 #include <boost/current_function.hpp>
-#include <boost/mpl/if.hpp>
+#include <boost/type_traits/conditional.hpp>
 #include <boost/log/utility/string_literal.hpp>
 #include <boost/log/utility/unique_identifier_name.hpp>
 #include <boost/log/utility/unused_variable.hpp>
@@ -150,12 +150,12 @@ protected:
         //  Standard typedefs
         typedef named_scope_list::difference_type difference_type;
         typedef named_scope_list::value_type value_type;
-        typedef typename mpl::if_c<
+        typedef typename boost::conditional<
             fConstV,
             named_scope_list::const_reference,
             named_scope_list::reference
         >::type reference;
-        typedef typename mpl::if_c<
+        typedef typename boost::conditional<
             fConstV,
             named_scope_list::const_pointer,
             named_scope_list::pointer
