@@ -28,6 +28,7 @@
 #include <boost/log/utility/unused_variable.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/attribute_cast.hpp>
+#include <boost/log/detail/allocator_traits.hpp>
 #include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_HAS_PRAGMA_ONCE
@@ -124,13 +125,13 @@ public:
     typedef std::allocator< named_scope_entry > allocator_type;
 
     //  Standard types
-    typedef allocator_type::value_type value_type;
-    typedef allocator_type::reference reference;
-    typedef allocator_type::const_reference const_reference;
-    typedef allocator_type::pointer pointer;
-    typedef allocator_type::const_pointer const_pointer;
-    typedef allocator_type::size_type size_type;
-    typedef allocator_type::difference_type difference_type;
+    typedef log::aux::allocator_traits< allocator_type >::value_type value_type;
+    typedef log::aux::allocator_traits< allocator_type >::size_type size_type;
+    typedef log::aux::allocator_traits< allocator_type >::difference_type difference_type;
+    typedef log::aux::allocator_traits< allocator_type >::pointer pointer;
+    typedef log::aux::allocator_traits< allocator_type >::const_pointer const_pointer;
+    typedef value_type& reference;
+    typedef value_type const& const_reference;
 
 #ifndef BOOST_LOG_DOXYGEN_PASS
 

@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2015.
+ *          Copyright Andrey Semashev 2007 - 2020.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -30,6 +30,7 @@
 #include <boost/intrusive/link_mode.hpp>
 #include <boost/intrusive/derivation_value_traits.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
+#include <boost/log/detail/allocator_traits.hpp>
 #include <boost/log/detail/header.hpp>
 
 #ifndef BOOST_LOG_HASH_TABLE_SIZE_LOG
@@ -62,13 +63,13 @@ public:
 
 #if BOOST_LOG_ATTRIBUTE_SET_MAX_POOL_SIZE > 0
 
-    typedef typename base_type::value_type value_type;
-    typedef typename base_type::size_type size_type;
-    typedef typename base_type::difference_type difference_type;
-    typedef typename base_type::pointer pointer;
-    typedef typename base_type::const_pointer const_pointer;
-    typedef typename base_type::reference reference;
-    typedef typename base_type::const_reference const_reference;
+    typedef typename log::aux::allocator_traits< base_type >::value_type value_type;
+    typedef typename log::aux::allocator_traits< base_type >::size_type size_type;
+    typedef typename log::aux::allocator_traits< base_type >::difference_type difference_type;
+    typedef typename log::aux::allocator_traits< base_type >::pointer pointer;
+    typedef typename log::aux::allocator_traits< base_type >::const_pointer const_pointer;
+    typedef value_type& reference;
+    typedef value_type const& const_reference;
 
 private:
     array< pointer, BOOST_LOG_ATTRIBUTE_SET_MAX_POOL_SIZE > m_Pool;
@@ -96,7 +97,7 @@ public:
     {
         for (size_type i = 0; i < m_PooledCount; ++i)
         {
-            base_type::deallocate(m_Pool[i], 1);
+            log::aux::allocator_traits< base_type >::deallocate(*static_cast< base_type* >(this), m_Pool[i], 1);
         }
     }
 
@@ -116,24 +117,28 @@ public:
 
     pointer allocate(size_type n, const void* hint = NULL)
     {
-        if (m_PooledCount > 0)
+        if (BOOST_LIKELY(m_PooledCount > 0))
         {
             --m_PooledCount;
             return m_Pool[m_PooledCount];
         }
         else
-            return base_type::allocate(n, hint);
+        {
+            return log::aux::allocator_traits< base_type >::allocate(*static_cast< base_type* >(this), n, hint);
+        }
     }
 
     void deallocate(pointer p, size_type n)
     {
-        if (m_PooledCount < m_Pool.size())
+        if (BOOST_LIKELY(m_PooledCount < m_Pool.size()))
         {
             m_Pool[m_PooledCount] = p;
             ++m_PooledCount;
         }
         else
-            base_type::deallocate(p, n);
+        {
+            log::aux::allocator_traits< base_type >::deallocate(*static_cast< base_type* >(this), p, n);
+        }
     }
 
 #else
@@ -195,7 +200,7 @@ public:
     };
 
     //! A list of buckets
-    typedef boost::array< bucket, 1U << BOOST_LOG_HASH_TABLE_SIZE_LOG > buckets;
+    typedef boost::array< bucket, 1u << BOOST_LOG_HASH_TABLE_SIZE_LOG > buckets;
 
     //! Cleanup function object used to erase elements from the container
     struct disposer
