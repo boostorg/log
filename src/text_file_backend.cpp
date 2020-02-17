@@ -1061,8 +1061,8 @@ BOOST_LOG_API rotation_at_time_point::rotation_at_time_point(
     unsigned char minute,
     unsigned char second
 ) :
-    m_DayKind(not_specified),
     m_Day(0),
+    m_DayKind(not_specified),
     m_Hour(hour),
     m_Minute(minute),
     m_Second(second),
@@ -1078,8 +1078,8 @@ BOOST_LOG_API rotation_at_time_point::rotation_at_time_point(
     unsigned char minute,
     unsigned char second
 ) :
-    m_DayKind(weekday),
     m_Day(static_cast< unsigned char >(wday)),
+    m_DayKind(weekday),
     m_Hour(hour),
     m_Minute(minute),
     m_Second(second),
@@ -1095,8 +1095,8 @@ BOOST_LOG_API rotation_at_time_point::rotation_at_time_point(
     unsigned char minute,
     unsigned char second
 ) :
-    m_DayKind(monthday),
     m_Day(static_cast< unsigned char >(mday.as_number())),
+    m_DayKind(monthday),
     m_Hour(hour),
     m_Minute(minute),
     m_Second(second),
