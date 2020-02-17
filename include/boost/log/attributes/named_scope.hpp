@@ -125,10 +125,10 @@ public:
 
     //  Standard types
     typedef allocator_type::value_type value_type;
-    typedef allocator_type::reference reference;
-    typedef allocator_type::const_reference const_reference;
-    typedef allocator_type::pointer pointer;
-    typedef allocator_type::const_pointer const_pointer;
+    typedef allocator_type::value_type& reference;
+    typedef allocator_type::value_type const& const_reference;
+    typedef allocator_type::value_type* pointer;
+    typedef allocator_type::value_type const* const_pointer;
     typedef allocator_type::size_type size_type;
     typedef allocator_type::difference_type difference_type;
 
