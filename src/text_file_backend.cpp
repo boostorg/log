@@ -1482,26 +1482,26 @@ BOOST_LOG_API void text_file_backend::rotate_file()
     filesystem::path prev_file_name = m_pImpl->m_FileName;
     close_file();
 
-    if (!!m_pImpl->m_TargetFileNameGenerator)
+    // Check if the file has been created in the first place
+    system::error_code ec;
+    filesystem::file_status status = filesystem::status(prev_file_name, ec);
+    if (status.type() == filesystem::regular_file)
     {
-        filesystem::path new_file_name;
-        new_file_name = m_pImpl->m_TargetStorageDir / m_pImpl->m_TargetFileNameGenerator(m_pImpl->m_FileCounter);
-
-        if (new_file_name != prev_file_name)
+        if (!!m_pImpl->m_TargetFileNameGenerator)
         {
-            filesystem::create_directories(new_file_name.parent_path());
-            move_file(prev_file_name, new_file_name);
+            filesystem::path new_file_name;
+            new_file_name = m_pImpl->m_TargetStorageDir / m_pImpl->m_TargetFileNameGenerator(m_pImpl->m_FileCounter);
 
-            prev_file_name.swap(new_file_name);
+            if (new_file_name != prev_file_name)
+            {
+                filesystem::create_directories(new_file_name.parent_path());
+                move_file(prev_file_name, new_file_name);
+
+                prev_file_name.swap(new_file_name);
+            }
         }
-    }
 
-    if (!!m_pImpl->m_pFileCollector)
-    {
-        // Check if the file has not been deleted by another process
-        system::error_code ec;
-        filesystem::file_status status = filesystem::status(prev_file_name, ec);
-        if (status.type() == filesystem::regular_file)
+        if (!!m_pImpl->m_pFileCollector)
             m_pImpl->m_pFileCollector->store_file(prev_file_name);
     }
 }
