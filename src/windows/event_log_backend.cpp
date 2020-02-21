@@ -13,9 +13,10 @@
  *         for signalling application events.
  */
 
+#include <boost/log/detail/config.hpp>
+
 #ifndef BOOST_LOG_WITHOUT_EVENT_LOG
 
-#include <boost/log/detail/config.hpp>
 #include <string>
 #include <vector>
 #include <ostream>
