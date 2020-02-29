@@ -209,6 +209,7 @@ void default_sink::consume(record_view const& rec)
 {
     BOOST_LOG_EXPR_IF_MT(lock_guard< mutex_type > lock(m_mutex);)
     m_message_visitor(m_message_name, rec.attribute_values(), message_printer(m_severity_extractor(m_severity_name, rec).get()));
+    std::fflush(stdout);
 }
 
 void default_sink::flush()

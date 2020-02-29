@@ -13,6 +13,7 @@
 
 [*New Features:]
 
+* Default sink used in trivial logging, when no sinks are registered in the logging core, now automatically flushes output after each log record. ([github_issue 103])
 * `core::flush` now performs a flush on the default sink used for trivial logging, when no sinks are registered.
 
 [*Bug fixes:]
