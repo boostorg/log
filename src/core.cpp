@@ -617,12 +617,34 @@ BOOST_LOG_API void core::flush()
 {
     // Acquire exclusive lock to prevent any logging attempts while flushing
     BOOST_LOG_EXPR_IF_MT(implementation::scoped_write_lock lock(m_impl->m_mutex);)
-    implementation::sink_list::iterator it = m_impl->m_sinks.begin(), end = m_impl->m_sinks.end();
-    for (; it != end; ++it)
+    if (BOOST_LIKELY(!m_impl->m_sinks.empty()))
+    {
+        implementation::sink_list::iterator it = m_impl->m_sinks.begin(), end = m_impl->m_sinks.end();
+        for (; it != end; ++it)
+        {
+            try
+            {
+                it->get()->flush();
+            }
+#if !defined(BOOST_LOG_NO_THREADS)
+            catch (thread_interrupted&)
+            {
+                throw;
+            }
+#endif // !defined(BOOST_LOG_NO_THREADS)
+            catch (...)
+            {
+                if (m_impl->m_exception_handler.empty())
+                    throw;
+                m_impl->m_exception_handler();
+            }
+        }
+    }
+    else
     {
         try
         {
-            it->get()->flush();
+            m_impl->m_default_sink->flush();
         }
 #if !defined(BOOST_LOG_NO_THREADS)
         catch (thread_interrupted&)

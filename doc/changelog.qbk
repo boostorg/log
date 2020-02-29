@@ -11,6 +11,10 @@
 
 [heading 2.18, Boost 1.73]
 
+[*New Features:]
+
+* `core::flush` now performs a flush on the default sink used for trivial logging, when no sinks are registered.
+
 [*Bug fixes:]
 
 * Added a workaround for some syslog API implementations (e.g. glibc), which do not save the application identification string in `openlog` call. Such implementations could access already freed memory on each `syslog` call, resulting in undefined behavior. ([github_issue 97])
