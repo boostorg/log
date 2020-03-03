@@ -15,7 +15,7 @@
 #define BOOST_TEST_MODULE util_dynamic_type_disp
 
 #include <string>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/test/tools/floating_point_comparison.hpp>
 #include <boost/log/utility/type_dispatch/dynamic_type_dispatcher.hpp>
@@ -111,8 +111,8 @@ BOOST_AUTO_TEST_CASE(type_dispatch)
     logging::dynamic_type_dispatcher disp;
 
     // Register type visitors
-    disp.register_type< int >(boost::bind(&my_visitor::on_int, &vis, _1));
-    disp.register_type< double >(boost::bind(&my_visitor::on_double, &vis, _1));
+    disp.register_type< int >(boost::bind(&my_visitor::on_int, &vis, boost::placeholders::_1));
+    disp.register_type< double >(boost::bind(&my_visitor::on_double, &vis, boost::placeholders::_1));
 
     BOOST_CHECK(disp.registered_types_count() == 2);
 
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(type_dispatch)
     BOOST_CHECK(!val1.dispatch(disp));
 
     // And now they are
-    disp.register_type< std::string >(boost::bind(&my_visitor::on_string, &vis, _1));
+    disp.register_type< std::string >(boost::bind(&my_visitor::on_string, &vis, boost::placeholders::_1));
     BOOST_CHECK(disp.registered_types_count() == 3);
 
     vis.set_expected(val1.m_Value);

@@ -35,9 +35,9 @@
 #include <stdexcept>
 #include <algorithm>
 #include <boost/type.hpp>
-#include <boost/bind.hpp>
 #include <boost/limits.hpp>
 #include <boost/cstdint.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/smart_ptr/make_shared_object.hpp>
 #include <boost/core/null_deleter.hpp>
 #include <boost/optional/optional.hpp>
@@ -854,7 +854,7 @@ BOOST_LOG_SETUP_API void init_from_settings(basic_settings_section< CharT > cons
             }
         }
 
-        std::for_each(new_sinks.begin(), new_sinks.end(), boost::bind(&core::add_sink, core::get(), _1));
+        std::for_each(new_sinks.begin(), new_sinks.end(), boost::bind(&core::add_sink, core::get(), boost::placeholders::_1));
     }
 }
 

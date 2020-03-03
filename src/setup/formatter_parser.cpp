@@ -21,7 +21,6 @@
 #include <sstream>
 #include <stdexcept>
 #include <boost/assert.hpp>
-#include <boost/bind.hpp>
 #include <boost/move/core.hpp>
 #include <boost/move/utility_core.hpp>
 #include <boost/optional/optional.hpp>

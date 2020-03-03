@@ -19,8 +19,8 @@
 #include <iostream>
 #include <fstream>
 #include <functional>
-#include <boost/ref.hpp>
-#include <boost/bind.hpp>
+#include <boost/core/ref.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/smart_ptr/shared_ptr.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/thread/thread.hpp>

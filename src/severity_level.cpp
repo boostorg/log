@@ -18,7 +18,7 @@
 #include <boost/log/sources/severity_feature.hpp>
 
 #if !defined(BOOST_LOG_NO_THREADS) && !defined(BOOST_LOG_USE_COMPILER_TLS)
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/checked_delete.hpp>
 #include <boost/thread/thread.hpp> // at_thread_exit
 #include <boost/log/detail/singleton.hpp>

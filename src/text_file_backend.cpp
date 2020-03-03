@@ -29,8 +29,8 @@
 #include <iterator>
 #include <algorithm>
 #include <stdexcept>
-#include <boost/ref.hpp>
-#include <boost/bind.hpp>
+#include <boost/core/ref.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/cstdint.hpp>
 #include <boost/smart_ptr/make_shared_object.hpp>
 #include <boost/enable_shared_from_this.hpp>
@@ -570,18 +570,18 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
             {
                 // Both counter and date/time placeholder in the pattern
                 file_name_generator = boost::bind(date_and_time_formatter(),
-                    boost::bind(file_counter_formatter(counter_pos, width), name_pattern, _1), _1);
+                    boost::bind(file_counter_formatter(counter_pos, width), name_pattern, boost::placeholders::_1), boost::placeholders::_1);
             }
             else
             {
                 // Only date/time placeholders in the pattern
-                file_name_generator = boost::bind(date_and_time_formatter(), name_pattern, _1);
+                file_name_generator = boost::bind(date_and_time_formatter(), name_pattern, boost::placeholders::_1);
             }
         }
         else if (counter_found)
         {
             // Only counter placeholder in the pattern
-            file_name_generator = boost::bind(file_counter_formatter(counter_pos, width), name_pattern, _1);
+            file_name_generator = boost::bind(file_counter_formatter(counter_pos, width), name_pattern, boost::placeholders::_1);
         }
         else
         {
@@ -935,7 +935,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
                             }
                         };
                         if (std::find_if(m_Files.begin(), m_Files.end(),
-                            boost::bind(&local::equivalent, boost::cref(info.m_Path), _1)) == m_Files.end())
+                            boost::bind(&local::equivalent, boost::cref(info.m_Path), boost::placeholders::_1)) == m_Files.end())
                         {
                             // Check that the file name matches the pattern
                             unsigned int file_number = 0;
@@ -960,7 +960,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
                 // Sort files chronologically
                 m_Files.splice(m_Files.end(), files);
                 m_TotalSize += total_size;
-                m_Files.sort(boost::bind(&file_info::m_TimeStamp, _1) < boost::bind(&file_info::m_TimeStamp, _2));
+                m_Files.sort(boost::bind(&file_info::m_TimeStamp, boost::placeholders::_1) < boost::bind(&file_info::m_TimeStamp, boost::placeholders::_2));
             }
         }
 
@@ -985,7 +985,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         BOOST_LOG_EXPR_IF_MT(lock_guard< mutex > lock(m_Mutex);)
 
         file_collectors::iterator it = std::find_if(m_Collectors.begin(), m_Collectors.end(),
-            boost::bind(&file_collector::is_governed, _1, boost::cref(target_dir)));
+            boost::bind(&file_collector::is_governed, boost::placeholders::_1, boost::cref(target_dir)));
         shared_ptr< file_collector > p;
         if (it != m_Collectors.end()) try
         {

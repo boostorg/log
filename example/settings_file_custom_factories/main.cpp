@@ -19,8 +19,8 @@
 #include <iostream>
 #include <fstream>
 #include <stdexcept>
-#include <boost/ref.hpp>
-#include <boost/bind.hpp>
+#include <boost/core/ref.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/smart_ptr/make_shared_object.hpp>
 #include <boost/log/core.hpp>
 #include <boost/log/common.hpp>
@@ -115,7 +115,7 @@ struct scope_list_formatter
         (
             name_,
             rec.attribute_values(),
-            boost::bind(&scope_list_formatter::format, _1, boost::ref(strm))
+            boost::bind(&scope_list_formatter::format, boost::placeholders::_1, boost::ref(strm))
         );
     }
 

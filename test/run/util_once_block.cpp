@@ -21,8 +21,8 @@
 
 #if !defined(BOOST_LOG_NO_THREADS)
 
-#include <boost/ref.hpp>
-#include <boost/bind.hpp>
+#include <boost/core/ref.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/locks.hpp>

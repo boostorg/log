@@ -19,8 +19,8 @@
 
 #include <iomanip>
 #include <iostream>
-#include <boost/ref.hpp>
-#include <boost/bind.hpp>
+#include <boost/core/ref.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/smart_ptr/shared_ptr.hpp>
 #include <boost/smart_ptr/make_shared_object.hpp>
 #include <boost/date_time/microsec_time_clock.hpp>
