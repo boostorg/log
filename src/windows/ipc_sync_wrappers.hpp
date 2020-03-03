@@ -52,114 +52,6 @@ namespace ipc {
 
 namespace aux {
 
-// TODO: Port to Boost.Atomic when it supports extended atomic ops
-#if defined(BOOST_MSVC) && (_MSC_VER >= 1400) && !defined(UNDER_CE)
-
-#if _MSC_VER == 1400
-extern "C" unsigned char _interlockedbittestandset(long *a, long b);
-extern "C" unsigned char _interlockedbittestandreset(long *a, long b);
-#else
-extern "C" unsigned char _interlockedbittestandset(volatile long *a, long b);
-extern "C" unsigned char _interlockedbittestandreset(volatile long *a, long b);
-#endif
-
-#pragma intrinsic(_interlockedbittestandset)
-#pragma intrinsic(_interlockedbittestandreset)
-
-BOOST_FORCEINLINE bool bit_test_and_set(boost::atomic< uint32_t >& x, uint32_t bit) BOOST_NOEXCEPT
-{
-    return _interlockedbittestandset(reinterpret_cast< long* >(&x.storage()), static_cast< long >(bit)) != 0;
-}
-
-BOOST_FORCEINLINE bool bit_test_and_reset(boost::atomic< uint32_t >& x, uint32_t bit) BOOST_NOEXCEPT
-{
-    return _interlockedbittestandreset(reinterpret_cast< long* >(&x.storage()), static_cast< long >(bit)) != 0;
-}
-
-#elif (defined(BOOST_MSVC) || defined(BOOST_INTEL_WIN)) && defined(_M_IX86)
-
-BOOST_FORCEINLINE bool bit_test_and_set(boost::atomic< uint32_t >& x, uint32_t bit) BOOST_NOEXCEPT
-{
-    boost::atomic< uint32_t >::storage_type* p = &x.storage();
-    bool ret;
-    __asm
-    {
-        mov eax, bit
-        mov edx, p
-        lock bts [edx], eax
-        setc ret
-    };
-    return ret;
-}
-
-BOOST_FORCEINLINE bool bit_test_and_reset(boost::atomic< uint32_t >& x, uint32_t bit) BOOST_NOEXCEPT
-{
-    boost::atomic< uint32_t >::storage_type* p = &x.storage();
-    bool ret;
-    __asm
-    {
-        mov eax, bit
-        mov edx, p
-        lock btr [edx], eax
-        setc ret
-    };
-    return ret;
-}
-
-#elif defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__))
-
-#if !defined(__CUDACC__)
-#define BOOST_LOG_DETAIL_ASM_CLOBBER_CC_COMMA "cc",
-#else
-#define BOOST_LOG_DETAIL_ASM_CLOBBER_CC_COMMA
-#endif
-
-BOOST_FORCEINLINE bool bit_test_and_set(boost::atomic< uint32_t >& x, uint32_t bit) BOOST_NOEXCEPT
-{
-    bool res;
-    __asm__ __volatile__
-    (
-        "lock; bts %[bit_number], %[storage]\n\t"
-        "setc %[result]\n\t"
-        : [storage] "+m" (x.storage()), [result] "=q" (res)
-        : [bit_number] "Kq" (bit)
-        : BOOST_LOG_DETAIL_ASM_CLOBBER_CC_COMMA "memory"
-    );
-    return res;
-}
-
-BOOST_FORCEINLINE bool bit_test_and_reset(boost::atomic< uint32_t >& x, uint32_t bit) BOOST_NOEXCEPT
-{
-    bool res;
-    __asm__ __volatile__
-    (
-        "lock; btr %[bit_number], %[storage]\n\t"
-        "setc %[result]\n\t"
-        : [storage] "+m" (x.storage()), [result] "=q" (res)
-        : [bit_number] "Kq" (bit)
-        : BOOST_LOG_DETAIL_ASM_CLOBBER_CC_COMMA "memory"
-    );
-    return res;
-}
-
-#else
-
-BOOST_FORCEINLINE bool bit_test_and_set(boost::atomic< uint32_t >& x, uint32_t bit) BOOST_NOEXCEPT
-{
-    const uint32_t mask = uint32_t(1u) << bit;
-    uint32_t old_val = x.fetch_or(mask, boost::memory_order_acq_rel);
-    return (old_val & mask) != 0u;
-}
-
-BOOST_FORCEINLINE bool bit_test_and_reset(boost::atomic< uint32_t >& x, uint32_t bit) BOOST_NOEXCEPT
-{
-    const uint32_t mask = uint32_t(1u) << bit;
-    uint32_t old_val = x.fetch_and(~mask, boost::memory_order_acq_rel);
-    return (old_val & mask) != 0u;
-}
-
-#endif
-
 //! Interprocess event object
 class interprocess_event
 {
@@ -403,7 +295,7 @@ public:
 
     bool try_lock()
     {
-        return !bit_test_and_set(m_shared_state->m_lock_state, lock_flag_bit);
+        return !m_shared_state->m_lock_state.bit_test_and_set(lock_flag_bit, boost::memory_order_acquire);
     }
 
     void lock()
@@ -424,7 +316,7 @@ public:
         const uint32_t old_count = m_shared_state->m_lock_state.fetch_add(lock_flag_value, boost::memory_order_release);
         if ((old_count & event_set_flag_value) == 0u && (old_count > lock_flag_value))
         {
-            if (!bit_test_and_set(m_shared_state->m_lock_state, event_set_flag_bit))
+            if (!m_shared_state->m_lock_state.bit_test_and_set(event_set_flag_bit, boost::memory_order_relaxed))
             {
                 m_event.set_noexcept();
             }
