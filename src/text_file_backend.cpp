@@ -39,6 +39,8 @@
 #include <boost/type_traits/is_same.hpp>
 #include <boost/system/error_code.hpp>
 #include <boost/system/system_error.hpp>
+#include <boost/filesystem/directory.hpp>
+#include <boost/filesystem/exception.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/filesystem/operations.hpp>
