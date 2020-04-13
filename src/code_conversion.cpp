@@ -125,6 +125,7 @@ inline std::size_t code_convert(const SourceCharT* begin, const SourceCharT* end
                 // Looks like the tail of the source buffer contains only part of the last character.
                 // In this case we intentionally fall through to throw an exception.
             }
+            BOOST_FALLTHROUGH;
 
         default: // std::codecvt_base::error
             BOOST_LOG_THROW_DESCR(conversion_error, "Could not convert character encoding");

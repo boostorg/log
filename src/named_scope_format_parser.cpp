@@ -124,12 +124,13 @@ bool detect_operator(const char* begin, const char* end, const char* operator_ke
             return true;
         }
         // Fall through to other cases involving '-'
+        BOOST_FALLTHROUGH;
 
     case '=':
     case '|':
     case '&':
     case '+':
-        // Handle operator=, operator==, operator+=, operator++, operator||, opeartor&&, etc.
+        // Handle operator=, operator==, operator+=, operator++, operator||, operator&&, etc.
         if (end - p >= 2 && (p[0] == p[1] || p[1] == '='))
             operator_end = p + 2;
         else
@@ -295,6 +296,7 @@ inline const char* find_opening_parenthesis(const char* begin, const char* end, 
                 }
             }
             // Fall through to process this character as other characters
+            BOOST_FALLTHROUGH;
 
         default:
             if (state != operator_detected)
@@ -358,6 +360,7 @@ inline const char* find_closing_parenthesis(const char* begin, const char* end, 
                 }
             }
             // Fall through to process this character as other characters
+            BOOST_FALLTHROUGH;
 
         default:
             if (!found_first_meaningful_char && c != ' ')
