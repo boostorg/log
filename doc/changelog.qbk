@@ -9,6 +9,12 @@
 
 [section:changelog Changelog]
 
+[heading 2.19, Boost 1.74]
+
+[*Bug fixes:]
+
+* The [link log.detailed.sink_backends.syslog syslog] sink backend now verifies the IP version of the local and target addresses set by user. The addresses must have the same IP version as was specified in the `ip_version` named parameter on the sink backend construction (by default, IPv4 is assumed). When an address is obtained as a result of host name resolution, only addresses with matching IP version are considered. ([github_issue 119])
+
 [heading 2.18, Boost 1.73]
 
 [*New Features:]
