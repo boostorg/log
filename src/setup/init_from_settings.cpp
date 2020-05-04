@@ -434,7 +434,7 @@ private:
 
 public:
     //! The function constructs a sink that writes log records to the console
-    shared_ptr< sinks::sink > create_sink(settings_section const& params)
+    shared_ptr< sinks::sink > create_sink(settings_section const& params) BOOST_OVERRIDE
     {
         return base_type::select_backend_character_type(params, impl());
     }
@@ -454,7 +454,7 @@ public:
 
 public:
     //! The function constructs a sink that writes log records to a text file
-    shared_ptr< sinks::sink > create_sink(settings_section const& params)
+    shared_ptr< sinks::sink > create_sink(settings_section const& params) BOOST_OVERRIDE
     {
         typedef sinks::text_file_backend backend_t;
         shared_ptr< backend_t > backend = boost::make_shared< backend_t >();
@@ -579,7 +579,7 @@ public:
 
 public:
     //! The function constructs a sink that writes log records to syslog
-    shared_ptr< sinks::sink > create_sink(settings_section const& params)
+    shared_ptr< sinks::sink > create_sink(settings_section const& params) BOOST_OVERRIDE
     {
         // Construct the backend
         typedef sinks::syslog_backend backend_t;

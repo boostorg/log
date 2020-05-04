@@ -194,7 +194,7 @@ struct syslog_backend::implementation::native :
     }
 
     //! The method sends the formatted message to the syslog host
-    void send(syslog::level lev, string_type const& formatted_message)
+    void send(syslog::level lev, string_type const& formatted_message) BOOST_OVERRIDE
     {
         int native_level;
         switch (lev)
@@ -447,7 +447,7 @@ struct syslog_backend::implementation::udp_socket_based :
     }
 
     //! The method sends the formatted message to the syslog host
-    void send(syslog::level lev, string_type const& formatted_message)
+    void send(syslog::level lev, string_type const& formatted_message) BOOST_OVERRIDE
     {
         if (!m_pSocket.get())
         {

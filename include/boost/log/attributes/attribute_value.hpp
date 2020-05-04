@@ -98,7 +98,7 @@ public:
         /*!
          * \return The attribute value that refers to self implementation.
          */
-        virtual attribute_value get_value() { return attribute_value(this); }
+        attribute_value get_value() BOOST_OVERRIDE { return attribute_value(this); }
 
         /*!
          * \return The attribute value type

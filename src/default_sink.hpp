@@ -56,10 +56,10 @@ private:
 
 public:
     default_sink();
-    ~default_sink();
-    bool will_consume(attribute_value_set const&);
-    void consume(record_view const& rec);
-    void flush();
+    ~default_sink() BOOST_OVERRIDE;
+    bool will_consume(attribute_value_set const&) BOOST_OVERRIDE;
+    void consume(record_view const& rec) BOOST_OVERRIDE;
+    void flush() BOOST_OVERRIDE;
 };
 
 } // namespace aux

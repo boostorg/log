@@ -67,7 +67,7 @@ namespace aux {
         {
         public:
             //! The method dispatches the value to the given object
-            bool dispatch(type_dispatcher& dispatcher)
+            bool dispatch(type_dispatcher& dispatcher) BOOST_OVERRIDE
             {
                 type_dispatcher::callback< value_type > callback = dispatcher.get_callback< value_type >();
                 if (callback)
@@ -80,7 +80,7 @@ namespace aux {
             }
 
             //! The method is called when the attribute value is passed to another thread
-            intrusive_ptr< attribute_value::impl > detach_from_thread()
+            intrusive_ptr< attribute_value::impl > detach_from_thread() BOOST_OVERRIDE
             {
     #if !defined(BOOST_LOG_NO_THREADS)
                 return new attributes::attribute_value_impl< value_type >(

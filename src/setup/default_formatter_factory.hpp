@@ -45,7 +45,7 @@ public:
     typedef typename base_type::args_map args_map;
 
     //! The function creates a formatter for the specified attribute.
-    virtual formatter_type create_formatter(attribute_name const& name, args_map const& args);
+    formatter_type create_formatter(attribute_name const& name, args_map const& args) BOOST_OVERRIDE;
 };
 
 } // namespace aux

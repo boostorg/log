@@ -659,14 +659,14 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
             uintmax_t max_files);
 
         //! Destructor
-        ~file_collector();
+        ~file_collector() BOOST_OVERRIDE;
 
         //! The function stores the specified file in the storage
-        void store_file(filesystem::path const& file_name);
+        void store_file(filesystem::path const& file_name) BOOST_OVERRIDE;
 
         //! Scans the target directory for the files that have already been stored
         uintmax_t scan_for_files(
-            file::scan_method method, filesystem::path const& pattern, unsigned int* counter);
+            file::scan_method method, filesystem::path const& pattern, unsigned int* counter) BOOST_OVERRIDE;
 
         //! The function updates storage restrictions
         void update(uintmax_t max_size, uintmax_t min_free_space, uintmax_t max_files);
@@ -1345,7 +1345,7 @@ BOOST_LOG_API void text_file_backend::consume(record_view const& rec, string_typ
     {
         // The file stream is not operational. One possible reason is that there is no more free space
         // on the file system. In this case it is possible that this log record will fail to be written as well,
-        // leaving the newly creted file empty. Eventually this results in lots of empty log files.
+        // leaving the newly created file empty. Eventually this results in lots of empty log files.
         // We should take precautions to avoid this. https://svn.boost.org/trac/boost/ticket/11016
         prev_file_name = m_pImpl->m_FileName;
         close_file();
