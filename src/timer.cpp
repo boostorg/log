@@ -131,7 +131,7 @@ public:
      */
     impl() : m_BaseTimePoint(utc_time_traits::get_clock()) {}
 
-    attribute_value get_value()
+    attribute_value get_value() BOOST_OVERRIDE
     {
         return attribute_value(new attribute_value_impl< value_type >(
             utc_time_traits::get_clock() - m_BaseTimePoint));

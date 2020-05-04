@@ -73,7 +73,7 @@ public:
      *
      * \return \c true if the value has been dispatched, \c false otherwise
      */
-    virtual bool dispatch(type_dispatcher& dispatcher)
+    bool dispatch(type_dispatcher& dispatcher) BOOST_OVERRIDE
     {
         type_dispatcher::callback< value_type > callback = dispatcher.get_callback< value_type >();
         if (callback)
@@ -88,7 +88,7 @@ public:
     /*!
      * \return The attribute value type
      */
-    typeindex::type_index get_type() const { return typeindex::type_id< value_type >(); }
+    typeindex::type_index get_type() const BOOST_OVERRIDE { return typeindex::type_id< value_type >(); }
 
     /*!
      * \return Reference to the contained value.

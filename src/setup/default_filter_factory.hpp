@@ -70,20 +70,20 @@ public:
     typedef typename base_type::string_type string_type;
 
     //! The callback for equality relation filter
-    virtual filter on_equality_relation(attribute_name const& name, string_type const& arg);
+    filter on_equality_relation(attribute_name const& name, string_type const& arg) BOOST_OVERRIDE;
     //! The callback for inequality relation filter
-    virtual filter on_inequality_relation(attribute_name const& name, string_type const& arg);
+    filter on_inequality_relation(attribute_name const& name, string_type const& arg) BOOST_OVERRIDE;
     //! The callback for less relation filter
-    virtual filter on_less_relation(attribute_name const& name, string_type const& arg);
+    filter on_less_relation(attribute_name const& name, string_type const& arg) BOOST_OVERRIDE;
     //! The callback for greater relation filter
-    virtual filter on_greater_relation(attribute_name const& name, string_type const& arg);
+    filter on_greater_relation(attribute_name const& name, string_type const& arg) BOOST_OVERRIDE;
     //! The callback for less or equal relation filter
-    virtual filter on_less_or_equal_relation(attribute_name const& name, string_type const& arg);
+    filter on_less_or_equal_relation(attribute_name const& name, string_type const& arg) BOOST_OVERRIDE;
     //! The callback for greater or equal relation filter
-    virtual filter on_greater_or_equal_relation(attribute_name const& name, string_type const& arg);
+    filter on_greater_or_equal_relation(attribute_name const& name, string_type const& arg) BOOST_OVERRIDE;
 
     //! The callback for custom relation filter
-    virtual filter on_custom_relation(attribute_name const& name, string_type const& rel, string_type const& arg);
+    filter on_custom_relation(attribute_name const& name, string_type const& rel, string_type const& arg) BOOST_OVERRIDE;
 
 private:
     //! The function parses the argument value for a binary relation and constructs the corresponding filter

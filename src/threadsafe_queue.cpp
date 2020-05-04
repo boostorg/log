@@ -76,11 +76,11 @@ public:
         m_Head.node = m_Tail.node = first_node;
     }
 
-    ~threadsafe_queue_impl_generic()
+    ~threadsafe_queue_impl_generic() BOOST_OVERRIDE
     {
     }
 
-    node_base* reset_last_node()
+    node_base* reset_last_node() BOOST_OVERRIDE
     {
         BOOST_ASSERT(m_Head.node == m_Tail.node);
         node_base* p = m_Head.node;
@@ -88,12 +88,12 @@ public:
         return p;
     }
 
-    bool unsafe_empty()
+    bool unsafe_empty() BOOST_OVERRIDE
     {
         return m_Head.node == m_Tail.node;
     }
 
-    void push(node_base* p)
+    void push(node_base* p) BOOST_OVERRIDE
     {
         set_next(p, NULL);
         exclusive_lock_guard< mutex_type > _(m_Tail.mutex);
@@ -101,7 +101,7 @@ public:
         m_Tail.node = p;
     }
 
-    bool try_pop(node_base*& node_to_free, node_base*& node_with_value)
+    bool try_pop(node_base*& node_to_free, node_base*& node_with_value) BOOST_OVERRIDE
     {
         exclusive_lock_guard< mutex_type > _(m_Head.mutex);
         node_base* next = get_next(m_Head.node);

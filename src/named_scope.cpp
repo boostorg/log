@@ -92,7 +92,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
 
         //! The method dispatches the value to the given object. It returns true if the
         //! object was capable to consume the real attribute value type and false otherwise.
-        bool dispatch(type_dispatcher& dispatcher)
+        bool dispatch(type_dispatcher& dispatcher) BOOST_OVERRIDE
         {
             type_dispatcher::callback< scope_stack > callback =
                 dispatcher.get_callback< scope_stack >();
@@ -108,11 +108,11 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         /*!
          * \return The attribute value type
          */
-        typeindex::type_index get_type() const { return typeindex::type_id< scope_stack >(); }
+        typeindex::type_index get_type() const BOOST_OVERRIDE { return typeindex::type_id< scope_stack >(); }
 
         //! The method is called when the attribute value is passed to another thread (e.g.
         //! in case of asynchronous logging). The value should ensure it properly owns all thread-specific data.
-        intrusive_ptr< attribute_value::impl > detach_from_thread()
+        intrusive_ptr< attribute_value::impl > detach_from_thread() BOOST_OVERRIDE
         {
             if (!m_DetachedValue)
             {
@@ -186,7 +186,7 @@ struct BOOST_SYMBOL_VISIBLE named_scope::impl :
     }
 
     //! The method returns the actual attribute value. It must not return NULL.
-    attribute_value get_value()
+    attribute_value get_value() BOOST_OVERRIDE
     {
         return attribute_value(new named_scope_value(&get_scope_list()));
     }
