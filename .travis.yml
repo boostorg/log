@@ -290,46 +290,60 @@ matrix:
 
     - os: linux
       dist: xenial
-      compiler: clang-UBSAN
-      env: UBSAN=1 TOOLSET=clang COMPILER=clang++-9 CXXSTD=03,11,14,17,2a UBSAN_OPTIONS=print_stacktrace=1
+      compiler: clang-10
+      env: TOOLSET=clang COMPILER=clang++-10 CXXSTD=03,11,14,17,20
       addons:
         apt:
           packages:
-            - clang-9
+            - clang-10
             - libstdc++-9-dev
           sources:
             - sourceline: "ppa:ubuntu-toolchain-r/test"
-            - sourceline: "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-9 main"
+            - sourceline: "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-10 main"
+              key_url: "https://apt.llvm.org/llvm-snapshot.gpg.key"
+
+    - os: linux
+      dist: xenial
+      compiler: clang-UBSAN
+      env: UBSAN=1 TOOLSET=clang COMPILER=clang++-10 CXXSTD=03,11,14,17,20 UBSAN_OPTIONS=print_stacktrace=1
+      addons:
+        apt:
+          packages:
+            - clang-10
+            - libstdc++-9-dev
+          sources:
+            - sourceline: "ppa:ubuntu-toolchain-r/test"
+            - sourceline: "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-10 main"
               key_url: "https://apt.llvm.org/llvm-snapshot.gpg.key"
 
     - os: linux
       dist: xenial
       compiler: clang-libc++
-      env: TOOLSET=clang COMPILER=clang++-9 CXXSTD=03,11,14,17,2a CXXFLAGS="-stdlib=libc++" LINKFLAGS="-stdlib=libc++"
+      env: TOOLSET=clang COMPILER=clang++-10 CXXSTD=03,11,14,17,20 CXXFLAGS="-stdlib=libc++" LINKFLAGS="-stdlib=libc++"
       addons:
         apt:
           packages:
-            - clang-9
-            - libc++-9-dev
-            - libc++abi-9-dev
+            - clang-10
+            - libc++-10-dev
+            - libc++abi-10-dev
           sources:
             - sourceline: "ppa:ubuntu-toolchain-r/test"
-            - sourceline: "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-9 main"
+            - sourceline: "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-10 main"
               key_url: "https://apt.llvm.org/llvm-snapshot.gpg.key"
 
     - os: linux
       dist: xenial
       compiler: clang-libc++-UBSAN
-      env: UBSAN=1 TOOLSET=clang COMPILER=clang++-9 CXXSTD=03,11,14,17,2a UBSAN_OPTIONS=print_stacktrace=1 CXXFLAGS="-stdlib=libc++" LINKFLAGS="-stdlib=libc++"
+      env: UBSAN=1 TOOLSET=clang COMPILER=clang++-10 CXXSTD=03,11,14,17,20 UBSAN_OPTIONS=print_stacktrace=1 CXXFLAGS="-stdlib=libc++" LINKFLAGS="-stdlib=libc++"
       addons:
         apt:
           packages:
-            - clang-9
-            - libc++-9-dev
-            - libc++abi-9-dev
+            - clang-10
+            - libc++-10-dev
+            - libc++abi-10-dev
           sources:
             - sourceline: "ppa:ubuntu-toolchain-r/test"
-            - sourceline: "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-9 main"
+            - sourceline: "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-10 main"
               key_url: "https://apt.llvm.org/llvm-snapshot.gpg.key"
 
 # clang, OS X
