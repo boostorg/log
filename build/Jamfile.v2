@@ -213,7 +213,6 @@ project boost/log
         <toolset>gcc,<target-os>windows:<linkflags>-Wl,--enable-auto-import
         <toolset>gcc,<target-os>cygwin:<linkflags>-Wl,--enable-auto-import
 
-        <library>/boost/date_time//boost_date_time
         <library>/boost/filesystem//boost_filesystem
         <threading>single:<define>BOOST_LOG_NO_THREADS
         <threading>multi:<library>/boost/atomic//boost_atomic
