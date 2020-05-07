@@ -773,8 +773,8 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         info.m_TimeStamp = filesystem::last_write_time(src_path);
         info.m_Size = filesystem::file_size(src_path);
 
-        filesystem::path file_name_path = src_path.filename();
-        path_string_type file_name = file_name_path.native();
+        const filesystem::path file_name_path = src_path.filename();
+        path_string_type const& file_name = file_name_path.native();
         info.m_Path = m_StorageDir / file_name_path;
 
         // Check if the file is already in the target directory
@@ -862,7 +862,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
                     if (m_MinFreeSpace)
                         free_space = filesystem::space(m_StorageDir).available;
                     m_TotalSize -= old_info.m_Size;
-                    m_Files.erase(it++);
+                    it = m_Files.erase(it);
                 }
                 catch (system::system_error&)
                 {
@@ -874,7 +874,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
             {
                 // If it's not a file or is absent, just remove it from the list
                 m_TotalSize -= old_info.m_Size;
-                m_Files.erase(it++);
+                it = m_Files.erase(it);
             }
         }
 
