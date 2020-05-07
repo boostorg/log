@@ -19,6 +19,7 @@
 #include <boost/move/core.hpp>
 #include <boost/move/utility_core.hpp>
 #include <boost/type_traits/remove_cv.hpp>
+#include <boost/type_traits/is_nothrow_move_constructible.hpp>
 #include <boost/log/detail/config.hpp>
 #include <boost/log/attributes/attribute_value.hpp>
 #include <boost/log/utility/type_dispatch/type_dispatcher.hpp>
@@ -64,7 +65,10 @@ public:
     /*!
      * Constructor with initialization of the stored value
      */
-    explicit attribute_value_impl(BOOST_RV_REF(value_type) v) : m_value(boost::move(v)) {}
+    explicit attribute_value_impl(BOOST_RV_REF(value_type) v) BOOST_NOEXCEPT_IF(boost::is_nothrow_move_constructible< value_type >::value) :
+        m_value(boost::move(v))
+    {
+    }
 
     /*!
      * Attribute value dispatching method.

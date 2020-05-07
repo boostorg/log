@@ -595,9 +595,9 @@ private:
 public:
     BOOST_DEFAULTED_FUNCTION(named_scope_formatter(), {})
     named_scope_formatter(named_scope_formatter const& that) : m_formatters(that.m_formatters) {}
-    named_scope_formatter(BOOST_RV_REF(named_scope_formatter) that) { m_formatters.swap(that.m_formatters); }
+    named_scope_formatter(BOOST_RV_REF(named_scope_formatter) that) BOOST_NOEXCEPT { m_formatters.swap(that.m_formatters); }
 
-    named_scope_formatter& operator= (named_scope_formatter that)
+    named_scope_formatter& operator= (named_scope_formatter that) BOOST_NOEXCEPT
     {
         this->swap(that);
         return *this;
