@@ -48,6 +48,7 @@ local doxygen_params =
                         BOOST_LOG_NO_VTABLE= \\
                         BOOST_SYMBOL_VISIBLE= \\
                         BOOST_FORCEINLINE=inline \\
+                        BOOST_INLINE_VARIABLE=inline \\
                         BOOST_STATIC_ASSERT(x)= \\
                         BOOST_STATIC_ASSERT_MSG(x,y)= \\
                         BOOST_STATIC_CONSTANT(x,y)=\"static constexpr x y\" \\
