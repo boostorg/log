@@ -300,6 +300,31 @@ Here, `tuple_manip` accepts two arguments - the sequence of elements, and, optio
 
 [endsect]
 
+[section:optional Optional manipulator]
+
+    #include <``[boost_log_utility_manipulators_optional_hpp]``>
+
+Optional manipulator allows to output an optional value to the output stream. If the value is not present, the manipulator allows to specify a "none" marker to output instead. For example:
+
+    boost::optional< int > param1;
+    boost::optional< int > param2 = 10;
+
+    BOOST_LOG(lg) << "param1: " << logging::optional_manip(param1, "[none]") << ", param2: " << logging::optional_manip(param2, "[none]"); // Outputs: "param1: [none], param2: 10"
+
+[tip This manipulator can also be used with regular output streams, not necessarily loggers.]
+
+Here, `optional_manip` accepts two arguments - the optional value, and, optionally, a "none" marker. The optional value can be any type that supports the following:
+
+* Contextually convertible to `bool`, where `true` indicates that the value is present.
+* Can be dereferenced using `operator*()`, and the result of this operator is the value.
+* The result of dereferencing must support stream insertion operator.
+
+Examples of types that fit these requirements are `boost::optional` (see __boost_optional__), `std::optional` and pointers to objects.
+
+The "none" marker argument, if specified, is inserted into stream in case if the optional value is not present (i.e. the contextual conversion to `bool` yields `false`). The marker can be any type that supports stream insertion. If the marker is not specified, no output is produced if the value is not present.
+
+[endsect]
+
 [endsect]
 
 [section:ipc Interprocess communication tools]
