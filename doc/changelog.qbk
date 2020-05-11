@@ -18,6 +18,7 @@
 [*New Features:]
 
 * Move constructors and assignment operators of various components were marked `noexcept`.
+* Added a new [link log.detailed.utilities.manipulators.range `range_manip`] stream manipulator that can be used for outputting elements of a range, optionally separated by a delimiter.
 
 [heading 2.18, Boost 1.73]
 

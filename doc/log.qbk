@@ -38,6 +38,7 @@
 [def __boost_optional__ [@http://www.boost.org/doc/libs/release/libs/optional/index.html Boost.Optional]]
 [def __boost_variant__ [@http://www.boost.org/doc/libs/release/doc/html/variant.html Boost.Variant]]
 [def __boost_intrusive__ [@http://www.boost.org/doc/libs/release/doc/html/intrusive.html Boost.Intrusive]]
+[def __boost_range__ [@http://www.boost.org/doc/libs/release/libs/range/index.html Boost.Range]]
 [def __boost_iostreams__ [@http://www.boost.org/doc/libs/release/libs/iostreams/doc/index.html Boost.IOStreams]]
 [def __boost_mpl__ [@http://www.boost.org/doc/libs/release/libs/mpl/doc/index.html Boost.MPL]]
 [def __boost_exception__ [@http://www.boost.org/doc/libs/release/libs/exception/doc/boost-exception.html Boost.Exception]]

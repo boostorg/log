@@ -262,6 +262,22 @@ Sometimes it can be useful to be able to insert a newline character in the outpu
 
 [endsect]
 
+[section:range Range manipulator]
+
+    #include <``[boost_log_utility_manipulators_range_hpp]``>
+
+It can be useful to be able to output elements of a container (or, more generally, a range), preferably separated with a delimiter. The `range_manip` manipulator allows to do this:
+
+    std::vector< int > ints{ 1, 2, 3 };
+
+    BOOST_LOG(lg) << "Integers: { " << logging::range_manip(ints, ", ") << " }"; // Outputs: "Integers: { 1, 2, 3 }"
+
+[tip This manipulator can also be used with regular output streams, not necessarily loggers.]
+
+Here, `range_manip` accepts two arguments - the range of elements, and, optionally, a delimiter. The range can be any type supported by __boost_range__ `begin()` and `end()` free functions, which includes any standard containers and arrays. Elements of the range must support stream insertion operator. The delimiter argument, if specified, is inserted into stream between elements. The delimiter can be any type that supports stream insertion. If delimiter is not specified, the elements are output into the stream without separation.
+
+[endsect]
+
 [endsect]
 
 [section:ipc Interprocess communication tools]
