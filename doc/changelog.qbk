@@ -19,6 +19,7 @@
 
 * Move constructors and assignment operators of various components were marked `noexcept`.
 * Added a new [link log.detailed.utilities.manipulators.range `range_manip`] stream manipulator that can be used for outputting elements of a range, optionally separated by a delimiter.
+* Added a new [link log.detailed.utilities.manipulators.tuple `tuple_manip`] stream manipulator that can be used for outputting elements of a tuple or any other heterogeneous sequence, optionally separated by a delimiter.
 
 [heading 2.18, Boost 1.73]
 
