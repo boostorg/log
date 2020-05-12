@@ -112,9 +112,7 @@ public:
 template< typename StreamT, typename OptionalT, typename NoneT >
 inline typename boost::enable_if_c< log::aux::is_ostream< StreamT >::value, StreamT& >::type operator<< (StreamT& strm, optional_manipulator< OptionalT, NoneT > const& manip)
 {
-    if (BOOST_LIKELY(strm.good()))
-        manip.output(strm);
-
+    manip.output(strm);
     return strm;
 }
 
