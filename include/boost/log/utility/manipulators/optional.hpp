@@ -122,6 +122,8 @@ inline typename boost::enable_if_c< log::aux::is_ostream< StreamT >::value, Stre
  * \param opt Optional value to output. The optional value must support contextual conversion to \c bool and dereferencing, and its dereferencing result must support stream output.
  * \param none Marker used to indicate when the value is not present. Optional. If not specified, nothing is output if the value is not present.
  * \returns Manipulator to be inserted into the stream.
+ *
+ * \note Both \a opt and \a none objects must outlive the created manipulator object.
  */
 template< typename OptionalT, typename NoneT >
 inline typename boost::enable_if_c<
@@ -138,6 +140,8 @@ inline typename boost::enable_if_c<
  * \param opt Optional value to output. The optional value must support contextual conversion to \c bool and dereferencing, and its dereferencing result must support stream output.
  * \param none Marker used to indicate when the value is not present. Optional. If not specified, nothing is output if the value is not present.
  * \returns Manipulator to be inserted into the stream.
+ *
+ * \note Both \a opt and \a none objects must outlive the created manipulator object.
  */
 template< typename OptionalT, typename NoneT >
 inline typename boost::enable_if_c<
@@ -154,6 +158,8 @@ inline typename boost::enable_if_c<
  * \param opt Optional value to output. The optional value must support contextual conversion to \c bool and dereferencing, and its dereferencing result must support stream output.
  * \param none Marker used to indicate when the value is not present. Optional. If not specified, nothing is output if the value is not present.
  * \returns Manipulator to be inserted into the stream.
+ *
+ * \note Both \a opt and \a none objects must outlive the created manipulator object.
  */
 template< typename OptionalT, typename NoneElementT, std::size_t N >
 inline typename boost::enable_if_c<
@@ -170,6 +176,8 @@ inline typename boost::enable_if_c<
  * \param opt Optional value to output. The optional value must support contextual conversion to \c bool and dereferencing, and its dereferencing result must support stream output.
  * \param none Marker used to indicate when the value is not present. Optional. If not specified, nothing is output if the value is not present.
  * \returns Manipulator to be inserted into the stream.
+ *
+ * \note Both \a opt and \a none objects must outlive the created manipulator object.
  */
 template< typename OptionalT, typename NoneT >
 inline typename boost::enable_if_c<
@@ -186,6 +194,8 @@ inline typename boost::enable_if_c<
  * \param opt Optional value to output. The optional value must support contextual conversion to \c bool and dereferencing, and its dereferencing result must support stream output.
  * \param none Marker used to indicate when the value is not present. Optional. If not specified, nothing is output if the value is not present.
  * \returns Manipulator to be inserted into the stream.
+ *
+ * \note Both \a opt and \a none objects must outlive the created manipulator object.
  */
 template< typename OptionalT, typename NoneT >
 inline typename boost::enable_if_c<
@@ -202,6 +212,8 @@ inline typename boost::enable_if_c<
  * \param opt Optional value to output. The optional value must support contextual conversion to \c bool and dereferencing, and its dereferencing result must support stream output.
  * \param none Marker used to indicate when the value is not present. Optional. If not specified, nothing is output if the value is not present.
  * \returns Manipulator to be inserted into the stream.
+ *
+ * \note Both \a opt and \a none objects must outlive the created manipulator object.
  */
 template< typename OptionalT, typename NoneElementT, std::size_t N >
 inline typename boost::enable_if_c<
@@ -217,6 +229,8 @@ inline typename boost::enable_if_c<
  *
  * \param opt Optional value to output. The optional value must support contextual conversion to \c bool and dereferencing, and its dereferencing result must support stream output.
  * \returns Manipulator to be inserted into the stream.
+ *
+ * \note \a opt object must outlive the created manipulator object.
  */
 template< typename OptionalT >
 inline typename boost::enable_if_c<
@@ -232,6 +246,8 @@ inline typename boost::enable_if_c<
  *
  * \param opt Optional value to output. The optional value must support contextual conversion to \c bool and dereferencing, and its dereferencing result must support stream output.
  * \returns Manipulator to be inserted into the stream.
+ *
+ * \note \a opt object must outlive the created manipulator object.
  */
 template< typename OptionalT >
 inline typename boost::enable_if_c<

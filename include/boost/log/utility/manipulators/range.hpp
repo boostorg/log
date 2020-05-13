@@ -127,6 +127,8 @@ inline typename boost::enable_if_c< log::aux::is_ostream< StreamT >::value, Stre
  * \param range Range of elements to output. The range must support begin and end iterators, and its elements must support stream output.
  * \param delimiter Delimiter to separate elements in the output. Optional. If not specified, elements are output without separation.
  * \returns Manipulator to be inserted into the stream.
+ *
+ * \note Both \a range and \a delimiter objects must outlive the created manipulator object.
  */
 template< typename RangeT, typename DelimiterT >
 inline typename boost::enable_if_c<
@@ -143,6 +145,8 @@ inline typename boost::enable_if_c<
  * \param range Range of elements to output. The range must support begin and end iterators, and its elements must support stream output.
  * \param delimiter Delimiter to separate elements in the output. Optional. If not specified, elements are output without separation.
  * \returns Manipulator to be inserted into the stream.
+ *
+ * \note Both \a range and \a delimiter objects must outlive the created manipulator object.
  */
 template< typename RangeT, typename DelimiterT >
 inline typename boost::disable_if_c<
@@ -159,6 +163,8 @@ inline typename boost::disable_if_c<
  * \param range Range of elements to output. The range must support begin and end iterators, and its elements must support stream output.
  * \param delimiter Delimiter to separate elements in the output. Optional. If not specified, elements are output without separation.
  * \returns Manipulator to be inserted into the stream.
+ *
+ * \note Both \a range and \a delimiter objects must outlive the created manipulator object.
  */
 template< typename RangeT, typename DelimiterElementT, std::size_t N >
 inline range_manipulator< RangeT, DelimiterElementT* > range_manip(RangeT const& range, DelimiterElementT (&delimiter)[N]) BOOST_NOEXCEPT
@@ -171,6 +177,8 @@ inline range_manipulator< RangeT, DelimiterElementT* > range_manip(RangeT const&
  *
  * \param range Range of elements to output. The range must support begin and end iterators, and its elements must support stream output.
  * \returns Manipulator to be inserted into the stream.
+ *
+ * \note \a delimiter object must outlive the created manipulator object.
  */
 template< typename RangeT >
 inline range_manipulator< RangeT, void > range_manip(RangeT const& range) BOOST_NOEXCEPT

@@ -160,6 +160,8 @@ inline typename boost::enable_if_c< log::aux::is_ostream< StreamT >::value, Stre
  * \param tuple Heterogeneous sequence of elements to output. The sequence must be supported by Boost.Fusion, and its elements must support stream output.
  * \param delimiter Delimiter to separate elements in the output. Optional. If not specified, elements are output without separation.
  * \returns Manipulator to be inserted into the stream.
+ *
+ * \note Both \a tuple and \a delimiter objects must outlive the created manipulator object.
  */
 template< typename TupleT, typename DelimiterT >
 inline typename boost::enable_if_c<
@@ -176,6 +178,8 @@ inline typename boost::enable_if_c<
  * \param tuple Heterogeneous sequence of elements to output. The sequence must be supported by Boost.Fusion, and its elements must support stream output.
  * \param delimiter Delimiter to separate elements in the output. Optional. If not specified, elements are output without separation.
  * \returns Manipulator to be inserted into the stream.
+ *
+ * \note Both \a tuple and \a delimiter objects must outlive the created manipulator object.
  */
 template< typename TupleT, typename DelimiterT >
 inline typename boost::disable_if_c<
@@ -192,6 +196,8 @@ inline typename boost::disable_if_c<
  * \param tuple Heterogeneous sequence of elements to output. The sequence must be supported by Boost.Fusion, and its elements must support stream output.
  * \param delimiter Delimiter to separate elements in the output. Optional. If not specified, elements are output without separation.
  * \returns Manipulator to be inserted into the stream.
+ *
+ * \note Both \a tuple and \a delimiter objects must outlive the created manipulator object.
  */
 template< typename TupleT, typename DelimiterElementT, std::size_t N >
 inline tuple_manipulator< TupleT, DelimiterElementT* > tuple_manip(TupleT const& tuple, DelimiterElementT (&delimiter)[N]) BOOST_NOEXCEPT
@@ -204,6 +210,8 @@ inline tuple_manipulator< TupleT, DelimiterElementT* > tuple_manip(TupleT const&
  *
  * \param tuple Heterogeneous sequence of elements to output. The sequence must be supported by Boost.Fusion, and its elements must support stream output.
  * \returns Manipulator to be inserted into the stream.
+ *
+ * \note \a tuple object must outlive the created manipulator object.
  */
 template< typename TupleT >
 inline tuple_manipulator< TupleT, void > tuple_manip(TupleT const& tuple) BOOST_NOEXCEPT
