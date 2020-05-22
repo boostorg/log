@@ -124,12 +124,23 @@ matrix:
 
     - os: linux
       dist: bionic
-      compiler: gcc-UBSAN
-      env: UBSAN=1 TOOLSET=gcc COMPILER=g++-9 CXXSTD=03,11,14,17,2a UBSAN_OPTIONS=print_stacktrace=1 LINKFLAGS=-fuse-ld=gold
+      compiler: gcc-10
+      env: TOOLSET=gcc COMPILER=g++-10 CXXSTD=03,11,14,17,20
       addons:
         apt:
           packages:
-            - g++-9
+            - g++-10
+          sources:
+            - sourceline: "ppa:ubuntu-toolchain-r/test"
+
+    - os: linux
+      dist: bionic
+      compiler: gcc-UBSAN
+      env: UBSAN=1 TOOLSET=gcc COMPILER=g++-10 CXXSTD=03,11,14,17,20 UBSAN_OPTIONS=print_stacktrace=1 LINKFLAGS=-fuse-ld=gold
+      addons:
+        apt:
+          packages:
+            - g++-10
           sources:
             - sourceline: "ppa:ubuntu-toolchain-r/test"
 
