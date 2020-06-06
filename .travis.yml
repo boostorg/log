@@ -367,6 +367,9 @@ matrix:
 #      env: TOOLSET=clang COMPILER=clang++ CXXSTD=14,1z
 #      osx_image: xcode10.1
 
+# clang, FreeBSD
+    - os: freebsd
+      env: TOOLSET=clang COMPILER=clang++ CXXSTD=03,11,14,17
 
 install:
   - GIT_FETCH_JOBS=8
