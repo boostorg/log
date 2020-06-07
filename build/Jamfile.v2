@@ -1,5 +1,5 @@
 #
-#          Copyright Andrey Semashev 2007 - 2016.
+#          Copyright Andrey Semashev 2007 - 2020.
 # Distributed under the Boost Software License, Version 1.0.
 #    (See accompanying file LICENSE_1_0.txt or copy at
 #          http://www.boost.org/LICENSE_1_0.txt)
@@ -32,12 +32,14 @@ lib advapi32 ;
 lib secur32 ;
 lib ws2_32 ;
 lib mswsock ;
+explicit psapi advapi32 secur32 ws2_32 mswsock ;
 
 # UNIX libs
 lib rt ;
 lib socket ;
 lib nsl ;
 lib ipv6 ;
+explicit rt socket nsl ipv6 ;
 
 rule has-config-flag ( flag : properties * )
 {
@@ -71,7 +73,7 @@ rule check-instruction-set ( properties * )
 
 rule select-regex-backend ( properties * )
 {
-    local result = ;
+    local result ;
 
     # Use Boost.Regex backend by default. It produces smaller executables and also has the best performance for small string matching.
     if ! (
@@ -88,7 +90,7 @@ rule select-regex-backend ( properties * )
 
 rule check-pthread-mutex-robust ( properties * )
 {
-    local result = ;
+    local result ;
 
     local has_pthread_mutex_robust = [ configure.builds /boost/log/pthread-mutex-robust//pthread_mutex_robust : $(properties) : pthread-supports-robust-mutexes ] ;
     if $(has_pthread_mutex_robust)
@@ -101,7 +103,7 @@ rule check-pthread-mutex-robust ( properties * )
 
 rule check-atomic-int32 ( properties * )
 {
-    local result = ;
+    local result ;
 
     local has_atomic_int32 = [ configure.builds /boost/log/atomic-int32//atomic_int32 : $(properties) : native-atomic-int32-supported ] ;
     if ! $(has_atomic_int32)
@@ -114,7 +116,7 @@ rule check-atomic-int32 ( properties * )
 
 rule check-native-syslog ( properties * )
 {
-    local result = ;
+    local result ;
 
     if ! [ has-config-flag BOOST_LOG_WITHOUT_SYSLOG : $(properties) ]
     {
