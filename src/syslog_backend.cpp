@@ -13,9 +13,9 @@
  *         at http://www.boost.org/doc/libs/release/libs/log/doc/html/index.html.
  */
 
-#ifndef BOOST_LOG_WITHOUT_SYSLOG
-
 #include <boost/log/detail/config.hpp>
+
+#ifndef BOOST_LOG_WITHOUT_SYSLOG
 #include <ctime>
 #include <algorithm>
 #include <stdexcept>
