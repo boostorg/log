@@ -1491,7 +1491,8 @@ BOOST_LOG_API void text_file_backend::rotate_file()
     {
         if (!!m_pImpl->m_TargetFileNameGenerator)
         {
-            filesystem::path new_file_name = m_pImpl->m_TargetStorageDir / m_pImpl->m_TargetFileNameGenerator(m_pImpl->m_FileCounter);
+            // File counter was incremented when the file was opened, we have to use the same counter value we used to generate the original filename
+            filesystem::path new_file_name = m_pImpl->m_TargetStorageDir / m_pImpl->m_TargetFileNameGenerator(m_pImpl->m_FileCounter - 1u);
 
             if (new_file_name != prev_file_name)
             {
