@@ -8,16 +8,11 @@ sudo: false
 
 python: "2.7"
 
-os:
-  - linux
-  - osx
-
-dist: bionic
-
 branches:
   only:
     - master
     - develop
+    - /feature\/.*/
 
 env:
   matrix:
@@ -31,6 +26,7 @@ matrix:
   include:
 # gcc, Linux
     - os: linux
+      dist: focal
       compiler: gcc
       env: TOOLSET=gcc COMPILER=g++ CXXSTD=03,11 EXTRA_TESTS=1
 
@@ -123,7 +119,7 @@ matrix:
             - sourceline: "ppa:ubuntu-toolchain-r/test"
 
     - os: linux
-      dist: bionic
+      dist: focal
       compiler: gcc-10
       env: TOOLSET=gcc COMPILER=g++-10 CXXSTD=03,11,14,17,20
       addons:
@@ -134,7 +130,7 @@ matrix:
             - sourceline: "ppa:ubuntu-toolchain-r/test"
 
     - os: linux
-      dist: bionic
+      dist: focal
       compiler: gcc-UBSAN
       env: UBSAN=1 TOOLSET=gcc COMPILER=g++-10 CXXSTD=03,11,14,17,20 UBSAN_OPTIONS=print_stacktrace=1 LINKFLAGS=-fuse-ld=gold
       addons:
@@ -286,7 +282,7 @@ matrix:
               key_url: "https://apt.llvm.org/llvm-snapshot.gpg.key"
 
     - os: linux
-      dist: xenial
+      dist: bionic
       compiler: clang-9
       env: TOOLSET=clang COMPILER=clang++-9 CXXSTD=03,11,14,17,2a
       addons:
@@ -296,11 +292,11 @@ matrix:
             - libstdc++-9-dev
           sources:
             - sourceline: "ppa:ubuntu-toolchain-r/test"
-            - sourceline: "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-9 main"
+            - sourceline: "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-9 main"
               key_url: "https://apt.llvm.org/llvm-snapshot.gpg.key"
 
     - os: linux
-      dist: xenial
+      dist: focal
       compiler: clang-10
       env: TOOLSET=clang COMPILER=clang++-10 CXXSTD=03,11,14,17,20
       addons:
@@ -310,11 +306,11 @@ matrix:
             - libstdc++-9-dev
           sources:
             - sourceline: "ppa:ubuntu-toolchain-r/test"
-            - sourceline: "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-10 main"
+            - sourceline: "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-10 main"
               key_url: "https://apt.llvm.org/llvm-snapshot.gpg.key"
 
     - os: linux
-      dist: xenial
+      dist: focal
       compiler: clang-libc++
       env: TOOLSET=clang COMPILER=clang++-10 CXXSTD=03,11,14,17,20 CXXFLAGS="-stdlib=libc++" LINKFLAGS="-stdlib=libc++"
       addons:
@@ -325,11 +321,11 @@ matrix:
             - libc++abi-10-dev
           sources:
             - sourceline: "ppa:ubuntu-toolchain-r/test"
-            - sourceline: "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-10 main"
+            - sourceline: "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-10 main"
               key_url: "https://apt.llvm.org/llvm-snapshot.gpg.key"
 
     - os: linux
-      dist: xenial
+      dist: focal
       compiler: clang-UBSAN
       env: UBSAN=1 TOOLSET=clang COMPILER=clang++-10 CXXSTD=03,11,14,17,20 UBSAN_OPTIONS=print_stacktrace=1
       addons:
@@ -339,11 +335,11 @@ matrix:
             - libstdc++-9-dev
           sources:
             - sourceline: "ppa:ubuntu-toolchain-r/test"
-            - sourceline: "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-10 main"
+            - sourceline: "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-10 main"
               key_url: "https://apt.llvm.org/llvm-snapshot.gpg.key"
 
     - os: linux
-      dist: xenial
+      dist: focal
       compiler: clang-libc++-UBSAN
       env: UBSAN=1 TOOLSET=clang COMPILER=clang++-10 CXXSTD=03,11,14,17,20 UBSAN_OPTIONS=print_stacktrace=1 CXXFLAGS="-stdlib=libc++" LINKFLAGS="-stdlib=libc++"
       addons:
@@ -354,7 +350,7 @@ matrix:
             - libc++abi-10-dev
           sources:
             - sourceline: "ppa:ubuntu-toolchain-r/test"
-            - sourceline: "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-10 main"
+            - sourceline: "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-10 main"
               key_url: "https://apt.llvm.org/llvm-snapshot.gpg.key"
 
 # clang, OS X
@@ -369,7 +365,7 @@ matrix:
 
 # clang, FreeBSD
     - os: freebsd
-      env: TOOLSET=clang COMPILER=clang++ CXXSTD=03,11,14,17
+      env: TOOLSET=clang COMPILER=clang++ CXXSTD=03,11,14,17,2a
 
 install:
   - GIT_FETCH_JOBS=8
