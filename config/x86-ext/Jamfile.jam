@@ -16,6 +16,7 @@ project /boost/log/x86-extensions
 obj ssse3 : ssse3.cpp
     :
         <toolset>gcc:<cxxflags>"-msse -msse2 -msse3 -mssse3"
+        <toolset>qcc:<cxxflags>"-msse -msse2 -msse3 -mssse3"
         <toolset>clang:<cxxflags>"-msse -msse2 -msse3 -mssse3"
         <toolset>intel-linux:<cxxflags>"-xSSSE3"
         <toolset>intel-darwin:<cxxflags>"-xSSSE3"
@@ -25,6 +26,7 @@ obj ssse3 : ssse3.cpp
 obj avx2 : avx2.cpp
     :
         <toolset>gcc:<cxxflags>"-mavx -mavx2 -fabi-version=0"
+        <toolset>qcc:<cxxflags>"-mavx -mavx2 -fabi-version=0"
         <toolset>clang:<cxxflags>"-mavx -mavx2"
         <toolset>intel-linux:<cxxflags>"-xCORE-AVX2 -fabi-version=0"
         <toolset>intel-darwin:<cxxflags>"-xCORE-AVX2 -fabi-version=0"

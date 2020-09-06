@@ -293,11 +293,11 @@ rule ssse3-targets-cond ( properties * )
 
     if <log-architecture>x86 in [ log-architecture.deduce-architecture $(properties) ]
     {
-        local has_ssse3 = [ configure.builds /boost/log/x86-extensions//ssse3 : $(properties) : compiler-supports-ssse3 ] ;
+        local has_ssse3 = [ configure.builds /boost/log/x86-extensions//ssse3 : $(properties) : compiler supports SSSE3 ] ;
         if $(has_ssse3)
         {
             result = ;
-            if <toolset>gcc in $(properties) || <toolset>clang in $(properties)
+            if <toolset>gcc in $(properties) || <toolset>clang in $(properties) || <toolset>qcc in $(properties)
             {
                 result = <cxxflags>"-msse -msse2 -msse3 -mssse3" ;
             }
@@ -356,11 +356,11 @@ rule avx2-targets-cond ( properties * )
 
     if <log-architecture>x86 in [ log-architecture.deduce-architecture $(properties) ]
     {
-        local has_avx2 = [ configure.builds /boost/log/x86-extensions//avx2 : $(properties) : compiler-supports-avx2 ] ;
+        local has_avx2 = [ configure.builds /boost/log/x86-extensions//avx2 : $(properties) : compiler supports AVX2 ] ;
         if $(has_avx2)
         {
             result = ;
-            if <toolset>gcc in $(properties)
+            if <toolset>gcc in $(properties) || <toolset>qcc in $(properties)
             {
                 result = <cxxflags>"-mavx -mavx2 -fabi-version=0" ;
             }
