@@ -92,7 +92,7 @@ rule check-pthread-mutex-robust ( properties * )
 {
     local result ;
 
-    local has_pthread_mutex_robust = [ configure.builds /boost/log/pthread-mutex-robust//pthread_mutex_robust : $(properties) : pthread-supports-robust-mutexes ] ;
+    local has_pthread_mutex_robust = [ configure.builds /boost/log/pthread-mutex-robust//pthread_mutex_robust : $(properties) : "pthread supports robust mutexes" ] ;
     if $(has_pthread_mutex_robust)
     {
         result = <define>BOOST_LOG_HAS_PTHREAD_MUTEX_ROBUST ;
@@ -105,7 +105,7 @@ rule check-atomic-int32 ( properties * )
 {
     local result ;
 
-    local has_atomic_int32 = [ configure.builds /boost/log/atomic-int32//atomic_int32 : $(properties) : native-atomic-int32-supported ] ;
+    local has_atomic_int32 = [ configure.builds /boost/log/atomic-int32//atomic_int32 : $(properties) : "native atomic int32 supported" ] ;
     if ! $(has_atomic_int32)
     {
         result = <define>BOOST_LOG_WITHOUT_IPC ;
@@ -120,7 +120,7 @@ rule check-native-syslog ( properties * )
 
     if ! [ has-config-flag BOOST_LOG_WITHOUT_SYSLOG : $(properties) ]
     {
-        local has_native_syslog = [ configure.builds /boost/log/native-syslog//native_syslog : $(properties) : native-syslog-supported ] ;
+        local has_native_syslog = [ configure.builds /boost/log/native-syslog//native_syslog : $(properties) : "native syslog supported" ] ;
         if $(has_native_syslog)
         {
             result = <define>BOOST_LOG_USE_NATIVE_SYSLOG ;
@@ -138,7 +138,7 @@ rule check-message-compiler ( properties * )
     {
         if ! [ has-config-flag BOOST_LOG_WITHOUT_EVENT_LOG : $(properties) ]
         {
-            local has_mc = [ configure.builds /boost/log/message-compiler//test-availability : $(properties) : message-compiler ] ;
+            local has_mc = [ configure.builds /boost/log/message-compiler//test-availability : $(properties) : "has message compiler" ] ;
             if ! $(has_mc)
             {
                 result = <define>BOOST_LOG_WITHOUT_EVENT_LOG ;
@@ -293,7 +293,7 @@ rule ssse3-targets-cond ( properties * )
 
     if <log-architecture>x86 in [ log-architecture.deduce-architecture $(properties) ]
     {
-        local has_ssse3 = [ configure.builds /boost/log/x86-extensions//ssse3 : $(properties) : compiler supports SSSE3 ] ;
+        local has_ssse3 = [ configure.builds /boost/log/x86-extensions//ssse3 : $(properties) : "compiler supports SSSE3" ] ;
         if $(has_ssse3)
         {
             result = ;
@@ -356,7 +356,7 @@ rule avx2-targets-cond ( properties * )
 
     if <log-architecture>x86 in [ log-architecture.deduce-architecture $(properties) ]
     {
-        local has_avx2 = [ configure.builds /boost/log/x86-extensions//avx2 : $(properties) : compiler supports AVX2 ] ;
+        local has_avx2 = [ configure.builds /boost/log/x86-extensions//avx2 : $(properties) : "compiler supports AVX2" ] ;
         if $(has_avx2)
         {
             result = ;
@@ -418,14 +418,14 @@ rule select-arch-specific-sources ( properties * )
 
     if <log-architecture>x86 in [ log-architecture.deduce-architecture $(properties) ]
     {
-        local has_ssse3 = [ configure.builds /boost/log/x86-extensions//ssse3 : $(properties) : compiler-supports-ssse3 ] ;
+        local has_ssse3 = [ configure.builds /boost/log/x86-extensions//ssse3 : $(properties) : "compiler supports SSSE3" ] ;
         if $(has_ssse3)
         {
             result += <define>BOOST_LOG_USE_SSSE3 ;
             result += <source>$(BOOST_LOG_COMMON_SSSE3_SRC) ;
         }
 
-        local has_avx2 = [ configure.builds /boost/log/x86-extensions//avx2 : $(properties) : compiler-supports-avx2 ] ;
+        local has_avx2 = [ configure.builds /boost/log/x86-extensions//avx2 : $(properties) : "compiler supports AVX2" ] ;
         if $(has_avx2)
         {
             result += <define>BOOST_LOG_USE_AVX2 ;
