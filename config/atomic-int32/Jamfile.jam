@@ -12,8 +12,8 @@ project /boost/log/atomic-int32
     : source-location .
     : requirements
         <conditional>@log-platform-config.set-platform-defines
-
         <pch>off
     ;
 
 obj atomic_int32 : atomic_int32.cpp ;
+explicit atomic_int32 ;

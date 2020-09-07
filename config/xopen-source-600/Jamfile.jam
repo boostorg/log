@@ -14,3 +14,4 @@ project /boost/log/xopen-source-600
     ;
 
 obj xopen_source_600 : xopen_source_600.cpp ;
+explicit xopen_source_600 ;

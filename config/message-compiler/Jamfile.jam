@@ -17,6 +17,8 @@ project /boost/log/message-compiler
     ;
 
 obj simple_event_log : windows/simple_event_log.mc ;
+explicit simple_event_log ;
 
 # This test target verifies that Message Compiler (mc) is available and supported by the current toolset
 alias test-availability : simple_event_log ;
+explicit test-availability ;

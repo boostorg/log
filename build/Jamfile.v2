@@ -12,7 +12,7 @@ import path ;
 import project ;
 import feature ;
 import configure ;
-import log-architecture ;
+import log-arch-config ;
 import log-platform-config ;
 using mc ;
 
@@ -56,7 +56,7 @@ rule has-config-flag ( flag : properties * )
 rule check-instruction-set ( properties * )
 {
     local result ;
-    local instruction_set = [ feature.get-values "log-instruction-set" : [ log-architecture.deduce-instruction-set $(properties) ] ] ;
+    local instruction_set = [ log-arch-config.deduce-instruction-set $(properties) ] ;
 
     if $(instruction_set) = i386 || $(instruction_set) = i486
     {
@@ -287,59 +287,13 @@ BOOST_LOG_COMMON_AVX2_SRC =
     dump_avx2
     ;
 
-rule ssse3-targets-cond ( properties * )
-{
-    local result = <build>no ;
-
-    if <log-architecture>x86 in [ log-architecture.deduce-architecture $(properties) ]
-    {
-        local has_ssse3 = [ configure.builds /boost/log/x86-extensions//ssse3 : $(properties) : "compiler supports SSSE3" ] ;
-        if $(has_ssse3)
-        {
-            result = ;
-            if <toolset>gcc in $(properties) || <toolset>clang in $(properties) || <toolset>qcc in $(properties)
-            {
-                result = <cxxflags>"-msse -msse2 -msse3 -mssse3" ;
-            }
-            else if <toolset>intel in $(properties)
-            {
-                if <toolset-intel:platform>win in $(properties)
-                {
-                    result = <cxxflags>"/QxSSSE3" ;
-                }
-                else
-                {
-                    result = <cxxflags>"-xSSSE3" ;
-                }
-            }
-            else if <toolset>msvc in $(properties)
-            {
-                # MSVC doesn't really care about these switches, all SSE intrinsics are always available, but still...
-                # Also 64 bit MSVC doesn't have the /arch:SSE2 switch as it is the default.
-                if <log-address-model>32 in [ log-architecture.deduce-address-model $(properties) ]
-                {
-                    result = <cxxflags>"/arch:SSE2" ;
-                }
-            }
-        }
-    }
-
-#    if ! <build>no in $(result)
-#    {
-#        ECHO Boost.Log: Using SSSE3 optimized implementation ;
-#    }
-#    ECHO $(result) ;
-
-    return $(result) ;
-}
-
 for local src in $(BOOST_LOG_COMMON_SSSE3_SRC)
 {
     obj $(src)
         : ## sources ##
             $(src).cpp
         : ## requirements ##
-            <conditional>@ssse3-targets-cond
+            <conditional>@log-arch-config.ssse3-flags
             <link>shared:<define>BOOST_LOG_DLL
             <define>BOOST_LOG_BUILDING_THE_LIB=1
         : ## default-build ##
@@ -350,58 +304,13 @@ for local src in $(BOOST_LOG_COMMON_SSSE3_SRC)
     explicit $(src) ;
 }
 
-rule avx2-targets-cond ( properties * )
-{
-    local result = <build>no ;
-
-    if <log-architecture>x86 in [ log-architecture.deduce-architecture $(properties) ]
-    {
-        local has_avx2 = [ configure.builds /boost/log/x86-extensions//avx2 : $(properties) : "compiler supports AVX2" ] ;
-        if $(has_avx2)
-        {
-            result = ;
-            if <toolset>gcc in $(properties) || <toolset>qcc in $(properties)
-            {
-                result = <cxxflags>"-mavx -mavx2 -fabi-version=0" ;
-            }
-            else if <toolset>clang in $(properties)
-            {
-                result = <cxxflags>"-mavx -mavx2" ;
-            }
-            else if <toolset>intel in $(properties)
-            {
-                if <toolset-intel:platform>win in $(properties)
-                {
-                    result = <cxxflags>"/arch:CORE-AVX2" ;
-                }
-                else
-                {
-                    result = <cxxflags>"-xCORE-AVX2 -fabi-version=0" ;
-                }
-            }
-            else if <toolset>msvc in $(properties)
-            {
-                result = <cxxflags>"/arch:AVX" ;
-            }
-        }
-    }
-
-#    if ! <build>no in $(result)
-#    {
-#        ECHO Boost.Log: Using AVX2 optimized implementation ;
-#    }
-#    ECHO $(result) ;
-
-    return $(result) ;
-}
-
 for local src in $(BOOST_LOG_COMMON_AVX2_SRC)
 {
     obj $(src)
         : ## sources ##
             $(src).cpp
         : ## requirements ##
-            <conditional>@avx2-targets-cond
+            <conditional>@log-arch-config.avx2-flags
             <link>shared:<define>BOOST_LOG_DLL
             <define>BOOST_LOG_BUILDING_THE_LIB=1
         : ## default-build ##
@@ -416,7 +325,7 @@ rule select-arch-specific-sources ( properties * )
 {
     local result ;
 
-    if <log-architecture>x86 in [ log-architecture.deduce-architecture $(properties) ]
+    if x86 in [ log-arch-config.deduce-architecture $(properties) ]
     {
         local has_ssse3 = [ configure.builds /boost/log/x86-extensions//ssse3 : $(properties) : "compiler supports SSSE3" ] ;
         if $(has_ssse3)
