@@ -20,7 +20,18 @@ project.pop-current ;
 
 rule set-platform-defines ( properties * )
 {
-    local result = ;
+    local result ;
+
+    if <target-os>windows in $(properties)
+    {
+        # Disable warnings about using 'insecure' standard C functions.
+        # These affect MSVC C/C++ library headers, which are used by various compilers. Define them universally on Windows to avoid
+        # duplicating them for every compiler in every jamfile.
+        result += <define>_SCL_SECURE_NO_WARNINGS ;
+        result += <define>_SCL_SECURE_NO_DEPRECATE ;
+        result += <define>_CRT_SECURE_NO_WARNINGS ;
+        result += <define>_CRT_SECURE_NO_DEPRECATE ;
+    }
 
     if ( <target-os>windows in $(properties) ) || ( <target-os>cygwin in $(properties) )
     {
