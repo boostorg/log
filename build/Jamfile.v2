@@ -175,6 +175,8 @@ project boost/log
         <define>BOOST_SPIRIT_USE_PHOENIX_V3=1
         <define>BOOST_THREAD_DONT_USE_CHRONO=1 # Don't introduce false dependency on Boost.Chrono
 
+        <c++-template-depth>1024
+
         <toolset>msvc:<cxxflags>/bigobj
         <toolset>msvc:<cxxflags>/wd4503 # decorated name length exceeded, name was truncated
         <toolset>msvc:<cxxflags>/wd4456 # declaration of 'A' hides previous local declaration
@@ -196,10 +198,6 @@ project boost/log
         <toolset>intel-win:<cxxflags>"/Qwd177,780,2196,1782,193,304,981,1418,411,734,279"
         <toolset>intel-linux:<cxxflags>"-wd177,780,2196,1782,193,304,981,1418,411,734,279"
         <toolset>intel-darwin:<cxxflags>"-wd177,780,2196,1782,193,304,981,1418,411,734,279"
-
-        <toolset>darwin:<cxxflags>-ftemplate-depth-1024
-        <toolset>clang:<cxxflags>-ftemplate-depth-1024
-        <toolset>gcc:<cxxflags>-ftemplate-depth-1024
 
         <toolset>gcc:<cxxflags>-fno-strict-aliasing  # avoids strict aliasing violations in other Boost components
         <toolset>gcc,<target-os>windows:<linkflags>-Wl,--enable-auto-import
