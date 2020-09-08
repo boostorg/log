@@ -14,6 +14,7 @@
 [*Bug fixes:]
 
 * Corrected the file counter that would be used in [link log.detailed.sink_backends.text_file `text_file_backend`] when generating the target file name (based on the pattern set by `set_target_file_name_pattern` method) when the log file is rotated. The backend used to use the next value of file counter, which could cause some counter values to be skipped on application restarts. ([github_issue 125])
+* Replaced a volatile version counter in `basic_sink_frontend` with an atomic. This should silence clang-cl warnings about deprecated uses of `volatile`. ([github_issue 128])
 
 [heading 2.19, Boost 1.74]
 
