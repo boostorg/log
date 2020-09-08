@@ -172,7 +172,7 @@
 #if defined(_MSC_VER)
 #   define BOOST_LOG_ASSUME(expr) __assume(expr)
 #elif defined(__has_builtin)
-#   if __has_builtin(__builtin_assume)
+#   if __has_builtin(__builtin_assume) && (!defined(__clang__) || (__clang_major__ * 100 + __clang_minor__) >= 307)
 #       define BOOST_LOG_ASSUME(expr) __builtin_assume(expr)
 #   else
 #       define BOOST_LOG_ASSUME(expr)
