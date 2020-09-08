@@ -57,7 +57,6 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
             entry._m_pPrev = top;
             entry._m_pNext = &this->m_RootNode;
 
-            BOOST_LOG_ASSUME(&entry != 0);
             this->m_RootNode._m_pPrev = top->_m_pNext =
                 const_cast< aux::named_scope_list_node* >(
                     static_cast< const aux::named_scope_list_node* >(&entry));
