@@ -171,6 +171,12 @@
 // An MS-like compilers' extension that allows to optimize away the needless code
 #if defined(_MSC_VER)
 #   define BOOST_LOG_ASSUME(expr) __assume(expr)
+#elif defined(__has_builtin)
+#   if __has_builtin(__builtin_assume)
+#       define BOOST_LOG_ASSUME(expr) __builtin_assume(expr)
+#   else
+#       define BOOST_LOG_ASSUME(expr)
+#   endif
 #else
 #   define BOOST_LOG_ASSUME(expr)
 #endif
