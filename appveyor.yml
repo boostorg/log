@@ -98,8 +98,10 @@ environment:
 
 install:
   - set GIT_FETCH_JOBS=8
+  - set BOOST_BRANCH=develop
+  - if "%APPVEYOR_REPO_BRANCH%" == "master" set BOOST_BRANCH=master
   - cd ..
-  - git clone -b %APPVEYOR_REPO_BRANCH% https://github.com/boostorg/boost.git boost-root
+  - git clone -b %BOOST_BRANCH% https://github.com/boostorg/boost.git boost-root
   - cd boost-root
   - git submodule init tools/boostdep
   - git submodule init tools/build

@@ -369,8 +369,10 @@ matrix:
 
 install:
   - GIT_FETCH_JOBS=8
+  - BOOST_BRANCH=develop
+  - if [ "$TRAVIS_BRANCH" = "master" ]; then BOOST_BRANCH=master; fi
   - cd ..
-  - git clone -b $TRAVIS_BRANCH --depth 1 https://github.com/boostorg/boost.git boost-root
+  - git clone -b $BOOST_BRANCH --depth 1 https://github.com/boostorg/boost.git boost-root
   - cd boost-root
   - git submodule init tools/boostdep
   - git submodule init tools/build
