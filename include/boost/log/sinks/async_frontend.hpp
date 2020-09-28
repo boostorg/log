@@ -380,11 +380,8 @@ public:
         // First check that no other thread is running
         {
             unique_lock< frontend_mutex_type > lock(base_type::frontend_mutex());
-            if (!start_feeding_operation(lock, feeding_records))
-            {
-                m_StopRequested.store(false, boost::memory_order_relaxed);
+            if (start_feeding_operation(lock, feeding_records))
                 return;
-            }
         }
 
         scoped_feeding_opereation guard(*this);
@@ -452,11 +449,8 @@ public:
         // First check that no other thread is running
         {
             unique_lock< frontend_mutex_type > lock(base_type::frontend_mutex());
-            if (!start_feeding_operation(lock, feeding_records))
-            {
-                m_StopRequested.store(false, boost::memory_order_relaxed);
+            if (start_feeding_operation(lock, feeding_records))
                 return;
-            }
         }
 
         scoped_feeding_opereation guard(*this);
@@ -513,9 +507,10 @@ private:
             if (BOOST_UNLIKELY(op == feeding_records && m_ActiveOperation == feeding_records))
                 BOOST_LOG_THROW_DESCR(unexpected_call, "Asynchronous sink frontend already runs a record feeding thread");
 
-            if (m_StopRequested.load(boost::memory_order_relaxed))
+            if (BOOST_UNLIKELY(m_StopRequested.load(boost::memory_order_relaxed)))
             {
-                return false;
+                m_StopRequested.store(false, boost::memory_order_relaxed);
+                return true;
             }
 
             m_BlockCond.wait(lock);
@@ -523,7 +518,7 @@ private:
 
         m_ActiveOperation = op;
 
-        return true;
+        return false;
     }
 
     //! Completes record feeding operation
