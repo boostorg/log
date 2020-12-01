@@ -432,6 +432,8 @@ public:
             lock_guard< frontend_mutex_type > lock(base_type::frontend_mutex());
 
             m_StopRequested.store(true, boost::memory_order_release);
+            queue_base_type::interrupt_dequeue();
+
             m_DedicatedFeedingThread.swap(feeding_thread);
         }
 
