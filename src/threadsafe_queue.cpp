@@ -29,6 +29,8 @@
 #include <new>
 #include <boost/assert.hpp>
 #include <boost/throw_exception.hpp>
+#include <boost/memory_order.hpp>
+#include <boost/atomic/atomic.hpp>
 #include <boost/align/aligned_alloc.hpp>
 #include <boost/type_traits/alignment_of.hpp>
 #include <boost/log/detail/adaptive_mutex.hpp>
@@ -96,14 +98,14 @@ public:
     void push(node_base* p) BOOST_OVERRIDE
     {
         set_next(p, NULL);
-        exclusive_lock_guard< mutex_type > _(m_Tail.mutex);
+        exclusive_lock_guard< mutex_type > lock(m_Tail.mutex);
         set_next(m_Tail.node, p);
         m_Tail.node = p;
     }
 
     bool try_pop(node_base*& node_to_free, node_base*& node_with_value) BOOST_OVERRIDE
     {
-        exclusive_lock_guard< mutex_type > _(m_Head.mutex);
+        exclusive_lock_guard< mutex_type > lock(m_Head.mutex);
         node_base* next = get_next(m_Head.node);
         if (next)
         {
@@ -119,11 +121,11 @@ public:
 private:
     BOOST_FORCEINLINE static void set_next(node_base* p, node_base* next)
     {
-        p->next.data[0] = next;
+        p->next.store(next, boost::memory_order_relaxed);
     }
     BOOST_FORCEINLINE static node_base* get_next(node_base* p)
     {
-        return static_cast< node_base* >(p->next.data[0]);
+        return p->next.load(boost::memory_order_relaxed);
     }
 
     // Copying and assignment are closed

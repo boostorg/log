@@ -27,11 +27,11 @@
 #include <new>
 #include <memory>
 #include <cstddef>
-#include <boost/aligned_storage.hpp>
+#include <boost/atomic/atomic.hpp>
 #include <boost/move/core.hpp>
 #include <boost/move/utility_core.hpp>
 #include <boost/type_traits/alignment_of.hpp>
-#include <boost/type_traits/type_with_alignment.hpp>
+#include <boost/type_traits/aligned_storage.hpp>
 #include <boost/log/detail/allocator_traits.hpp>
 #include <boost/log/detail/header.hpp>
 
@@ -44,18 +44,9 @@ namespace aux {
 //! Base class for the thread-safe queue implementation
 struct threadsafe_queue_impl
 {
-    struct BOOST_LOG_MAY_ALIAS pointer_storage
-    {
-        union
-        {
-            void* data[2];
-            type_with_alignment< 2 * sizeof(void*) >::type alignment;
-        };
-    };
-
     struct node_base
     {
-        pointer_storage next;
+        boost::atomic< node_base* > next;
     };
 
     static BOOST_LOG_API threadsafe_queue_impl* create(node_base* first_node);
