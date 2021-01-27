@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2015.
+ *          Copyright Andrey Semashev 2007 - 2021.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -78,11 +78,20 @@ public:
         m_Head.node = m_Tail.node = first_node;
     }
 
-    ~threadsafe_queue_impl_generic() BOOST_OVERRIDE
+    static void* operator new (std::size_t size)
     {
+        void* p = alignment::aligned_alloc(BOOST_LOG_CPU_CACHE_LINE_SIZE, size);
+        if (BOOST_UNLIKELY(!p))
+            BOOST_THROW_EXCEPTION(std::bad_alloc());
+        return p;
     }
 
-    node_base* reset_last_node() BOOST_OVERRIDE
+    static void operator delete (void* p, std::size_t) BOOST_NOEXCEPT
+    {
+        alignment::aligned_free(p);
+    }
+
+    node_base* reset_last_node() BOOST_NOEXCEPT
     {
         BOOST_ASSERT(m_Head.node == m_Tail.node);
         node_base* p = m_Head.node;
@@ -90,12 +99,12 @@ public:
         return p;
     }
 
-    bool unsafe_empty() BOOST_OVERRIDE
+    bool unsafe_empty() const BOOST_NOEXCEPT
     {
         return m_Head.node == m_Tail.node;
     }
 
-    void push(node_base* p) BOOST_OVERRIDE
+    void push(node_base* p)
     {
         set_next(p, NULL);
         exclusive_lock_guard< mutex_type > lock(m_Tail.mutex);
@@ -103,7 +112,7 @@ public:
         m_Tail.node = p;
     }
 
-    bool try_pop(node_base*& node_to_free, node_base*& node_with_value) BOOST_OVERRIDE
+    bool try_pop(node_base*& node_to_free, node_base*& node_with_value)
     {
         exclusive_lock_guard< mutex_type > lock(m_Head.mutex);
         node_base* next = get_next(m_Head.node);
@@ -133,22 +142,42 @@ private:
     BOOST_DELETED_FUNCTION(threadsafe_queue_impl_generic& operator= (threadsafe_queue_impl_generic const&))
 };
 
+inline threadsafe_queue_impl::threadsafe_queue_impl()
+{
+}
+
+inline threadsafe_queue_impl::~threadsafe_queue_impl()
+{
+}
+
 BOOST_LOG_API threadsafe_queue_impl* threadsafe_queue_impl::create(node_base* first_node)
 {
     return new threadsafe_queue_impl_generic(first_node);
 }
 
-BOOST_LOG_API void* threadsafe_queue_impl::operator new (std::size_t size)
+BOOST_LOG_API void threadsafe_queue_impl::destroy(threadsafe_queue_impl* impl) BOOST_NOEXCEPT
 {
-    void* p = alignment::aligned_alloc(BOOST_LOG_CPU_CACHE_LINE_SIZE, size);
-    if (BOOST_UNLIKELY(!p))
-        BOOST_THROW_EXCEPTION(std::bad_alloc());
-    return p;
+    delete static_cast< threadsafe_queue_impl_generic* >(impl);
 }
 
-BOOST_LOG_API void threadsafe_queue_impl::operator delete (void* p, std::size_t)
+BOOST_LOG_API threadsafe_queue_impl::node_base* threadsafe_queue_impl::reset_last_node(threadsafe_queue_impl* impl) BOOST_NOEXCEPT
 {
-    alignment::aligned_free(p);
+    return static_cast< threadsafe_queue_impl_generic* >(impl)->reset_last_node();
+}
+
+BOOST_LOG_API bool threadsafe_queue_impl::unsafe_empty(const threadsafe_queue_impl* impl) BOOST_NOEXCEPT
+{
+    return static_cast< const threadsafe_queue_impl_generic* >(impl)->unsafe_empty();
+}
+
+BOOST_LOG_API void threadsafe_queue_impl::push(threadsafe_queue_impl* impl, node_base* p)
+{
+    static_cast< threadsafe_queue_impl_generic* >(impl)->push(p);
+}
+
+BOOST_LOG_API bool threadsafe_queue_impl::try_pop(threadsafe_queue_impl* impl, node_base*& node_to_free, node_base*& node_with_value)
+{
+    return static_cast< threadsafe_queue_impl_generic* >(impl)->try_pop(node_to_free, node_with_value);
 }
 
 } // namespace aux
