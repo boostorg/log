@@ -32,6 +32,7 @@
 #include <boost/move/utility_core.hpp>
 #include <boost/type_traits/alignment_of.hpp>
 #include <boost/type_traits/aligned_storage.hpp>
+#include <boost/log/utility/use_std_allocator.hpp>
 #include <boost/log/detail/allocator_traits.hpp>
 #include <boost/log/detail/header.hpp>
 
@@ -104,7 +105,7 @@ struct threadsafe_queue_node :
  *
  * The last requirement is not mandatory but is crucial for decent performance.
  */
-template< typename T, typename AllocatorT = std::allocator< void > >
+template< typename T, typename AllocatorT = use_std_allocator >
 class threadsafe_queue :
     private boost::log::aux::rebind_alloc< AllocatorT, threadsafe_queue_node< T > >::type
 {
