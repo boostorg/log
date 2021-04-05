@@ -16,6 +16,7 @@
 * Corrected a formal race condition in the thread-safe log record queue implementation used in the `unbounded_fifo_queue` policy of the [class_sinks_asynchronous_sink] frontend. The race could be detected by TSAN, but it was not a real problem on most current CPU architectures and compilers. ([github_issue 139])
 * When copying a logger with a channel attribute (e.g. `channel_logger`), the channel attribute is now deep-copied from the original logger. This means that modifying the channel in the new logger will no longer affect the original logger.
 * Replaced the use of `std::allocator<void>` in template parameters with a new tag type `boost::log::use_std_allocator` to silence libc++ warnings about the former being deprecated in C++17 and later. The tag indicates that the instantiated template should be using a specialization of `std::allocator` internally to allocate dynamic memory, so the change has no functional effect. ([github_issue 141])
+* Boost.Log no longer defines `__MSVCRT_VERSION__` macro on MinGW and MinGW-w64. This macro is used to select the target C runtime library. Defining this macro caused incompatibility with UCRT, which is available as an option in recent MinGW-w64. ([pull_request 149])
 
 [heading 2.20, Boost 1.75]
 
