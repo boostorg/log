@@ -34,8 +34,12 @@
 // Some Android NDKs (Google NDK and older Crystax.NET NDK versions) don't define SYS_futex
 #if defined(SYS_futex)
 #define BOOST_LOG_SYS_FUTEX SYS_futex
-#else
+#elif defined(__NR_futex)
 #define BOOST_LOG_SYS_FUTEX __NR_futex
+#elif defined(__NR_futex_time64)
+#define BOOST_LOG_SYS_FUTEX __NR_futex_time64
+#else
+#error "Unable to find a suitable futex"
 #endif
 
 #if defined(FUTEX_WAIT_PRIVATE)
