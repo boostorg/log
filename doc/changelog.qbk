@@ -9,6 +9,12 @@
 
 [section:changelog Changelog]
 
+[heading 2.22, Boost 1.77]
+
+[*Bug fixes:]
+
+* Fixed compilation on Linux for riscv32 target. ([pull_request 150])
+
 [heading 2.21, Boost 1.76]
 
 [*Bug fixes:]
