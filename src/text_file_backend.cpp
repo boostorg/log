@@ -1513,7 +1513,9 @@ BOOST_LOG_API void text_file_backend::set_open_mode(std::ios_base::openmode mode
 {
     mode |= std::ios_base::out;
     mode &= ~std::ios_base::in;
-    if ((mode & (std::ios_base::trunc | std::ios_base::app)) == 0)
+    if ((mode & std::ios_base::app) != 0)
+        mode |= std::ios_base::ate; // we need to seek to end after opening the file to obtain its size
+    else
         mode |= std::ios_base::trunc;
     m_pImpl->m_FileOpenMode = mode;
 }
