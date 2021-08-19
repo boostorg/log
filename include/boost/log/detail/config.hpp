@@ -98,10 +98,12 @@
 #   define BOOST_LOG_BROKEN_CONSTANT_EXPRESSIONS
 #endif
 
-#if defined(BOOST_NO_CXX11_HDR_CODECVT)
+#if (defined(BOOST_NO_CXX11_HDR_CODECVT) && (BOOST_CXX_VERSION < 201700)) || (defined(_MSVC_STL_VERSION) && (_MSVC_STL_VERSION < 142))
     // The compiler does not support std::codecvt<char16_t> and std::codecvt<char32_t> specializations.
     // The BOOST_NO_CXX11_HDR_CODECVT means there's no usable <codecvt>, which is slightly different from this macro.
     // But in order for <codecvt> to be implemented the std::codecvt specializations have to be implemented as well.
+    // We need to check the C++ version as well, since <codecvt> is deprecated from C++17 onwards which may cause
+    // BOOST_NO_CXX11_HDR_CODECVT to be set, even though std::codecvt in <locale> is just fine.
 #   define BOOST_LOG_NO_CXX11_CODECVT_FACETS
 #endif
 
