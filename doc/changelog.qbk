@@ -9,6 +9,12 @@
 
 [section:changelog Changelog]
 
+[heading 2.23, Boost 1.78]
+
+[*General changes:]
+
+* Updated detection of `std::codecvt` specializations for `char16_t` and `char32_t` for compatibility with C++17 and later. ([pull_request 159])
+
 [heading 2.22, Boost 1.77]
 
 [*Bug fixes:]
