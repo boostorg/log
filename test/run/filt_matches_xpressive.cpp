@@ -12,6 +12,12 @@
  * \brief  This header contains tests for the \c matches filter with Boost.Xpressive backend.
  */
 
+#include <boost/config.hpp>
+
+// gcc 10 and 11 are known to ICE on Boost.Xpressive code in C++03 mode, see:
+// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=102293
+#if !defined(BOOST_GCC) || defined(BOOST_GCC_CXX11) || BOOST_GCC < 100000
+
 #define BOOST_TEST_MODULE filt_matches_xpressive
 
 #include <string>
@@ -105,3 +111,12 @@ BOOST_AUTO_TEST_CASE(composition_check)
     BOOST_CHECK(!f(values2));
     BOOST_CHECK(f(values3));
 }
+
+#else // !defined(BOOST_GCC) || BOOST_GCC < 100000
+
+int main()
+{
+    return 0;
+}
+
+#endif // !defined(BOOST_GCC) || BOOST_GCC < 100000
