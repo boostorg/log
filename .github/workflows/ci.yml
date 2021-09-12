@@ -234,6 +234,7 @@ jobs:
 
           - toolset: clang
             cxxstd: "03,11,14,17,2a"
+            build_variant: debug
             os: macos-10.15
 
           # - name: CMake tests
