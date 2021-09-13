@@ -24,16 +24,23 @@
 #include <boost/log/utility/open_mode.hpp>
 #include <boost/log/exceptions.hpp>
 #include <boost/test/unit_test.hpp>
+#include <boost/config.h>
+#if defined(BOOST_WINDOWS)
+#include <boost/winapi/get_current_process_id.hpp>
+#else
+#include <unistd.h>
+#endif
 #include <cstddef>
 #include <cstring>
 #include <string>
 #include <vector>
+#include <sstream>
 #include <iostream>
 #include <stdexcept>
 #include <boost/move/utility_core.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <algorithm>
-#include <boost/ref.hpp>
+#include <boost/core/ref.hpp>
 #include <boost/atomic/fences.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/chrono/duration.hpp>
@@ -43,11 +50,40 @@
 typedef boost::log::ipc::reliable_message_queue queue_t;
 typedef queue_t::size_type size_type;
 
-const boost::log::ipc::object_name ipc_queue_name(boost::log::ipc::object_name::session, "boost_log_test_ipc_reliable_mq");
+inline boost::log::ipc::object_name generate_ipc_queue_name()
+{
+    // Make sure IPC queue name is specific to the current process. This is useful when running
+    // multiple instances of the test concurrently (e.g. debug and release).
+    std::ostringstream strm;
+    strm << "boost_log_test_ipc_reliable_mq"
+#if defined(BOOST_WINDOWS)
+        << +boost::winapi::GetCurrentProcessId();
+#else
+        << +getpid();
+#endif
+    return boost::log::ipc::object_name(boost::log::ipc::object_name::session, strm.str());
+}
+
+const boost::log::ipc::object_name ipc_queue_name = generate_ipc_queue_name();
 const unsigned int capacity = 512;
 const size_type block_size = 1024;
 const char message1[] = "Hello, world!";
 const char message2[] = "Hello, the brand new world!";
+
+struct queue_cleanup
+{
+    ~queue_cleanup()
+    {
+        try
+        {
+            queue_t::remove(ipc_queue_name);
+        }
+        catch (...)
+        {
+        }
+    }
+}
+const queue_cleanup_guard = {};
 
 BOOST_AUTO_TEST_CASE(basic_functionality)
 {
@@ -57,7 +93,7 @@ BOOST_AUTO_TEST_CASE(basic_functionality)
         BOOST_CHECK(!queue.is_open());
     }
 
-    // Do a remove in case if a previous test failed
+    // Do a remove in case if a previous test crashed
     queue_t::remove(ipc_queue_name);
 
     // Opening a non-existing queue
