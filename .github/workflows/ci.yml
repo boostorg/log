@@ -233,7 +233,7 @@ jobs:
               - libc++abi-12-dev
 
           - toolset: clang
-            cxxstd: "03,11,14,17"
+            cxxstd: "03,11"
             build_variant: debug
             os: macos-10.15
 
