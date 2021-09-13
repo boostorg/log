@@ -24,7 +24,7 @@
 #include <boost/log/utility/open_mode.hpp>
 #include <boost/log/exceptions.hpp>
 #include <boost/test/unit_test.hpp>
-#include <boost/config.h>
+#include <boost/config.hpp>
 #if defined(BOOST_WINDOWS)
 #include <boost/winapi/get_current_process_id.hpp>
 #else
