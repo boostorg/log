@@ -14,6 +14,7 @@
 [*General changes:]
 
 * Updated detection of `std::codecvt` specializations for `char16_t` and `char32_t` for compatibility with C++17 and later. ([pull_request 159])
+* Added support for C++17 `std::byte` type to receive methods of the [link log.detailed.utilities.ipc.reliable_message_queue inter-process message queue].
 
 [heading 2.22, Boost 1.77]
 
