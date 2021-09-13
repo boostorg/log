@@ -223,6 +223,7 @@ public:
         m_stop(false),
         m_name(name)
     {
+        BOOST_ASSERT(block_size >= block_header::get_header_overhead());
         create_region(capacity, block_size);
     }
 
@@ -244,6 +245,7 @@ public:
         m_stop(false),
         m_name(name)
     {
+        BOOST_ASSERT(block_size >= block_header::get_header_overhead());
         boost::interprocess::offset_t shmem_size = 0;
         if (!m_shared_memory.get_size(shmem_size) || shmem_size == 0)
             create_region(capacity, block_size);
@@ -614,6 +616,7 @@ private:
         const uint32_t capacity = hdr->m_capacity;
         const size_type block_size = hdr->m_block_size;
         uint32_t pos = hdr->m_put_pos;
+        BOOST_ASSERT(pos < capacity);
 
         block_header* block = hdr->get_block(pos);
         block->m_size = message_size;
@@ -648,6 +651,7 @@ private:
         const uint32_t capacity = hdr->m_capacity;
         const size_type block_size = hdr->m_block_size;
         uint32_t pos = hdr->m_get_pos;
+        BOOST_ASSERT(pos < capacity);
 
         block_header* block = hdr->get_block(pos);
         size_type message_size = block->m_size;
