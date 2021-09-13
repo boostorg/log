@@ -21,6 +21,8 @@ env:
   GIT_FETCH_JOBS: 8
   NET_RETRY_COUNT: 5
   DEFAULT_BUILD_VARIANT: debug,release
+  BOOST_TEST_CATCH_SYSTEM_ERRORS: 0
+  BOOST_TEST_AUTO_START_DBG: 0
 
 jobs:
   posix:
@@ -233,7 +235,7 @@ jobs:
               - libc++abi-12-dev
 
           - toolset: clang
-            cxxstd: "03,11"
+            cxxstd: "03,11,14,17,2a"
             build_variant: debug
             os: macos-10.15
 
