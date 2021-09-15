@@ -16,6 +16,10 @@
 * Updated detection of `std::codecvt` specializations for `char16_t` and `char32_t` for compatibility with C++17 and later. ([pull_request 159])
 * Added support for C++17 `std::byte` type to receive methods of the [link log.detailed.utilities.ipc.reliable_message_queue inter-process message queue].
 
+[*Bug fixes:]
+
+* Fixed a race condition on POSIX systems in [link log.detailed.utilities.ipc.reliable_message_queue `reliable_message_queue::open_or_create`] or the equivalent constructor. Multiple threads or processes calling `open_or_create` concurrently with sending or receiving messages from the same queue could end up corrupting the queue contents and potentially crashing the process. ([github_issue 162])
+
 [heading 2.22, Boost 1.77]
 
 [*Bug fixes:]
