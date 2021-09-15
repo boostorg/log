@@ -82,8 +82,13 @@ struct queue_cleanup
         {
         }
     }
-}
-const queue_cleanup_guard = {};
+};
+#if !defined(BOOST_MSVC) || BOOST_MSVC >= 1800
+const queue_cleanup queue_cleanup_guard = {};
+#else
+// MSVC prior to 12.0 ICEs on the aggregate initialization of the constant
+const queue_cleanup queue_cleanup_guard;
+#endif
 
 BOOST_AUTO_TEST_CASE(basic_functionality)
 {
