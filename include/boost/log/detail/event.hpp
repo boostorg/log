@@ -38,7 +38,7 @@
 #else
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition_variable.hpp>
-#define BOOST_LOG_EVENT_USE_BOOST_CONDITION
+#define BOOST_LOG_EVENT_USE_BOOST_CONDITION_VARIABLE
 #endif
 
 #include <boost/log/detail/header.hpp>
