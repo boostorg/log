@@ -23,37 +23,11 @@
 #include <boost/log/detail/event.hpp>
 #include <boost/log/exceptions.hpp>
 
-#if defined(BOOST_LOG_EVENT_USE_FUTEX)
+#if defined(BOOST_LOG_EVENT_USE_ATOMIC)
 
-#include <stddef.h>
-#include <errno.h>
-#include <sys/syscall.h>
-#include <linux/futex.h>
 #include <boost/memory_order.hpp>
-
-// Some Android NDKs (Google NDK and older Crystax.NET NDK versions) don't define SYS_futex
-#if defined(SYS_futex)
-#define BOOST_LOG_SYS_FUTEX SYS_futex
-#elif defined(__NR_futex)
-#define BOOST_LOG_SYS_FUTEX __NR_futex
-// riscv32 defines a different system call instead of __NR_futex
-#elif defined(__NR_futex_time64)
-#define BOOST_LOG_SYS_FUTEX __NR_futex_time64
-#else
-#error "Unable to find a suitable futex"
-#endif
-
-#if defined(FUTEX_WAIT_PRIVATE)
-#define BOOST_LOG_FUTEX_WAIT FUTEX_WAIT_PRIVATE
-#else
-#define BOOST_LOG_FUTEX_WAIT FUTEX_WAIT
-#endif
-
-#if defined(FUTEX_WAKE_PRIVATE)
-#define BOOST_LOG_FUTEX_WAKE FUTEX_WAKE_PRIVATE
-#else
-#define BOOST_LOG_FUTEX_WAKE FUTEX_WAKE
-#endif
+#include <boost/atomic/atomic.hpp>
+#include <boost/atomic/fences.hpp>
 
 #elif defined(BOOST_LOG_EVENT_USE_POSIX_SEMAPHORE)
 
@@ -81,57 +55,27 @@ BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
 
-#if defined(BOOST_LOG_EVENT_USE_FUTEX)
-
-//! Default constructor
-BOOST_LOG_API futex_based_event::futex_based_event() : m_state(0)
-{
-}
-
-//! Destructor
-BOOST_LOG_API futex_based_event::~futex_based_event()
-{
-}
+#if defined(BOOST_LOG_EVENT_USE_ATOMIC)
 
 //! Waits for the object to become signalled
-BOOST_LOG_API void futex_based_event::wait()
+BOOST_LOG_API void atomic_based_event::wait()
 {
-    if (m_state.exchange(0, boost::memory_order_acq_rel) == 0)
+    while (m_state.exchange(0u, boost::memory_order_acq_rel) == 0u)
     {
-        while (true)
-        {
-            if (::syscall(BOOST_LOG_SYS_FUTEX, &m_state.value(), BOOST_LOG_FUTEX_WAIT, 0, NULL, NULL, 0) == 0)
-            {
-                // Another thread has set the event while sleeping
-                break;
-            }
-
-            const int err = errno;
-            if (err == EWOULDBLOCK)
-            {
-                // Another thread has set the event before sleeping
-                break;
-            }
-            else if (BOOST_UNLIKELY(err != EINTR))
-            {
-                BOOST_LOG_THROW_DESCR_PARAMS(system_error, "Failed to block on the futex", (err));
-            }
-        }
-
-        m_state.store(0, boost::memory_order_relaxed);
+        m_state.wait(0u, boost::memory_order_relaxed);
     }
 }
 
 //! Sets the object to a signalled state
-BOOST_LOG_API void futex_based_event::set_signalled()
+BOOST_LOG_API void atomic_based_event::set_signalled()
 {
-    if (m_state.exchange(1, boost::memory_order_release) == 0)
+    if (m_state.load(boost::memory_order_relaxed) != 0u)
     {
-        if (BOOST_UNLIKELY(::syscall(BOOST_LOG_SYS_FUTEX, &m_state.value(), BOOST_LOG_FUTEX_WAKE, 1, NULL, NULL, 0) < 0))
-        {
-            const int err = errno;
-            BOOST_LOG_THROW_DESCR_PARAMS(system_error, "Failed to wake threads blocked on the futex", (err));
-        }
+        boost::atomic_thread_fence(boost::memory_order_release);
+    }
+    else if (m_state.exchange(1u, boost::memory_order_release) == 0u)
+    {
+        m_state.notify_one();
     }
 }
 
