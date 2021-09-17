@@ -344,6 +344,7 @@ rule select-platform-specific-sources ( properties * )
     if <target-os>windows in $(properties)
     {
         result += <source>windows/light_rw_mutex.cpp ;
+        result += <source>windows/is_debugger_present.cpp ;
 
         if ! [ has-config-flag BOOST_LOG_WITHOUT_IPC : $(properties) ]
         {
