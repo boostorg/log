@@ -15,6 +15,7 @@
 
 * Updated detection of `std::codecvt` specializations for `char16_t` and `char32_t` for compatibility with C++17 and later. ([pull_request 159])
 * Added support for C++17 `std::byte` type to receive methods of the [link log.detailed.utilities.ipc.reliable_message_queue inter-process message queue].
+* On Windows, when building the library for Windows 8 or later, the library will use `nt62` tag in the version namespace to denote the target OS ABI. For example, the version namespace could be named as `v2_mt_nt62`. This name will be part of all symbols exported by the library. Use the `BOOST_USE_WINAPI_VERSION` macro consistenly when building Boost and your code to request the minimum target Windows version.
 
 [*Bug fixes:]
 

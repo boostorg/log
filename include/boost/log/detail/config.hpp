@@ -332,7 +332,9 @@ namespace boost {
 #           if defined(BOOST_THREAD_PLATFORM_PTHREAD)
 #               define BOOST_LOG_VERSION_NAMESPACE v2_mt_posix
 #           elif defined(BOOST_THREAD_PLATFORM_WIN32)
-#               if BOOST_USE_WINAPI_VERSION >= BOOST_WINAPI_VERSION_WIN6
+#               if BOOST_USE_WINAPI_VERSION >= BOOST_WINAPI_VERSION_WIN8
+#                   define BOOST_LOG_VERSION_NAMESPACE v2_mt_nt62
+#               elif BOOST_USE_WINAPI_VERSION >= BOOST_WINAPI_VERSION_WIN6
 #                   define BOOST_LOG_VERSION_NAMESPACE v2_mt_nt6
 #               else
 #                   define BOOST_LOG_VERSION_NAMESPACE v2_mt_nt5
@@ -348,7 +350,9 @@ namespace boost {
 #           if defined(BOOST_THREAD_PLATFORM_PTHREAD)
 #               define BOOST_LOG_VERSION_NAMESPACE v2s_mt_posix
 #           elif defined(BOOST_THREAD_PLATFORM_WIN32)
-#               if BOOST_USE_WINAPI_VERSION >= BOOST_WINAPI_VERSION_WIN6
+#               if BOOST_USE_WINAPI_VERSION >= BOOST_WINAPI_VERSION_WIN8
+#                   define BOOST_LOG_VERSION_NAMESPACE v2s_mt_nt62
+#               elif BOOST_USE_WINAPI_VERSION >= BOOST_WINAPI_VERSION_WIN6
 #                   define BOOST_LOG_VERSION_NAMESPACE v2s_mt_nt6
 #               else
 #                   define BOOST_LOG_VERSION_NAMESPACE v2s_mt_nt5

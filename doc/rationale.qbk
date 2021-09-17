@@ -208,7 +208,7 @@ Most of the time users won't even notice the existence of this internal namespac
 * The `<version>` component describes the library major version. It is currently `v2`.
 * The `<linkage>` component tells whether the library is linked statically or dynamically. It is `s` if the library is linked statically and empty otherwise.
 * The `<threading>` component is `st` for single-threaded builds and `mt` for multi-threaded ones.
-* The `<system>` component describes the underlying OS API used by the library. Currently, it is only specified for multi-threaded builds. Depending on the target platform and configuration, it can be `posix`, `nt5` or `nt6`.
+* The `<system>` component describes the underlying OS API used by the library. Currently, it is only specified for multi-threaded builds. Depending on the target platform and configuration, it can be `posix`, `nt5`, `nt6` or `nt62`.
 
 As a couple quick examples, `v2s_st` corresponds to v2 static single-threaded build of the library and `v2_mt_posix` - to v2 dynamic multi-threaded build for POSIX system API.
 
