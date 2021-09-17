@@ -38,7 +38,6 @@ rule set-platform-defines ( properties * )
         result += <define>NOMINMAX ;
         result += <define>WIN32_LEAN_AND_MEAN ;
         result += <define>SECURITY_WIN32 ;
-        result += <define>BOOST_USE_WINDOWS_H ;
 
         if <target-os>cygwin in $(properties)
         {
