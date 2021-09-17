@@ -39,7 +39,9 @@
 #elif defined(BOOST_LOG_EVENT_USE_WINAPI)
 
 #include <windows.h>
-#include <boost/detail/interlocked.hpp>
+#include <boost/memory_order.hpp>
+#include <boost/atomic/atomic.hpp>
+#include <boost/atomic/fences.hpp>
 
 #else
 
@@ -134,47 +136,73 @@ BOOST_LOG_API void sem_based_event::set_signalled()
 
 //! Default constructor
 BOOST_LOG_API winapi_based_event::winapi_based_event() :
-    m_state(0),
-    m_event(CreateEventA(NULL, false, false, NULL))
+    m_state(0u),
+    m_event(NULL)
 {
-    if (BOOST_UNLIKELY(!m_event))
+    if (!m_state.has_native_wait_notify())
     {
-        const DWORD err = GetLastError();
-        BOOST_LOG_THROW_DESCR_PARAMS(system_error, "Failed to create Windows event", (err));
+        m_event = CreateEventA(NULL, false, false, NULL);
+        if (BOOST_UNLIKELY(!m_event))
+        {
+            const DWORD err = GetLastError();
+            BOOST_LOG_THROW_DESCR_PARAMS(system_error, "Failed to create Windows event", (err));
+        }
     }
 }
 
 //! Destructor
 BOOST_LOG_API winapi_based_event::~winapi_based_event()
 {
-    BOOST_VERIFY(CloseHandle(m_event) != 0);
+    if (!!m_event)
+    {
+        BOOST_VERIFY(CloseHandle(m_event) != 0);
+    }
 }
 
 //! Waits for the object to become signalled
 BOOST_LOG_API void winapi_based_event::wait()
 {
-    // On Windows we assume that memory view is always actual (Intel x86 and x86_64 arch)
-    if (const_cast< volatile boost::uint32_t& >(m_state) == 0)
+    if (!m_event)
     {
-        if (BOOST_UNLIKELY(WaitForSingleObject(m_event, INFINITE) != 0))
+        while (m_state.exchange(0u, boost::memory_order_acq_rel) == 0u)
         {
-            const DWORD err = GetLastError();
-            BOOST_LOG_THROW_DESCR_PARAMS(system_error, "Failed to block on Windows event", (err));
+            m_state.wait(0u, boost::memory_order_relaxed);
         }
     }
-    const_cast< volatile boost::uint32_t& >(m_state) = 0;
+    else
+    {
+        while (m_state.exchange(0u, boost::memory_order_acq_rel) == 0u)
+        {
+            if (BOOST_UNLIKELY(WaitForSingleObject(m_event, INFINITE) != 0))
+            {
+                const DWORD err = GetLastError();
+                BOOST_LOG_THROW_DESCR_PARAMS(system_error, "Failed to block on Windows event", (err));
+            }
+        }
+    }
 }
 
 //! Sets the object to a signalled state
 BOOST_LOG_API void winapi_based_event::set_signalled()
 {
-    if (BOOST_INTERLOCKED_COMPARE_EXCHANGE(reinterpret_cast< long* >(&m_state), 1, 0) == 0)
+    if (m_state.load(boost::memory_order_relaxed) != 0u)
     {
-        if (BOOST_UNLIKELY(SetEvent(m_event) == 0))
+        boost::atomic_thread_fence(boost::memory_order_release);
+    }
+    else if (m_state.exchange(1u, boost::memory_order_release) == 0u)
+    {
+        if (!m_event)
         {
-            const DWORD err = GetLastError();
-            const_cast< volatile boost::uint32_t& >(m_state) = 0;
-            BOOST_LOG_THROW_DESCR_PARAMS(system_error, "Failed to wake the blocked thread", (err));
+            m_state.notify_one();
+        }
+        else
+        {
+            if (BOOST_UNLIKELY(SetEvent(m_event) == 0))
+            {
+                const DWORD err = GetLastError();
+                m_state.store(0u, boost::memory_order_relaxed);
+                BOOST_LOG_THROW_DESCR_PARAMS(system_error, "Failed to wake the blocked thread", (err));
+            }
         }
     }
 }

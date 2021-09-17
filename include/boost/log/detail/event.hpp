@@ -34,6 +34,7 @@
 #define BOOST_LOG_EVENT_USE_POSIX_SEMAPHORE
 #elif defined(BOOST_THREAD_PLATFORM_WIN32)
 #include <boost/cstdint.hpp>
+#include <boost/atomic/atomic.hpp>
 #define BOOST_LOG_EVENT_USE_WINAPI
 #else
 #include <boost/thread/mutex.hpp>
@@ -103,7 +104,7 @@ typedef sem_based_event event;
 class winapi_based_event
 {
 private:
-    boost::uint32_t m_state;
+    boost::atomic< boost::uint32_t > m_state;
     void* m_event;
 
 public:
