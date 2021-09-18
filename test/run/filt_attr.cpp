@@ -14,6 +14,15 @@
 
 #define BOOST_TEST_MODULE filt_attr
 
+#include <boost/predef/os.h>
+
+// Try including WinAPI config as soon as possible so that any other headers don't include Windows SDK headers.
+// This is important to select the target Windows version, as windows.h will be included by other Boost libraries, e.g. Regex.
+#if defined(BOOST_OS_WINDOWS_AVAILABLE)
+#define BOOST_USE_WINDOWS_H
+#include <boost/winapi/config.hpp>
+#endif
+
 #include <memory>
 #include <string>
 #include <algorithm>
