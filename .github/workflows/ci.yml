@@ -349,7 +349,30 @@ jobs:
             echo "CMAKE_BUILD_PARALLEL_LEVEL=$BUILD_JOBS" >> $GITHUB_ENV
             DEPINST_ARGS=()
             GIT_VERSION="$(git --version | sed -e 's/git version //')"
-            if $(dpkg --compare-versions "$GIT_VERSION" ge 2.8.0)
+            GIT_HAS_JOBS=1
+            if [ -f "/etc/debian_version" ]
+            then
+                if $(dpkg --compare-versions "$GIT_VERSION" lt 2.8.0)
+                then
+                    GIT_HAS_JOBS=0
+                fi
+            else
+                declare -a GIT_VER=(${GIT_VERSION//./ })
+                declare -a GIT_MIN_VER=(2 8 0)
+                for ((i=0; i<${#GIT_VER[@]}; i++))
+                do
+                    if [ -z "${GIT_MIN_VER[i]}" ]
+                    then
+                        GIT_MIN_VER[i]=0
+                    fi
+                    if [ "${GIT_VER[i]}" -lt "${GIT_MIN_VER[i]}" ]
+                    then
+                        GIT_HAS_JOBS=0
+                        break
+                    fi
+                done
+            fi
+            if [ "$GIT_HAS_JOBS" -ne 0 ]
             then
                 DEPINST_ARGS+=("--git_args" "--jobs $GIT_FETCH_JOBS")
             fi
