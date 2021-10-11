@@ -1,0 +1,75 @@
+# log-setup-config.jam
+#
+# Distributed under the Boost Software License Version 1.0. (See
+# accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
+
+import "class" : new ;
+import generators ;
+import project ;
+import property-set ;
+import targets ;
+import type ;
+
+type.register ALIAS_OR_LIB ;
+
+# The generator class for alias-or-lib (target type ALIAS_OR_LIB). Depending on properties
+# it will request building of the appropriate type -- ALIAS or LIB
+#
+class alias-or-lib-generator : generator
+{
+    rule __init__ ( * : * )
+    {
+        generator.__init__ $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8)
+            : $(9) : $(10) : $(11) : $(12) : $(13) : $(14) : $(15) : $(16) :
+            $(17) : $(18) : $(19) ;
+    }
+
+    rule run ( project name ? : property-set : sources * )
+    {
+        # The alias-or-lib generator is composing, and can be only invoked with
+        # an explicit name. This check is present in generator.run (and so in
+        # builtin.linking-generator) but duplicated here to avoid doing extra
+        # work.
+        if $(name)
+        {
+            local properties = [ $(property-set).raw ] ;
+            # Determine the needed target type.
+            local actual-type ;
+            local flag-to-trigger-alias = BOOST_LOG_WITHOUT_SETTINGS_PARSERS ;
+            if ( "<define>$(flag-to-trigger-alias)" in $(properties) || "<define>$(flag-to-trigger-alias)=1" in $(properties) )
+            {
+                actual-type = ALIAS ;
+            }
+            else
+            {
+                actual-type = LIB ;
+            }
+            # Construct the target.
+            local result = [ generators.construct $(project) $(name) : $(actual-type)
+                : $(property-set) : $(sources) ] ;
+            return $(result) ;
+        }
+    }
+
+    rule viable-source-types ( )
+    {
+        return * ;
+    }
+}
+
+generators.register [ new alias-or-lib-generator alias-or-lib-generator true :  : ALIAS_OR_LIB ] ;
+
+# Declares the 'alias-or-lib' target. It will add an alias-or-lib typed target
+# which will resolve to either an alias or a lib depending on the properties.
+#
+rule alias-or-lib ( name : sources * : requirements * : default-build * :
+    usage-requirements * )
+{
+    local result ;
+
+    result = [ targets.create-typed-target ALIAS_OR_LIB : [ project.current ] : $(name)
+        : $(sources) : $(requirements) : $(default-build) : $(usage-requirements) ] ;
+
+    return $(result) ;
+}

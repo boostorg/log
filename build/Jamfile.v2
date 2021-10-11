@@ -14,6 +14,7 @@ import feature ;
 import configure ;
 import log-arch-config ;
 import log-platform-config ;
+import log-setup-rules ;
 using mc ;
 
 local here = [ modules.binding $(__name__) ] ;
@@ -391,6 +392,63 @@ rule select-platform-specific-sources ( properties * )
     return $(result) ;
 }
 
+rule select-log-setup-requirements ( properties * )
+{
+    local result ;
+
+    local BOOST_LOG_SETUP_COMMON_SRC =
+        parser_utils.cpp
+        init_from_stream.cpp
+        init_from_settings.cpp
+        settings_parser.cpp
+        filter_parser.cpp
+        formatter_parser.cpp
+        default_filter_factory.cpp
+        matches_relation_factory.cpp
+        default_formatter_factory.cpp
+        ;
+
+    if ! [ has-config-flag BOOST_LOG_WITHOUT_SETTINGS_PARSERS : $(properties) ]
+    {
+        for local srcfile in $(BOOST_LOG_SETUP_COMMON_SRC)
+        {
+            result += <source>setup/$(srcfile) ;
+        }
+        if <link>shared in $(properties)
+        {
+            result += <define>BOOST_LOG_DYN_LINK=1 ;
+            result += <define>BOOST_LOG_SETUP_DLL ;
+        }
+        result += <define>BOOST_LOG_SETUP_BUILDING_THE_LIB=1 ;
+        result += <library>boost_log ;
+    }
+
+    return $(result) ;
+}
+
+rule select-log-setup-usage-requirements ( properties * )
+{
+    local result ;
+
+    if ! [ has-config-flag BOOST_LOG_WITHOUT_SETTINGS_PARSERS : $(properties) ]
+    {
+        if <link>shared in $(properties)
+        {
+            result += <define>BOOST_LOG_SETUP_DYN_LINK=1 ;
+        }
+        if <threading>single in $(properties)
+        {
+            result += <define>BOOST_LOG_NO_THREADS ;
+        }
+    }
+    else
+    {
+        result += <define>BOOST_LOG_SETUP_NO_LIB ;
+    }
+
+    return $(result) ;
+}
+
 lib boost_log
     : ## sources ##
         $(BOOST_LOG_COMMON_SRC)
@@ -405,31 +463,13 @@ lib boost_log
         <threading>single:<define>BOOST_LOG_NO_THREADS
     ;
 
-
-local BOOST_LOG_SETUP_COMMON_SRC =
-    parser_utils.cpp
-    init_from_stream.cpp
-    init_from_settings.cpp
-    settings_parser.cpp
-    filter_parser.cpp
-    formatter_parser.cpp
-    default_filter_factory.cpp
-    matches_relation_factory.cpp
-    default_formatter_factory.cpp
-    ;
-
-lib boost_log_setup
+alias-or-lib boost_log_setup
     : ## sources ##
-        setup/$(BOOST_LOG_SETUP_COMMON_SRC)
     : ## requirements ##
-        <link>shared:<define>BOOST_LOG_DYN_LINK=1
-        <link>shared:<define>BOOST_LOG_SETUP_DLL
-        <define>BOOST_LOG_SETUP_BUILDING_THE_LIB=1
-        <library>boost_log
+        <conditional>@select-log-setup-requirements
     : ## default-build ##
     : ## usage-requirements ##
-        <link>shared:<define>BOOST_LOG_SETUP_DYN_LINK=1
-        <threading>single:<define>BOOST_LOG_NO_THREADS
+        <conditional>@select-log-setup-usage-requirements
     ;
 
 boost-install boost_log boost_log_setup ;
