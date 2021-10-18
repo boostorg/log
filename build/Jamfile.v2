@@ -418,10 +418,23 @@ local BOOST_LOG_SETUP_COMMON_SRC =
     default_formatter_factory.cpp
     ;
 
+rule check-boost_log_setup-enabled ( properties * )
+{
+    local result ;
+
+    if [ has-config-flag BOOST_LOG_WITHOUT_SETTINGS_PARSERS : $(properties) ]
+    {
+        result = <build>no ;
+    }
+
+    return $(result) ;
+}
+
 lib boost_log_setup
     : ## sources ##
         setup/$(BOOST_LOG_SETUP_COMMON_SRC)
     : ## requirements ##
+        <conditional>@check-boost_log_setup-enabled
         <link>shared:<define>BOOST_LOG_DYN_LINK=1
         <link>shared:<define>BOOST_LOG_SETUP_DLL
         <define>BOOST_LOG_SETUP_BUILDING_THE_LIB=1
