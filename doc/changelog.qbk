@@ -20,6 +20,7 @@
 [*Bug fixes:]
 
 * Fixed a race condition on POSIX systems in [link log.detailed.utilities.ipc.reliable_message_queue `reliable_message_queue::open_or_create`] or the equivalent constructor. Multiple threads or processes calling `open_or_create` concurrently with sending or receiving messages from the same queue could end up corrupting the queue contents and potentially crashing the process. ([github_issue 162])
+* Added a workaround for `b2 install` failing on Windows because of missing `boost_log_setup` library if `BOOST_LOG_WITHOUT_SETTINGS_PARSERS` is defined. ([github_issue 164])
 
 [heading 2.22, Boost 1.77]
 
