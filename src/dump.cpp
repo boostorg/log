@@ -60,7 +60,7 @@ extern dump_data_char32_t dump_data_char32_avx2;
 
 enum { stride = 256 };
 
-extern BOOST_ALIGNMENT(16) const char g_hex_char_table[2][16] =
+BOOST_ALIGNMENT(16) extern const char g_hex_char_table[2][16] =
 {
     { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' },
     { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' }
