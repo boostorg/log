@@ -203,7 +203,15 @@ BOOST_FORCEINLINE void dump_data_avx2(const void* data, std::size_t size, std::b
     char_type* buf_end = buf + stride * 3u;
 
     const char* const char_table = g_hex_char_table[(strm.flags() & std::ios_base::uppercase) != 0];
+#if defined(__GNUC__) && ((defined(BOOST_GCC) && BOOST_GCC < 40900) || (defined(BOOST_CLANG) && BOOST_CLANG_VERSION < 40000))
+    // gcc 4.7 is missing _mm256_broadcastsi128_si256 declaration in immintrin.h.
+    // gcc 4.8 generates vmovdqu+vinserti128 instead of a single vbroadcasti128.
+    // clang up until 4.0 generates vmovdqu+vinserti128 or worse.
+    __m256i mm_char_table;
+    __asm__("vbroadcasti128 %1, %0" : "=x" (mm_char_table) : "m" (*reinterpret_cast< const __m128i* >(char_table)));
+#else
     const __m256i mm_char_table = _mm256_broadcastsi128_si256(_mm_loadu_si128(reinterpret_cast< const __m128i* >(char_table)));
+#endif
 
     // First, check the input alignment. Also, if we can dump the whole data in one go, do it right away. It turns out to be faster than splitting
     // the work between prealign and tail part. It is also a fairly common case since on most platforms memory is not aligned to 32 bytes (i.e. prealign is often needed).
