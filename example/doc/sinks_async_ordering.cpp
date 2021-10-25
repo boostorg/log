@@ -60,8 +60,8 @@ boost::shared_ptr< sink_t > init_logging()
     // Wrap it into the frontend and register in the core
     boost::shared_ptr< sink_t > sink(new sink_t(
         backend,                                                                 /*< pointer to the pre-initialized backend >*/
-        keywords::order =
-            logging::make_attr_ordering("LineID", std::less< unsigned int >()),  /*< log record ordering predicate >*/
+        keywords::order = logging::make_attr_ordering< unsigned int >(           /*< log record ordering predicate >*/
+            "LineID", std::less< unsigned int >()),
         keywords::ordering_window = boost::posix_time::seconds(1)                /*< latency of log record processing >*/
     ));
     core->add_sink(sink);
