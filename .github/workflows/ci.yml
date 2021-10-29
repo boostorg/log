@@ -238,9 +238,9 @@ jobs:
             cxxstd: "03,11,14,17,2a"
             os: macos-10.15
 
-          # - name: CMake tests
-          #   cmake_tests: 1
-          #   os: ubuntu-20.04
+          - name: CMake tests
+            cmake_tests: 1
+            os: ubuntu-20.04
 
     timeout-minutes: 120
     runs-on: ${{matrix.os}}
@@ -446,7 +446,9 @@ jobs:
             mkdir __build_static__ && cd __build_static__
             cmake ../libs/$LIBRARY/test/test_cmake
             cmake --build . --target boost_${LIBRARY}_cmake_self_test -j $BUILD_JOBS
+            cmake --build . --target boost_${LIBRARY}_setup_cmake_self_test -j $BUILD_JOBS
             cd ..
             mkdir __build_shared__ && cd __build_shared__
             cmake -DBUILD_SHARED_LIBS=On ../libs/$LIBRARY/test/test_cmake
             cmake --build . --target boost_${LIBRARY}_cmake_self_test -j $BUILD_JOBS
+            cmake --build . --target boost_${LIBRARY}_setup_cmake_self_test -j $BUILD_JOBS

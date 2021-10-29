@@ -1,4 +1,4 @@
-# Copyright 2019 Andrey Semashev
+# Copyright 2019 - 2021 Andrey Semashev
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE_1_0.txt or copy at http://boost.org/LICENSE_1_0.txt)
 
@@ -106,6 +106,10 @@ environment:
       ENV_SCRIPT: C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars32.bat
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
 
+    - TEST_CMAKE: 1
+      ENV_SCRIPT: C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+
 install:
   - set GIT_FETCH_JOBS=8
   - set BOOST_BRANCH=develop
@@ -133,3 +137,21 @@ test_script:
   - if "%EXTRA_TESTS%" == "" set BOOST_LOG_TEST_WITHOUT_SELF_CONTAINED_HEADER_TESTS=1 & set BOOST_LOG_TEST_WITHOUT_EXAMPLES=1
   - if not "%CXXSTD%" == "" set CXXSTD=cxxstd=%CXXSTD%
   - b2 -j %NUMBER_OF_PROCESSORS% libs/log/test variant=release toolset=%TOOLSET% address-model=%ADDRESS_MODEL% %CXXSTD% %B2_ARGS%
+
+for:
+  - matrix:
+      only: [TEST_CMAKE: 1]
+    test_script:
+      - PATH=%ADDPATH%;%PATH%
+      - if not "%ENV_SCRIPT%" == "" call "%ENV_SCRIPT%"
+      - mkdir __build_static__
+      - cd __build_static__
+      - cmake ../libs/log/test/test_cmake
+      - cmake --build . --target boost_log_cmake_self_test -j %NUMBER_OF_PROCESSORS%
+      - cmake --build . --target boost_log_setup_cmake_self_test -j %NUMBER_OF_PROCESSORS%
+      - cd ..
+      - mkdir __build_shared__
+      - cd __build_shared__
+      - cmake -DBUILD_SHARED_LIBS=On ../libs/log/test/test_cmake
+      - cmake --build . --target boost_log_cmake_self_test -j %NUMBER_OF_PROCESSORS%
+      - cmake --build . --target boost_log_setup_cmake_self_test -j %NUMBER_OF_PROCESSORS%
