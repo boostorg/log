@@ -249,15 +249,7 @@
         // other Boost libraries. We explicitly add comments here for other libraries.
         // In dynamic-library builds this is not needed.
 #       if !defined(BOOST_LOG_DLL)
-#           include <boost/system/config.hpp>
 #           include <boost/filesystem/config.hpp>
-#           if !defined(BOOST_DATE_TIME_NO_LIB) && !defined(BOOST_DATE_TIME_SOURCE)
-#               define BOOST_LIB_NAME boost_date_time
-#               if defined(BOOST_ALL_DYN_LINK) || defined(BOOST_DATE_TIME_DYN_LINK)
-#                   define BOOST_DYN_LINK
-#               endif
-#               include <boost/config/auto_link.hpp>
-#           endif
             // Boost.Thread's config is included below, if needed
 #       endif
 #   endif  // auto-linking disabled
