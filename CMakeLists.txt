@@ -609,7 +609,6 @@ if (NOT BOOST_LOG_WITHOUT_SETTINGS_PARSERS)
             ${boost_log_setup_public_deps}
 
         PRIVATE
-            Boost::align # A missing dependency of Boost.ASIO, see https://github.com/boostorg/asio/pull/384
             Boost::asio
             Boost::bind
             Boost::date_time
