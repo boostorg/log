@@ -260,7 +260,7 @@ jobs:
                 if [ -f "/etc/debian_version" ]
                 then
                     apt-get -o Acquire::Retries=$NET_RETRY_COUNT update
-                    apt-get -o Acquire::Retries=$NET_RETRY_COUNT install -y sudo software-properties-common tzdata wget curl apt-transport-https ca-certificates make build-essential g++ python python3 git cmake
+                    apt-get -o Acquire::Retries=$NET_RETRY_COUNT install -y sudo software-properties-common tzdata wget curl apt-transport-https ca-certificates make build-essential g++ python python3 perl git cmake
                 fi
             fi
             git config --global pack.threads 0
@@ -270,28 +270,32 @@ jobs:
       - name: Install packages
         if: matrix.install
         run: |
-            SOURCE_KEYS=(${{join(matrix.source_keys, ' ')}})
-            SOURCES=(${{join(matrix.sources, ' ')}})
+            declare -a SOURCE_KEYS SOURCES
+            if [ -n "${{join(matrix.source_keys, ' ')}}" ]
+            then
+                SOURCE_KEYS=("${{join(matrix.source_keys, '" "')}}")
+            fi
+            if [ -n "${{join(matrix.sources, ' ')}}" ]
+            then
+                SOURCES=("${{join(matrix.sources, '" "')}}")
+            fi
             for key in "${SOURCE_KEYS[@]}"
             do
                 for i in {1..$NET_RETRY_COUNT}
                 do
+                    echo "Adding key: $key"
                     wget -O - "$key" | sudo apt-key add - && break || sleep 2
                 done
             done
             if [ ${#SOURCES[@]} -gt 0 ]
             then
                 APT_ADD_REPO_COMMON_ARGS=("-y")
-                APT_ADD_REPO_HAS_SOURCE_ARGS=0
-                SOFTWARE_PROPERTIES_VERSION="$(dpkg-query --showformat='${Version}' --show software-properties-common)"
-                if dpkg --compare-versions "$SOFTWARE_PROPERTIES_VERSION" ge "0.96.24.20"
+                APT_ADD_REPO_SUPPORTED_ARGS="$(apt-add-repository --help | perl -ne 'if (/^\s*-n/) { print "n"; } elsif (/^\s*-P/) { print "P"; } elsif (/^\s*-S/) { print "S"; } elsif (/^\s*-U/) { print "U"; }')"
+                if [ -n "$APT_ADD_REPO_SUPPORTED_ARGS" -a -z "${APT_ADD_REPO_SUPPORTED_ARGS##*n*}" ]
                 then
                     APT_ADD_REPO_COMMON_ARGS+=("-n")
                 fi
-                if dpkg --compare-versions "$SOFTWARE_PROPERTIES_VERSION" ge "0.98.10"
-                then
-                    APT_ADD_REPO_HAS_SOURCE_ARGS=1
-                fi
+                APT_ADD_REPO_HAS_SOURCE_ARGS="$([ -n "$APT_ADD_REPO_SUPPORTED_ARGS" -a -z "${APT_ADD_REPO_SUPPORTED_ARGS##*P*}" -a -z "${APT_ADD_REPO_SUPPORTED_ARGS##*S*}" -a -z "${APT_ADD_REPO_SUPPORTED_ARGS##*U*}" ] && echo 1 || echo 0)"
                 for source in "${SOURCES[@]}"
                 do
                     for i in {1..$NET_RETRY_COUNT}
@@ -312,6 +316,7 @@ jobs:
                             esac
                         fi
                         APT_ADD_REPO_ARGS+=("$source")
+                        echo "apt-add-repository ${APT_ADD_REPO_ARGS[@]}"
                         sudo -E apt-add-repository "${APT_ADD_REPO_ARGS[@]}" && break || sleep 2
                     done
                 done
@@ -342,7 +347,7 @@ jobs:
             REF=${GITHUB_BASE_REF:-$GITHUB_REF}
             REF=${REF#refs/heads/}
             echo REF: $REF
-            BOOST_BRANCH=develop && [ "$REF" == "master" ] && BOOST_BRANCH=master || true
+            BOOST_BRANCH=develop && [ "$REF" = "master" ] && BOOST_BRANCH=master || true
             echo BOOST_BRANCH: $BOOST_BRANCH
             BUILD_JOBS=$((nproc || sysctl -n hw.ncpu) 2> /dev/null)
             echo "BUILD_JOBS=$BUILD_JOBS" >> $GITHUB_ENV
