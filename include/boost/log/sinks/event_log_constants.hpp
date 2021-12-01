@@ -63,9 +63,9 @@ namespace event_log {
     enum event_type
     {
         success = 0,                 //!< Equivalent to EVENTLOG_SUCCESS
-        info = 4,                    //!< Equivalent to EVENTLOG_INFORMATION_TYPE
+        info = 1,                    //!< Equivalent to EVENTLOG_INFORMATION_TYPE
         warning = 2,                 //!< Equivalent to EVENTLOG_WARNING_TYPE
-        error = 1                    //!< Equivalent to EVENTLOG_ERROR_TYPE
+        error = 3                    //!< Equivalent to EVENTLOG_ERROR_TYPE
     };
 
     /*!
