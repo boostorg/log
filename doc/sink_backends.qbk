@@ -210,7 +210,7 @@ The sink backend supports appending to the previously written files (e.g. left f
 
 When initializing from [link log.detailed.utilities.setup.settings settings], the "Append" parameter of the "TextFile" sink enables appending.
 
-In order for file appending to actually happen, it is important that the name of the newly opened log file matches the previously written file. Othewise, the sink will simply create a new file under the new name. There are several recommendations to follow when file appending is desirable:
+In order for file appending to actually happen, it is important that the name of the newly opened log file matches the previously written file. Otherwise, the sink will simply create a new file under the new name. There are several recommendations to follow when file appending is desirable:
 
 * Don't use placeholders in the active file name pattern. This will ensure that every time the sink opens a file for writing, that file has the same name.
 * Use a distinct target file name pattern, preferably with date, time or counter placeholders. This will ensure that when the file is rotated and collected, it doesn't clash with the previously written files, and that the newly opened file will have a different name from the previous one.

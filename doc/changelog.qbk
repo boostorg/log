@@ -11,6 +11,13 @@
 
 [heading 2.24, Boost 1.79]
 
+[*General changes:]
+
+* In [link log.detailed.sink_backends.text_file `text_file_backend`], added support for appending to a previously written log file, when file rotation is used and log file names use file counters. For this to work, the target storage directory must be the same as the directory where the active log file is written, and `text_file_backend::scan_for_files` must be called prior to emitting any log records to discover the last file counter used in the target storage directory. Previously, in such a configuration the sink backend would generate a new file name instead of appending to the last written one.
+* *Breaking change:* The [class_file_collector] interface has changed:
+  * `scan_for_files` method returns a `scan_result` structure that contains information collected during the scan;
+  * `is_in_storage` method added for testing if a path refers to a file within the target storage directory.
+
 [*Bug fixes:]
 
 * Fixed file counter being set to zero if the user calls [link log.detailed.sink_backends.text_file.file_scanning `text_file_backend::scan_for_files`] multiple times, and the second and the following calls don't find any new files. ([github_issue 179])
