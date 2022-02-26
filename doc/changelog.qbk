@@ -1,5 +1,5 @@
 [/
-              Copyright Andrey Semashev 2007 - 2021.
+              Copyright Andrey Semashev 2007 - 2022.
      Distributed under the Boost Software License, Version 1.0.
         (See accompanying file LICENSE_1_0.txt or copy at
               http://www.boost.org/LICENSE_1_0.txt)
@@ -8,6 +8,12 @@
 /]
 
 [section:changelog Changelog]
+
+[heading 2.24, Boost 1.79]
+
+[*Bug fixes:]
+
+* Fixed file counter being set to zero if the user calls [link log.detailed.sink_backends.text_file.file_scanning `text_file_backend::scan_for_files`] multiple times, and the second and the following calls don't find any new files. ([github_issue 179])
 
 [heading 2.23, Boost 1.78]
 

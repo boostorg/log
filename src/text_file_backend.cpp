@@ -892,7 +892,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
     uintmax_t file_collector::scan_for_files(
         file::scan_method method, filesystem::path const& pattern, unsigned int* counter)
     {
-        uintmax_t file_count = 0;
+        uintmax_t file_count = 0u;
         if (method != file::no_scan)
         {
             filesystem::path dir = m_StorageDir;
@@ -912,14 +912,16 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
             filesystem::file_status status = filesystem::status(dir, ec);
             if (status.type() == filesystem::directory_file)
             {
-                BOOST_LOG_EXPR_IF_MT(lock_guard< mutex > lock(m_Mutex);)
-
+                unsigned int new_counter = 0u;
                 if (counter)
-                    *counter = 0;
+                    new_counter = *counter;
+                bool found_file_number = false;
+
+                BOOST_LOG_EXPR_IF_MT(lock_guard< mutex > lock(m_Mutex);)
 
                 file_list files;
                 filesystem::directory_iterator it(dir), end;
-                uintmax_t total_size = 0;
+                uintmax_t total_size = 0u;
                 for (; it != end; ++it)
                 {
                     filesystem::directory_entry const& dir_entry = *it;
@@ -951,9 +953,12 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
                                 files.push_back(info);
                                 ++file_count;
 
-                                // Test that the file_number >= *counter accounting for the integer overflow
-                                if (file_number_parsed && counter != NULL && (file_number - *counter) < ((~0u) ^ ((~0u) >> 1)))
-                                    *counter = file_number + 1u;
+                                // Test that the file_number >= new_counter accounting for the integer overflow
+                                if (file_number_parsed && (file_number - new_counter) < ((~0u) ^ ((~0u) >> 1u)))
+                                {
+                                    found_file_number = true;
+                                    new_counter = file_number + 1u;
+                                }
                             }
                         }
                     }
@@ -963,6 +968,9 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
                 m_Files.splice(m_Files.end(), files);
                 m_TotalSize += total_size;
                 m_Files.sort(boost::bind(&file_info::m_TimeStamp, boost::placeholders::_1) < boost::bind(&file_info::m_TimeStamp, boost::placeholders::_2));
+
+                if (counter && found_file_number)
+                    *counter = new_counter;
             }
         }
 
@@ -1207,9 +1215,6 @@ BOOST_LOG_API bool rotation_at_time_interval::operator()() const
 //! Sink implementation data
 struct text_file_backend::implementation
 {
-    //! File open mode
-    std::ios_base::openmode m_FileOpenMode;
-
     //! File name pattern
     filesystem::path m_FileNamePattern;
     //! Directory to store files in
@@ -1226,6 +1231,9 @@ struct text_file_backend::implementation
 
     //! Stored files counter
     unsigned int m_FileCounter;
+
+    //! File open mode
+    std::ios_base::openmode m_FileOpenMode;
 
     //! Current file name
     filesystem::path m_FileName;
@@ -1253,9 +1261,9 @@ struct text_file_backend::implementation
     bool m_FinalRotationEnabled;
 
     implementation(uintmax_t rotation_size, auto_newline_mode auto_newline, bool auto_flush, bool enable_final_rotation) :
+        m_FileCounter(0u),
         m_FileOpenMode(std::ios_base::trunc | std::ios_base::out),
-        m_FileCounter(0),
-        m_CharactersWritten(0),
+        m_CharactersWritten(0u),
         m_FileRotationSize(rotation_size),
         m_AutoNewlineMode(auto_newline),
         m_AutoFlush(auto_flush),
