@@ -96,7 +96,12 @@ struct BOOST_LOG_NO_VTABLE collector
     /*!
      * Virtual destructor
      */
+#if !defined(BOOST_GCC) || (BOOST_GCC >= 40700)
     BOOST_DEFAULTED_FUNCTION(virtual ~collector(), {})
+#else
+    // gcc 4.6 does not support defaulted virtual destructors
+    virtual ~collector() {}
+#endif
 
     /*!
      * The function stores the specified file in the storage. May lead to an older file
