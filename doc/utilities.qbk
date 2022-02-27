@@ -325,6 +325,64 @@ The "none" marker argument, if specified, is inserted into stream in case if the
 
 [endsect]
 
+[section:invoke Invoke manipulator]
+
+    #include <``[boost_log_utility_manipulators_invoke_hpp]``>
+
+Invoke manipulator allows to inject a user-defined function call into the stream output expression. The function will be called when the manipulator is inserted into the stream. The manipulator will pass a reference to the stream to the function as the first argument, optionally followed by a number of additional arguments that were specified on the manipulator construction. For example:
+
+    void print_signal(std::ostream& stream, int sig)
+    {
+        switch (sig)
+        {
+        case SIGINT:
+            stream << "SIGINT";
+            break;
+        case SIGTERM:
+            stream << "SIGTERM";
+            break;
+        default:
+            stream << sig;
+            break;
+        }
+    }
+
+    int sig = SIGINT;
+
+    // Outputs: "Signal received: SIGINT"
+    BOOST_LOG(lg) << "Signal received: " << logging::invoke_manip(&print_signal, sig);
+
+[tip This manipulator can also be used with regular output streams, not necessarily loggers.]
+
+Here, `print_signal` will be called by the manipulator when its `operator<<` is called. The output stream will be passed as the first argument and any additional arguments (`sig`, in this case) following that. The arguments are captured by value by default. One can use `std::ref`/`boost::ref` if capturing by reference is needed.
+
+[note Passing additional arguments to the function requires a C++14 compiler. Use `std::bind`, __boost_bind__ or C++11 lambdas to bind arguments to the function instead of passing them separately if lower C++ version is required.]
+
+Please note that the function will be called only if the streaming expression is executed. If the log record is discarded by filters, the streaming expression is skipped and the user's function is not called. Do not use this manipulator for injecting business-critical calls into logging expressions.
+
+This manipulator is especially convenient with C++11 lambdas. The above example could be rewritten like this:
+
+    int sig = SIGINT;
+
+    // Outputs: "Signal received: SIGINT"
+    BOOST_LOG(lg) << "Signal received: " << logging::invoke_manip([sig](auto& stream)
+    {
+        switch (sig)
+        {
+        case SIGINT:
+            stream << "SIGINT";
+            break;
+        case SIGTERM:
+            stream << "SIGTERM";
+            break;
+        default:
+            stream << sig;
+            break;
+        }
+    });
+
+[endsect]
+
 [endsect]
 
 [section:ipc Interprocess communication tools]

@@ -17,6 +17,7 @@
 * *Breaking change:* The [class_file_collector] interface has changed:
   * `scan_for_files` method returns a `scan_result` structure that contains information collected during the scan;
   * `is_in_storage` method added for testing if a path refers to a file within the target storage directory.
+* Added a new [link log.detailed.utilities.manipulators.invoke `invoke_manip`] stream manipulator that can be used for injecting user's function into a stream output expression.
 
 [*Bug fixes:]
 
