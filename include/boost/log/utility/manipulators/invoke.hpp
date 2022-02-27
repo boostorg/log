@@ -111,7 +111,12 @@ inline auto invoke_manip(FunctionT&& func, Arg0&& arg0, Args&&... args)
         [func, arg0, args...](auto& stream) mutable
 #endif
         {
+#if !defined(BOOST_MSVC) || BOOST_MSVC >= 1910
             static_cast< FunctionT&& >(func)(stream, static_cast< Arg0&& >(arg0), static_cast< Args&& >(args)...);
+#else
+            // MSVC 19.0 (VS 14.0) ICEs if we use perfect forwarding here
+            func(stream, arg0, args...);
+#endif
         }
     );
 }
