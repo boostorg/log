@@ -96,10 +96,9 @@ struct BOOST_LOG_NO_VTABLE collector
     /*!
      * Virtual destructor
      */
-#if !defined(BOOST_GCC) || (BOOST_GCC >= 40700)
+#if !defined(BOOST_LOG_NO_CXX11_DEFAULTED_VIRTUAL_FUNCTIONS)
     BOOST_DEFAULTED_FUNCTION(virtual ~collector(), {})
 #else
-    // gcc 4.6 does not support defaulted virtual destructors
     virtual ~collector() {}
 #endif
 

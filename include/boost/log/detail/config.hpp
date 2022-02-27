@@ -149,8 +149,9 @@
 #endif
 
 #if defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS) || (defined(BOOST_GCC) && (BOOST_GCC / 100) <= 406)
-// GCC 4.6 cannot handle a defaulted function with noexcept specifier
+// GCC 4.6 cannot handle defaulted functions with noexcept specifier or virtual functions
 #define BOOST_LOG_NO_CXX11_DEFAULTED_NOEXCEPT_FUNCTIONS
+#define BOOST_LOG_NO_CXX11_DEFAULTED_VIRTUAL_FUNCTIONS
 #endif
 
 #if defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS) || (defined(BOOST_CLANG) && ((__clang_major__ == 3) && (__clang_minor__ <= 1)))
