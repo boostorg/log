@@ -19,7 +19,7 @@
 
 #include <boost/type_traits/is_base_of.hpp>
 #include <boost/log/detail/config.hpp>
-#if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+#if defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 #include <boost/mpl/aux_/na.hpp>
 #include <boost/mpl/placeholders.hpp>
 #include <boost/mpl/inherit.hpp>
