@@ -272,7 +272,7 @@ As was noted in the [link log.tutorial.formatters tutorial], the library provide
 
     sink->set_formatter(expr::stream << expr1 << expr2 << ... << exprN);
 
-Here expressions `expr1` through `exprN` may be either manipulators, described in this section, or other expressions resulting in an object that supports putting into an STL-stream.
+Here expressions `expr1` through `exprN` may be either manipulators, described in this section, or other expressions resulting in an object that supports putting into a standard library output stream.
 
 To use __boost_format__-style syntax one should use `format` construct:
 
