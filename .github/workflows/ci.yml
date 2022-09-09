@@ -105,22 +105,23 @@ jobs:
             install:
               - g++-10
           - toolset: gcc-11
-            cxxstd: "03,11,14,17,20"
-            os: ubuntu-20.04
+            cxxstd: "03,11,14,17,20,23"
+            os: ubuntu-22.04
             install:
               - g++-11
-            sources:
-              - "ppa:ubuntu-toolchain-r/test"
+          - toolset: gcc-12
+            cxxstd: "03,11,14,17,20,23"
+            os: ubuntu-22.04
+            install:
+              - g++-12
           - name: UBSAN
             toolset: gcc-11
-            cxxstd: "03,11,14,17,20"
+            cxxstd: "03,11,14,17,20,23"
             ubsan: 1
             build_variant: debug
-            os: ubuntu-20.04
+            os: ubuntu-22.04
             install:
               - g++-11
-            sources:
-              - "ppa:ubuntu-toolchain-r/test"
 
           # Linux, clang
           - toolset: clang
@@ -211,38 +212,64 @@ jobs:
           - toolset: clang
             compiler: clang++-11
             cxxstd: "03,11,14,17,20"
-            os: ubuntu-20.04
+            os: ubuntu-22.04
             install:
               - clang-11
           - toolset: clang
             compiler: clang++-12
-            cxxstd: "03,11,14,17,20"
-            os: ubuntu-20.04
+            cxxstd: "03,11,14,17,20,2b"
+            os: ubuntu-22.04
             install:
               - clang-12
           - toolset: clang
-            compiler: clang++-12
-            cxxstd: "03,11,14,17,20"
-            os: ubuntu-20.04
+            compiler: clang++-13
+            cxxstd: "03,11,14,17,20,2b"
+            os: ubuntu-22.04
             install:
-              - clang-12
-              - libc++-12-dev
-              - libc++abi-12-dev
+              - clang-13
+          - toolset: clang
+            compiler: clang++-14
+            cxxstd: "03,11,14,17,20,2b"
+            os: ubuntu-22.04
+            install:
+              - clang-14
+          - toolset: clang
+            compiler: clang++-15
+            cxxstd: "03,11,14,17,20,2b"
+            os: ubuntu-22.04
+            install:
+              - clang-15
+            sources:
+              - "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-15 main"
+            source_keys:
+              - "https://apt.llvm.org/llvm-snapshot.gpg.key"
+          - toolset: clang
+            compiler: clang++-15
+            cxxstd: "03,11,14,17,20,2b"
+            os: ubuntu-22.04
+            install:
+              - clang-15
+              - libc++-15-dev
+              - libc++abi-15-dev
+            sources:
+              - "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-15 main"
+            source_keys:
+              - "https://apt.llvm.org/llvm-snapshot.gpg.key"
             cxxflags: -stdlib=libc++
             linkflags: -stdlib=libc++
           - name: UBSAN
             toolset: clang
-            compiler: clang++-12
-            cxxstd: "03,11,14,17,20"
+            compiler: clang++-14
+            cxxstd: "03,11,14,17,20,2b"
             cxxflags: -stdlib=libc++
             linkflags: -stdlib=libc++
             ubsan: 1
             build_variant: debug
-            os: ubuntu-20.04
+            os: ubuntu-22.04
             install:
-              - clang-12
-              - libc++-12-dev
-              - libc++abi-12-dev
+              - clang-14
+              - libc++-14-dev
+              - libc++abi-14-dev
 
           - toolset: clang
             cxxstd: "03,11,14,17,2a"
@@ -270,7 +297,13 @@ jobs:
                 if [ -f "/etc/debian_version" ]
                 then
                     apt-get -o Acquire::Retries=$NET_RETRY_COUNT update
-                    apt-get -o Acquire::Retries=$NET_RETRY_COUNT install -y sudo software-properties-common tzdata wget curl apt-transport-https ca-certificates make build-essential g++ python python3 perl git cmake
+                    if [ "$(apt-cache search "^python-is-python3$" | wc -l)" -ne 0 ]
+                    then
+                        PYTHON_PACKAGE="python-is-python3"
+                    else
+                        PYTHON_PACKAGE="python"
+                    fi
+                    apt-get -o Acquire::Retries=$NET_RETRY_COUNT install -y sudo software-properties-common tzdata wget curl apt-transport-https ca-certificates make build-essential g++ $PYTHON_PACKAGE python3 perl git cmake
                 fi
             fi
             git config --global pack.threads 0
