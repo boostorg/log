@@ -22,6 +22,7 @@
 #include <stdexcept>
 #include <boost/limits.hpp>
 #include <boost/assert.hpp>
+#include <boost/core/snprintf.hpp>
 #include <boost/smart_ptr/weak_ptr.hpp>
 #include <boost/smart_ptr/shared_ptr.hpp>
 #include <boost/smart_ptr/make_shared_object.hpp>
@@ -40,7 +41,6 @@
 #include <boost/log/sinks/syslog_backend.hpp>
 #include <boost/log/sinks/syslog_constants.hpp>
 #include <boost/log/detail/singleton.hpp>
-#include <boost/log/detail/snprintf.hpp>
 #include <boost/log/exceptions.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/thread/locks.hpp>
@@ -392,7 +392,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
 
         // The packet size is mandated in RFC3164, plus one for the terminating zero
         char packet[1025];
-        int n = boost::log::aux::snprintf
+        int n = boost::core::snprintf
         (
             packet,
             sizeof(packet),
@@ -535,7 +535,7 @@ BOOST_LOG_API void syslog_backend::set_local_address(std::string const& addr, un
     if (udp_socket_based_impl* impl = dynamic_cast< udp_socket_based_impl* >(m_pImpl))
     {
         char service_name[std::numeric_limits< unsigned int >::digits10 + 3];
-        boost::log::aux::snprintf(service_name, sizeof(service_name), "%u", static_cast< unsigned int >(port));
+        boost::core::snprintf(service_name, sizeof(service_name), "%u", static_cast< unsigned int >(port));
 
         asio::ip::udp::endpoint local_address;
         {
@@ -581,7 +581,7 @@ BOOST_LOG_API void syslog_backend::set_target_address(std::string const& addr, u
     if (udp_socket_based_impl* impl = dynamic_cast< udp_socket_based_impl* >(m_pImpl))
     {
         char service_name[std::numeric_limits< unsigned int >::digits10 + 3];
-        boost::log::aux::snprintf(service_name, sizeof(service_name), "%u", static_cast< unsigned int >(port));
+        boost::core::snprintf(service_name, sizeof(service_name), "%u", static_cast< unsigned int >(port));
 
         asio::ip::udp::endpoint remote_address;
         {
