@@ -112,7 +112,7 @@ protected:
 
 protected:
     //! Default constructor
-    singular_ref() BOOST_NOEXCEPT : m_ptr(NULL)
+    BOOST_CONSTEXPR singular_ref() BOOST_NOEXCEPT : m_ptr(NULL)
     {
     }
 
@@ -270,7 +270,7 @@ protected:
 
 protected:
     //! Default constructor
-    variant_ref() BOOST_NOEXCEPT : m_ptr(NULL), m_type_idx(0)
+    BOOST_CONSTEXPR variant_ref() BOOST_NOEXCEPT : m_ptr(NULL), m_type_idx(0u)
     {
     }
 
@@ -447,7 +447,7 @@ public:
     /*!
      * Default constructor. Creates a reference wrapper that does not refer to a value.
      */
-    BOOST_DEFAULTED_FUNCTION(value_ref(), BOOST_NOEXCEPT {})
+    BOOST_DEFAULTED_FUNCTION(BOOST_CONSTEXPR value_ref(), BOOST_NOEXCEPT {})
 
     /*!
      * Initializing constructor. Creates a reference wrapper that refers to the specified value.
