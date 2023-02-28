@@ -262,7 +262,7 @@ jobs:
             compiler: clang++-14
             cxxstd: "03,11,14,17,20,2b"
             cxxflags: -stdlib=libc++
-            linkflags: -stdlib=libc++
+            linkflags: "-stdlib=libc++ -lubsan"
             ubsan: 1
             build_variant: debug
             os: ubuntu-22.04
