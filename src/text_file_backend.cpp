@@ -1481,7 +1481,7 @@ BOOST_LOG_API void text_file_backend::consume(record_view const& rec, string_typ
 
         // Check the file size before invoking the open handler, as it may write more data to the file
         m_pImpl->m_CharactersWritten = static_cast< std::streamoff >(m_pImpl->m_File.tellp());
-        if (m_pImpl->m_CharactersWritten + formatted_message.size() >= m_pImpl->m_FileRotationSize)
+        if (m_pImpl->m_CharactersWritten > 0 && m_pImpl->m_CharactersWritten + formatted_message.size() >= m_pImpl->m_FileRotationSize)
         {
             // Avoid running the close handler, as we haven't run the open handler yet
             struct close_handler_backup_guard

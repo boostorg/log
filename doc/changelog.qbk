@@ -9,6 +9,10 @@
 
 [section:changelog Changelog]
 
+[heading 2.27, Boost 1.83]
+
+* Fixed a possible infinite loop in [link log.detailed.sink_backends.text_file `text_file_backend`], when the size of a formatted log record exceeds the `rotation_size` limit. ([github_issue 209])
+
 [heading 2.26, Boost 1.82]
 
 * Due to changes in Boost libraries used by Boost.Log, support for C++03 is deprecated. C++11 will become the minimum starting with Boost.Log 1.84.
