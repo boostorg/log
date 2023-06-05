@@ -239,27 +239,33 @@ jobs:
             os: ubuntu-22.04
             install:
               - clang-15
-            sources:
-              - "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-15 main"
-            source_keys:
-              - "https://apt.llvm.org/llvm-snapshot.gpg.key"
           - toolset: clang
-            compiler: clang++-15
+            compiler: clang++-16
             cxxstd: "03,11,14,17,20,2b"
             os: ubuntu-22.04
             install:
-              - clang-15
-              - libc++-15-dev
-              - libc++abi-15-dev
+              - clang-16
             sources:
-              - "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-15 main"
+              - "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-16 main"
+            source_keys:
+              - "https://apt.llvm.org/llvm-snapshot.gpg.key"
+          - toolset: clang
+            compiler: clang++-16
+            cxxstd: "03,11,14,17,20,2b"
+            os: ubuntu-22.04
+            install:
+              - clang-16
+              - libc++-16-dev
+              - libc++abi-16-dev
+            sources:
+              - "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-16 main"
             source_keys:
               - "https://apt.llvm.org/llvm-snapshot.gpg.key"
             cxxflags: -stdlib=libc++
             linkflags: -stdlib=libc++
           - name: UBSAN
             toolset: clang
-            compiler: clang++-14
+            compiler: clang++-15
             cxxstd: "03,11,14,17,20,2b"
             cxxflags: -stdlib=libc++
             linkflags: "-stdlib=libc++ -lubsan"
@@ -267,9 +273,9 @@ jobs:
             build_variant: debug
             os: ubuntu-22.04
             install:
-              - clang-14
-              - libc++-14-dev
-              - libc++abi-14-dev
+              - clang-15
+              - libc++-15-dev
+              - libc++abi-15-dev
 
           - toolset: clang
             cxxstd: "03,11,14,17,2a"
