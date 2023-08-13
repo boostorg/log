@@ -9,6 +9,10 @@
 
 [section:changelog Changelog]
 
+[heading 2.28, Boost 1.84]
+
+* C++03 is no longer supported. A C++11 or later compiler is required.
+
 [heading 2.27, Boost 1.83]
 
 * Fixed a possible infinite loop in [link log.detailed.sink_backends.text_file `text_file_backend`], when the size of a formatted log record exceeds the `rotation_size` limit. ([github_issue 209])

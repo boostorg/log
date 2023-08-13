@@ -163,18 +163,19 @@ To keep the code snippets in this documentation simple, the following namespace 
 
 [section:supported_compilers Supported compilers and platforms]
 
-The library should build and work with a reasonably compliant compiler. The library was successfully built and tested on the following platforms:
+The library should build and work with a reasonably compliant C++11 compiler. The library was successfully built and tested on the following platforms:
 
-* Windows XP, Windows Vista, Windows 7. MSVC 8.0 SP1, MSVC 9.0 and newer.
-* Linux. GCC 4.5 and newer. Older versions may work too, but it was not tested.
-* Linux. Intel C++ 13.1.0.146 Build 20130121.
-* Linux. Clang 3.2 and newer.
+* Windows 10. MSVC 14.0 and newer. MinGW32 with gcc 5.x and MinGW-w64 with gcc 6.x and newer.
+* Cygwin and Cygwin64 with gcc 7.x and newer.
+* Linux. GCC 4.6 and newer.
+* Linux. Clang 3.5 and newer.
 
 The following compilers/platforms are not supported and will likely fail to compile the library:
 
+* Compilers that do not support C++11.
 * C++11 compilers with non-C++11 standard libraries (like Clang with libstdc++ from GCC 4.2). Please, use a C++11 standard library in C++11 mode.
-* MSVC 8.0 (without SP1) and older.
-* GCC 4.2 and older.
+* MSVC 12.0 and older.
+* GCC 4.4 and older.
 * Borland C++ 5.5.1 (free version). Newer versions might or might not work.
 * Solaris Studio 12.3 and older.
 * Windows 9x, ME, NT4, 2000 and older are not supported.
