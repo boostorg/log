@@ -14,19 +14,6 @@ branches:
 
 environment:
   matrix:
-# AppVeyor doesn't provide 64-bit compilers for these MSVC versions
-#    - TOOLSET: msvc-9.0
-#      ADDRESS_MODEL: 64
-#      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-#    - TOOLSET: msvc-10.0
-#      ADDRESS_MODEL: 64
-#      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-#    - TOOLSET: msvc-11.0
-#      ADDRESS_MODEL: 64
-#      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-    - TOOLSET: msvc-12.0
-      ADDRESS_MODEL: 64
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
     - TOOLSET: msvc-14.0
       ADDRESS_MODEL: 64
       EXTRA_TESTS: 1
@@ -46,19 +33,19 @@ environment:
       B2_ARGS: define=_WIN32_WINNT=0x0A00
     - TOOLSET: gcc
       ADDRESS_MODEL: 64
-      CXXSTD: 03,11
+      CXXSTD: 11
       ADDPATH: C:\cygwin64\bin
       EXTRA_TESTS: 1
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
     - TOOLSET: gcc
       ADDRESS_MODEL: 64
-      CXXSTD: 03,11,14
+      CXXSTD: 11,14
       ADDPATH: C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin
       EXTRA_TESTS: 1
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
     - TOOLSET: gcc
       ADDRESS_MODEL: 64
-      CXXSTD: 03,11,14,17
+      CXXSTD: 11,14,17
       ADDPATH: C:\mingw-w64\x86_64-7.3.0-posix-seh-rt_v5-rev0\mingw64\bin
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
     - TOOLSET: clang-win
@@ -67,18 +54,6 @@ environment:
       ENV_SCRIPT: C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
 
-    - TOOLSET: msvc-9.0
-      ADDRESS_MODEL: 32
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-    - TOOLSET: msvc-10.0
-      ADDRESS_MODEL: 32
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-    - TOOLSET: msvc-11.0
-      ADDRESS_MODEL: 32
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-    - TOOLSET: msvc-12.0
-      ADDRESS_MODEL: 32
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
     - TOOLSET: msvc-14.0
       ADDRESS_MODEL: 32
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
@@ -92,17 +67,17 @@ environment:
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
     - TOOLSET: gcc
       ADDRESS_MODEL: 32
-      CXXSTD: 03,11
+      CXXSTD: 11
       ADDPATH: C:\cygwin\bin
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
     - TOOLSET: gcc
       ADDRESS_MODEL: 32
-      CXXSTD: 03,11
+      CXXSTD: 11
       ADDPATH: C:\mingw\bin
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
     - TOOLSET: gcc
       ADDRESS_MODEL: 32
-      CXXSTD: 03,11,14
+      CXXSTD: 11,14
       ADDPATH: C:\mingw-w64\i686-6.3.0-posix-dwarf-rt_v5-rev1\mingw32\bin
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
     - TOOLSET: clang-win
