@@ -6,11 +6,11 @@
  */
 
 #include <string>
+#include <sstream>
 #include <iostream>
 #include <stdexcept>
 #include <boost/smart_ptr/shared_ptr.hpp>
 #include <boost/smart_ptr/make_shared_object.hpp>
-#include <boost/lexical_cast.hpp>
 #include <boost/phoenix.hpp>
 #include <boost/log/core.hpp>
 #include <boost/log/expressions.hpp>
@@ -142,21 +142,33 @@ public:
 
     logging::filter on_equality_relation(logging::attribute_name const& name, string_type const& arg)
     {
-        return expr::attr< point >(name) == boost::lexical_cast< point >(arg);
+        return expr::attr< point >(name) == parse_argument< point >(arg);
     }
 
     logging::filter on_inequality_relation(logging::attribute_name const& name, string_type const& arg)
     {
-        return expr::attr< point >(name) != boost::lexical_cast< point >(arg);
+        return expr::attr< point >(name) != parse_argument< point >(arg);
     }
 
     logging::filter on_custom_relation(logging::attribute_name const& name, string_type const& rel, string_type const& arg)
     {
         if (rel == "is_in_rectangle")
         {
-            return boost::phoenix::bind(&is_in_rectangle, expr::attr< point >(name), boost::lexical_cast< rectangle >(arg));
+            return boost::phoenix::bind(&is_in_rectangle, expr::attr< point >(name), parse_argument< rectangle >(arg));
         }
         throw std::runtime_error("Unsupported filter relation: " + rel);
+    }
+
+private:
+    template< typename ArgumentT >
+    static ArgumentT parse_argument(string_type const& arg)
+    {
+        std::istringstream strm(arg);
+        ArgumentT val;
+        strm >> val;
+        if (strm.fail() || strm.bad())
+            throw std::runtime_error("Failed to parse argument from \"" + arg + "\"");
+        return val;
     }
 };
 

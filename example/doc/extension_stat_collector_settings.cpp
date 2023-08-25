@@ -12,7 +12,6 @@
 #include <stdexcept>
 #include <boost/smart_ptr/shared_ptr.hpp>
 #include <boost/smart_ptr/make_shared_object.hpp>
-#include <boost/lexical_cast.hpp>
 #include <boost/optional/optional.hpp>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 #include <boost/phoenix.hpp>
@@ -169,7 +168,7 @@ public:
         boost::posix_time::time_duration write_interval = boost::posix_time::minutes(1);
         if (boost::optional< std::string > param = settings["WriteInterval"])
         {
-            unsigned int sec = boost::lexical_cast< unsigned int >(param.get());
+            unsigned long sec = std::stoul(param.get());
             write_interval = boost::posix_time::seconds(sec);
         }
 

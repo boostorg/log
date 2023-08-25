@@ -485,7 +485,6 @@ target_link_libraries(boost_log
         Boost::bind
         Boost::exception
         Boost::interprocess
-        Boost::lexical_cast
         Boost::optional
         Boost::random
         Boost::spirit
@@ -544,7 +543,6 @@ set(boost_log_setup_public_deps
     Boost::config
     Boost::core
     Boost::iterator
-    Boost::lexical_cast
     Boost::move
     Boost::optional
     Boost::parameter
