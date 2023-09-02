@@ -20,7 +20,7 @@
 #include <algorithm>
 #include <boost/cstdint.hpp>
 #include <boost/assert.hpp>
-#include <boost/core/swap.hpp>
+#include <boost/core/invoke_swap.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/smart_ptr/weak_ptr.hpp>
 #include <boost/smart_ptr/shared_ptr.hpp>
@@ -61,7 +61,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
 
 //! Sequence shuffling algorithm. Very similar to std::random_shuffle, used for forward portability with compilers that removed it from the standard library (C++17).
 template< typename Iterator, typename RandomNumberGenerator >
-void random_shuffle(Iterator begin, Iterator end, RandomNumberGenerator& rng)
+inline void random_shuffle(Iterator begin, Iterator end, RandomNumberGenerator& rng)
 {
     Iterator it = begin;
     ++it;
@@ -69,7 +69,7 @@ void random_shuffle(Iterator begin, Iterator end, RandomNumberGenerator& rng)
     {
         Iterator where = begin + rng() % (it - begin + 1u);
         if (where != it)
-            boost::swap(*where, *it);
+            boost::core::invoke_swap(*where, *it);
         ++it;
     }
 }
