@@ -167,7 +167,7 @@ The library should build and work with a reasonably compliant C++11 compiler. Th
 
 * Windows 10. MSVC 14.0 and newer. MinGW32 with gcc 5.x and MinGW-w64 with gcc 6.x and newer.
 * Cygwin and Cygwin64 with gcc 7.x and newer.
-* Linux. GCC 4.6 and newer.
+* Linux. GCC 4.8 and newer.
 * Linux. Clang 3.5 and newer.
 
 The following compilers/platforms are not supported and will likely fail to compile the library:
