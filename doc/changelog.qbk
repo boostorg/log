@@ -12,6 +12,7 @@
 [heading 2.28, Boost 1.84]
 
 * C++03 is no longer supported. A C++11 or later compiler is required.
+* When built with C++11 compilers that are conforming enough for Boost.Regex v5 to be used, Boost.Log no longer links with Boost.Regex prebuilt library, since Boost.Regex v5 is header-only.
 
 [heading 2.27, Boost 1.83]
 

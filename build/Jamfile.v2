@@ -14,16 +14,14 @@ import feature ;
 import configure ;
 import log-arch-config ;
 import log-platform-config ;
+import log-build-config ;
+
 using mc ;
 
 local here = [ modules.binding $(__name__) ] ;
 
 project.push-current [ project.current ] ;
-project.load [ path.join [ path.make $(here:D) ] ../config/message-compiler ] ;
 project.load [ path.join [ path.make $(here:D) ] ../config/x86-ext ] ;
-project.load [ path.join [ path.make $(here:D) ] ../config/pthread-mutex-robust ] ;
-project.load [ path.join [ path.make $(here:D) ] ../config/native-syslog ] ;
-project.load [ path.join [ path.make $(here:D) ] ../config/atomic-int32 ] ;
 project.pop-current ;
 
 # Windows libs
@@ -41,132 +39,15 @@ lib nsl ;
 lib ipv6 ;
 explicit rt socket nsl ipv6 ;
 
-rule has-config-flag ( flag : properties * )
-{
-    if ( "<define>$(flag)" in $(properties) || "<define>$(flag)=1" in $(properties) )
-    {
-        return 1 ;
-    }
-    else
-    {
-        return ;
-    }
-}
-
-rule check-instruction-set ( properties * )
-{
-    local result ;
-    local instruction_set = [ log-arch-config.deduce-instruction-set $(properties) ] ;
-
-    if $(instruction_set) = i386 || $(instruction_set) = i486
-    {
-        if ! $(.annouced-failure)
-        {
-            ECHO Boost.Log is not supported on the specified target CPU and will not be built. At least i586 class CPU is required. ;
-            .annouced-failure = 1 ;
-        }
-        result = <build>no ;
-    }
-
-    return $(result) ;
-}
-
-rule select-regex-backend ( properties * )
-{
-    local result ;
-
-    # Use Boost.Regex backend by default. It produces smaller executables and also has the best performance for small string matching.
-    if ! (
-        [ has-config-flag BOOST_LOG_WITHOUT_SETTINGS_PARSERS : $(properties) ] ||
-        [ has-config-flag BOOST_LOG_WITHOUT_DEFAULT_FACTORIES : $(properties) ] ||
-        [ has-config-flag BOOST_LOG_USE_STD_REGEX : $(properties) ] ||
-        [ has-config-flag BOOST_LOG_USE_BOOST_XPRESSIVE : $(properties) ] )
-    {
-        result = <library>/boost/regex//boost_regex ;
-    }
-
-    return $(result) ;
-}
-
-rule check-pthread-mutex-robust ( properties * )
-{
-    local result ;
-
-    local has_pthread_mutex_robust = [ configure.builds /boost/log/pthread-mutex-robust//pthread_mutex_robust : $(properties) : "pthread supports robust mutexes" ] ;
-    if $(has_pthread_mutex_robust)
-    {
-        result = <define>BOOST_LOG_HAS_PTHREAD_MUTEX_ROBUST ;
-    }
-
-    return $(result) ;
-}
-
-rule check-atomic-int32 ( properties * )
-{
-    local result ;
-
-    local has_atomic_int32 = [ configure.builds /boost/log/atomic-int32//atomic_int32 : $(properties) : "native atomic int32 supported" ] ;
-    if ! $(has_atomic_int32)
-    {
-        result = <define>BOOST_LOG_WITHOUT_IPC ;
-    }
-
-    return $(result) ;
-}
-
-rule check-native-syslog ( properties * )
-{
-    local result ;
-
-    if ! [ has-config-flag BOOST_LOG_WITHOUT_SYSLOG : $(properties) ]
-    {
-        local has_native_syslog = [ configure.builds /boost/log/native-syslog//native_syslog : $(properties) : "native syslog supported" ] ;
-        if $(has_native_syslog)
-        {
-            result = <define>BOOST_LOG_USE_NATIVE_SYSLOG ;
-        }
-    }
-
-    return $(result) ;
-}
-
-rule check-message-compiler ( properties * )
-{
-    local result ;
-
-    if <target-os>windows in $(properties)
-    {
-        if ! [ has-config-flag BOOST_LOG_WITHOUT_EVENT_LOG : $(properties) ]
-        {
-            local has_mc = [ configure.builds /boost/log/message-compiler//test-availability : $(properties) : "has message compiler" ] ;
-            if ! $(has_mc)
-            {
-                result = <define>BOOST_LOG_WITHOUT_EVENT_LOG ;
-            }
-        }
-        else
-        {
-            # This branch is needed to fix building with MinGW
-            result = <define>BOOST_LOG_WITHOUT_EVENT_LOG ;
-        }
-    }
-    else
-    {
-        result = <define>BOOST_LOG_WITHOUT_EVENT_LOG ;
-    }
-
-    return $(result) ;
-}
-
 project boost/log
     : source-location ../src
     : requirements
-        <conditional>@check-instruction-set
-        <conditional>@check-atomic-int32
-        <conditional>@select-regex-backend
-        <conditional>@check-pthread-mutex-robust
-        <conditional>@check-native-syslog
-        <conditional>@check-message-compiler
+        <conditional>@log-arch-config.check-instruction-set
+        <conditional>@log-build-config.check-atomic-int32
+        <conditional>@log-build-config.select-regex-backend
+        <conditional>@log-build-config.check-pthread-mutex-robust
+        <conditional>@log-build-config.check-native-syslog
+        <conditional>@log-build-config.check-message-compiler
         <conditional>@log-platform-config.set-platform-defines
 
         <include>../src
@@ -346,7 +227,7 @@ rule select-platform-specific-sources ( properties * )
         result += <source>windows/light_rw_mutex.cpp ;
         result += <source>windows/is_debugger_present.cpp ;
 
-        if ! [ has-config-flag BOOST_LOG_WITHOUT_IPC : $(properties) ]
+        if ! [ log-build-config.has-config-flag BOOST_LOG_WITHOUT_IPC : $(properties) ]
         {
             result += <source>windows/object_name.cpp ;
             result += <source>windows/mapped_shared_memory.cpp ;
@@ -355,12 +236,12 @@ rule select-platform-specific-sources ( properties * )
             result += <library>secur32 ;
         }
 
-        if ! [ has-config-flag BOOST_LOG_WITHOUT_DEBUG_OUTPUT : $(properties) ]
+        if ! [ log-build-config.has-config-flag BOOST_LOG_WITHOUT_DEBUG_OUTPUT : $(properties) ]
         {
             result += <source>windows/debug_output_backend.cpp ;
         }
 
-        if ! [ has-config-flag BOOST_LOG_WITHOUT_EVENT_LOG : $(properties) ]
+        if ! [ log-build-config.has-config-flag BOOST_LOG_WITHOUT_EVENT_LOG : $(properties) ]
         {
             result += <source>windows/simple_event_log.mc ;
             result += <source>windows/event_log_backend.cpp ;
@@ -374,14 +255,14 @@ rule select-platform-specific-sources ( properties * )
         result += <define>BOOST_LOG_WITHOUT_EVENT_LOG ;
         result += <define>BOOST_LOG_WITHOUT_DEBUG_OUTPUT ;
 
-        if ! [ has-config-flag BOOST_LOG_WITHOUT_IPC : $(properties) ]
+        if ! [ log-build-config.has-config-flag BOOST_LOG_WITHOUT_IPC : $(properties) ]
         {
             result += <source>posix/object_name.cpp ;
             result += <source>posix/ipc_reliable_message_queue.cpp ;
         }
     }
 
-    if ! [ has-config-flag BOOST_LOG_WITHOUT_SYSLOG : $(properties) ]
+    if ! [ log-build-config.has-config-flag BOOST_LOG_WITHOUT_SYSLOG : $(properties) ]
     {
         result += <source>syslog_backend.cpp ;
     }
@@ -422,7 +303,7 @@ rule check-boost_log_setup-enabled ( properties * )
 {
     local result ;
 
-    if [ has-config-flag BOOST_LOG_WITHOUT_SETTINGS_PARSERS : $(properties) ]
+    if [ log-build-config.has-config-flag BOOST_LOG_WITHOUT_SETTINGS_PARSERS : $(properties) ]
     {
         result = <build>no ;
     }

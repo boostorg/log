@@ -154,3 +154,21 @@ rule avx2-flags ( properties * )
 
     return $(result) ;
 }
+
+rule check-instruction-set ( properties * )
+{
+    local result ;
+    local instruction_set = [ log-arch-config.deduce-instruction-set $(properties) ] ;
+
+    if $(instruction_set) = i386 || $(instruction_set) = i486
+    {
+        if ! $(.annouced-failure)
+        {
+            ECHO Boost.Log is not supported on the specified target CPU and will not be built. At least i586 class CPU is required. ;
+            .annouced-failure = 1 ;
+        }
+        result = <build>no ;
+    }
+
+    return $(result) ;
+}
