@@ -346,7 +346,6 @@ if (CMAKE_SYSTEM_NAME STREQUAL "SunOS")
 endif()
 
 if (BOOST_LOG_USE_REGEX_BACKEND STREQUAL "Boost.Regex")
-    set(boost_log_regex_backend_private_libs Boost::regex)
     list(APPEND boost_log_common_private_defines BOOST_LOG_USE_BOOST_REGEX)
 elseif (BOOST_LOG_USE_REGEX_BACKEND STREQUAL "Boost.Xpressive")
     set(boost_log_regex_backend_private_libs Boost::xpressive)
@@ -530,7 +529,6 @@ target_link_libraries(boost_log_with_support
         Boost::log
 
         Boost::exception
-        Boost::regex
         Boost::spirit
         Boost::xpressive
 )

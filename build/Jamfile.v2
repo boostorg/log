@@ -71,23 +71,6 @@ rule check-instruction-set ( properties * )
     return $(result) ;
 }
 
-rule select-regex-backend ( properties * )
-{
-    local result ;
-
-    # Use Boost.Regex backend by default. It produces smaller executables and also has the best performance for small string matching.
-    if ! (
-        [ has-config-flag BOOST_LOG_WITHOUT_SETTINGS_PARSERS : $(properties) ] ||
-        [ has-config-flag BOOST_LOG_WITHOUT_DEFAULT_FACTORIES : $(properties) ] ||
-        [ has-config-flag BOOST_LOG_USE_STD_REGEX : $(properties) ] ||
-        [ has-config-flag BOOST_LOG_USE_BOOST_XPRESSIVE : $(properties) ] )
-    {
-        result = <library>/boost/regex//boost_regex ;
-    }
-
-    return $(result) ;
-}
-
 rule check-pthread-mutex-robust ( properties * )
 {
     local result ;
@@ -163,7 +146,6 @@ project boost/log
     : requirements
         <conditional>@check-instruction-set
         <conditional>@check-atomic-int32
-        <conditional>@select-regex-backend
         <conditional>@check-pthread-mutex-robust
         <conditional>@check-native-syslog
         <conditional>@check-message-compiler
