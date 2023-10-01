@@ -20,7 +20,6 @@
 #include <iterator>
 #include <algorithm>
 #include <boost/array.hpp>
-#include <boost/static_assert.hpp>
 #include <boost/type_index.hpp>
 #include <boost/mpl/if.hpp>
 #include <boost/mpl/size.hpp>
@@ -82,7 +81,7 @@ private:
         p->first = typeindex::type_id< T >();
 
         typedef void (*trampoline_t)(void*, T const&);
-        BOOST_STATIC_ASSERT_MSG(sizeof(trampoline_t) == sizeof(void*), "Boost.Log: Unsupported platform, the size of a function pointer differs from the size of a pointer");
+        static_assert(sizeof(trampoline_t) == sizeof(void*), "Boost.Log: Unsupported platform, the size of a function pointer differs from the size of a pointer");
         union
         {
             void* as_pvoid;

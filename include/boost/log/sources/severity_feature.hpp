@@ -16,7 +16,6 @@
 #define BOOST_LOG_SOURCES_SEVERITY_FEATURE_HPP_INCLUDED_
 
 #include <boost/cstdint.hpp>
-#include <boost/static_assert.hpp>
 #include <boost/core/invoke_swap.hpp>
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 #include <boost/move/core.hpp>
@@ -60,7 +59,7 @@ namespace aux {
     public:
         //! Stored level type
         typedef LevelT value_type;
-        BOOST_STATIC_ASSERT_MSG(sizeof(value_type) <= sizeof(uintmax_t), "Boost.Log: Unsupported severity level type, the severity level must fit into uintmax_t");
+        static_assert(sizeof(value_type) <= sizeof(uintmax_t), "Boost.Log: Unsupported severity level type, the severity level must fit into uintmax_t");
 
     protected:
         //! Factory implementation

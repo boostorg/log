@@ -1,4 +1,4 @@
-# Copyright 2021-2022 Andrey Semashev
+# Copyright 2021-2023 Andrey Semashev
 #
 # Distributed under the Boost Software License, Version 1.0.
 # See accompanying file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt
@@ -442,6 +442,10 @@ endif()
 set(boost_log_install_targets boost_log)
 add_library(Boost::log ALIAS boost_log)
 
+target_compile_features(boost_log PUBLIC
+    cxx_static_assert
+)
+
 target_include_directories(boost_log
     PUBLIC
         include
@@ -579,6 +583,11 @@ if (NOT BOOST_LOG_WITHOUT_SETTINGS_PARSERS)
         set_target_properties(boost_log_setup PROPERTIES VERSION "${BOOST_SUPERPROJECT_VERSION}")
     endif()
     list(APPEND boost_log_install_targets boost_log_setup)
+
+    target_compile_features(boost_log_setup PUBLIC
+        cxx_static_assert
+        cxx_uniform_initialization
+    )
 
     target_include_directories(boost_log_setup
         PUBLIC
