@@ -1,5 +1,5 @@
 #
-#          Copyright Andrey Semashev 2007 - 2020.
+#          Copyright Andrey Semashev 2007 - 2023.
 # Distributed under the Boost Software License, Version 1.0.
 #    (See accompanying file LICENSE_1_0.txt or copy at
 #          http://www.boost.org/LICENSE_1_0.txt)
@@ -12,6 +12,7 @@ import path ;
 import project ;
 import feature ;
 import configure ;
+import config : requires ;
 import log-arch-config ;
 import log-platform-config ;
 import log-build-config ;
@@ -38,6 +39,15 @@ lib socket ;
 lib nsl ;
 lib ipv6 ;
 explicit rt socket nsl ipv6 ;
+
+local log_cxx_requirements = [ requires
+        cxx11_static_assert
+    ] ;
+
+local log_setup_cxx_requirements = [ requires
+        cxx11_static_assert
+        cxx11_unified_initialization_syntax
+    ] ;
 
 project boost/log
     : source-location ../src
@@ -280,10 +290,12 @@ lib boost_log
         <conditional>@select-platform-specific-sources
         <link>shared:<define>BOOST_LOG_DLL
         <define>BOOST_LOG_BUILDING_THE_LIB=1
+        $(log_cxx_requirements)
     : ## default-build ##
     : ## usage-requirements ##
         <link>shared:<define>BOOST_LOG_DYN_LINK=1
         <threading>single:<define>BOOST_LOG_NO_THREADS
+        $(log_cxx_requirements)
     ;
 
 
@@ -319,11 +331,13 @@ lib boost_log_setup
         <link>shared:<define>BOOST_LOG_DYN_LINK=1
         <link>shared:<define>BOOST_LOG_SETUP_DLL
         <define>BOOST_LOG_SETUP_BUILDING_THE_LIB=1
+        $(log_setup_cxx_requirements)
         <library>boost_log
     : ## default-build ##
     : ## usage-requirements ##
         <link>shared:<define>BOOST_LOG_SETUP_DYN_LINK=1
         <threading>single:<define>BOOST_LOG_NO_THREADS
+        $(log_setup_cxx_requirements)
     ;
 
 boost-install boost_log boost_log_setup ;
