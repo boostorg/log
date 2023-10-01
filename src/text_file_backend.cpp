@@ -30,7 +30,6 @@
 #include <algorithm>
 #include <stdexcept>
 #include <boost/core/ref.hpp>
-#include <boost/bind/bind.hpp>
 #include <boost/cstdint.hpp>
 #include <boost/optional/optional.hpp>
 #include <boost/smart_ptr/make_shared_object.hpp>
@@ -569,19 +568,40 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
             if (counter_found)
             {
                 // Both counter and date/time placeholder in the pattern
-                file_name_generator = boost::bind(date_and_time_formatter(),
-                    boost::bind(file_counter_formatter(counter_pos, width), name_pattern, boost::placeholders::_1), boost::placeholders::_1);
+#if !defined(BOOST_NO_CXX14_INITIALIZED_LAMBDA_CAPTURES)
+                file_name_generator = [date_and_time_fmt = date_and_time_formatter(), file_counter_fmt = file_counter_formatter(counter_pos, width), name_pattern](unsigned int counter)
+                    { return date_and_time_fmt(file_counter_fmt(name_pattern, counter), counter); };
+#else
+                date_and_time_formatter date_and_time_fmt;
+                file_counter_formatter file_counter_fmt(counter_pos, width);
+                file_name_generator = [date_and_time_fmt, file_counter_fmt, name_pattern](unsigned int counter)
+                    { return date_and_time_fmt(file_counter_fmt(name_pattern, counter), counter); };
+#endif
             }
             else
             {
                 // Only date/time placeholders in the pattern
-                file_name_generator = boost::bind(date_and_time_formatter(), name_pattern, boost::placeholders::_1);
+#if !defined(BOOST_NO_CXX14_INITIALIZED_LAMBDA_CAPTURES)
+                file_name_generator = [date_and_time_fmt = date_and_time_formatter(), name_pattern](unsigned int counter)
+                    { return date_and_time_fmt(name_pattern, counter); };
+#else
+                date_and_time_formatter date_and_time_fmt;
+                file_name_generator = [date_and_time_fmt, name_pattern](unsigned int counter)
+                    { return date_and_time_fmt(name_pattern, counter); };
+#endif
             }
         }
         else if (counter_found)
         {
             // Only counter placeholder in the pattern
-            file_name_generator = boost::bind(file_counter_formatter(counter_pos, width), name_pattern, boost::placeholders::_1);
+#if !defined(BOOST_NO_CXX14_INITIALIZED_LAMBDA_CAPTURES)
+            file_name_generator = [file_counter_fmt = file_counter_formatter(counter_pos, width), name_pattern](unsigned int counter)
+                { return file_counter_fmt(name_pattern, counter); };
+#else
+            file_counter_formatter file_counter_fmt(counter_pos, width);
+            file_name_generator = [file_counter_fmt, name_pattern](unsigned int counter)
+                { return file_counter_fmt(name_pattern, counter); };
+#endif
         }
         else
         {
@@ -1027,7 +1047,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         BOOST_LOG_EXPR_IF_MT(lock_guard< mutex > lock(m_Mutex);)
 
         file_collectors::iterator it = std::find_if(m_Collectors.begin(), m_Collectors.end(),
-            boost::bind(&file_collector::is_governed, boost::placeholders::_1, boost::cref(target_dir)));
+            [&target_dir](file_collector const& collector) { return collector.is_governed(target_dir); });
         shared_ptr< file_collector > p;
         if (it != m_Collectors.end()) try
         {

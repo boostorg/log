@@ -442,8 +442,11 @@ endif()
 set(boost_log_install_targets boost_log)
 add_library(Boost::log ALIAS boost_log)
 
-target_compile_features(boost_log PUBLIC
-    cxx_static_assert
+target_compile_features(boost_log
+    PUBLIC
+        cxx_static_assert
+    PRIVATE
+        cxx_lambdas
 )
 
 target_include_directories(boost_log
@@ -584,9 +587,12 @@ if (NOT BOOST_LOG_WITHOUT_SETTINGS_PARSERS)
     endif()
     list(APPEND boost_log_install_targets boost_log_setup)
 
-    target_compile_features(boost_log_setup PUBLIC
-        cxx_static_assert
-        cxx_uniform_initialization
+    target_compile_features(boost_log_setup
+        PUBLIC
+            cxx_static_assert
+            cxx_uniform_initialization
+        PRIVATE
+            cxx_lambdas
     )
 
     target_include_directories(boost_log_setup
