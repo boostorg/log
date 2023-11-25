@@ -35,25 +35,13 @@ jobs:
       matrix:
         include:
           # Linux, gcc
-          - toolset: gcc-4.8
-            cxxstd: "11"
-            os: ubuntu-latest
-            container: ubuntu:18.04
-            install:
-              - g++-4.8
-          - toolset: gcc-4.9
-            cxxstd: "11"
-            os: ubuntu-latest
-            container: ubuntu:16.04
-            install:
-              - g++-4.9
-            extra_tests: 1
           - toolset: gcc-5
             cxxstd: "11,14,1z"
             os: ubuntu-latest
             container: ubuntu:16.04
             install:
               - g++-5
+            extra_tests: 1
           - toolset: gcc-6
             cxxstd: "11,14,1z"
             os: ubuntu-latest
@@ -193,30 +181,40 @@ jobs:
             os: ubuntu-22.04
             install:
               - clang-11
+              - g++-11
+            gcc_toolchain: 11
           - toolset: clang
             compiler: clang++-12
             cxxstd: "11,14,17,20,2b"
             os: ubuntu-22.04
             install:
               - clang-12
+              - g++-11
+            gcc_toolchain: 11
           - toolset: clang
             compiler: clang++-13
             cxxstd: "11,14,17,20,2b"
             os: ubuntu-22.04
             install:
               - clang-13
+              - g++-11
+            gcc_toolchain: 11
           - toolset: clang
             compiler: clang++-14
             cxxstd: "11,14,17,20,2b"
             os: ubuntu-22.04
             install:
               - clang-14
+              - g++-11
+            gcc_toolchain: 11
           - toolset: clang
             compiler: clang++-15
             cxxstd: "11,14,17,20,2b"
             os: ubuntu-22.04
             install:
               - clang-15
+              - g++-11
+            gcc_toolchain: 11
           - toolset: clang
             compiler: clang++-16
             cxxstd: "11,14,17,20,2b"
