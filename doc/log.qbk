@@ -186,7 +186,7 @@ Boost.Log should be compatible with all hardware architectures supported by Boos
 
 GCC versions since 4.5 support link time optimization (LTO), when most of optimizations and binary code generation happen at linking stage. This allows to perform more advanced optimizations and produce faster code. Unfortunately, it does not play well with projects containing source files that need to be compiled with different compiler options. Boost.Log is one of such projects, some parts of its sources contain optimizations for modern CPUs and will not run on older CPUs. Enabling LTO for Boost.Log will produce binaries incompatible with older CPUs (GCC bugs [@https://gcc.gnu.org/bugzilla/show_bug.cgi?id=61043 61043], [@https://gcc.gnu.org/bugzilla/show_bug.cgi?id=77845 77845]), which will likely result in crashes at run time. For this reason LTO is not supported in Boost.Log.
 
-There is a GCC [@http://gcc.gnu.org/bugzilla/show_bug.cgi?id=60607 bug] which may cause compilation failures when `-march=native` command line argument is used. It is recommended to avoid using `-march=native` argument (or `instruction-set=native` bjam property) and instead explicitly specify the target CPU (e.g. `instruction-set=sandy-bridge`).
+There is a GCC [@http://gcc.gnu.org/bugzilla/show_bug.cgi?id=60607 bug] which may cause compilation failures when `-march=native` command line argument is used. It is recommended to avoid using `-march=native` argument (or `instruction-set=native` b2 property) and instead explicitly specify the target CPU (e.g. `instruction-set=sandy-bridge`).
 
 [heading Notes for MinGW, Cygwin and Visual Studio Express Edition users]
 
@@ -194,7 +194,7 @@ In order to compile the library with these compilers special preparations are ne
 
 Second, at some point the library will require a Message Compiler tool (`mc.exe`), which is not available in MinGW, Cygwin and some versions of MSVC Express Edition. Typically the library build scripts will automatically detect if message compiler is present on the system and disable Event log related portion of the library if it's not. If Event log support is required and it is not found on the system, you have three options to settle the problem. The recommended solution is to obtain the original `mc.exe`. This tool is available in Windows SDK, which can be downloaded from the Microsoft site freely (for example, [@http://www.microsoft.com/downloads/details.aspx?FamilyID=71deb800-c591-4f97-a900-bea146e4fae1&displaylang=en here]). Also, this tool should be available in Visual Studio 2010 Express Edition. During the compilation, `mc.exe` should be accessible through one of the directories in your `PATH` environment variable.
 
-Another way is to attempt to use the `windmc.exe` tool distributed with MinGW and Cygwin, which is the analogue of the original `mc.exe`. In order to do that you will have to patch Boost.Build files (in particular, the `tools/build/tools/mc.jam` file) as described in [@https://svn.boost.org/trac/boost/ticket/4111 this] ticket. After that you will be able to specify the `mc-compiler=windmc` option to bjam to build the library.
+Another way is to attempt to use the `windmc.exe` tool distributed with MinGW and Cygwin, which is the analogue of the original `mc.exe`. In order to do that you will have to patch Boost.Build files (in particular, the `tools/build/tools/mc.jam` file) as described in [@https://svn.boost.org/trac/boost/ticket/4111 this] ticket. After that you will be able to specify the `mc-compiler=windmc` option to b2 to build the library.
 
 In case if message compiler detection fails for some reason, you can explicitly disable support for event log backend by defining the `BOOST_LOG_WITHOUT_EVENT_LOG` configuration macro when building the library. This will remove the need for the message compiler. See [link log.installation.config this section] for more configuration options.
 
@@ -233,10 +233,10 @@ The library supports a number of configuration macros:
     [[`BOOST_LOG_USE_STD_REGEX`, `BOOST_LOG_USE_BOOST_REGEX` or `BOOST_LOG_USE_BOOST_XPRESSIVE`] [Affects only compilation of the library. By defining one of these macros the user can instruct Boost.Log to use `std::regex`, __boost_regex__ or __boost_xpressive__ internally for string matching filters parsed from strings and settings. If none of these macros is defined then Boost.Log uses __boost_regex__ by default. Using `std::regex` or __boost_regex__ typically produces smaller executables, __boost_regex__ usually also being the fastest in run time. Using __boost_xpressive__ allows to eliminate the dependency on __boost_regex__ compiled binary. Note that these macros do not affect [link log.detailed.expressions.predicates.advanced_string_matching filtering expressions] created by users.] [Instead of definitng one of these macros, use `BOOST_LOG_USE_REGEX_BACKEND` string option with one of the following values: "std::regex", "Boost.Regex" or "Boost.Xpressive". The macros will be defined accordingly by CMake.]]
 ]
 
-You can define configuration macros in the `bjam` command line, like this:
+You can define configuration macros in the `b2` command line, like this:
 
 [pre
-    bjam --with-log variant=release define=BOOST_LOG_WITHOUT_EVENT_LOG define=BOOST_USE_WINAPI_VERSION=0x0600 stage
+    b2 --with-log variant=release define=BOOST_LOG_WITHOUT_EVENT_LOG define=BOOST_USE_WINAPI_VERSION=0x0600 stage
 ]
 
 With CMake, the configuration macros can be specified as CMake options in the command line like this:
