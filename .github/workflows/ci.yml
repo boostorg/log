@@ -306,8 +306,6 @@ jobs:
             fi
             git config --global pack.threads 0
 
-      - uses: actions/checkout@v3
-
       - name: Install packages
         if: matrix.install
         run: |
@@ -422,11 +420,25 @@ jobs:
             then
                 DEPINST_ARGS+=("--git_args" "--jobs $GIT_FETCH_JOBS")
             fi
+            mkdir -p snapshot
+            cd snapshot
+            echo "Downloading library snapshot: https://github.com/${GITHUB_REPOSITORY}/archive/${GITHUB_SHA}.tar.gz"
+            curl -L --retry "$NET_RETRY_COUNT" -o "${LIBRARY}-${GITHUB_SHA}.tar.gz" "https://github.com/${GITHUB_REPOSITORY}/archive/${GITHUB_SHA}.tar.gz"
+            tar -xf "${LIBRARY}-${GITHUB_SHA}.tar.gz"
+            if [ ! -d "${LIBRARY}-${GITHUB_SHA}" ]
+            then
+                echo "Library snapshot does not contain the library directory ${LIBRARY}-${GITHUB_SHA}:"
+                ls -la
+                exit 1
+            fi
+            rm -f "${LIBRARY}-${GITHUB_SHA}.tar.gz"
             cd ..
             git clone -b "$BOOST_BRANCH" --depth 1 "https://github.com/boostorg/boost.git" "boost-root"
             cd boost-root
-            mkdir -p libs/$LIBRARY
-            cp -r $GITHUB_WORKSPACE/* libs/$LIBRARY
+            mkdir -p libs
+            rm -rf "libs/$LIBRARY"
+            mv -f "../snapshot/${LIBRARY}-${GITHUB_SHA}" "libs/$LIBRARY"
+            rm -rf "../snapshot"
             git submodule update --init tools/boostdep
             if [ -n "${{matrix.extra_tests}}" ]
             then
@@ -452,7 +464,7 @@ jobs:
       - name: Run tests
         if: matrix.cmake_tests == ''
         run: |
-            cd ../boost-root
+            cd boost-root
             if [ -z "${{matrix.extra_tests}}" ]
             then
                 export BOOST_LOG_TEST_WITHOUT_SELF_CONTAINED_HEADER_TESTS=1
@@ -488,7 +500,7 @@ jobs:
       - name: Run CMake tests
         if: matrix.cmake_tests
         run: |
-            cd ../boost-root
+            cd boost-root
             mkdir __build_static__ && cd __build_static__
             cmake ../libs/$LIBRARY/test/test_cmake
             cmake --build . --target boost_${LIBRARY}_cmake_self_test -j $BUILD_JOBS
@@ -533,8 +545,6 @@ jobs:
     runs-on: ${{matrix.os}}
 
     steps:
-      - uses: actions/checkout@v3
-
       - name: Setup Boost
         run: |
             echo GITHUB_REPOSITORY: %GITHUB_REPOSITORY%
@@ -547,10 +557,24 @@ jobs:
             set BOOST_BRANCH=develop
             for /f %%i in ("%GITHUB_BASE_REF%") do if "%%~nxi" == "master" set BOOST_BRANCH=master
             echo BOOST_BRANCH: %BOOST_BRANCH%
+            mkdir snapshot
+            cd snapshot
+            echo Downloading library snapshot: https://github.com/%GITHUB_REPOSITORY%/archive/%GITHUB_SHA%.zip
+            curl -L --retry %NET_RETRY_COUNT% -o "%LIBRARY%-%GITHUB_SHA%.zip" "https://github.com/%GITHUB_REPOSITORY%/archive/%GITHUB_SHA%.zip"
+            tar -xf "%LIBRARY%-%GITHUB_SHA%.zip"
+            if not exist "%LIBRARY%-%GITHUB_SHA%\" (
+                echo Library snapshot does not contain the library directory %LIBRARY%-%GITHUB_SHA%:
+                dir
+                exit /b 1
+            )
+            del /f "%LIBRARY%-%GITHUB_SHA%.zip"
             cd ..
             git clone -b %BOOST_BRANCH% --depth 1 https://github.com/boostorg/boost.git boost-root
             cd boost-root
-            xcopy /s /e /q %GITHUB_WORKSPACE% libs\%LIBRARY%\
+            if not exist "libs\" mkdir libs
+            if exist "libs\%LIBRARY%\" rmdir /s /q "libs\%LIBRARY%"
+            move /Y "..\snapshot\%LIBRARY%-%GITHUB_SHA%" "libs\%LIBRARY%"
+            rmdir /s /q "..\snapshot"
             git submodule update --init tools/boostdep
             if not "${{matrix.extra_tests}}" == "" set DEPINST_ARG_INCLUDE_EXAMPLES="--include=example"
             python tools/boostdep/depinst/depinst.py %DEPINST_ARG_INCLUDE_EXAMPLES% --git_args "--jobs %GIT_FETCH_JOBS%" %LIBRARY%
@@ -562,7 +586,7 @@ jobs:
       - name: Run tests
         if: matrix.cmake_tests == ''
         run: |
-            cd ../boost-root
+            cd boost-root
             set "B2_ARGS=-j %NUMBER_OF_PROCESSORS% toolset=${{matrix.toolset}} embed-manifest-via=linker"
             if not "${{matrix.cxxstd}}" == "" set "B2_ARGS=%B2_ARGS% ^"cxxstd=${{matrix.cxxstd}}^""
             if not "${{matrix.build_variant}}" == "" ( set "B2_ARGS=%B2_ARGS% variant=${{matrix.build_variant}}" ) else ( set "B2_ARGS=%B2_ARGS% variant=%DEFAULT_BUILD_VARIANT%" )
@@ -577,7 +601,7 @@ jobs:
       - name: Run CMake tests
         if: matrix.cmake_tests
         run: |
-            cd ../boost-root
+            cd boost-root
             mkdir __build_static__
             cd __build_static__
             cmake ../libs/%LIBRARY%/test/test_cmake
