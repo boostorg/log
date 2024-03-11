@@ -1,0 +1,63 @@
+# Copyright René Ferdinand Rivera Morell 2023
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
+
+import project ;
+
+project /boost/log
+    : common-requirements
+        <source>/boost/align//boost_align
+        <source>/boost/array//boost_array
+        <source>/boost/asio//boost_asio
+        <source>/boost/assert//boost_assert
+        <source>/boost/atomic//boost_atomic
+        <source>/boost/bind//boost_bind
+        <source>/boost/config//boost_config
+        <source>/boost/container//boost_container
+        <source>/boost/core//boost_core
+        <source>/boost/date_time//boost_date_time
+        <source>/boost/exception//boost_exception
+        <source>/boost/filesystem//boost_filesystem
+        <source>/boost/function_types//boost_function_types
+        <source>/boost/fusion//boost_fusion
+        <source>/boost/interprocess//boost_interprocess
+        <source>/boost/intrusive//boost_intrusive
+        <source>/boost/io//boost_io
+        <source>/boost/iterator//boost_iterator
+        <source>/boost/lexical_cast//boost_lexical_cast
+        <source>/boost/move//boost_move
+        <source>/boost/mpl//boost_mpl
+        <source>/boost/optional//boost_optional
+        <source>/boost/parameter//boost_parameter
+        <source>/boost/phoenix//boost_phoenix
+        <source>/boost/predef//boost_predef
+        <source>/boost/preprocessor//boost_preprocessor
+        <source>/boost/property_tree//boost_property_tree
+        <source>/boost/proto//boost_proto
+        <source>/boost/random//boost_random
+        <source>/boost/range//boost_range
+        <source>/boost/regex//boost_regex
+        <source>/boost/smart_ptr//boost_smart_ptr
+        <source>/boost/spirit//boost_spirit
+        <source>/boost/static_assert//boost_static_assert
+        <source>/boost/system//boost_system
+        <source>/boost/thread//boost_thread
+        <source>/boost/throw_exception//boost_throw_exception
+        <source>/boost/type_index//boost_type_index
+        <source>/boost/type_traits//boost_type_traits
+        <source>/boost/utility//boost_utility
+        <source>/boost/winapi//boost_winapi
+        <source>/boost/xpressive//boost_xpressive
+        <include>include
+    ;
+
+explicit
+    [ alias boost_log : build//boost_log ]
+    [ alias boost_log_setup : build//boost_log_setup ]
+    [ alias all : boost_log boost_log_setup example test ]
+    ;
+
+call-if : boost-library log
+    : install boost_log boost_log_setup
+    ;
