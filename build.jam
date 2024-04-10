@@ -12,9 +12,7 @@ project /boost/log
         <library>/boost/asio//boost_asio
         <library>/boost/assert//boost_assert
         <library>/boost/atomic//boost_atomic
-        <library>/boost/bind//boost_bind
         <library>/boost/config//boost_config
-        <library>/boost/container//boost_container
         <library>/boost/core//boost_core
         <library>/boost/date_time//boost_date_time
         <library>/boost/exception//boost_exception
@@ -25,7 +23,6 @@ project /boost/log
         <library>/boost/intrusive//boost_intrusive
         <library>/boost/io//boost_io
         <library>/boost/iterator//boost_iterator
-        <library>/boost/lexical_cast//boost_lexical_cast
         <library>/boost/move//boost_move
         <library>/boost/mpl//boost_mpl
         <library>/boost/optional//boost_optional
@@ -40,7 +37,6 @@ project /boost/log
         <library>/boost/regex//boost_regex
         <library>/boost/smart_ptr//boost_smart_ptr
         <library>/boost/spirit//boost_spirit
-        <library>/boost/static_assert//boost_static_assert
         <library>/boost/system//boost_system
         <library>/boost/thread//boost_thread
         <library>/boost/throw_exception//boost_throw_exception
