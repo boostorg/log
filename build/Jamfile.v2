@@ -19,12 +19,6 @@ import log-build-config ;
 
 using mc ;
 
-local here = [ modules.binding $(__name__) ] ;
-
-project.push-current [ project.current ] ;
-project.load [ path.join [ path.make $(here:D) ] ../config/x86-ext ] ;
-project.pop-current ;
-
 # Windows libs
 searched-lib psapi ;
 searched-lib advapi32 ;
@@ -60,7 +54,6 @@ local log_setup_cxx_public_requirements = [ requires
 project
     : source-location ../src
     : requirements
-        <conditional>@log-arch-config.check-instruction-set
         <conditional>@log-build-config.check-atomic-int32
         <conditional>@log-build-config.select-regex-backend
         <conditional>@log-build-config.check-pthread-mutex-robust
@@ -214,7 +207,7 @@ rule select-arch-specific-sources ( properties * )
 {
     local result ;
 
-    if x86 in [ log-arch-config.deduce-architecture $(properties) ]
+    if <architecture>x86 in $(properties)
     {
         local has_ssse3 = [ configure.builds /boost/log/x86-extensions//ssse3 : $(properties) : "compiler supports SSSE3" ] ;
         if $(has_ssse3)

@@ -48,6 +48,15 @@ project /boost/log
         <include>include
     ;
 
+path-constant HERE : . ;
+use-project /boost/log/atomic-int32 : $(HERE)/config/atomic-int32 ;
+use-project /boost/log/message-compiler : $(HERE)/config/message-compiler ;
+use-project /boost/log/native-syslog : $(HERE)/config/native-syslog ;
+use-project /boost/log/pthread-mutex-robust : $(HERE)/config/pthread-mutex-robust ;
+use-project /boost/log/regex-header-only : $(HERE)/config/regex-header-only ;
+use-project /boost/log/x86-extensions : $(HERE)/config/x86-ext ;
+use-project /boost/log/xopen-source-600 : $(HERE)/config/xopen-source-600 ;
+
 explicit
     [ alias boost_log : build//boost_log ]
     [ alias boost_log_setup : build//boost_log_setup ]

@@ -12,12 +12,6 @@ import path ;
 import property ;
 import feature ;
 
-local here = [ modules.binding $(__name__) ] ;
-
-project.push-current [ project.current ] ;
-project.load [ path.join [ path.make $(here:D) ] ../config/xopen-source-600 ] ;
-project.pop-current ;
-
 rule set-platform-defines ( properties * )
 {
     local result ;

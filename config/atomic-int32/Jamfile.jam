@@ -6,7 +6,7 @@
 #
 
 import project ;
-import log-platform-config ;
+import ../../build/log-platform-config ;
 
 project /boost/log/atomic-int32
     : source-location .
