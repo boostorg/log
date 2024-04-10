@@ -56,7 +56,7 @@ Cygwin support is very preliminary. The default GCC version available in Cygwin 
 
 [section:config Configuring and building the library]
 
-The library has a separately compiled part which should be built as described in the [@http://www.boost.org/doc/libs/release/more/getting_started/ Getting Started guide]. One thing should be noted, though. If your application consists of more than one module (e.g. an exe and one or several dll's) that use Boost.Log, the library _must_ be built as a shared object. If you have a single executable or a single module that works with Boost.Log, you may build the library as a static library.
+The library has a separately compiled part which should be built as described in the [@https://www.boost.org/doc/libs/release/more/getting_started/ Getting Started guide]. One thing should be noted, though. If your application consists of more than one module (e.g. an exe and one or several dll's) that use Boost.Log, the library _must_ be built as a shared object. If you have a single executable or a single module that works with Boost.Log, you may build the library as a static library.
 
 The library supports a number of configuration macros:
 
