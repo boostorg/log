@@ -297,6 +297,7 @@ lib boost_log
     : ## usage-requirements ##
         <link>shared:<define>BOOST_LOG_DYN_LINK=1
         <threading>single:<define>BOOST_LOG_NO_THREADS
+        <define>BOOST_LOG_NO_LIB=1
         $(log_cxx_public_requirements)
     ;
 
@@ -340,5 +341,6 @@ lib boost_log_setup
     : ## usage-requirements ##
         <link>shared:<define>BOOST_LOG_SETUP_DYN_LINK=1
         <threading>single:<define>BOOST_LOG_NO_THREADS
+        <define>BOOST_LOG_SETUP_NO_LIB=1
         $(log_setup_cxx_public_requirements)
     ;
