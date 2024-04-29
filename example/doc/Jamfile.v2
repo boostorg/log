@@ -91,6 +91,7 @@ project
         <library>/boost/thread//boost_thread
         <library>/boost/lambda//boost_lambda
         <library>/boost/scope_exit//boost_scope_exit
+        <library>/boost/format//boost_format
         <threading>multi
     ;
 
