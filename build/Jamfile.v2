@@ -12,6 +12,7 @@ import path ;
 import project ;
 import feature ;
 import configure ;
+import-search /boost/config/checks ;
 import config : requires ;
 import log-arch-config ;
 import log-platform-config ;
