@@ -273,6 +273,7 @@ if (WIN32)
             set_source_files_properties("${CMAKE_CURRENT_BINARY_DIR}/src/windows/simple_event_log.rc" PROPERTIES GENERATED TRUE)
 
             if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+                # Workaround for a windres.exe issue: https://github.com/boostorg/log/pull/231
                 list(APPEND CMAKE_RC_FLAGS "--use-temp-file")
             endif()
 
