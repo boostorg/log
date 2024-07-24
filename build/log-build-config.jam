@@ -28,7 +28,7 @@ rule check-regex-header-only ( properties * )
 {
     local result ;
 
-    local has_regex_header_only = [ configure.builds /boost/log/regex-header-only//regex_header_only : $(properties) : "Boost.Regex is header-only" ] ;
+    local has_regex_header_only = [ configure.builds /boost/log/config/regex-header-only//regex_header_only : $(properties) : "Boost.Regex is header-only" ] ;
     if ! $(has_regex_header_only)
     {
         result = <library>/boost/regex//boost_regex ;
@@ -41,7 +41,7 @@ rule check-atomic-int32 ( properties * )
 {
     local result ;
 
-    local has_atomic_int32 = [ configure.builds /boost/log/atomic-int32//atomic_int32 : $(properties) : "native atomic int32 supported" ] ;
+    local has_atomic_int32 = [ configure.builds /boost/log/config/atomic-int32//atomic_int32 : $(properties) : "native atomic int32 supported" ] ;
     if ! $(has_atomic_int32)
     {
         result = <define>BOOST_LOG_WITHOUT_IPC ;
@@ -54,7 +54,7 @@ rule check-pthread-mutex-robust ( properties * )
 {
     local result ;
 
-    local has_pthread_mutex_robust = [ configure.builds /boost/log/pthread-mutex-robust//pthread_mutex_robust : $(properties) : "pthread supports robust mutexes" ] ;
+    local has_pthread_mutex_robust = [ configure.builds /boost/log/config/pthread-mutex-robust//pthread_mutex_robust : $(properties) : "pthread supports robust mutexes" ] ;
     if $(has_pthread_mutex_robust)
     {
         result = <define>BOOST_LOG_HAS_PTHREAD_MUTEX_ROBUST ;
@@ -69,7 +69,7 @@ rule check-native-syslog ( properties * )
 
     if ! [ has-config-flag BOOST_LOG_WITHOUT_SYSLOG : $(properties) ]
     {
-        local has_native_syslog = [ configure.builds /boost/log/native-syslog//native_syslog : $(properties) : "native syslog supported" ] ;
+        local has_native_syslog = [ configure.builds /boost/log/config/native-syslog//native_syslog : $(properties) : "native syslog supported" ] ;
         if $(has_native_syslog)
         {
             result = <define>BOOST_LOG_USE_NATIVE_SYSLOG ;
@@ -87,7 +87,7 @@ rule check-message-compiler ( properties * )
     {
         if ! [ has-config-flag BOOST_LOG_WITHOUT_EVENT_LOG : $(properties) ]
         {
-            local has_mc = [ configure.builds /boost/log/message-compiler//test-availability : $(properties) : "has message compiler" ] ;
+            local has_mc = [ configure.builds /boost/log/config/message-compiler//test-availability : $(properties) : "has message compiler" ] ;
             if ! $(has_mc)
             {
                 result = <define>BOOST_LOG_WITHOUT_EVENT_LOG ;

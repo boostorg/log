@@ -211,14 +211,14 @@ rule select-arch-specific-sources ( properties * )
 
     if <architecture>x86 in $(properties)
     {
-        local has_ssse3 = [ configure.builds /boost/log/x86-extensions//ssse3 : $(properties) : "compiler supports SSSE3" ] ;
+        local has_ssse3 = [ configure.builds /boost/log/config/x86-ext//ssse3 : $(properties) : "compiler supports SSSE3" ] ;
         if $(has_ssse3)
         {
             result += <define>BOOST_LOG_USE_SSSE3 ;
             result += <source>$(BOOST_LOG_COMMON_SSSE3_SRC) ;
         }
 
-        local has_avx2 = [ configure.builds /boost/log/x86-extensions//avx2 : $(properties) : "compiler supports AVX2" ] ;
+        local has_avx2 = [ configure.builds /boost/log/config/x86-ext//avx2 : $(properties) : "compiler supports AVX2" ] ;
         if $(has_avx2)
         {
             result += <define>BOOST_LOG_USE_AVX2 ;

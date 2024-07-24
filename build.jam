@@ -49,14 +49,6 @@ project /boost/log
         <include>include
     ;
 
-use-project /boost/log/atomic-int32 : config/atomic-int32 ;
-use-project /boost/log/message-compiler : config/message-compiler ;
-use-project /boost/log/native-syslog : config/native-syslog ;
-use-project /boost/log/pthread-mutex-robust : config/pthread-mutex-robust ;
-use-project /boost/log/regex-header-only : config/regex-header-only ;
-use-project /boost/log/x86-extensions : config/x86-ext ;
-use-project /boost/log/xopen-source-600 : config/xopen-source-600 ;
-
 explicit
     [ alias boost_log : build//boost_log ]
     [ alias boost_log_setup : build//boost_log_setup ]
@@ -66,4 +58,3 @@ explicit
 call-if : boost-library log
     : install boost_log boost_log_setup
     ;
-
