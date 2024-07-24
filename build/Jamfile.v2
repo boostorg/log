@@ -52,10 +52,18 @@ local log_setup_cxx_public_requirements = [ requires
         cxx11_lambdas
     ] ;
 
+constant boost_dependencies_private :
+    /boost/align//boost_align
+    /boost/asio//boost_asio
+    /boost/interprocess//boost_interprocess
+    /boost/predef//boost_predef
+    /boost/random//boost_random ;
+
 project
     : source-location ../src
     : common-requirements <library>$(boost_dependencies)
     : requirements
+        <library>$(boost_dependencies_private)
         <conditional>@log-build-config.check-atomic-int32
         <conditional>@log-build-config.select-regex-backend
         <conditional>@log-build-config.check-pthread-mutex-robust
