@@ -54,6 +54,7 @@ local log_setup_cxx_public_requirements = [ requires
 
 project
     : source-location ../src
+    : common-requirements <library>$(boost_dependencies)
     : requirements
         <conditional>@log-build-config.check-atomic-int32
         <conditional>@log-build-config.select-regex-backend
