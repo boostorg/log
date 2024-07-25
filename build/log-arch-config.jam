@@ -13,8 +13,42 @@ import path ;
 import property ;
 import feature ;
 
+rule deduce-address-model ( properties * )
+{
+    # The address-model is always set to a deduced value using the predef.address-model checks.
+    return [ feature.get-values <address-model> : $(properties) ] ;
+}
+
+rule deduce-architecture ( properties * )
+{
+    # The architecture is always set to a deduced value using the predef.architecture checks.
+    return [ feature.get-values <architecture> : $(properties) ] ;
+}
+
+rule deduce-instruction-set ( properties * )
+{
+    local result ;
+    local instruction_set = [ feature.get-values <instruction-set> : $(properties) ] ;
+
+    if $(instruction_set)
+    {
+        result = $(instruction_set) ;
+    }
+    else
+    {
+        if x86 in [ deduce-architecture $(properties) ] && 32 in [ deduce-address-model $(properties) ]
+        {
+            # We build for Pentium Pro and later CPUs by default. This is used as the target in many Linux distributions, and Windows and OS X also seem to not support older CPUs.
+            result = i686 ;
+        }
+    }
+
+    return $(result) ;
+}
+
 rule ssse3-flags ( properties * )
 {
+    local result ;
     if <toolset>intel in $(properties)
     {
         if <toolset-intel:platform>win in $(properties)
@@ -76,4 +110,18 @@ rule avx2-flags ( properties * )
 
 rule check-instruction-set ( properties * )
 {
+    local result ;
+    local instruction_set = [ log-arch-config.deduce-instruction-set $(properties) ] ;
+
+    if $(instruction_set) = i386 || $(instruction_set) = i486
+    {
+        if ! $(.annouced-failure)
+        {
+            ECHO Boost.Log is not supported on the specified target CPU and will not be built. At least i586 class CPU is required. ;
+            .annouced-failure = 1 ;
+        }
+        result = <build>no ;
+    }
+
+    return $(result) ;
 }
