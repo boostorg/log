@@ -17,7 +17,7 @@ import config : requires ;
 import log-arch-config ;
 import log-platform-config ;
 import log-build-config ;
-import-search /boost/predef/tools ;
+import-search /boost/predef/tools/check ;
 import predef ;
 
 using mc ;
