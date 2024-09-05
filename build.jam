@@ -5,44 +5,7 @@
 
 require-b2 5.2 ;
 
-constant boost_dependencies :
-    /boost/assert//boost_assert
-    /boost/atomic//boost_atomic
-    /boost/config//boost_config
-    /boost/core//boost_core
-    /boost/date_time//boost_date_time
-    /boost/exception//boost_exception
-    /boost/filesystem//boost_filesystem
-    /boost/function_types//boost_function_types
-    /boost/fusion//boost_fusion
-    /boost/intrusive//boost_intrusive
-    /boost/io//boost_io
-    /boost/iterator//boost_iterator
-    /boost/move//boost_move
-    /boost/mpl//boost_mpl
-    /boost/optional//boost_optional
-    /boost/parameter//boost_parameter
-    /boost/phoenix//boost_phoenix
-    /boost/preprocessor//boost_preprocessor
-    /boost/property_tree//boost_property_tree
-    /boost/proto//boost_proto
-    /boost/range//boost_range
-    /boost/regex//boost_regex
-    /boost/smart_ptr//boost_smart_ptr
-    /boost/spirit//boost_spirit
-    /boost/system//boost_system
-    /boost/thread//boost_thread
-    /boost/throw_exception//boost_throw_exception
-    /boost/type_index//boost_type_index
-    /boost/type_traits//boost_type_traits
-    /boost/utility//boost_utility
-    /boost/winapi//boost_winapi
-    /boost/xpressive//boost_xpressive ;
-
-project /boost/log
-    : common-requirements
-        <include>include
-    ;
+project /boost/log ;
 
 explicit
     [ alias boost_log : build//boost_log ]
