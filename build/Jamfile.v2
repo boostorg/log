@@ -106,6 +106,7 @@ constant boost_log_setup_private_deps :
     <library>/boost/exception//boost_exception
     <library>/boost/filesystem//boost_filesystem
     <library>/boost/io//boost_io
+    <library>/boost/log//boost_log
     <library>/boost/spirit//boost_spirit
     <library>/boost/throw_exception//boost_throw_exception
     <library>/boost/utility//boost_utility
