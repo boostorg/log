@@ -115,6 +115,13 @@ constant boost_log_setup_private_deps :
     ]
     ;
 
+constant boost_log_support_public_deps :
+    <library>/boost/log//boost_log
+    <library>/boost/exception//boost_exception
+    <library>/boost/spirit//boost_spirit
+    <library>/boost/xpressive//boost_xpressive
+    ;
+
 project
     : source-location ../src
     : common-requirements
@@ -417,4 +424,11 @@ lib boost_log_setup
         <threading>single:<define>BOOST_LOG_NO_THREADS
         <define>BOOST_LOG_SETUP_NO_LIB=1
         $(boost_log_setup_public_deps)
+    ;
+
+alias boost_log_with_support
+    : requirements
+        $(boost_log_support_public_deps)
+    : usage-requirements
+        $(boost_log_support_public_deps)
     ;

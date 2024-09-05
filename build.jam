@@ -10,7 +10,8 @@ project /boost/log ;
 explicit
     [ alias boost_log : build//boost_log ]
     [ alias boost_log_setup : build//boost_log_setup ]
-    [ alias all : boost_log boost_log_setup example test ]
+    [ alias boost_log_with_support : build//boost_log_with_support ]
+    [ alias all : boost_log boost_log_setup boost_log_with_support example test ]
     ;
 
 call-if : boost-library log
