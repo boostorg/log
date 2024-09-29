@@ -23,7 +23,7 @@
 #include <boost/log/attributes/attribute_value_set.hpp>
 #include <boost/log/expressions/keyword_fwd.hpp>
 #ifndef BOOST_LOG_NO_THREADS
-#include <boost/detail/atomic_count.hpp>
+#include <boost/smart_ptr/detail/atomic_count.hpp>
 #endif // BOOST_LOG_NO_THREADS
 #include <boost/log/detail/header.hpp>
 
