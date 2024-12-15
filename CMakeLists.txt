@@ -326,6 +326,9 @@ if (WIN32 OR CYGWIN)
         mswsock
         advapi32
     )
+    list(APPEND boost_log_setup_private_libs
+        ws2_32
+    )
 endif()
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
@@ -655,6 +658,7 @@ if (NOT BOOST_LOG_WITHOUT_SETTINGS_PARSERS)
 
     target_link_libraries(boost_log_setup
         PRIVATE
+            ${boost_log_setup_private_libs}
             ${boost_log_common_private_linkflags}
     )
 else()
