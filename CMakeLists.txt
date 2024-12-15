@@ -659,6 +659,14 @@ if (NOT BOOST_LOG_WITHOUT_SETTINGS_PARSERS)
         PRIVATE
             ${boost_log_common_private_linkflags}
     )
+
+    if(MINGW)
+        target_link_libraries(boost_log_setup
+            PRIVATE
+                ws2_32
+        )
+    endif()
+
 else()
     add_library(boost_log_setup INTERFACE)
     target_include_directories(boost_log_setup INTERFACE include)
