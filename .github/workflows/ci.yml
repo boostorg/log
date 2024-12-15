@@ -557,9 +557,13 @@ jobs:
             cxxstd: "11-gnu,14-gnu,17-gnu,2a-gnu"
             os: windows-2019
 
-          - name: CMake tests
+          - name: CMake MSVC tests
             cmake_tests: 1
             os: windows-2022
+          - name: CMake MinGW-w64 tests
+            cmake_tests: 1
+            os: windows-2022
+            cmake_generator: "MinGW Makefiles"
 
     timeout-minutes: 60
     runs-on: ${{matrix.os}}
@@ -621,6 +625,7 @@ jobs:
       - name: Run CMake tests
         if: matrix.cmake_tests
         run: |
+            if not "${{matrix.cmake_generator}}" == "" set "CMAKE_GENERATOR=${{matrix.cmake_generator}}"
             cd boost-root
             mkdir __build_static__
             cd __build_static__
