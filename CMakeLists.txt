@@ -306,7 +306,7 @@ else()
 endif()
 
 if (CYGWIN)
-    # Boost.Interprocess does not compile on Cygwin: https://github.com/boostorg/interprocess/issues/76
+    # Boost.Interprocess does not compile on Cygwin: https://github.com/boostorg/interprocess/issues/242
     set(BOOST_LOG_WITHOUT_IPC ON)
     list(APPEND boost_log_common_private_defines
         __USE_W32_SOCKETS
