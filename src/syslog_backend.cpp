@@ -554,8 +554,8 @@ BOOST_LOG_API void syslog_backend::set_local_address(std::string const& addr, un
     }
 #else
     // Boost.ASIO requires threads for the host name resolver,
-    // so without threads we simply assume the string already contains IP address
-    set_local_address(boost::asio::ip::address::from_string(addr), port);
+    // so without threads we simply assume the string already contains an IP address
+    set_local_address(asio::ip::make_address(addr), port);
 #endif // !defined(BOOST_LOG_NO_THREADS)
 }
 //! The method sets the local address which log records will be sent from.
@@ -600,8 +600,8 @@ BOOST_LOG_API void syslog_backend::set_target_address(std::string const& addr, u
     }
 #else
     // Boost.ASIO requires threads for the host name resolver,
-    // so without threads we simply assume the string already contains IP address
-    set_target_address(boost::asio::ip::address::from_string(addr), port);
+    // so without threads we simply assume the string already contains an IP address
+    set_target_address(asio::ip::make_address(addr), port);
 #endif // !defined(BOOST_LOG_NO_THREADS)
 }
 //! The method sets the address of the remote host where log records will be sent to.
