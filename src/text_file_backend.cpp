@@ -136,6 +136,9 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
             return (isdigit(c) != 0);
         }
         static std::string default_file_name_pattern() { return "%5N.log"; }
+
+        template< class Int >
+        static std::string to_string(Int num) { return std::to_string(num); }
     };
 
 #ifndef BOOST_LOG_BROKEN_STATIC_CONSTANTS_LINKAGE
@@ -185,6 +188,9 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
             return (iswdigit(c) != 0);
         }
         static std::wstring default_file_name_pattern() { return L"%5N.log"; }
+
+        template< class Int >
+        static std::wstring to_string(Int num) { return std::to_wstring(num); }
     };
 
 #ifndef BOOST_LOG_BROKEN_STATIC_CONSTANTS_LINKAGE
@@ -263,8 +269,6 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         path_string_type::size_type m_FileCounterPosition;
         //! File counter width
         std::streamsize m_Width;
-        //! The file counter formatting stream
-        mutable std::basic_ostringstream< path_char_type > m_Stream;
 
     public:
         //! Initializing constructor
@@ -272,26 +276,26 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
             m_FileCounterPosition(pos),
             m_Width(width)
         {
-            typedef file_char_traits< path_char_type > traits_t;
-            m_Stream.fill(traits_t::zero);
         }
         //! Copy constructor
         file_counter_formatter(file_counter_formatter const& that) :
             m_FileCounterPosition(that.m_FileCounterPosition),
             m_Width(that.m_Width)
         {
-            m_Stream.fill(that.m_Stream.fill());
         }
 
         //! The function formats the file counter into the file name
         path_string_type operator()(path_string_type const& pattern, unsigned int counter) const
         {
-            path_string_type file_name = pattern;
+            typedef file_char_traits< path_char_type > traits_t;
 
-            m_Stream.str(path_string_type());
-            m_Stream.width(m_Width);
-            m_Stream << counter;
-            file_name.insert(m_FileCounterPosition, m_Stream.str());
+            path_string_type str = traits_t::to_string(counter);
+            // Add padding with zeros
+            if (str.size() < static_cast< size_t >(m_Width))
+                str = path_string_type(m_Width - str.size(), traits_t::zero) + str;
+
+            path_string_type file_name = pattern;
+            file_name.insert(m_FileCounterPosition, str);
 
             return file_name;
         }
