@@ -133,7 +133,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         static bool is_digit(char c)
         {
             using namespace std;
-            return (isdigit(c) != 0);
+            return (isdigit(static_cast< unsigned char >(c)) != 0);
         }
         static std::string default_file_name_pattern() { return "%5N.log"; }
     };
