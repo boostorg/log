@@ -56,7 +56,6 @@
 #include <boost/log/attributes/time_traits.hpp>
 #include <boost/log/sinks/auto_newline_mode.hpp>
 #include <boost/log/sinks/text_file_backend.hpp>
-#include "unique_ptr.hpp"
 
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <mutex>

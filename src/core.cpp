@@ -17,6 +17,7 @@
 #include <cstddef>
 #include <new>
 #include <chrono>
+#include <memory>
 #include <vector>
 #include <algorithm>
 #include <boost/cstdint.hpp>
@@ -44,7 +45,6 @@
 #include <boost/log/detail/light_rw_mutex.hpp>
 #include <boost/log/detail/thread_id.hpp>
 #endif
-#include "unique_ptr.hpp"
 #include "default_sink.hpp"
 #include "stateless_allocator.hpp"
 #include "alignment_gap_between.hpp"
@@ -282,7 +282,7 @@ public:
 
 #else
     //! Thread-specific data
-    log::aux::unique_ptr< thread_data > m_thread_data;
+    std::unique_ptr< thread_data > m_thread_data;
 #endif
 
     //! The global state of logging
@@ -427,7 +427,7 @@ private:
         BOOST_LOG_EXPR_IF_MT(scoped_write_lock lock(m_mutex);)
         if (!m_thread_data.get())
         {
-            log::aux::unique_ptr< thread_data > p(new thread_data());
+            std::unique_ptr< thread_data > p(new thread_data());
             m_thread_data.reset(p.get());
 #if defined(BOOST_LOG_USE_COMPILER_TLS)
             m_thread_data_cache = p.release();

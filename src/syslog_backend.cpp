@@ -18,6 +18,7 @@
 #ifndef BOOST_LOG_WITHOUT_SYSLOG
 
 #include <ctime>
+#include <memory>
 #include <algorithm>
 #include <stdexcept>
 #include <boost/limits.hpp>
@@ -45,7 +46,6 @@
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <mutex>
 #endif
-#include "unique_ptr.hpp"
 
 #ifdef BOOST_LOG_USE_NATIVE_SYSLOG
 #include <syslog.h>
@@ -422,7 +422,7 @@ struct syslog_backend::implementation::udp_socket_based :
     //! Pointer to the list of sockets
     shared_ptr< syslog_udp_service > m_pService;
     //! Pointer to the socket being used
-    log::aux::unique_ptr< syslog_udp_socket > m_pSocket;
+    std::unique_ptr< syslog_udp_socket > m_pSocket;
     //! The target host to send packets to
     asio::ip::udp::endpoint m_TargetHost;
 
