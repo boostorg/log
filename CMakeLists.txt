@@ -132,7 +132,6 @@ set(boost_log_sources
     src/bit_tools.hpp
     src/code_conversion.cpp
     src/stateless_allocator.hpp
-    src/unique_ptr.hpp
     src/core.cpp
     src/record_ostream.cpp
     src/severity_level.cpp

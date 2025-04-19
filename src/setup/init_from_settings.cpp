@@ -116,7 +116,8 @@ struct is_case_insensitive_equal
     result_type operator() (CharT left, CharT right) const BOOST_NOEXCEPT
     {
         typedef typename boost::log::aux::encoding< CharT >::type encoding;
-        return encoding::tolower(left) == encoding::tolower(right);
+        typedef typename encoding::classify_type char_classify_type;
+        return encoding::tolower(static_cast< char_classify_type >(left)) == encoding::tolower(static_cast< char_classify_type >(right));
     }
 };
 
@@ -193,6 +194,7 @@ sinks::file::rotation_at_time_point param_cast_to_rotation_time_point(const char
     typedef CharT char_type;
     typedef boost::log::aux::char_constants< char_type > constants;
     typedef typename boost::log::aux::encoding< char_type >::type encoding;
+    typedef typename encoding::classify_type char_classify_type;
     typedef qi::extract_uint< unsigned short, 10, 1, 2 > day_extract;
     typedef qi::extract_uint< unsigned char, 10, 2, 2 > time_component_extract;
 
@@ -202,14 +204,14 @@ sinks::file::rotation_at_time_point param_cast_to_rotation_time_point(const char
     unsigned char hour = 0, minute = 0, second = 0;
     const char_type* begin = value.c_str(), *end = begin + value.size();
 
-    if (!encoding::isalnum(*begin)) // begin is null-terminated, so we also check that the string is not empty here
+    if (!encoding::isalnum(static_cast< char_classify_type >(*begin))) // begin is null-terminated, so we also check that the string is not empty here
         throw_invalid_value(param_name);
 
     const char_type* p = begin + 1;
-    if (encoding::isalpha(*begin))
+    if (encoding::isalpha(static_cast< char_classify_type >(*begin)))
     {
         // This must be a weekday
-        while (encoding::isalpha(*p))
+        while (encoding::isalpha(static_cast< char_classify_type >(*p)))
             ++p;
 
         std::size_t len = p - begin;
@@ -233,10 +235,10 @@ sinks::file::rotation_at_time_point param_cast_to_rotation_time_point(const char
     else
     {
         // This may be either a month day or an hour
-        while (encoding::isdigit(*p))
+        while (encoding::isdigit(static_cast< char_classify_type >(*p)))
             ++p;
 
-        if (encoding::isspace(*p))
+        if (encoding::isspace(static_cast< char_classify_type >(*p)))
         {
             // This is a month day
             unsigned short mday = 0;
@@ -256,7 +258,7 @@ sinks::file::rotation_at_time_point param_cast_to_rotation_time_point(const char
     }
 
     // Skip spaces
-    while (encoding::isspace(*p))
+    while (encoding::isspace(static_cast< char_classify_type >(*p)))
         ++p;
 
     // Parse hour
