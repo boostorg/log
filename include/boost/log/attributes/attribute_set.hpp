@@ -142,6 +142,8 @@ private:
         value_type m_Value;
 
         node(key_type const& key, mapped_type const& data);
+        node(const node&) = delete;
+        node& operator=(const node&) = delete;
     };
 
     //! Iterator class
