@@ -60,7 +60,7 @@ constant boost_log_public_deps :
     <library>/boost/type_index//boost_type_index
     <library>/boost/type_traits//boost_type_traits
     <library>/boost/utility//boost_utility
-    <target-os>:<library>/boost/winapi//boost_winapi
+    <target-os>windows:<library>/boost/winapi//boost_winapi
     [ requires
         cxx11_static_assert
     ]
