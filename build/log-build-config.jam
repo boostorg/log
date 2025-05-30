@@ -12,20 +12,21 @@ import path ;
 import property ;
 import feature ;
 
-rule has-config-flag ( flag : properties * )
+# The rule checks if there is one of the defines listed in `flags` in `properties`. The value of the define is not considered.
+rule has-config-flag ( flags + : properties * )
 {
-    local result ;
-
     for local property in $(properties)
     {
-        if [ MATCH "^(<define>$(flag))(=.*)?$" : $(property) ]
+        for local flag in $(flags)
         {
-            result = 1 ;
-            break ;
+            if [ MATCH "^(<define>$(flag))(=.*)?$" : $(property) ]
+            {
+                return 1 ;
+            }
         }
     }
 
-    return $(result) ;
+    return ;
 }
 
 rule check-regex-header-only ( properties * )
@@ -116,11 +117,7 @@ rule select-regex-backend ( properties * )
     local result ;
 
     # Use Boost.Regex backend by default. It produces smaller executables and also has the best performance for small string matching.
-    if ! (
-        [ log-build-config.has-config-flag BOOST_LOG_WITHOUT_SETTINGS_PARSERS : $(properties) ] ||
-        [ log-build-config.has-config-flag BOOST_LOG_WITHOUT_DEFAULT_FACTORIES : $(properties) ] ||
-        [ log-build-config.has-config-flag BOOST_LOG_USE_STD_REGEX : $(properties) ] ||
-        [ log-build-config.has-config-flag BOOST_LOG_USE_BOOST_XPRESSIVE : $(properties) ] )
+    if ! [ has-config-flag BOOST_LOG_WITHOUT_SETTINGS_PARSERS BOOST_LOG_WITHOUT_DEFAULT_FACTORIES BOOST_LOG_USE_STD_REGEX BOOST_LOG_USE_BOOST_XPRESSIVE : $(properties) ]
     {
         result = <conditional>@log-build-config.check-regex-header-only ;
     }
