@@ -1,6 +1,6 @@
 # log-build-config.jam
 #
-# Copyright 2023 Andrey Semashev
+# Copyright 2023-2025 Andrey Semashev
 #
 # Distributed under the Boost Software License Version 1.0. (See
 # accompanying file LICENSE_1_0.txt or copy at
@@ -14,14 +14,18 @@ import feature ;
 
 rule has-config-flag ( flag : properties * )
 {
-    if ( "<define>$(flag)" in $(properties) || "<define>$(flag)=1" in $(properties) )
+    local result ;
+
+    for local property in $(properties)
     {
-        return 1 ;
+        if [ MATCH "^(<define>$(flag))(=.*)?$" : $(property) ]
+        {
+            result = 1 ;
+            break ;
+        }
     }
-    else
-    {
-        return ;
-    }
+
+    return $(result) ;
 }
 
 rule check-regex-header-only ( properties * )
