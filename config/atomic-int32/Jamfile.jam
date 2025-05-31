@@ -12,6 +12,7 @@ project
     : source-location .
     : requirements
         <conditional>@log-platform-config.set-platform-defines
+        <library>/boost/atomic//boost_atomic
         <pch>off
     ;
 
