@@ -1,4 +1,4 @@
-# Copyright 2021-2024 Andrey Semashev
+# Copyright 2021-2025 Andrey Semashev
 #
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE_1_0.txt or copy at http://boost.org/LICENSE_1_0.txt)
@@ -544,22 +544,19 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - toolset: msvc-14.0
-            cxxstd: "14"
-            os: windows-2019
-            extra_tests: 1
-          - toolset: msvc-14.2
-            cxxstd: "14,17,20,latest"
-            os: windows-2019
           - toolset: msvc-14.3
-            cxxstd: "14,17,20,latest"
+            cxxstd: "14"
+            os: windows-2022
+            extra_tests: 1
+          - toolset: msvc-14.3
+            cxxstd: "17,20,latest"
             os: windows-2022
           - toolset: clang-win
             cxxstd: "14,17,latest"
             os: windows-2022
           - toolset: gcc
-            cxxstd: "11-gnu,14-gnu,17-gnu,2a-gnu"
-            os: windows-2019
+            cxxstd: "11-gnu,14-gnu,17-gnu,20-gnu,23-gnu"
+            os: windows-2022
 
           - name: CMake MSVC tests
             cmake_tests: 1
