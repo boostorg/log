@@ -318,6 +318,22 @@ jobs:
                 echo "GHA_CONTAINER=${{matrix.container}}" >> $GITHUB_ENV
                 if [ -f "/etc/debian_version" ]
                 then
+                    # Use Azure APT mirrors in containers to avoid HTTP errors due to DDoS filters triggered by lots of CI jobs launching concurrently.
+                    # Note that not all Ubuntu versions support "mirror+file:..." URIs in APT sources, so just use Azure mirrors exclusively.
+                    # Note also that on recent Ubuntu versions DEB822 format is used for source files.
+                    APT_SOURCES=()
+                    if [ -d "/etc/apt/sources.list.d" ]
+                    then
+                        readarray -t APT_SOURCES < <(find "/etc/apt/sources.list.d" -type f -name '*.sources' -print)
+                    fi
+                    if [ -f "/etc/apt/sources.list" ]
+                    then
+                        APT_SOURCES+=("/etc/apt/sources.list")
+                    fi
+                    if [ "${#APT_SOURCES[@]}" -gt 0 ]
+                    then
+                        sed -i -E -e 's!([^ ]+) (http|https)://(archive|security)\.ubuntu\.com/ubuntu[^ ]*(.*)!\1 http://azure.archive.ubuntu.com/ubuntu/\4!' "${APT_SOURCES[@]}"
+                    fi
                     apt-get -o Acquire::Retries=$NET_RETRY_COUNT update
                     if [ "$(apt-cache search "^python-is-python3$" | wc -l)" -ne 0 ]
                     then
