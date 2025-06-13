@@ -72,6 +72,9 @@ environment:
       ADDRESS_MODEL: 32
       CXXSTD: 11,14
       ADDPATH: C:\mingw-w64\i686-8.1.0-posix-dwarf-rt_v6-rev0\mingw32\bin
+      # Boost.Context, on which Boost.ASIO depends, does not build on this target, which prevents Boost.Log from building.
+      # https://github.com/chriskohlhoff/asio/issues/1637
+      B2_ARGS: define=BOOST_LOG_WITHOUT_ASIO=1
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
     - TOOLSET: clang-win
       ADDRESS_MODEL: 32
