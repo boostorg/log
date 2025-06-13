@@ -124,3 +124,15 @@ rule select-regex-backend ( properties * )
 
     return $(result) ;
 }
+
+rule check-asio ( properties * )
+{
+    local result ;
+
+    if ! [ has-config-flag BOOST_LOG_WITHOUT_ASIO : $(properties) ]
+    {
+        result = <library>/boost/asio//boost_asio ;
+    }
+
+    return $(result) ;
+}

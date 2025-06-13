@@ -1,5 +1,5 @@
 #
-#          Copyright Andrey Semashev 2007 - 2023.
+#          Copyright Andrey Semashev 2007 - 2025.
 # Distributed under the Boost Software License, Version 1.0.
 #    (See accompanying file LICENSE_1_0.txt or copy at
 #          http://www.boost.org/LICENSE_1_0.txt)
@@ -68,13 +68,13 @@ constant boost_log_public_deps :
 
 constant boost_log_private_deps :
     <library>/boost/align//boost_align
-    <library>/boost/asio//boost_asio
     <library>/boost/bind//boost_bind
     <library>/boost/exception//boost_exception
     <library>/boost/interprocess//boost_interprocess
     <library>/boost/optional//boost_optional
     <library>/boost/random//boost_random
     <library>/boost/spirit//boost_spirit
+    <conditional>@log-build-config.check-asio
     [ requires
         cxx11_lambdas
     ]
@@ -100,7 +100,6 @@ constant boost_log_setup_public_deps :
     ;
 
 constant boost_log_setup_private_deps :
-    <library>/boost/asio//boost_asio
     <library>/boost/bind//boost_bind
     <library>/boost/date_time//boost_date_time
     <library>/boost/exception//boost_exception
@@ -110,6 +109,7 @@ constant boost_log_setup_private_deps :
     <library>/boost/spirit//boost_spirit
     <library>/boost/throw_exception//boost_throw_exception
     <library>/boost/utility//boost_utility
+    <conditional>@log-build-config.check-asio
     [ requires
         cxx11_lambdas
     ]

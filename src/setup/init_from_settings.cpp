@@ -62,7 +62,7 @@
 #include <boost/log/utility/setup/from_settings.hpp>
 #include <boost/log/utility/setup/filter_parser.hpp>
 #include <boost/log/utility/setup/formatter_parser.hpp>
-#if !defined(BOOST_LOG_NO_ASIO)
+#if !defined(BOOST_LOG_WITHOUT_ASIO)
 #include <boost/asio/ip/address.hpp>
 #endif
 #if !defined(BOOST_LOG_NO_THREADS)
@@ -171,14 +171,14 @@ inline sinks::auto_newline_mode param_cast_to_auto_newline_mode(const char* para
     }
 }
 
-#if !defined(BOOST_LOG_NO_ASIO)
+#if !defined(BOOST_LOG_WITHOUT_ASIO)
 //! Extracts a network address from parameter value
 template< typename CharT >
 inline std::string param_cast_to_address(const char* param_name, std::basic_string< CharT > const& value)
 {
     return log::aux::to_narrow(value);
 }
-#endif // !defined(BOOST_LOG_NO_ASIO)
+#endif // !defined(BOOST_LOG_WITHOUT_ASIO)
 
 template< typename CharT >
 inline bool is_weekday(const CharT* str, std::size_t len, boost::log::basic_string_literal< CharT > const& weekday, boost::log::basic_string_literal< CharT > const& short_weekday)
@@ -589,14 +589,14 @@ public:
         // For now we use only the default level mapping. Will add support for configuration later.
         backend->set_severity_mapper(sinks::syslog::direct_severity_mapping< >(log::aux::default_attribute_names::severity()));
 
-#if !defined(BOOST_LOG_NO_ASIO)
+#if !defined(BOOST_LOG_WITHOUT_ASIO)
         // Setup local and remote addresses
         if (optional< string_type > local_address_param = params["LocalAddress"])
             backend->set_local_address(param_cast_to_address("LocalAddress", local_address_param.get()));
 
         if (optional< string_type > target_address_param = params["TargetAddress"])
             backend->set_target_address(param_cast_to_address("TargetAddress", target_address_param.get()));
-#endif // !defined(BOOST_LOG_NO_ASIO)
+#endif // !defined(BOOST_LOG_WITHOUT_ASIO)
 
         return base_type::init_sink(backend, params);
     }

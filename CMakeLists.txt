@@ -1,4 +1,4 @@
-# Copyright 2021-2024 Andrey Semashev
+# Copyright 2021-2025 Andrey Semashev
 #
 # Distributed under the Boost Software License, Version 1.0.
 # See accompanying file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt
@@ -19,6 +19,7 @@ if (WIN32)
     set(BOOST_LOG_WITHOUT_EVENT_LOG OFF CACHE BOOL "Disable support for event log on Windows in Boost.Log")
 endif()
 set(BOOST_LOG_WITHOUT_IPC OFF CACHE BOOL "Disable support for inter-process communication in Boost.Log")
+set(BOOST_LOG_WITHOUT_ASIO OFF CACHE BOOL "Disable support for Boost.ASIO in Boost.Log")
 set(BOOST_LOG_WITHOUT_SYSLOG OFF CACHE BOOL "Disable support for syslog API in Boost.Log")
 set(BOOST_LOG_USE_NATIVE_SYSLOG OFF CACHE BOOL "Force-enable using native syslog API in Boost.Log")
 set(BOOST_LOG_USE_COMPILER_TLS OFF CACHE BOOL "Enable using compiler-specific intrinsics for thread-local storage in Boost.Log")
@@ -121,6 +122,10 @@ if (BUILD_SHARED_LIBS)
     list(APPEND boost_log_setup_private_defines BOOST_LOG_SETUP_DLL)
 else()
     list(APPEND boost_log_common_public_defines BOOST_LOG_STATIC_LINK)
+endif()
+
+if (BOOST_LOG_WITHOUT_ASIO)
+    list(APPEND boost_log_common_public_defines BOOST_LOG_WITHOUT_ASIO)
 endif()
 
 set(boost_log_sources
@@ -496,7 +501,6 @@ target_link_libraries(boost_log
 
     PRIVATE
         Boost::align
-        Boost::asio
         Boost::bind
         Boost::exception
         Boost::interprocess
@@ -518,6 +522,13 @@ if (NOT BOOST_LOG_NO_THREADS)
         PUBLIC
             Boost::atomic
             Boost::thread
+    )
+endif()
+
+if (NOT BOOST_LOG_WITHOUT_ASIO)
+    target_link_libraries(boost_log
+        PRIVATE
+            Boost::asio
     )
 endif()
 
@@ -622,7 +633,6 @@ if (NOT BOOST_LOG_WITHOUT_SETTINGS_PARSERS)
             ${boost_log_setup_public_deps}
 
         PRIVATE
-            Boost::asio
             Boost::bind
             Boost::date_time
             Boost::exception
@@ -639,6 +649,13 @@ if (NOT BOOST_LOG_WITHOUT_SETTINGS_PARSERS)
                 Boost::fusion
                 Boost::mpl
                 ${boost_log_regex_backend_private_libs}
+        )
+    endif()
+
+    if (NOT BOOST_LOG_WITHOUT_ASIO)
+        target_link_libraries(boost_log_setup
+            PRIVATE
+                Boost::asio
         )
     endif()
 
