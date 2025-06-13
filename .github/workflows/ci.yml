@@ -571,7 +571,11 @@ jobs:
             cxxstd: "14,17,latest"
             os: windows-2022
           - toolset: gcc
-            cxxstd: "11-gnu,14-gnu,17-gnu,20-gnu,23-gnu"
+            cxxstd: "11-gnu"
+            os: windows-2022
+            extra_tests: 1
+          - toolset: gcc
+            cxxstd: "14-gnu,17-gnu,20-gnu,23-gnu"
             os: windows-2022
 
           - name: CMake MSVC tests
