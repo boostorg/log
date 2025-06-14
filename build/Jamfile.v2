@@ -72,7 +72,6 @@ constant boost_log_private_deps :
     <library>/boost/exception//boost_exception
     <library>/boost/interprocess//boost_interprocess
     <library>/boost/optional//boost_optional
-    <library>/boost/random//boost_random
     <library>/boost/spirit//boost_spirit
     <conditional>@log-build-config.check-asio
     [ requires

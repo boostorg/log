@@ -505,7 +505,6 @@ target_link_libraries(boost_log
         Boost::exception
         Boost::interprocess
         Boost::optional
-        Boost::random
         Boost::spirit
         ${boost_log_regex_backend_private_libs}
 )
