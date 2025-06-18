@@ -23,18 +23,18 @@ import predef ;
 using mc ;
 
 # Windows libs
-searched-lib psapi ;
-searched-lib advapi32 ;
-searched-lib secur32 ;
-searched-lib ws2_32 ;
-searched-lib mswsock ;
+lib psapi ;
+lib advapi32 ;
+lib secur32 ;
+lib ws2_32 ;
+lib mswsock ;
 explicit psapi advapi32 secur32 ws2_32 mswsock ;
 
 # UNIX libs
-searched-lib rt ;
-searched-lib socket ;
-searched-lib nsl ;
-searched-lib ipv6 ;
+lib rt ;
+lib socket ;
+lib nsl ;
+lib ipv6 ;
 explicit rt socket nsl ipv6 ;
 
 constant boost_log_public_deps :
