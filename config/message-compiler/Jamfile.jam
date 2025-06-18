@@ -6,7 +6,7 @@
 #
 
 import project ;
-import log-platform-config ;
+import ../../build/log-platform-config ;
 using mc ;
 
 project
