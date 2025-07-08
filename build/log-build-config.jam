@@ -131,7 +131,7 @@ rule check-asio ( properties * )
 
     if ! [ has-config-flag BOOST_LOG_WITHOUT_ASIO : $(properties) ]
     {
-        result = <library>/boost/asio//boost_asio ;
+        result = <library>/boost/asio//boost_asio_core ;
     }
 
     return $(result) ;
