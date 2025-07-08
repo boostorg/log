@@ -87,6 +87,8 @@
 [import ../example/doc/expressions_keyword_fmt_tag.cpp]
 [import ../example/doc/expressions_has_attr_stat_accum.cpp]
 [import ../example/doc/expressions_channel_severity_filter.cpp]
+[import ../example/doc/expressions_filter_adapt_function.cpp]
+[import ../example/doc/expressions_wrap_filter.cpp]
 [import ../example/doc/sources_net_connection.cpp]
 [import ../example/doc/sources_net_connection_chan.cpp]
 [import ../example/doc/sources_net_connection_dynamic_chan.cpp]

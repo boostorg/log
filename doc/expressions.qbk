@@ -1,5 +1,5 @@
 [/
-              Copyright Andrey Semashev 2007 - 2022.
+              Copyright Andrey Semashev 2007 - 2025.
      Distributed under the Boost Software License, Version 1.0.
         (See accompanying file LICENSE_1_0.txt or copy at
               http://www.boost.org/LICENSE_1_0.txt)
@@ -259,6 +259,42 @@ This filter is implemented for Windows only. The `is_debugger_present` filter re
 [example_sinks_debugger]
 
 [@boost:/libs/log/example/doc/sinks_debugger.cpp See the complete code].
+
+[endsect]
+
+[section:wrap_filter Injecting user-defined functions in filtering expressions]
+
+    #include <``[boost_log_expressions_predicates_wrap_filter_hpp]``>
+
+Users may want to combine their custom filtering function objects with the filters provided by Boost.Log. In order to be able to integrate the user-defined function into a filtering expression, the function must be adapted as a __boost_phoenix__ function object. One way to do this is to use one of the [@https://www.boost.org/doc/libs/release/libs/phoenix/doc/html/phoenix/modules/function/adapting_functions.html macros] provided by __boost_phoenix__ to create a lazy function for the user's filtering function. For example:
+
+[example_expressions_filter_adapt_function]
+
+[@boost:/libs/log/example/doc/expressions_filter_adapt_function.cpp See the complete code].
+
+Here, using the `BOOST_PHOENIX_ADAPT_FUNCTION` macro we created a `lazy::my_filter` factory function that, when called, creates a function object that is compatible with __boost_phoenix__ template expressions. This created function object becomes part of the filtering expression and, when invoked during log record filtering, will forward the call to the wrapped `my_filter` function defined by the user. The `_1` placeholder in the filtering expression designates the set of attribute values that will be forwarded to the `my_filter` function. The function must return `true` to indicate that the log record passed the filter and `false` otherwise.
+
+[tip It is also possible to use [@https://www.boost.org/doc/libs/release/libs/phoenix/doc/html/phoenix/modules/bind.html `boost::phoenix::bind`] instead of the `BOOST_PHOENIX_ADAPT_*` macros. `boost::phoenix::bind` also creates a function object that can integrate with __boost_phoenix__ expressions:
+
+```
+logging::add_console_log
+(
+    std::clog,
+    keywords::filter =
+        severity >= critical || boost::phoenix::bind(&my_filter, boost::phoenix::placeholders::_1),
+    keywords::format =
+        expr::stream << "<" << severity << "> [" << channel << "] " << expr::smessage
+);
+```
+]
+
+However, Boost.Log provides a dedicated [funcref boost::log::expressions::wrap_filter `wrap_filter`] utility that removes the need to create a factory function or specify argument placeholders. The function wraps user-defined function object and enables it to participate in filtering expressions. The above example can be simplified as follows:
+
+[example_expressions_wrap_filter]
+
+[@boost:/libs/log/example/doc/expressions_wrap_filter.cpp See the complete code].
+
+Note that `wrap_filter` allows for wrapping arbitrary function objects, including C++11 lambda functions, as long as the wrapped function object is callable with a single argument of type `attribute_value_set` and returns a value convertible to `bool`.
 
 [endsect]
 
