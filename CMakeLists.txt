@@ -527,7 +527,7 @@ endif()
 if (NOT BOOST_LOG_WITHOUT_ASIO)
     target_link_libraries(boost_log
         PRIVATE
-            Boost::asio
+            Boost::asio_core
     )
 endif()
 
@@ -654,7 +654,7 @@ if (NOT BOOST_LOG_WITHOUT_SETTINGS_PARSERS)
     if (NOT BOOST_LOG_WITHOUT_ASIO)
         target_link_libraries(boost_log_setup
             PRIVATE
-                Boost::asio
+                Boost::asio_core
         )
     endif()
 
