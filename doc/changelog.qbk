@@ -9,6 +9,10 @@
 
 [section:changelog Changelog]
 
+[heading 2.33, Boost 1.90]
+
+* Fixed a missed optimization in `value_ref` visitation.
+
 [heading 2.32, Boost 1.89]
 
 * Added support for `BOOST_LOG_WITHOUT_ASIO` configuration macro, which can be used to remove the dependency on __boost_asio__ and disable the related functionality.
