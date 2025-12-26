@@ -103,8 +103,8 @@
 #   define BOOST_LOG_NO_CXX11_CODECVT_FACETS
 #endif
 
-#if defined(__CYGWIN__) && !defined(BOOST_LOG_WITHOUT_ASIO)
-    // Boost.ASIO is broken on Cygwin
+#if defined(__CYGWIN__) && defined(__LP64__) && !defined(BOOST_LOG_WITHOUT_ASIO)
+    // Boost.ASIO is broken on Cygwin64
 #   define BOOST_LOG_WITHOUT_ASIO
 #endif
 

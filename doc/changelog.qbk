@@ -12,6 +12,7 @@
 [heading 2.34, Boost 1.91]
 
 * Enabled building interprocess communication support on Cygwin by default.
+* Enabled building Boost.ASIO support on Cygwin32 (but not Cygwin64).
 
 [heading 2.33, Boost 1.90]
 
