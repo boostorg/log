@@ -188,7 +188,9 @@ public:
         catch (exception& e)
         {
             // Attach the attribute name to the exception
+#ifndef BOOST_NO_EXCEPTIONS
             boost::log::aux::attach_attribute_name_info(e, name);
+#endif
             throw;
         }
     }
