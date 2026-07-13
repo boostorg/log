@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2021.
+ *          Copyright Andrey Semashev 2007 - 2026.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -71,11 +71,16 @@ BOOST_LOG_API void atomic_based_event::wait()
 //! Sets the object to a signalled state
 BOOST_LOG_API void atomic_based_event::set_signalled()
 {
-    if (m_state.load(boost::memory_order_relaxed) != 0u)
-    {
-        boost::atomic_thread_fence(boost::memory_order_release);
-    }
-    else if (m_state.exchange(1u, boost::memory_order_release) == 0u)
+    // This must be an unconditional read-modify-write, not a load with an
+    // "already signalled, skip the notify" fast path. The event is paired with
+    // external predicates (unbounded_fifo_queue's interruption flag and queue
+    // contents) that the caller publishes before this call, so a load-only fast
+    // path could observe a stale non-zero m_state (StoreLoad reordering on x86)
+    // or skip the notify while a concurrent wait() consumes the prior signal --
+    // either way the waiter re-parks with the wakeup lost. The exchange is a
+    // full barrier, ordered with wait()'s exchange in m_state's modification
+    // order, so a notify is guaranteed whenever the prior signal was consumed.
+    if (m_state.exchange(1u, boost::memory_order_acq_rel) == 0u)
     {
         m_state.notify_one();
     }
@@ -185,11 +190,12 @@ BOOST_LOG_API void winapi_based_event::wait()
 //! Sets the object to a signalled state
 BOOST_LOG_API void winapi_based_event::set_signalled()
 {
-    if (m_state.load(boost::memory_order_relaxed) != 0u)
-    {
-        boost::atomic_thread_fence(boost::memory_order_release);
-    }
-    else if (m_state.exchange(1u, boost::memory_order_release) == 0u)
+    // Unconditional read-modify-write, for the same reason as
+    // atomic_based_event::set_signalled (see the comment there). Both sub-paths
+    // are affected: the auto-reset event's sticky signal does not rescue the
+    // kernel-event path, because a load-only fast path would skip SetEvent
+    // entirely rather than leave a pending kernel signal.
+    if (m_state.exchange(1u, boost::memory_order_acq_rel) == 0u)
     {
         if (!m_event)
         {
