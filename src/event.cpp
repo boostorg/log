@@ -133,11 +133,11 @@ BOOST_LOG_API void sem_based_event::set_signalled()
 //! Default constructor
 BOOST_LOG_API winapi_based_event::winapi_based_event() :
     m_state(0u),
-    m_event(NULL)
+    m_event(nullptr)
 {
     if (!m_state.has_native_wait_notify())
     {
-        m_event = CreateEventA(NULL, false, false, NULL);
+        m_event = CreateEventA(nullptr, false, false, nullptr);
         if (BOOST_UNLIKELY(!m_event))
         {
             const DWORD err = GetLastError();
