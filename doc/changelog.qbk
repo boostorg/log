@@ -1,5 +1,5 @@
 [/
-              Copyright Andrey Semashev 2007 - 2025.
+              Copyright Andrey Semashev 2007 - 2026.
      Distributed under the Boost Software License, Version 1.0.
         (See accompanying file LICENSE_1_0.txt or copy at
               http://www.boost.org/LICENSE_1_0.txt)
@@ -8,6 +8,10 @@
 /]
 
 [section:changelog Changelog]
+
+[heading 2.35, Boost 1.93]
+
+* Fixed a possible infinite wait in `asynchronous_sink::flush()` and `asynchronous_sink::stop()`, when `unbounded_fifo_queue` policy is used. The infinite wait was more likely to happen when the affected methods were called concurrently with feeding log records to the sink. ([github_issue 255])
 
 [heading 2.34, Boost 1.91]
 

@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2021.
+ *          Copyright Andrey Semashev 2007 - 2026.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -71,11 +71,7 @@ BOOST_LOG_API void atomic_based_event::wait()
 //! Sets the object to a signalled state
 BOOST_LOG_API void atomic_based_event::set_signalled()
 {
-    if (m_state.load(boost::memory_order_relaxed) != 0u)
-    {
-        boost::atomic_thread_fence(boost::memory_order_release);
-    }
-    else if (m_state.exchange(1u, boost::memory_order_release) == 0u)
+    if (m_state.exchange(1u, boost::memory_order_release) == 0u)
     {
         m_state.notify_one();
     }
@@ -185,11 +181,7 @@ BOOST_LOG_API void winapi_based_event::wait()
 //! Sets the object to a signalled state
 BOOST_LOG_API void winapi_based_event::set_signalled()
 {
-    if (m_state.load(boost::memory_order_relaxed) != 0u)
-    {
-        boost::atomic_thread_fence(boost::memory_order_release);
-    }
-    else if (m_state.exchange(1u, boost::memory_order_release) == 0u)
+    if (m_state.exchange(1u, boost::memory_order_release) == 0u)
     {
         if (!m_event)
         {
