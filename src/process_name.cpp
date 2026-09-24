@@ -168,11 +168,9 @@ BOOST_LOG_API std::string get_process_name()
 
     if (getexecpath(buf, sizeof(buf)) == 0)
         return filesystem::path(buf).filename().string();
-
-    return std::string();
-#else
-    return std::to_string(getpid());
 #endif
+
+    return std::to_string(getpid());
 }
 
 } // namespace aux
