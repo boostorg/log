@@ -148,6 +148,41 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 #include <boost/log/detail/footer.hpp>
 
+#elif defined(__OpenBSD__)
+
+#include <unistd.h>
+#include <sys/param.h>
+#include <boost/log/detail/header.hpp>
+
+namespace boost {
+
+BOOST_LOG_OPEN_NAMESPACE
+
+namespace aux {
+
+//! The function returns the current process name
+BOOST_LOG_API std::string get_process_name()
+{
+#if OpenBSD >= 202610
+    char buf[PATH_MAX];
+
+    if (getexecpath(buf, sizeof(buf)) == 0)
+        return filesystem::path(buf).filename().string();
+
+    return std::string();
+#else
+    return std::to_string(getpid());
+#endif
+}
+
+} // namespace aux
+
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
+
+} // namespace boost
+
+#include <boost/log/detail/footer.hpp>
+
 #else
 
 #include <unistd.h>
