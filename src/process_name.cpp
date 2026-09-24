@@ -44,16 +44,16 @@ BOOST_LOG_API std::string get_process_name()
     buf.resize(PATH_MAX);
     do
     {
-        unsigned int len = GetModuleFileNameW(NULL, &buf[0], static_cast< unsigned int >(buf.size()));
+        unsigned int len = GetModuleFileNameW(nullptr, &buf[0], static_cast< unsigned int >(buf.size()));
         if (len < buf.size())
         {
             buf.resize(len);
             break;
         }
 
-        buf.resize(buf.size() * 2);
+        buf.resize(buf.size() * 2u);
     }
-    while (buf.size() < 65536);
+    while (buf.size() < 65536u);
 
     return filesystem::path(buf).filename().string();
 }
@@ -127,10 +127,10 @@ namespace aux {
 BOOST_LOG_API std::string get_process_name()
 {
 #if defined(KERN_PROC_PATHNAME)
-    int mib[4] = { CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1 };
+    int mib[4u] = { CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1 };
     char buf[PATH_MAX] = {};
     size_t cb = sizeof(buf);
-    if (sysctl(mib, 4, buf, &cb, NULL, 0) == 0)
+    if (sysctl(mib, sizeof(mib) / sizeof(*mib), buf, &cb, nullptr, 0u) == 0)
         return filesystem::path(buf).filename().string();
 #endif
 
@@ -151,7 +151,14 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 #elif defined(__OpenBSD__)
 
 #include <unistd.h>
-#include <sys/param.h>
+#include <sys/param.h> // OpenBSD macro
+#if (OpenBSD < 202610)
+#include <stddef.h>
+#include <sys/sysctl.h>
+#if (OpenBSD <= 201411)
+#include <boost/filesystem/operations.hpp>
+#endif
+#endif
 #include <boost/log/detail/header.hpp>
 
 namespace boost {
@@ -163,12 +170,40 @@ namespace aux {
 //! The function returns the current process name
 BOOST_LOG_API std::string get_process_name()
 {
-#if OpenBSD >= 202610
+#if (OpenBSD >= 202610)
+    // OpenBSD 8.0 added getexecpath
     char buf[PATH_MAX];
 
     if (getexecpath(buf, sizeof(buf)) == 0)
         return filesystem::path(buf).filename().string();
-#endif
+#else // (OpenBSD >= 202610)
+#if (OpenBSD <= 201411)
+    // OpenBSD 5.6 was the last to support /proc filesystem.
+    // We still prefer it over sysctl(KERN_PROC) as the latter truncates executable name to 16 chars.
+    if (filesystem::exists("/proc/curproc/file"))
+        return filesystem::read_symlink("/proc/curproc/file").filename().string();
+#endif // (OpenBSD <= 201411)
+    // Note that we intentionally don't use getprogname() here as it is relying
+    // on argv, which may be spoofed and not reflect the actual executable
+    // name. Also, its usage is not thread-safe, as other threads may
+    // concurrently call setprogname() and modify or free the previous buffer
+    // that was used by getprogname(). This could happen concurrently with
+    // get_process_name() using the buffer returned by getprogname().
+    int mib[6u] =
+    {
+        CTL_KERN,
+        KERN_PROC,
+        KERN_PROC_PID,
+        static_cast< int >(getpid()),
+        static_cast< int >(sizeof(kinfo_proc)),
+        1 // number of kinfo_proc structures to return
+    };
+    kinfo_proc kp;
+    size_t len = sizeof(kp);
+
+    if (sysctl(mib, sizeof(mib) / sizeof(*mib), &kp, &len, nullptr, 0u) == 0)
+        return kp.p_comm;
+#endif // (OpenBSD >= 202610)
 
     return std::to_string(getpid());
 }
