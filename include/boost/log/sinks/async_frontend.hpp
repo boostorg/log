@@ -60,6 +60,7 @@ namespace sinks {
         queue_base_type(arg0),\
         m_pBackend(boost::make_shared< sink_backend_type >(arg0)),\
         m_ActiveOperation(idle),\
+        m_FlushWaiters(0u),\
         m_StopRequested(false),\
         m_FlushRequested(false)\
     {\
@@ -72,6 +73,7 @@ namespace sinks {
         queue_base_type(arg0),\
         m_pBackend(backend),\
         m_ActiveOperation(idle),\
+        m_FlushWaiters(0u),\
         m_StopRequested(false),\
         m_FlushRequested(false)\
     {\
@@ -86,6 +88,7 @@ namespace sinks {
         queue_base_type((BOOST_PP_ENUM_PARAMS_Z(z, n, arg))),\
         m_pBackend(boost::make_shared< sink_backend_type >(BOOST_PP_ENUM_PARAMS_Z(z, n, arg))),\
         m_ActiveOperation(idle),\
+        m_FlushWaiters(0u),\
         m_StopRequested(false),\
         m_FlushRequested(false)\
     {\
@@ -98,6 +101,7 @@ namespace sinks {
         queue_base_type((BOOST_PP_ENUM_PARAMS_Z(z, n, arg))),\
         m_pBackend(backend),\
         m_ActiveOperation(idle),\
+        m_FlushWaiters(0u),\
         m_StopRequested(false),\
         m_FlushRequested(false)\
     {\
@@ -185,6 +189,26 @@ private:
         BOOST_DELETED_FUNCTION(scoped_feeding_operation& operator= (scoped_feeding_operation const&))
     };
 
+    //! Tracks waiting flush callers under the frontend mutex
+    class scoped_flush_waiter
+    {
+    private:
+        unsigned int& m_Counter;
+
+    public:
+        explicit scoped_flush_waiter(unsigned int& counter) BOOST_NOEXCEPT : m_Counter(counter)
+        {
+            ++m_Counter;
+        }
+        ~scoped_flush_waiter()
+        {
+            --m_Counter;
+        }
+
+        BOOST_DELETED_FUNCTION(scoped_flush_waiter(scoped_flush_waiter const&))
+        BOOST_DELETED_FUNCTION(scoped_flush_waiter& operator= (scoped_flush_waiter const&))
+    };
+
     //! A scope guard that resets a flag on destructor
     class scoped_flag
     {
@@ -247,6 +271,8 @@ private:
 
     //! Currently active operation
     operation m_ActiveOperation;
+    //! Flush callers that can take over an unfinished request
+    unsigned int m_FlushWaiters;
     //! The flag indicates that the feeding loop has to be stopped
     boost::atomic< bool > m_StopRequested;
     //! The flag indicates that queue flush has been requested
@@ -266,6 +292,7 @@ public:
         base_type(true),
         m_pBackend(boost::make_shared< sink_backend_type >()),
         m_ActiveOperation(idle),
+        m_FlushWaiters(0u),
         m_StopRequested(false),
         m_FlushRequested(false)
     {
@@ -287,6 +314,7 @@ public:
         base_type(true),
         m_pBackend(backend),
         m_ActiveOperation(idle),
+        m_FlushWaiters(0u),
         m_StopRequested(false),
         m_FlushRequested(false)
     {
@@ -460,10 +488,11 @@ public:
             std::unique_lock< frontend_mutex_type > lock(base_type::frontend_mutex());
             if (static_cast< unsigned int >(m_ActiveOperation & feeding_records) != 0u)
             {
+                scoped_flush_waiter waiter(m_FlushWaiters);
                 // There is already a thread feeding records, let it do the job
                 m_FlushRequested.store(true, boost::memory_order_release);
                 queue_base_type::interrupt_dequeue();
-                while (!m_StopRequested.load(boost::memory_order_acquire) && m_FlushRequested.load(boost::memory_order_acquire))
+                while (m_ActiveOperation != idle && !m_StopRequested.load(boost::memory_order_acquire) && m_FlushRequested.load(boost::memory_order_acquire))
                     m_BlockCond.wait(lock);
 
                 // The condition may have been signalled when the feeding operation was finishing.
@@ -519,6 +548,9 @@ private:
             std::lock_guard< frontend_mutex_type > lock(base_type::frontend_mutex());
             m_ActiveOperation = idle;
             m_StopRequested.store(false, boost::memory_order_relaxed);
+            // A caller-driven flush can fail without another caller to finish its request.
+            if (m_FlushWaiters == 0u)
+                m_FlushRequested.store(false, boost::memory_order_relaxed);
             m_BlockCond.notify_all();
         }
         catch (...)
@@ -529,22 +561,27 @@ private:
     //! The record feeding loop
     void do_feed_records()
     {
+        bool flush_requested = m_FlushRequested.load(boost::memory_order_acquire);
         while (!m_StopRequested.load(boost::memory_order_acquire))
         {
             record_view rec;
+            flush_requested = m_FlushRequested.load(boost::memory_order_acquire);
             bool dequeued = false;
-            if (BOOST_LIKELY(!m_FlushRequested.load(boost::memory_order_acquire)))
+            if (BOOST_LIKELY(!flush_requested))
                 dequeued = queue_base_type::try_dequeue_ready(rec);
             else
                 dequeued = queue_base_type::try_dequeue(rec);
 
             if (dequeued)
                 base_type::feed_record(rec, m_BackendMutex, *m_pBackend);
+            else if (!flush_requested && m_FlushRequested.load(boost::memory_order_acquire))
+                continue;
             else
                 break;
         }
 
-        if (BOOST_UNLIKELY(m_FlushRequested.load(boost::memory_order_acquire)))
+        // Acknowledge only requests observed before the final dequeue attempt.
+        if (BOOST_UNLIKELY(flush_requested))
         {
             scoped_flag guard(base_type::frontend_mutex(), m_BlockCond, m_FlushRequested);
             base_type::flush_backend(m_BackendMutex, *m_pBackend);
