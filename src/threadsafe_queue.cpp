@@ -74,7 +74,7 @@ private:
 public:
     explicit threadsafe_queue_impl_generic(node_base* first_node)
     {
-        set_next(first_node, NULL);
+        first_node->next.store(NULL, boost::memory_order_relaxed);
         m_Head.node = m_Tail.node = first_node;
     }
 
@@ -106,7 +106,7 @@ public:
 
     void push(node_base* p)
     {
-        set_next(p, NULL);
+        p->next.store(NULL, boost::memory_order_relaxed);
         exclusive_lock_guard< mutex_type > lock(m_Tail.mutex);
         set_next(m_Tail.node, p);
         m_Tail.node = p;
