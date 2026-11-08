@@ -130,11 +130,12 @@ public:
 private:
     BOOST_FORCEINLINE static void set_next(node_base* p, node_base* next)
     {
-        p->next.store(next, boost::memory_order_relaxed);
+        // Publish payload writes and order this access before node reclamation.
+        p->next.store(next, boost::memory_order_release);
     }
     BOOST_FORCEINLINE static node_base* get_next(node_base* p)
     {
-        return p->next.load(boost::memory_order_relaxed);
+        return p->next.load(boost::memory_order_acquire);
     }
 
     // Copying and assignment are closed
