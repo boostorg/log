@@ -26,13 +26,13 @@
 
 #ifndef BOOST_LOG_NO_THREADS
 
+#include <cstddef>
 #include <new>
 #include <boost/assert.hpp>
 #include <boost/throw_exception.hpp>
 #include <boost/memory_order.hpp>
 #include <boost/atomic/atomic.hpp>
 #include <boost/align/aligned_alloc.hpp>
-#include <boost/type_traits/alignment_of.hpp>
 #include <boost/log/detail/adaptive_mutex.hpp>
 #include <boost/log/detail/locks.hpp>
 #include <boost/log/detail/header.hpp>
@@ -49,7 +49,7 @@ class threadsafe_queue_impl_generic :
 {
 private:
     //! Mutex type to be used
-    typedef adaptive_mutex mutex_type;
+    using mutex_type = adaptive_mutex;
 
     /*!
      * A structure that contains a pointer to the node and the associated mutex.
@@ -62,7 +62,7 @@ private:
         //! Lock for access synchronization
         mutex_type mutex;
         //  128 bytes padding is chosen to mitigate false sharing for NetBurst CPUs, which load two cache lines in one go.
-        unsigned char padding[128U - (sizeof(node_base*) + sizeof(mutex_type)) % 128U];
+        unsigned char padding[128u - (sizeof(node_base*) + sizeof(mutex_type)) % 128u];
     };
 
 private:
@@ -74,7 +74,7 @@ private:
 public:
     explicit threadsafe_queue_impl_generic(node_base* first_node)
     {
-        set_next(first_node, NULL);
+        first_node->next.store(static_cast< node_base* >(nullptr), boost::memory_order_relaxed);
         m_Head.node = m_Tail.node = first_node;
     }
 
@@ -95,7 +95,7 @@ public:
     {
         BOOST_ASSERT(m_Head.node == m_Tail.node);
         node_base* p = m_Head.node;
-        m_Head.node = m_Tail.node = NULL;
+        m_Head.node = m_Tail.node = nullptr;
         return p;
     }
 
@@ -106,16 +106,18 @@ public:
 
     void push(node_base* p)
     {
-        set_next(p, NULL);
+        p->next.store(static_cast< node_base* >(nullptr), boost::memory_order_relaxed);
         exclusive_lock_guard< mutex_type > lock(m_Tail.mutex);
-        set_next(m_Tail.node, p);
+        // Make sure the load from `next` in `try_pop` synchronizes-with this store so that all prior
+        // memory accesses to the node payload are visible to the consumer.
+        m_Tail.node->next.store(p, boost::memory_order_release);
         m_Tail.node = p;
     }
 
     bool try_pop(node_base*& node_to_free, node_base*& node_with_value)
     {
         exclusive_lock_guard< mutex_type > lock(m_Head.mutex);
-        node_base* next = get_next(m_Head.node);
+        node_base* next = m_Head.node->next.load(boost::memory_order_acquire);
         if (next)
         {
             // We have a node to pop
@@ -125,16 +127,6 @@ public:
         }
         else
             return false;
-    }
-
-private:
-    BOOST_FORCEINLINE static void set_next(node_base* p, node_base* next)
-    {
-        p->next.store(next, boost::memory_order_relaxed);
-    }
-    BOOST_FORCEINLINE static node_base* get_next(node_base* p)
-    {
-        return p->next.load(boost::memory_order_relaxed);
     }
 
     // Copying and assignment are closed
