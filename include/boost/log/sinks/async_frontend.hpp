@@ -462,7 +462,7 @@ public:
             {
                 // There is already a thread feeding records, let it do the job
                 m_FlushRequested.store(true, boost::memory_order_release);
-                queue_base_type::interrupt_dequeue();
+                interrupt_queue_for_flush(*this, 0);
                 while (!m_StopRequested.load(boost::memory_order_acquire) && m_FlushRequested.load(boost::memory_order_acquire))
                     m_BlockCond.wait(lock);
 
@@ -483,6 +483,19 @@ public:
 
 private:
 #ifndef BOOST_LOG_DOXYGEN_PASS
+    // Custom queues opt in by name; existing interruption overloads keep their semantics.
+    template< typename QueueT >
+    static auto interrupt_queue_for_flush(QueueT& queue, int) -> decltype(queue.interrupt_dequeue_for_flush(), void())
+    {
+        queue.interrupt_dequeue_for_flush();
+    }
+
+    template< typename QueueT >
+    static void interrupt_queue_for_flush(QueueT& queue, ...)
+    {
+        queue.interrupt_dequeue();
+    }
+
     //! The method spawns record feeding thread
     void start_feeding_thread()
     {

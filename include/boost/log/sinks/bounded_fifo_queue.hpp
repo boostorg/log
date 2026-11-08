@@ -170,12 +170,25 @@ protected:
         return false;
     }
 
-    //! Wakes a thread possibly blocked in the \c dequeue method
+    //! Interrupts blocked dequeueing and enqueueing threads
     void interrupt_dequeue()
+    {
+        interrupt_dequeue_impl(true);
+    }
+
+    //! Wakes the dequeueing thread without cancelling blocked enqueueing threads
+    void interrupt_dequeue_for_flush()
+    {
+        interrupt_dequeue_impl(false);
+    }
+
+private:
+    void interrupt_dequeue_impl(bool interrupt_enqueue)
     {
         std::lock_guard< mutex_type > lock(m_mutex);
         m_interruption_requested = true;
-        overflow_strategy::interrupt();
+        if (interrupt_enqueue)
+            overflow_strategy::interrupt();
         m_cond.notify_one();
     }
 };
