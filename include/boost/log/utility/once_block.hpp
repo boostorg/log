@@ -17,6 +17,10 @@
 
 #include <boost/log/detail/config.hpp>
 #include <boost/log/utility/unique_identifier_name.hpp>
+#ifndef BOOST_LOG_NO_THREADS
+#include <boost/atomic/atomic.hpp>
+#include <boost/memory_order.hpp>
+#endif
 #include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_HAS_PRAGMA_ONCE
@@ -57,7 +61,7 @@ struct once_block_flag
         being_initialized,
         initialized
     };
-    unsigned char status;
+    boost::atomic< unsigned char > status;
 #endif // BOOST_LOG_DOXYGEN_PASS
 };
 
@@ -66,7 +70,7 @@ struct once_block_flag
  *
  * The static initializer for \c once_block_flag.
  */
-#define BOOST_LOG_ONCE_BLOCK_INIT { boost::log::once_block_flag::uninitialized }
+#define BOOST_LOG_ONCE_BLOCK_INIT {}
 
 namespace aux {
 
@@ -82,13 +86,15 @@ public:
 
     ~once_block_sentry() BOOST_NOEXCEPT
     {
-        if (BOOST_UNLIKELY(m_flag.status != once_block_flag::initialized))
+        // This read only decides rollback; executed() acquires completed initialization.
+        const unsigned char status = m_flag.status.load(boost::memory_order_relaxed);
+        if (BOOST_UNLIKELY(status != once_block_flag::initialized))
             rollback();
     }
 
     bool executed() const BOOST_NOEXCEPT
     {
-        return (m_flag.status == once_block_flag::initialized || enter_once_block());
+        return (m_flag.status.load(boost::memory_order_acquire) == once_block_flag::initialized || enter_once_block());
     }
 
     BOOST_LOG_API void commit() BOOST_NOEXCEPT;
