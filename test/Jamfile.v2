@@ -94,7 +94,14 @@ rule test_all
     }
     for file in [ glob run/*.cpp ]
     {
-        all_rules += [ run $(file) ] ;
+        if [ path.basename $(file) ] = "util_ipc_windows_sync.cpp"
+        {
+            all_rules += [ run $(file) : : : <include>../src ] ;
+        }
+        else
+        {
+            all_rules += [ run $(file) ] ;
+        }
     }
 
     if ! [ os.environ BOOST_LOG_TEST_WITHOUT_EXAMPLES ]

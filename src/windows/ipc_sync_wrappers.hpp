@@ -1,5 +1,6 @@
 /*
  *              Copyright Andrey Semashev 2016.
+ *              Copyright David Christle 2026.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -139,7 +140,7 @@ private:
     auto_handle m_sem;
 
     static boost::atomic< is_semaphore_zero_count_t > is_semaphore_zero_count;
-    static nt_query_semaphore_t nt_query_semaphore;
+    static boost::atomic< nt_query_semaphore_t > nt_query_semaphore;
 
 public:
     void create_or_open(const wchar_t* name, permissions const& perms = permissions());
@@ -392,6 +393,8 @@ private:
 
         //! The semaphore
         interprocess_semaphore m_semaphore;
+        //! Number of local waiters that may still use the semaphore handle
+        boost::atomic< uint32_t > m_local_waiters;
         //! Timestamp of the moment when the semaphore was checked for zero count and it was not zero. In milliseconds since epoch.
         tick_count_clock::time_point m_last_check_for_zero;
         //! The flag indicates that the semaphore has been checked for zero count and it was not zero
@@ -399,7 +402,11 @@ private:
         //! The semaphore id
         const uint32_t m_id;
 
-        explicit semaphore_info(uint32_t id) BOOST_NOEXCEPT : m_last_check_for_zero(0u), m_id(id)
+        explicit semaphore_info(uint32_t id) BOOST_NOEXCEPT :
+            m_local_waiters(0u),
+            m_last_check_for_zero(0u),
+            m_checked_for_zero(false),
+            m_id(id)
         {
         }
 
@@ -418,6 +425,25 @@ private:
 
         BOOST_DELETED_FUNCTION(semaphore_info(semaphore_info const&))
         BOOST_DELETED_FUNCTION(semaphore_info& operator=(semaphore_info const&))
+    };
+
+    struct semaphore_waiter
+    {
+        explicit semaphore_waiter(semaphore_info& info) BOOST_NOEXCEPT : m_info(info)
+        {
+            m_info.m_local_waiters.fetch_add(1u, boost::memory_order_relaxed);
+        }
+
+        ~semaphore_waiter() BOOST_NOEXCEPT
+        {
+            m_info.m_local_waiters.fetch_sub(1u, boost::memory_order_release);
+        }
+
+        BOOST_DELETED_FUNCTION(semaphore_waiter(semaphore_waiter const&))
+        BOOST_DELETED_FUNCTION(semaphore_waiter& operator=(semaphore_waiter const&))
+
+    private:
+        semaphore_info& m_info;
     };
 
     typedef boost::intrusive::list<

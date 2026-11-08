@@ -1,5 +1,6 @@
 /*
  *              Copyright Andrey Semashev 2016.
+ *              Copyright David Christle 2026.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -130,7 +131,8 @@ void interprocess_event::open(const wchar_t* name)
 }
 
 boost::atomic< interprocess_semaphore::is_semaphore_zero_count_t > interprocess_semaphore::is_semaphore_zero_count(&interprocess_semaphore::is_semaphore_zero_count_init);
-interprocess_semaphore::nt_query_semaphore_t interprocess_semaphore::nt_query_semaphore = NULL;
+// The dispatcher publishes this pointer; initialization can still run concurrently.
+boost::atomic< interprocess_semaphore::nt_query_semaphore_t > interprocess_semaphore::nt_query_semaphore(NULL);
 
 void interprocess_semaphore::create_or_open(const wchar_t* name, permissions const& perms)
 {
@@ -193,7 +195,7 @@ bool interprocess_semaphore::is_semaphore_zero_count_init(boost::winapi::HANDLE_
         nt_query_semaphore_t ntqs = (nt_query_semaphore_t)boost::winapi::get_proc_address(ntdll, "NtQuerySemaphore");
         if (ntqs)
         {
-            nt_query_semaphore = ntqs;
+            nt_query_semaphore.store(ntqs, boost::memory_order_relaxed);
             impl = &interprocess_semaphore::is_semaphore_zero_count_nt_query_semaphore;
         }
     }
@@ -206,7 +208,7 @@ bool interprocess_semaphore::is_semaphore_zero_count_init(boost::winapi::HANDLE_
 bool interprocess_semaphore::is_semaphore_zero_count_nt_query_semaphore(boost::winapi::HANDLE_ h)
 {
     semaphore_basic_information info = {};
-    NTSTATUS_ err = nt_query_semaphore
+    NTSTATUS_ err = nt_query_semaphore.load(boost::memory_order_relaxed)
     (
         h,
         0u, // SemaphoreBasicInformation
@@ -372,6 +374,7 @@ bool interprocess_condition_variable::wait(interprocess_mutex::optional_unlock& 
     m_shared_state->m_waiters = waiters + 1;
     const uint32_t generation = m_shared_state->m_generation;
 
+    semaphore_waiter waiter(*m_current_semaphore);
     boost::winapi::HANDLE_ handles[2u] = { m_current_semaphore->m_semaphore.get_handle(), abort_handle };
 
     interprocess_mutex* const mutex = lock.disengage();
@@ -383,15 +386,7 @@ bool interprocess_condition_variable::wait(interprocess_mutex::optional_unlock& 
     {
         const boost::winapi::DWORD_ err = boost::winapi::GetLastError();
 
-        // Although highly unrealistic, it is possible that it took so long for the current thread to enter WaitForMultipleObjects that
-        // another thread has managed to destroy the semaphore. This can happen if the semaphore remains in a non-zero state
-        // for too long, which means that another process died while being blocked on the semaphore, and the semaphore was signalled,
-        // and the non-zero state timeout has passed. In this case the most logical behavior for the wait function is to return as
-        // if because of a wakeup.
-        if (err == ERROR_INVALID_HANDLE)
-            retval = boost::winapi::WAIT_OBJECT_0_;
-        else
-            BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, "Failed to block on an interprocess semaphore object", (err));
+        BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, "Failed to block on an interprocess semaphore object", (err));
     }
 
     // Have to unconditionally lock the mutex here
@@ -457,7 +452,7 @@ interprocess_condition_variable::semaphore_info* interprocess_condition_variable
             mark_unused(info);
             return &info;
         }
-        else if (it->check_non_zero_timeout(now))
+        else if (it->m_local_waiters.load(boost::memory_order_acquire) == 0u && it->check_non_zero_timeout(now))
         {
             // The semaphore is non-zero for too long. A blocked process must have crashed. Close it.
             m_semaphore_info_set.erase(m_semaphore_info_set.iterator_to(*it));
