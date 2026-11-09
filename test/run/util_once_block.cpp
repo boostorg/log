@@ -22,6 +22,7 @@
 #if !defined(BOOST_LOG_NO_THREADS)
 
 #include <mutex>
+#include <atomic>
 #include <thread>
 #include "test_barrier.hpp"
 
@@ -149,6 +150,48 @@ BOOST_AUTO_TEST_CASE(once_block)
     BOOST_CHECK_EQUAL(var_to_init_once, 1);
 }
 
+
+BOOST_AUTO_TEST_CASE(once_block_publishes_initialized_data)
+{
+    logging::once_block_flag local_flag = BOOST_LOG_ONCE_BLOCK_INIT;
+    std::atomic< bool > initialized(false);
+    unsigned int value = 0u;
+    unsigned int observed = 0u;
+
+    std::thread initializer([&]()
+    {
+        BOOST_LOG_ONCE_BLOCK_FLAG(local_flag)
+        {
+            value = 42u;
+        }
+        initialized.store(true, std::memory_order_relaxed);
+    });
+
+    try
+    {
+        std::thread reader([&]()
+        {
+            // Scheduling must not publish the value independently of the once-block.
+            while (!initialized.load(std::memory_order_relaxed))
+                std::this_thread::yield();
+
+            BOOST_LOG_ONCE_BLOCK_FLAG(local_flag)
+            {
+                value = 43u;
+            }
+            observed = value;
+        });
+        reader.join();
+    }
+    catch (...)
+    {
+        initializer.join();
+        throw;
+    }
+
+    initializer.join();
+    BOOST_CHECK_EQUAL(observed, 42u);
+}
 
 struct my_exception
 {

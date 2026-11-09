@@ -49,12 +49,12 @@ BOOST_LOG_API bool once_block_sentry::enter_once_block() const BOOST_NOEXCEPT
 {
     boost::winapi::AcquireSRWLockExclusive(&g_OnceBlockMutex);
 
-    once_block_flag volatile& flag = m_flag;
-    while (flag.status != once_block_flag::initialized)
+    once_block_flag& flag = m_flag;
+    while (flag.status.load(boost::memory_order_relaxed) != once_block_flag::initialized)
     {
-        if (flag.status == once_block_flag::uninitialized)
+        if (flag.status.load(boost::memory_order_relaxed) == once_block_flag::uninitialized)
         {
-            flag.status = once_block_flag::being_initialized;
+            flag.status.store(once_block_flag::being_initialized, boost::memory_order_relaxed);
             boost::winapi::ReleaseSRWLockExclusive(&g_OnceBlockMutex);
 
             // Invoke the initializer block
@@ -62,7 +62,7 @@ BOOST_LOG_API bool once_block_sentry::enter_once_block() const BOOST_NOEXCEPT
         }
         else
         {
-            while (flag.status == once_block_flag::being_initialized)
+            while (flag.status.load(boost::memory_order_relaxed) == once_block_flag::being_initialized)
             {
                 BOOST_VERIFY(boost::winapi::SleepConditionVariableSRW(
                     &g_OnceBlockCond, &g_OnceBlockMutex, boost::winapi::INFINITE_, 0));
@@ -80,7 +80,7 @@ BOOST_LOG_API void once_block_sentry::commit() BOOST_NOEXCEPT
     boost::winapi::AcquireSRWLockExclusive(&g_OnceBlockMutex);
 
     // The initializer executed successfully
-    m_flag.status = once_block_flag::initialized;
+    m_flag.status.store(once_block_flag::initialized, boost::memory_order_release);
 
     boost::winapi::ReleaseSRWLockExclusive(&g_OnceBlockMutex);
     boost::winapi::WakeAllConditionVariable(&g_OnceBlockCond);
@@ -91,7 +91,7 @@ BOOST_LOG_API void once_block_sentry::rollback() BOOST_NOEXCEPT
     boost::winapi::AcquireSRWLockExclusive(&g_OnceBlockMutex);
 
     // The initializer failed, marking the flag as if it hasn't run at all
-    m_flag.status = once_block_flag::uninitialized;
+    m_flag.status.store(once_block_flag::uninitialized, boost::memory_order_relaxed);
 
     boost::winapi::ReleaseSRWLockExclusive(&g_OnceBlockMutex);
     boost::winapi::WakeAllConditionVariable(&g_OnceBlockCond);
@@ -126,7 +126,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
     struct BOOST_LOG_NO_VTABLE once_block_impl_base
     {
         virtual ~once_block_impl_base() {}
-        virtual bool enter_once_block(once_block_flag volatile& flag) = 0;
+        virtual bool enter_once_block(once_block_flag& flag) = 0;
         virtual void commit(once_block_flag& flag) = 0;
         virtual void rollback(once_block_flag& flag) = 0;
     };
@@ -172,15 +172,15 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
             pInitializeConditionVariable(&m_Cond);
         }
 
-        bool enter_once_block(once_block_flag volatile& flag)
+        bool enter_once_block(once_block_flag& flag)
         {
             m_pAcquireSRWLockExclusive(&m_Mutex);
 
-            while (flag.status != once_block_flag::initialized)
+            while (flag.status.load(boost::memory_order_relaxed) != once_block_flag::initialized)
             {
-                if (flag.status == once_block_flag::uninitialized)
+                if (flag.status.load(boost::memory_order_relaxed) == once_block_flag::uninitialized)
                 {
-                    flag.status = once_block_flag::being_initialized;
+                    flag.status.store(once_block_flag::being_initialized, boost::memory_order_relaxed);
                     m_pReleaseSRWLockExclusive(&m_Mutex);
 
                     // Invoke the initializer block
@@ -188,7 +188,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
                 }
                 else
                 {
-                    while (flag.status == once_block_flag::being_initialized)
+                    while (flag.status.load(boost::memory_order_relaxed) == once_block_flag::being_initialized)
                     {
                         BOOST_VERIFY(m_pSleepConditionVariableSRW(
                             &m_Cond, &m_Mutex, boost::winapi::INFINITE_, 0));
@@ -206,7 +206,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
             m_pAcquireSRWLockExclusive(&m_Mutex);
 
             // The initializer executed successfully
-            flag.status = once_block_flag::initialized;
+            flag.status.store(once_block_flag::initialized, boost::memory_order_release);
 
             m_pReleaseSRWLockExclusive(&m_Mutex);
             m_pWakeAllConditionVariable(&m_Cond);
@@ -217,7 +217,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
             m_pAcquireSRWLockExclusive(&m_Mutex);
 
             // The initializer failed, marking the flag as if it hasn't run at all
-            flag.status = once_block_flag::uninitialized;
+            flag.status.store(once_block_flag::uninitialized, boost::memory_order_relaxed);
 
             m_pReleaseSRWLockExclusive(&m_Mutex);
             m_pWakeAllConditionVariable(&m_Cond);
@@ -232,22 +232,22 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         std::condition_variable m_Cond;
 
     public:
-        bool enter_once_block(once_block_flag volatile& flag)
+        bool enter_once_block(once_block_flag& flag)
         {
             std::unique_lock< std::mutex > lock(m_Mutex);
 
-            while (flag.status != once_block_flag::initialized)
+            while (flag.status.load(boost::memory_order_relaxed) != once_block_flag::initialized)
             {
-                if (flag.status == once_block_flag::uninitialized)
+                if (flag.status.load(boost::memory_order_relaxed) == once_block_flag::uninitialized)
                 {
-                    flag.status = once_block_flag::being_initialized;
+                    flag.status.store(once_block_flag::being_initialized, boost::memory_order_relaxed);
 
                     // Invoke the initializer block
                     return false;
                 }
                 else
                 {
-                    while (flag.status == once_block_flag::being_initialized)
+                    while (flag.status.load(boost::memory_order_relaxed) == once_block_flag::being_initialized)
                     {
                         m_Cond.wait(lock);
                     }
@@ -261,7 +261,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         {
             {
                 std::lock_guard< std::mutex > lock(m_Mutex);
-                flag.status = once_block_flag::initialized;
+                flag.status.store(once_block_flag::initialized, boost::memory_order_release);
             }
             m_Cond.notify_all();
         }
@@ -270,7 +270,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         {
             {
                 std::lock_guard< std::mutex > lock(m_Mutex);
-                flag.status = once_block_flag::uninitialized;
+                flag.status.store(once_block_flag::uninitialized, boost::memory_order_relaxed);
             }
             m_Cond.notify_all();
         }
@@ -408,12 +408,12 @@ BOOST_LOG_API bool once_block_sentry::enter_once_block() const BOOST_NOEXCEPT
 {
     BOOST_VERIFY(!pthread_mutex_lock(&g_OnceBlockMutex));
 
-    once_block_flag volatile& flag = m_flag;
-    while (flag.status != once_block_flag::initialized)
+    once_block_flag& flag = m_flag;
+    while (flag.status.load(boost::memory_order_relaxed) != once_block_flag::initialized)
     {
-        if (flag.status == once_block_flag::uninitialized)
+        if (flag.status.load(boost::memory_order_relaxed) == once_block_flag::uninitialized)
         {
-            flag.status = once_block_flag::being_initialized;
+            flag.status.store(once_block_flag::being_initialized, boost::memory_order_relaxed);
             BOOST_VERIFY(!pthread_mutex_unlock(&g_OnceBlockMutex));
 
             // Invoke the initializer block
@@ -421,7 +421,7 @@ BOOST_LOG_API bool once_block_sentry::enter_once_block() const BOOST_NOEXCEPT
         }
         else
         {
-            while (flag.status == once_block_flag::being_initialized)
+            while (flag.status.load(boost::memory_order_relaxed) == once_block_flag::being_initialized)
             {
                 BOOST_VERIFY(!pthread_cond_wait(&g_OnceBlockCond, &g_OnceBlockMutex));
             }
@@ -438,7 +438,7 @@ BOOST_LOG_API void once_block_sentry::commit() BOOST_NOEXCEPT
     BOOST_VERIFY(!pthread_mutex_lock(&g_OnceBlockMutex));
 
     // The initializer executed successfully
-    m_flag.status = once_block_flag::initialized;
+    m_flag.status.store(once_block_flag::initialized, boost::memory_order_release);
 
     BOOST_VERIFY(!pthread_mutex_unlock(&g_OnceBlockMutex));
     BOOST_VERIFY(!pthread_cond_broadcast(&g_OnceBlockCond));
@@ -449,7 +449,7 @@ BOOST_LOG_API void once_block_sentry::rollback() BOOST_NOEXCEPT
     BOOST_VERIFY(!pthread_mutex_lock(&g_OnceBlockMutex));
 
     // The initializer failed, marking the flag as if it hasn't run at all
-    m_flag.status = once_block_flag::uninitialized;
+    m_flag.status.store(once_block_flag::uninitialized, boost::memory_order_relaxed);
 
     BOOST_VERIFY(!pthread_mutex_unlock(&g_OnceBlockMutex));
     BOOST_VERIFY(!pthread_cond_broadcast(&g_OnceBlockCond));
