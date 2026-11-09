@@ -18,8 +18,8 @@
 #include <boost/log/detail/config.hpp>
 #include <boost/log/utility/unique_identifier_name.hpp>
 #ifndef BOOST_LOG_NO_THREADS
-#include <boost/atomic/atomic.hpp>
 #include <boost/memory_order.hpp>
+#include <boost/atomic/atomic.hpp>
 #endif
 #include <boost/log/detail/header.hpp>
 
