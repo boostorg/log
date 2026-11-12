@@ -65,7 +65,7 @@ bool g_done = false;
 /*!
  * \brief An implementation of a test logging sink backend
  *
- * The sink backend does not do anything with the log records it receives.
+ * The sink backend counts the number of received records and checks their order.
  */
 class test_checking_backend :
     public sinks::basic_sink_backend< sinks::synchronized_feeding >
