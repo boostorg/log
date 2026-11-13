@@ -41,6 +41,7 @@
 #include <boost/log/core/record_view.hpp>
 #include <boost/log/sinks/basic_sink_frontend.hpp>
 #include <boost/log/sinks/frontend_requirements.hpp>
+#include <boost/log/sinks/queue_unblocking_flags.hpp>
 #include <boost/log/sinks/unbounded_fifo_queue.hpp>
 #include <boost/log/keywords/start_thread.hpp>
 #include <boost/log/detail/header.hpp>
@@ -420,7 +421,7 @@ public:
             std::lock_guard< frontend_mutex_type > lock(base_type::frontend_mutex());
 
             m_StopRequested.store(true, boost::memory_order_release);
-            queue_base_type::interrupt_dequeue();
+            queue_base_type::interrupt(queue_unblocking_flags::dequeue_one | queue_unblocking_flags::enqueue_all);
 
             m_DedicatedFeedingThread.swap(feeding_thread);
         }
@@ -462,7 +463,7 @@ public:
             {
                 // There is already a thread feeding records, let it do the job
                 m_FlushRequested.store(true, boost::memory_order_release);
-                queue_base_type::interrupt_dequeue();
+                queue_base_type::interrupt(queue_unblocking_flags::dequeue_one);
                 while (!m_StopRequested.load(boost::memory_order_acquire) && m_FlushRequested.load(boost::memory_order_acquire))
                     m_BlockCond.wait(lock);
 

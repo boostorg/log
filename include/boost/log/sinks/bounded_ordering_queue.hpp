@@ -36,6 +36,7 @@
 #include <boost/log/keywords/order.hpp>
 #include <boost/log/keywords/ordering_window.hpp>
 #include <boost/log/core/record_view.hpp>
+#include <boost/log/sinks/queue_unblocking_flags.hpp>
 #include <boost/log/detail/header.hpp>
 
 namespace boost {
@@ -237,13 +238,21 @@ protected:
         return false;
     }
 
-    //! Wakes a thread possibly blocked in the \c dequeue method
-    void interrupt_dequeue()
+    //! Wakes threads possibly blocked in \c dequeue_ready and/or \c enqueue
+    void interrupt(queue_unblocking_flags flags)
     {
         std::lock_guard< mutex_type > lock(m_mutex);
-        m_interruption_requested = true;
-        overflow_strategy::interrupt();
-        m_cond.notify_one();
+
+        if ((flags & queue_unblocking_flags::enqueue_all) != queue_unblocking_flags::none)
+        {
+            overflow_strategy::interrupt();
+        }
+
+        if (BOOST_LIKELY((flags & queue_unblocking_flags::dequeue_one) != queue_unblocking_flags::none))
+        {
+            m_interruption_requested = true;
+            m_cond.notify_one();
+        }
     }
 };
 

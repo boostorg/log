@@ -31,6 +31,7 @@
 #include <boost/log/detail/event.hpp>
 #include <boost/log/detail/threadsafe_queue.hpp>
 #include <boost/log/core/record_view.hpp>
+#include <boost/log/sinks/queue_unblocking_flags.hpp>
 #include <boost/log/detail/header.hpp>
 
 namespace boost {
@@ -122,11 +123,14 @@ protected:
         }
     }
 
-    //! Wakes a thread possibly blocked in the \c dequeue method
-    void interrupt_dequeue()
+    //! Wakes threads possibly blocked in \c dequeue_ready
+    void interrupt(queue_unblocking_flags flags)
     {
-        m_interruption_requested.store(true, boost::memory_order_release);
-        m_event.set_signalled();
+        if (BOOST_LIKELY((flags & queue_unblocking_flags::dequeue_one) != queue_unblocking_flags::none))
+        {
+            m_interruption_requested.store(true, boost::memory_order_release);
+            m_event.set_signalled();
+        }
     }
 };
 
