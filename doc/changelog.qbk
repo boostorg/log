@@ -16,6 +16,7 @@
 * Added missing memory ordering on the fast path of once-blocks (see [macroref BOOST_LOG_ONCE_BLOCK_FLAG] macro). Previously, on weak memory order architectures, it was possible for the thread skipping the once-block on the fast path to observe stale data that should have been initialized by the once-block body. ([pull_request 261])
 * Fixed a possible log record loss in `asynchronous_sink` with a bounded blocking queueing strategy, if one or more log records are blocked due to queue capacity and a flush is invoked. The blocked log records could have been lost instead of being enqueued. ([pull_request 260])
 * Improved support for obtaining current process executable name on OpenBSD 5.7 and later. This affects the [link log.detailed.attributes.process_name `current_process_name`] attribute. ([pull_request 257])
+* On Windows, fixed a possible use of prematurely closed semaphore handle in [link log.detailed.utilities.ipc.reliable_message_queue inter-process message queue] implementation. ([pull_request 262])
 
 [heading 2.34, Boost 1.91]
 

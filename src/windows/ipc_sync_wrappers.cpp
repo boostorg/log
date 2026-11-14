@@ -348,6 +348,8 @@ inline void interprocess_mutex::clear_waiting_and_try_lock(uint32_t& old_state)
 
 bool interprocess_condition_variable::wait(interprocess_mutex::optional_unlock& lock, boost::winapi::HANDLE_ abort_handle)
 {
+    m_current_semaphore->recover_local_waiters();
+
     int32_t waiters = m_shared_state->m_waiters;
     if (waiters < 0)
     {
@@ -372,34 +374,45 @@ bool interprocess_condition_variable::wait(interprocess_mutex::optional_unlock& 
     m_shared_state->m_waiters = waiters + 1;
     const uint32_t generation = m_shared_state->m_generation;
 
-    boost::winapi::HANDLE_ handles[2u] = { m_current_semaphore->m_semaphore.get_handle(), abort_handle };
+    semaphore_info* const sem_info = m_current_semaphore;
+    ++sem_info->m_local_waiters;
+
+    boost::winapi::HANDLE_ handles[2u] = { sem_info->m_semaphore.get_handle(), abort_handle };
 
     interprocess_mutex* const mutex = lock.disengage();
     mutex->unlock();
 
     boost::winapi::DWORD_ retval = boost::winapi::WaitForMultipleObjects(2u, handles, false, boost::winapi::INFINITE_);
 
+    boost::winapi::DWORD_ err = 0u;
     if (BOOST_UNLIKELY(retval == boost::winapi::WAIT_FAILED_))
-    {
-        const boost::winapi::DWORD_ err = boost::winapi::GetLastError();
+        err = boost::winapi::GetLastError();
 
-        // Although highly unrealistic, it is possible that it took so long for the current thread to enter WaitForMultipleObjects that
-        // another thread has managed to destroy the semaphore. This can happen if the semaphore remains in a non-zero state
-        // for too long, which means that another process died while being blocked on the semaphore, and the semaphore was signalled,
-        // and the non-zero state timeout has passed. In this case the most logical behavior for the wait function is to return as
-        // if because of a wakeup.
-        if (err == ERROR_INVALID_HANDLE)
-            retval = boost::winapi::WAIT_OBJECT_0_;
-        else
-            BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, "Failed to block on an interprocess semaphore object", (err));
+    // Have to unconditionally lock the mutex here. If lock() throws, the shared state is left with a leaked writer counter.
+    // The next notifying operation will post this extra counter to the semaphore, which will never become zero and then
+    // will eventually be disposed of by get_unused_semaphore().
+    // For the local waiters, we increment the atomic counter of failed waiters so that a future wait call recovers the correct
+    // number of local waiters. This leaves the atomic operations off the successful path.
+    try
+    {
+        mutex->lock();
+        lock.engage(*mutex);
+    }
+    catch (...)
+    {
+        sem_info->m_local_failed_waiters.opaque_add(1u, boost::memory_order_relaxed);
+        throw;
     }
 
-    // Have to unconditionally lock the mutex here
-    mutex->lock();
-    lock.engage(*mutex);
+    --sem_info->m_local_waiters;
 
     if (generation == m_shared_state->m_generation && m_shared_state->m_waiters > 0)
         --m_shared_state->m_waiters;
+
+    if (BOOST_UNLIKELY(err != 0u))
+    {
+        BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, "Failed to block on an interprocess semaphore object", (err));
+    }
 
     return retval == boost::winapi::WAIT_OBJECT_0_;
 }
@@ -437,7 +450,7 @@ interprocess_condition_variable::semaphore_info* interprocess_condition_variable
 interprocess_condition_variable::semaphore_info* interprocess_condition_variable::get_unused_semaphore()
 {
     // Be optimistic, check the current semaphore first
-    if (m_current_semaphore && m_current_semaphore->m_semaphore.is_zero_count())
+    if (m_current_semaphore->m_semaphore.is_zero_count())
     {
         mark_unused(*m_current_semaphore);
         return m_current_semaphore;
@@ -451,13 +464,15 @@ interprocess_condition_variable::semaphore_info* interprocess_condition_variable
         if (is_overflow_less(m_next_semaphore_id, it->m_id) || m_next_semaphore_id == it->m_id)
             m_next_semaphore_id = it->m_id + 1u;
 
+        it->recover_local_waiters();
+
         if (it->m_semaphore.is_zero_count())
         {
             semaphore_info& info = *it;
             mark_unused(info);
             return &info;
         }
-        else if (it->check_non_zero_timeout(now))
+        else if (it->m_local_waiters == 0u && it->check_non_zero_timeout(now))
         {
             // The semaphore is non-zero for too long. A blocked process must have crashed. Close it.
             m_semaphore_info_set.erase(m_semaphore_info_set.iterator_to(*it));

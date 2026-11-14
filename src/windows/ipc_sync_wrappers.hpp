@@ -398,8 +398,17 @@ private:
         bool m_checked_for_zero;
         //! The semaphore id
         const uint32_t m_id;
+        //! Number of threads in the current process blocked on the semaphore
+        uint32_t m_local_waiters;
+        //! Number of threads in the current process that failed to re-lock the mutex after blocking on the semaphore. Must not be greater than `m_local_waiters`.
+        boost::atomic< uint32_t > m_local_failed_waiters;
 
-        explicit semaphore_info(uint32_t id) BOOST_NOEXCEPT : m_last_check_for_zero(0u), m_id(id)
+        explicit semaphore_info(uint32_t id) BOOST_NOEXCEPT :
+            m_last_check_for_zero(0u),
+            m_checked_for_zero(false),
+            m_id(id),
+            m_local_waiters(0u),
+            m_local_failed_waiters(0u)
         {
         }
 
@@ -414,6 +423,14 @@ private:
             }
 
             return (now - m_last_check_for_zero) >= 2000u;
+        }
+
+        //! Recovers the actual number of local waiters after a failed wait
+        void recover_local_waiters() BOOST_NOEXCEPT
+        {
+            // Do a fast load first for the fast path
+            if (BOOST_UNLIKELY(m_local_failed_waiters.load(boost::memory_order_relaxed) > 0u))
+                m_local_waiters -= m_local_failed_waiters.exchange(0u, boost::memory_order_relaxed);
         }
 
         BOOST_DELETED_FUNCTION(semaphore_info(semaphore_info const&))
