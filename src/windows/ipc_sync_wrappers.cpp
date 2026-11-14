@@ -1,5 +1,5 @@
 /*
- *              Copyright Andrey Semashev 2016.
+ *          Copyright Andrey Semashev 2016 - 2026.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -130,7 +130,8 @@ void interprocess_event::open(const wchar_t* name)
 }
 
 boost::atomic< interprocess_semaphore::is_semaphore_zero_count_t > interprocess_semaphore::is_semaphore_zero_count(&interprocess_semaphore::is_semaphore_zero_count_init);
-interprocess_semaphore::nt_query_semaphore_t interprocess_semaphore::nt_query_semaphore = NULL;
+boost::atomic< interprocess_semaphore::nt_query_semaphore_t >
+    interprocess_semaphore::nt_query_semaphore(static_cast< interprocess_semaphore::nt_query_semaphore_t >(nullptr));
 
 void interprocess_semaphore::create_or_open(const wchar_t* name, permissions const& perms)
 {
@@ -172,7 +173,12 @@ void interprocess_semaphore::create_or_open(const wchar_t* name, permissions con
 
 void interprocess_semaphore::open(const wchar_t* name)
 {
-    boost::winapi::HANDLE_ h = boost::winapi::OpenSemaphoreW(boost::winapi::SYNCHRONIZE_ | boost::winapi::SEMAPHORE_MODIFY_STATE_ | boost::winapi::SEMAPHORE_QUERY_STATE_, false, name);
+    boost::winapi::HANDLE_ h = boost::winapi::OpenSemaphoreW
+    (
+        boost::winapi::SYNCHRONIZE_ | boost::winapi::SEMAPHORE_MODIFY_STATE_ | boost::winapi::SEMAPHORE_QUERY_STATE_,
+        false,
+        name
+    );
     if (BOOST_UNLIKELY(h == NULL))
     {
         const boost::winapi::DWORD_ err = boost::winapi::GetLastError();
@@ -186,14 +192,15 @@ bool interprocess_semaphore::is_semaphore_zero_count_init(boost::winapi::HANDLE_
 {
     is_semaphore_zero_count_t impl = &interprocess_semaphore::is_semaphore_zero_count_emulated;
 
-    // Check if ntdll.dll provides NtQuerySemaphore, see: http://undocumented.ntinternals.net/index.html?page=UserMode%2FUndocumented%20Functions%2FNT%20Objects%2FSemaphore%2FNtQuerySemaphore.html
+    // Check if ntdll.dll provides NtQuerySemaphore, see:
+    // http://undocumented.ntinternals.net/index.html?page=UserMode%2FUndocumented%20Functions%2FNT%20Objects%2FSemaphore%2FNtQuerySemaphore.html
     boost::winapi::HMODULE_ ntdll = boost::winapi::GetModuleHandleW(L"ntdll.dll");
     if (ntdll)
     {
         nt_query_semaphore_t ntqs = (nt_query_semaphore_t)boost::winapi::get_proc_address(ntdll, "NtQuerySemaphore");
         if (ntqs)
         {
-            nt_query_semaphore = ntqs;
+            nt_query_semaphore.store(ntqs, boost::memory_order_relaxed);
             impl = &interprocess_semaphore::is_semaphore_zero_count_nt_query_semaphore;
         }
     }
@@ -206,13 +213,13 @@ bool interprocess_semaphore::is_semaphore_zero_count_init(boost::winapi::HANDLE_
 bool interprocess_semaphore::is_semaphore_zero_count_nt_query_semaphore(boost::winapi::HANDLE_ h)
 {
     semaphore_basic_information info = {};
-    NTSTATUS_ err = nt_query_semaphore
+    NTSTATUS_ err = nt_query_semaphore.load(boost::memory_order_relaxed)
     (
         h,
         0u, // SemaphoreBasicInformation
         &info,
         sizeof(info),
-        NULL
+        nullptr
     );
     if (BOOST_UNLIKELY(err != 0u))
     {
@@ -228,7 +235,8 @@ bool interprocess_semaphore::is_semaphore_zero_count_nt_query_semaphore(boost::w
         {
             res = sizeof(buf) - 1u;
         }
-        BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error, std::string("Failed to test an interprocess semaphore object for zero count, NT status: ").append(buf, res), (ERROR_INVALID_HANDLE));
+        BOOST_LOG_THROW_DESCR_PARAMS(boost::log::system_error,
+            std::string("Failed to test an interprocess semaphore object for zero count, NT status: ").append(buf, res), (ERROR_INVALID_HANDLE));
     }
 
     return info.current_count == 0u;

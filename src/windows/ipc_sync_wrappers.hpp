@@ -1,5 +1,5 @@
 /*
- *              Copyright Andrey Semashev 2016.
+ *          Copyright Andrey Semashev 2016 - 2026.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -126,20 +126,27 @@ public:
 class interprocess_semaphore
 {
 private:
-    typedef boost::winapi::DWORD_ NTSTATUS_;
+    using NTSTATUS_ = boost::winapi::DWORD_;
     struct semaphore_basic_information
     {
         boost::winapi::ULONG_ current_count; // current semaphore count
         boost::winapi::ULONG_ maximum_count; // max semaphore count
     };
-    typedef NTSTATUS_ (__stdcall *nt_query_semaphore_t)(boost::winapi::HANDLE_ h, unsigned int info_class, semaphore_basic_information* pinfo, boost::winapi::ULONG_ info_size, boost::winapi::ULONG_* ret_len);
-    typedef bool (*is_semaphore_zero_count_t)(boost::winapi::HANDLE_ h);
+    using nt_query_semaphore_t = NTSTATUS_ (__stdcall *)
+    (
+        boost::winapi::HANDLE_ h,
+        unsigned int info_class,
+        semaphore_basic_information* pinfo,
+        boost::winapi::ULONG_ info_size,
+        boost::winapi::ULONG_* ret_len
+    );
+    using is_semaphore_zero_count_t = bool (*)(boost::winapi::HANDLE_ h);
 
 private:
     auto_handle m_sem;
 
     static boost::atomic< is_semaphore_zero_count_t > is_semaphore_zero_count;
-    static nt_query_semaphore_t nt_query_semaphore;
+    static boost::atomic< nt_query_semaphore_t > nt_query_semaphore;
 
 public:
     void create_or_open(const wchar_t* name, permissions const& perms = permissions());
