@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2015.
+ *          Copyright Andrey Semashev 2007 - 2026.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -220,7 +220,8 @@ public:
     //! Sink implementation type
     typedef SinkBackendT sink_backend_type;
     //! \cond
-    static_assert(has_requirement< typename sink_backend_type::frontend_requirements, synchronized_feeding >::value, "Asynchronous sink frontend is incompatible with the specified backend: thread synchronization requirements are not met");
+    static_assert(has_requirement< typename sink_backend_type::frontend_requirements, synchronized_feeding >::value,
+        "Asynchronous sink frontend is incompatible with the specified backend: thread synchronization requirements are not met");
     //! \endcond
 
 #ifndef BOOST_LOG_DOXYGEN_PASS
