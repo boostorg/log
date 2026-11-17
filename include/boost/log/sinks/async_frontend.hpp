@@ -477,7 +477,7 @@ public:
                 // There is already a thread feeding records, let it do the job
                 m_FlushRequested.store(true, boost::memory_order_release);
                 queue_base_type::interrupt(queue_unblocking_flags::dequeue_one);
-                while (!m_StopRequested.load(boost::memory_order_acquire) && m_FlushRequested.load(boost::memory_order_acquire))
+                while (m_ActiveOperation != idle && !m_StopRequested.load(boost::memory_order_acquire) && m_FlushRequested.load(boost::memory_order_acquire))
                     m_BlockCond.wait(lock);
 
                 // The condition variable may have been signalled when the feeding operation was finishing.
