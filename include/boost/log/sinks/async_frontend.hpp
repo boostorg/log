@@ -396,7 +396,7 @@ public:
      * The method softly interrupts record feeding loop. This method must be called when \c run,
      * \c feed_records or \c flush method execution has to be interrupted. Unlike regular thread
      * interruption, calling \c stop will not interrupt the record processing in the middle.
-     * Instead, the sink frontend will attempt to finish its business with the record in progress
+     * Instead, the sink frontend will attempt to finish processing the record in progress
      * and return afterwards. This method can be called either if the sink was created with
      * an internal dedicated thread, or if the feeding loop was initiated by user.
      *
@@ -432,9 +432,13 @@ public:
     }
 
     /*!
-     * The method feeds log records that may have been buffered to the backend and returns
+     * The method feeds log records that may have been buffered to the backend and returns. If an ordering
+     * queue is used, this method does not feed log records that are within the ordering window.
      *
-     * \pre The sink frontend must be constructed without spawning a dedicated thread
+     * The method may return before processing all buffered log records if \c stop is called immediately
+     * before or during this call.
+     *
+     * \pre The sink frontend must be constructed without spawning a dedicated thread.
      */
     void feed_records()
     {
@@ -455,6 +459,14 @@ public:
      * The method feeds all log records that may have been buffered to the backend and returns.
      * Unlike \c feed_records, in case of ordering queueing the method also feeds records
      * that were enqueued during the ordering window, attempting to drain the queue completely.
+     *
+     * If another thread is feeding records by calling \c run or \c feed_records, this method
+     * blocks until the feeding thread performs the flush.
+     *
+     * The method may return before feeding all buffered log records, if \c stop is called
+     * concurrently with this method or if a prior call to \c stop was not followed by a \c run
+     * or \c feed_records call. In this case, all unprocessed log records remain buffered and
+     * may be processed by a subsequent call to \c flush, \c run or \c feed_records.
      */
     void flush() BOOST_OVERRIDE
     {
@@ -468,7 +480,7 @@ public:
                 while (!m_StopRequested.load(boost::memory_order_acquire) && m_FlushRequested.load(boost::memory_order_acquire))
                     m_BlockCond.wait(lock);
 
-                // The condition may have been signalled when the feeding operation was finishing.
+                // The condition variable may have been signalled when the feeding operation was finishing.
                 // In that case records may not have been flushed, and we do the flush ourselves.
                 if (m_ActiveOperation != idle)
                     return;
