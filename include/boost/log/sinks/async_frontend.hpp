@@ -546,13 +546,7 @@ private:
         while (!m_StopRequested.load(boost::memory_order_acquire))
         {
             record_view rec;
-            bool dequeued = false;
-            if (BOOST_LIKELY(!m_FlushRequested.load(boost::memory_order_acquire)))
-                dequeued = queue_base_type::try_dequeue_ready(rec);
-            else
-                dequeued = queue_base_type::try_dequeue(rec);
-
-            if (dequeued)
+            if (queue_base_type::try_dequeue_ready(rec))
                 base_type::feed_record(rec, m_BackendMutex, *m_pBackend);
             else
                 break;
@@ -561,6 +555,17 @@ private:
         if (BOOST_UNLIKELY(m_FlushRequested.load(boost::memory_order_acquire)))
         {
             scoped_flag guard(base_type::frontend_mutex(), m_BlockCond, m_FlushRequested);
+
+            // Flush records in the ordering window
+            while (!m_StopRequested.load(boost::memory_order_acquire))
+            {
+                record_view rec;
+                if (queue_base_type::try_dequeue(rec))
+                    base_type::feed_record(rec, m_BackendMutex, *m_pBackend);
+                else
+                    break;
+            }
+
             base_type::flush_backend(m_BackendMutex, *m_pBackend);
         }
     }
