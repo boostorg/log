@@ -61,8 +61,9 @@ namespace sinks {
         queue_base_type(arg0),\
         m_pBackend(boost::make_shared< sink_backend_type >(arg0)),\
         m_ActiveOperation(idle),\
-        m_StopRequested(false),\
-        m_FlushRequested(false)\
+        m_FlushWaiters(0u),\
+        m_FlushRequested(false),\
+        m_StopRequested(false)\
     {\
         if (arg0[keywords::start_thread | true])\
             start_feeding_thread();\
@@ -73,8 +74,9 @@ namespace sinks {
         queue_base_type(arg0),\
         m_pBackend(backend),\
         m_ActiveOperation(idle),\
-        m_StopRequested(false),\
-        m_FlushRequested(false)\
+        m_FlushWaiters(0u),\
+        m_FlushRequested(false),\
+        m_StopRequested(false)\
     {\
         if (arg0[keywords::start_thread | true])\
             start_feeding_thread();\
@@ -87,8 +89,9 @@ namespace sinks {
         queue_base_type((BOOST_PP_ENUM_PARAMS_Z(z, n, arg))),\
         m_pBackend(boost::make_shared< sink_backend_type >(BOOST_PP_ENUM_PARAMS_Z(z, n, arg))),\
         m_ActiveOperation(idle),\
-        m_StopRequested(false),\
-        m_FlushRequested(false)\
+        m_FlushWaiters(0u),\
+        m_FlushRequested(false),\
+        m_StopRequested(false)\
     {\
         if ((BOOST_PP_ENUM_PARAMS_Z(z, n, arg))[keywords::start_thread | true])\
             start_feeding_thread();\
@@ -99,8 +102,9 @@ namespace sinks {
         queue_base_type((BOOST_PP_ENUM_PARAMS_Z(z, n, arg))),\
         m_pBackend(backend),\
         m_ActiveOperation(idle),\
-        m_StopRequested(false),\
-        m_FlushRequested(false)\
+        m_FlushWaiters(0u),\
+        m_FlushRequested(false),\
+        m_StopRequested(false)\
     {\
         if ((BOOST_PP_ENUM_PARAMS_Z(z, n, arg))[keywords::start_thread | true])\
             start_feeding_thread();\
@@ -186,34 +190,24 @@ private:
         BOOST_DELETED_FUNCTION(scoped_feeding_operation& operator= (scoped_feeding_operation const&))
     };
 
-    //! A scope guard that resets a flag on destructor
-    class scoped_flag
+    //! A scope guard for automatically updating a counter
+    class scoped_counter
     {
     private:
-        frontend_mutex_type& m_Mutex;
-        std::condition_variable_any& m_Cond;
-        boost::atomic< bool >& m_Flag;
+        unsigned int& m_counter;
 
     public:
-        explicit scoped_flag(frontend_mutex_type& mut, std::condition_variable_any& cond, boost::atomic< bool >& f) :
-            m_Mutex(mut), m_Cond(cond), m_Flag(f)
+        explicit scoped_counter(unsigned int& counter) : m_counter(counter)
         {
+            ++counter;
         }
-        ~scoped_flag()
+        ~scoped_counter()
         {
-            try
-            {
-                std::lock_guard< frontend_mutex_type > lock(m_Mutex);
-                m_Flag.store(false, boost::memory_order_relaxed);
-                m_Cond.notify_all();
-            }
-            catch (...)
-            {
-            }
+            --m_counter;
         }
 
-        BOOST_DELETED_FUNCTION(scoped_flag(scoped_flag const&))
-        BOOST_DELETED_FUNCTION(scoped_flag& operator= (scoped_flag const&))
+        BOOST_DELETED_FUNCTION(scoped_counter(scoped_counter const&))
+        BOOST_DELETED_FUNCTION(scoped_counter& operator= (scoped_counter const&))
     };
 
 public:
@@ -249,10 +243,12 @@ private:
 
     //! Currently active operation
     operation m_ActiveOperation;
-    //! The flag indicates that the feeding loop has to be stopped
-    boost::atomic< bool > m_StopRequested;
+    //! The number of \c flush requests blocked waiting for asynchronous completion in a feeding thread
+    unsigned int m_FlushWaiters;
     //! The flag indicates that queue flush has been requested
     boost::atomic< bool > m_FlushRequested;
+    //! The flag indicates that the feeding loop has to be stopped
+    boost::atomic< bool > m_StopRequested;
 
 public:
     /*!
@@ -268,8 +264,9 @@ public:
         base_type(true),
         m_pBackend(boost::make_shared< sink_backend_type >()),
         m_ActiveOperation(idle),
-        m_StopRequested(false),
-        m_FlushRequested(false)
+        m_FlushWaiters(0u),
+        m_FlushRequested(false),
+        m_StopRequested(false)
     {
         if (start_thread)
             start_feeding_thread();
@@ -289,8 +286,9 @@ public:
         base_type(true),
         m_pBackend(backend),
         m_ActiveOperation(idle),
-        m_StopRequested(false),
-        m_FlushRequested(false)
+        m_FlushWaiters(0u),
+        m_FlushRequested(false),
+        m_StopRequested(false)
     {
         if (start_thread)
             start_feeding_thread();
@@ -335,11 +333,11 @@ public:
      */
     void consume(record_view const& rec) BOOST_OVERRIDE
     {
-        if (BOOST_UNLIKELY(m_FlushRequested.load(boost::memory_order_acquire)))
+        if (BOOST_UNLIKELY(m_FlushRequested.load(boost::memory_order_relaxed)))
         {
             std::unique_lock< frontend_mutex_type > lock(base_type::frontend_mutex());
             // Wait until flush is done
-            while (m_FlushRequested.load(boost::memory_order_acquire))
+            while (m_FlushRequested.load(boost::memory_order_relaxed))
                 m_BlockCond.wait(lock);
         }
         queue_base_type::enqueue(rec);
@@ -350,7 +348,7 @@ public:
      */
     bool try_consume(record_view const& rec) BOOST_OVERRIDE
     {
-        if (!m_FlushRequested.load(boost::memory_order_acquire))
+        if (!m_FlushRequested.load(boost::memory_order_relaxed))
             return queue_base_type::try_enqueue(rec);
         else
             return false;
@@ -475,15 +473,22 @@ public:
             if (static_cast< unsigned int >(m_ActiveOperation & feeding_records) != 0u)
             {
                 // There is already a thread feeding records, let it do the job
-                m_FlushRequested.store(true, boost::memory_order_release);
+                scoped_counter waiter_guard(m_FlushWaiters);
+                m_FlushRequested.store(true, boost::memory_order_relaxed);
                 queue_base_type::interrupt(queue_unblocking_flags::dequeue_one);
-                while (m_ActiveOperation != idle && !m_StopRequested.load(boost::memory_order_acquire) && m_FlushRequested.load(boost::memory_order_acquire))
+
+                do
+                {
                     m_BlockCond.wait(lock);
 
-                // The condition variable may have been signalled when the feeding operation was finishing.
-                // In that case records may not have been flushed, and we do the flush ourselves.
-                if (m_ActiveOperation != idle)
-                    return;
+                    // Check if the feeding thread have completed the flush
+                    if (!m_FlushRequested.load(boost::memory_order_relaxed))
+                        return;
+                }
+                while (m_ActiveOperation != idle);
+
+                // The condition variable have been signalled when the feeding operation was finishing.
+                // In that case records may not have been flushed, and we do the flush ourselves, synchronously.
             }
 
             m_ActiveOperation = flushing;
@@ -531,6 +536,14 @@ private:
         try
         {
             std::lock_guard< frontend_mutex_type > lock(base_type::frontend_mutex());
+
+            // If a synchronous flush has failed with an exception, reset m_FlushRequested to false, but
+            // only if there are no other blocked flush callers. If there are, keep m_FlushRequested set
+            // to true so that if a feeding operation is started before they wake up, the feeding operation
+            // does perform a new flush attempt.
+            if (m_ActiveOperation == flushing && m_FlushWaiters == 0u)
+                m_FlushRequested.store(false, boost::memory_order_relaxed);
+
             m_ActiveOperation = idle;
             m_StopRequested.store(false, boost::memory_order_relaxed);
             m_BlockCond.notify_all();
@@ -552,10 +565,8 @@ private:
                 break;
         }
 
-        if (BOOST_UNLIKELY(m_FlushRequested.load(boost::memory_order_acquire)))
+        if (BOOST_UNLIKELY(m_FlushRequested.load(boost::memory_order_relaxed)))
         {
-            scoped_flag guard(base_type::frontend_mutex(), m_BlockCond, m_FlushRequested);
-
             // Flush records in the ordering window
             while (!m_StopRequested.load(boost::memory_order_acquire))
             {
@@ -567,6 +578,10 @@ private:
             }
 
             base_type::flush_backend(m_BackendMutex, *m_pBackend);
+
+            std::lock_guard< frontend_mutex_type > lock(base_type::frontend_mutex());
+            m_FlushRequested.store(false, boost::memory_order_relaxed);
+            m_BlockCond.notify_all();
         }
     }
 #endif // BOOST_LOG_DOXYGEN_PASS
