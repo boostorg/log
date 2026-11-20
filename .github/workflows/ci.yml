@@ -586,7 +586,10 @@ jobs:
             os: windows-2022
             extra_tests: 1
           - toolset: gcc
-            cxxstd: "14-gnu,17-gnu,20-gnu,23-gnu"
+            cxxstd: "14-gnu,17-gnu"
+            os: windows-2022
+          - toolset: gcc
+            cxxstd: "20-gnu,23-gnu"
             os: windows-2022
 
           - name: CMake MSVC tests
@@ -684,7 +687,11 @@ jobs:
       matrix:
         include:
           - toolset: gcc
-            cxxstd: "14-gnu,17-gnu,20-gnu,23-gnu"
+            cxxstd: "14-gnu,17-gnu"
+            build_variant: debug
+            os: windows-2022
+          - toolset: gcc
+            cxxstd: "20-gnu,23-gnu"
             build_variant: debug
             os: windows-2022
 
