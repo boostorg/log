@@ -25,7 +25,7 @@
 
 #define BOOST_TEST_MODULE sink_async_unbounded_fifo_flush_deadlock
 
-#include <boost/log/core/core.hpp>
+#include <boost/log/core/record_view.hpp>
 
 #if !defined(BOOST_LOG_NO_THREADS)
 
@@ -37,16 +37,14 @@
 #include <boost/smart_ptr/make_shared_object.hpp>
 #include <boost/log/sinks/async_frontend.hpp>
 #include <boost/log/sinks/unbounded_fifo_queue.hpp>
-#include <boost/log/sources/logger.hpp>
-#include <boost/log/sources/record_ostream.hpp>
 
 #include "test_thread.hpp"
 #include "test_barrier.hpp"
 #include "test_sink_backend.hpp"
+#include "make_record.hpp"
 
 namespace logging = boost::log;
 namespace sinks = boost::log::sinks;
-namespace src = boost::log::sources;
 
 //! Duration of the loop of emitting log records and flushing
 constexpr auto loop_duration = std::chrono::seconds(5);
@@ -56,8 +54,8 @@ constexpr auto join_timeout = std::chrono::seconds(5);
 
 BOOST_AUTO_TEST_CASE(sink_async_unbounded_fifo_flush_deadlock)
 {
-    auto core = logging::core::get();
-    core->add_sink(boost::make_shared< sinks::asynchronous_sink< test_backend, sinks::unbounded_fifo_queue > >());
+    auto backend = boost::make_shared< test_backend >();
+    auto sink = boost::make_shared< sinks::asynchronous_sink< test_backend, sinks::unbounded_fifo_queue > >(backend);
 
     std::atomic< bool > stop(false);
     test_barrier barrier(3u);
@@ -67,18 +65,16 @@ BOOST_AUTO_TEST_CASE(sink_async_unbounded_fifo_flush_deadlock)
         barrier.arrive_and_wait();
 
         while (!stop.load(std::memory_order_relaxed))
-            core->flush();
+            sink->flush();
     });
 
     test_thread log_emitter([&]()
     {
-        src::logger lg;
-
         barrier.arrive_and_wait();
 
         while (!stop.load(std::memory_order_relaxed))
         {
-            BOOST_LOG(lg) << "stress";
+            sink->consume(make_record_view());
             std::this_thread::yield();
         }
     });

@@ -24,7 +24,7 @@
 
 #define BOOST_TEST_MODULE sink_async_bounded_flush_loss
 
-#include <boost/log/core/core.hpp>
+#include <boost/log/core/record_view.hpp>
 
 #if !defined(BOOST_LOG_NO_THREADS)
 
@@ -43,20 +43,18 @@
 #include <boost/log/sinks/block_on_overflow.hpp>
 #include <boost/log/sinks/frontend_requirements.hpp>
 #include <boost/log/sinks/basic_sink_backend.hpp>
-#include <boost/log/sources/logger.hpp>
-#include <boost/log/sources/record_ostream.hpp>
+#include <boost/log/attributes/attribute_set.hpp>
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/attributes/value_extraction.hpp>
-#include <boost/log/attributes/scoped_attribute.hpp>
 #include <boost/log/utility/record_ordering.hpp>
 #include <boost/log/keywords/order.hpp>
 
 #include "test_thread.hpp"
 #include "test_barrier.hpp"
+#include "make_record.hpp"
 
 namespace logging = boost::log;
 namespace sinks = boost::log::sinks;
-namespace src = boost::log::sources;
 namespace attrs = boost::log::attributes;
 namespace keywords = boost::log::keywords;
 
@@ -127,10 +125,8 @@ public:
 template< typename QueueingPolicy, typename... Args >
 void test_async_bounded_flush(Args&&... args)
 {
-    auto core = logging::core::get();
     auto backend = boost::make_shared< test_sink_backend >();
     auto sink = boost::make_shared< sinks::asynchronous_sink< test_sink_backend, QueueingPolicy > >(backend, std::forward< Args >(args)...);
-    core->add_sink(sink);
 
     test_barrier unblock_barrier(2u);
     test_barrier flush1_barrier(2u);
@@ -138,12 +134,13 @@ void test_async_bounded_flush(Args&&... args)
 
     test_thread emitter([&]()
     {
-        src::logger lg;
+        logging::attribute_set record_attrs;
 
         for (unsigned int i = 0u; i < 3u; ++i)
         {
-            auto attr(logging::add_scoped_logger_attribute(lg, "Counter", attrs::make_constant(i)));
-            BOOST_LOG(lg) << i;
+            record_attrs.clear();
+            record_attrs.insert("Counter", attrs::make_constant(i));
+            sink->consume(make_record_view(record_attrs));
 
             if (i == 1u)
                 flush1_barrier.arrive_and_wait(); // notify the flusher
@@ -158,11 +155,11 @@ void test_async_bounded_flush(Args&&... args)
         std::this_thread::sleep_for(step_duration);
 
         unblock_barrier.arrive_and_wait(); // notify the unblocker
-        core->flush();
+        sink->flush();
 
         flush2_barrier.arrive_and_wait();
         // Do the final flush
-        core->flush();
+        sink->flush();
     });
 
     test_thread unblocker([&]()
@@ -198,8 +195,6 @@ void test_async_bounded_flush(Args&&... args)
 
     BOOST_CHECK_EQUAL(backend->get_received_count(), 3u);
     BOOST_CHECK_EQUAL(backend->get_error_count(), 0u);
-
-    core->remove_sink(sink);
 }
 
 BOOST_AUTO_TEST_CASE(sink_async_bounded_flush_fifo)
