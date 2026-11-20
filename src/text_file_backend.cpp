@@ -934,10 +934,17 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
             // limits trigger a deletion and this file get deleted, we may have an entry that refers to no actual file. In any case,
             // the total size of files in the storage will be incorrect. Here we work around this problem and simply remove
             // the old file entry without removing the file. The entry will be re-added to the list later.
+            // The old entry has the same file name as the stored file.
             while (it != end)
             {
-                system::error_code ec;
-                if (filesystem::equivalent(it->m_Path, info.m_Path, ec))
+                bool is_same_file = false;
+                if (filename_string(it->m_Path) == file_name)
+                {
+                    system::error_code ec;
+                    is_same_file = it->m_Path.native() == info.m_Path.native() || filesystem::equivalent(it->m_Path, info.m_Path, ec);
+                }
+
+                if (is_same_file)
                 {
                     m_TotalSize -= it->m_Size;
                     m_Files.erase(it);
