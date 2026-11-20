@@ -23,6 +23,7 @@
 #include <cstddef>
 #include <limits>
 #include <list>
+#include <vector>
 #include <string>
 #include <locale>
 #include <ostream>
@@ -32,6 +33,7 @@
 #include <stdexcept>
 #include <boost/core/ref.hpp>
 #include <boost/cstdint.hpp>
+#include <boost/move/utility_core.hpp>
 #include <boost/optional/optional.hpp>
 #include <boost/smart_ptr/make_shared_object.hpp>
 #include <boost/enable_shared_from_this.hpp>
@@ -662,27 +664,6 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
                 }
             };
 
-            //! Predicate for testing if a file_info refers to a file equivalent to another path
-            class equivalent_file
-            {
-            public:
-                typedef bool result_type;
-
-            private:
-                filesystem::path const& m_Path;
-
-            public:
-                explicit equivalent_file(filesystem::path const& path) BOOST_NOEXCEPT :
-                    m_Path(path)
-                {
-                }
-
-                result_type operator()(file_info const& info) const
-                {
-                    return filesystem::equivalent(info.m_Path, m_Path);
-                }
-            };
-
             uintmax_t m_Size;
             std::time_t m_TimeStamp;
             filesystem::path m_Path;
@@ -691,6 +672,56 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         typedef std::list< file_info > file_list;
         //! The string type compatible with the universal path type
         typedef filesystem::path::string_type path_string_type;
+
+        //! Information about a file found while scanning a directory
+        struct scanned_file
+        {
+            //! Ordering predicate by file name
+            struct order_by_file_name
+            {
+                typedef bool result_type;
+
+                result_type operator()(scanned_file const& left, scanned_file const& right) const BOOST_NOEXCEPT
+                {
+                    return left.m_FileName < right.m_FileName;
+                }
+            };
+
+            filesystem::path m_Path;
+            path_string_type m_FileName;
+            unsigned int m_FileNumber;
+            bool m_FileNumberParsed;
+            bool m_IsTracked;
+
+            scanned_file() BOOST_NOEXCEPT :
+                m_FileNumber(0u),
+                m_FileNumberParsed(false),
+                m_IsTracked(false)
+            {
+            }
+        };
+        //! A list of the scanned files
+        typedef std::vector< scanned_file > scanned_file_list;
+
+        //! A stored file, looked up by name
+        struct tracked_file
+        {
+            //! Ordering predicate by file name
+            struct order_by_file_name
+            {
+                typedef bool result_type;
+
+                result_type operator()(tracked_file const& left, tracked_file const& right) const BOOST_NOEXCEPT
+                {
+                    return left.m_FileName < right.m_FileName;
+                }
+            };
+
+            path_string_type m_FileName;
+            file_info const* m_pInfo;
+        };
+        //! A list of the tracked files
+        typedef std::vector< tracked_file > tracked_file_list;
 
     private:
         //! A reference to the repository this collector belongs to
@@ -753,6 +784,9 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         }
 
     private:
+        //! Marks the scanned files that are already tracked by the collector. Reorders \a files.
+        void mark_tracked_files(scanned_file_list& files) const;
+
         //! Makes relative path absolute with respect to the base path
         filesystem::path make_absolute(filesystem::path const& p) const
         {
@@ -1008,38 +1042,44 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
             {
                 BOOST_LOG_EXPR_IF_MT(std::lock_guard< std::mutex > lock(m_Mutex);)
 
-                file_list files;
-                filesystem::directory_iterator it(dir), end;
-                uintmax_t total_size = 0u;
-                for (; it != end; ++it)
+                // Match the file name first, as it does not query the file system
+                scanned_file_list scanned_files;
+                for (filesystem::directory_iterator it(dir), end; it != end; ++it)
                 {
                     filesystem::directory_entry const& dir_entry = *it;
-                    file_info info;
-                    info.m_Path = dir_entry.path();
+                    scanned_file scanned;
+                    scanned.m_Path = dir_entry.path();
+                    scanned.m_FileName = filename_string(scanned.m_Path);
+                    if (method == file::scan_matching && !match_pattern(scanned.m_FileName, mask, scanned.m_FileNumber, scanned.m_FileNumberParsed))
+                        continue;
+
                     status = dir_entry.status(ec);
                     if (status.type() == filesystem::regular_file)
-                    {
-                        // Check that there are no duplicates in the resulting list
-                        if (std::find_if(m_Files.begin(), m_Files.end(), file_info::equivalent_file(info.m_Path)) == m_Files.end())
-                        {
-                            // Check that the file name matches the pattern
-                            unsigned int file_number = 0u;
-                            bool file_number_parsed = false;
-                            if (method != file::scan_matching ||
-                                match_pattern(filename_string(info.m_Path), mask, file_number, file_number_parsed))
-                            {
-                                info.m_Size = filesystem::file_size(info.m_Path);
-                                total_size += info.m_Size;
-                                info.m_TimeStamp = filesystem::last_write_time(info.m_Path);
-                                files.push_back(info);
-                                ++result.found_count;
+                        scanned_files.push_back(boost::move(scanned));
+                }
 
-                                // Test that the file_number >= result.last_file_counter accounting for the integer overflow
-                                if (file_number_parsed && (!result.last_file_counter || (file_number - *result.last_file_counter) < ((~0u) ^ ((~0u) >> 1u))))
-                                    result.last_file_counter = file_number;
-                            }
-                        }
-                    }
+                // Check that there are no duplicates in the resulting list
+                if (!m_Files.empty() && !scanned_files.empty())
+                    mark_tracked_files(scanned_files);
+
+                file_list files;
+                uintmax_t total_size = 0u;
+                for (scanned_file_list::iterator it = scanned_files.begin(), end = scanned_files.end(); it != end; ++it)
+                {
+                    if (it->m_IsTracked)
+                        continue;
+
+                    file_info info;
+                    info.m_Path = boost::move(it->m_Path);
+                    info.m_Size = filesystem::file_size(info.m_Path);
+                    total_size += info.m_Size;
+                    info.m_TimeStamp = filesystem::last_write_time(info.m_Path);
+                    files.push_back(boost::move(info));
+                    ++result.found_count;
+
+                    // Test that the file_number >= result.last_file_counter accounting for the integer overflow
+                    if (it->m_FileNumberParsed && (!result.last_file_counter || (it->m_FileNumber - *result.last_file_counter) < ((~0u) ^ ((~0u) >> 1u))))
+                        result.last_file_counter = it->m_FileNumber;
                 }
 
                 // Sort files chronologically
@@ -1050,6 +1090,42 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         }
 
         return result;
+    }
+
+    //! Marks the scanned files that are already tracked by the collector
+    void file_collector::mark_tracked_files(scanned_file_list& files) const
+    {
+        // Only same-named files are compared, so both lists are sorted by name and matched in a single pass.
+        // filesystem::equivalent() handles a scanned directory spelled differently than the storage directory.
+        tracked_file_list tracked_files;
+        tracked_files.reserve(m_Files.size());
+        for (file_list::const_iterator it = m_Files.begin(), end = m_Files.end(); it != end; ++it)
+        {
+            tracked_file tracked;
+            tracked.m_FileName = filename_string(it->m_Path);
+            tracked.m_pInfo = &*it;
+            tracked_files.push_back(boost::move(tracked));
+        }
+
+        std::sort(tracked_files.begin(), tracked_files.end(), tracked_file::order_by_file_name());
+        std::sort(files.begin(), files.end(), scanned_file::order_by_file_name());
+
+        tracked_file_list::const_iterator tracked_it = tracked_files.begin(), tracked_end = tracked_files.end();
+        for (scanned_file_list::iterator it = files.begin(), end = files.end(); it != end && tracked_it != tracked_end; ++it)
+        {
+            while (tracked_it != tracked_end && tracked_it->m_FileName < it->m_FileName)
+                ++tracked_it;
+
+            for (tracked_file_list::const_iterator same_name_it = tracked_it; same_name_it != tracked_end && same_name_it->m_FileName == it->m_FileName; ++same_name_it)
+            {
+                filesystem::path const& tracked_path = same_name_it->m_pInfo->m_Path;
+                if (tracked_path.native() == it->m_Path.native() || filesystem::equivalent(tracked_path, it->m_Path))
+                {
+                    it->m_IsTracked = true;
+                    break;
+                }
+            }
+        }
     }
 
     //! The function updates storage restrictions
