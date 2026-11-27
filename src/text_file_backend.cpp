@@ -1016,17 +1016,16 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
                     filesystem::directory_entry const& dir_entry = *it;
                     file_info info;
                     info.m_Path = dir_entry.path();
-                    status = dir_entry.status(ec);
-                    if (status.type() == filesystem::regular_file)
+                    if (dir_entry.is_regular_file(ec))
                     {
-                        // Check that there are no duplicates in the resulting list
-                        if (std::find_if(m_Files.begin(), m_Files.end(), file_info::equivalent_file(info.m_Path)) == m_Files.end())
+                        // Check that the file name matches the pattern
+                        unsigned int file_number = 0u;
+                        bool file_number_parsed = false;
+                        if (method != file::scan_matching ||
+                            match_pattern(filename_string(info.m_Path), mask, file_number, file_number_parsed))
                         {
-                            // Check that the file name matches the pattern
-                            unsigned int file_number = 0u;
-                            bool file_number_parsed = false;
-                            if (method != file::scan_matching ||
-                                match_pattern(filename_string(info.m_Path), mask, file_number, file_number_parsed))
+                            // Check that there are no duplicates in the resulting list
+                            if (std::find_if(m_Files.begin(), m_Files.end(), file_info::equivalent_file(info.m_Path)) == m_Files.end())
                             {
                                 info.m_Size = filesystem::file_size(info.m_Path);
                                 total_size += info.m_Size;
